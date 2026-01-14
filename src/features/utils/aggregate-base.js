@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { FeatureBase } from './feature-base'
@@ -141,7 +141,7 @@ export class AggregateBase extends FeatureBase {
   }
 
   preHarvestChecks (opts) {
-    return !this.blocked
+    return !this.blocked && !this.ee.aborted
   }
 
   /**

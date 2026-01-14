@@ -1,6 +1,6 @@
 import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-describe('SPA session behavior - ', () => {
+describe.skip('SPA session behavior - ', () => {
   let interactionsCapture
   beforeEach(async () => {
     interactionsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })

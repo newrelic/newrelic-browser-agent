@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { setTopLevelCallers } from '../api/topLevelCallers'
@@ -54,9 +54,6 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
 
     setTopLevelCallers(agent) // no need to set global APIs on newrelic obj more than once
     addToNREUM('activatedFeatures', activatedFeatures)
-
-    // Update if soft_navigations is allowed to run AND part of this agent build, used to override old spa functions.
-    agent.runSoftNavOverSpa &&= (updatedInit.soft_navigations.enabled === true && updatedInit.feature_flags.includes('soft_nav'))
   }
 
   runtime.denyList = [

@@ -5,6 +5,104 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "8a835b39ea62389d5922d4fedb3b55b4479dd523",
+          "message": "add support for mfe tags with the register API",
+          "issues": [
+            "1660"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "71fb23f75f903f32ab07c09622692dab757ce274",
+          "message": "add child.id attribute to facilitate MFE cross-linking",
+          "issues": [
+            "1662"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "6338f04a2ec09ce0cbfa34e5878e14bfa5637a02",
+          "message": "Add \"deregister\" API",
+          "issues": [
+            "1632"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "b2d39659a17e1472e5b60baed04fbd0390267d95",
+          "message": "add parent.type attribute to facilitate relationship synthesis",
+          "issues": [
+            "1661"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "78da14b5b5a5fcc54edfbca5284d57a3c816dd9c",
+          "message": "enforce non-null values on the numeric fields",
+          "issues": [
+            "1664"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "a381a16cc6d1eabb5998188f69bb744525db3464",
+          "message": "Clean WebSocket URLs",
+          "issues": [
+            "1663"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "6ff6d39cf2b3584de7b6b9a75fbceffd7bce00de",
+          "message": "Add default close reason",
+          "issues": [
+            "1665"
+          ]
+        }
+      ],
+      "version": "1.308.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "766a2396-dfe4-45f9-b44e-f38f03992e1e",
+      "createTime": "2026-01-08T23:19:29.193Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "d93f3f388085b7e76292e79749977db19a10765a",
+          "message": "Make soft navigations feature the default SPA",
+          "issues": [
+            "1638"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "c284cfde4a18fb9afa75c11b181944401a902e13",
+          "message": "Add resetSession option to setUserId() API",
+          "issues": [
+            "1646"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "61fa99ba39334b85f7611a076943f15356f65364",
+          "message": "Ajax deny list wildcard support",
+          "issues": [
+            "1655"
+          ]
+        }
+      ],
+      "version": "1.307.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "ad77e5a2-aa35-454d-98a9-4c91b8674957",
+      "createTime": "2026-01-06T19:11:03.484Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "f9f1639504a32b0f24baa117d287c47e209cc818",
           "message": "Control log API through separate RUM flag",
           "issues": [
@@ -3527,5 +3625,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-12-16T15:22:41.405Z"
+  "updateTime": "2026-01-08T23:19:29.193Z"
 }

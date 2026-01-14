@@ -2,7 +2,6 @@ import { notIOS, notSafari, supportsFirstPaint } from '../../../tools/browser-ma
 import { testInteractionEventsRequest, testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('attribution tests', () => {
-  const config = { loader: 'spa', init: { feature_flags: ['soft_nav'] } }
   let interactionsCapture
 
   beforeEach(async () => {
@@ -13,7 +12,6 @@ describe('attribution tests', () => {
     const configWithDenyList = {
       loader: 'spa',
       init: {
-        feature_flags: ['soft_nav'],
         ajax: {
           deny_list: ['bam-test-1.nr-local.net']
         }
@@ -57,7 +55,7 @@ describe('attribution tests', () => {
       const ipl = interactionHarvests[0].request.body[0]
 
       expect(ipl.trigger).toEqual('initialPageLoad')
-      expect(ipl.children.length).toEqual(0)
+      expect(ipl.children.length).toEqual(1)
       expect(ipl.isRouteChange).not.toBeTruthy()
       if (browserMatch(notIOS)) expect(ipl.oldURL).toEqual('') // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 
@@ -85,7 +83,7 @@ describe('attribution tests', () => {
       const ipl = interactionHarvests[0].request.body[0]
 
       expect(ipl.trigger).toEqual('initialPageLoad')
-      expect(ipl.children.length).toEqual(0)
+      expect(ipl.children.length).toEqual(1)
       expect(ipl.isRouteChange).not.toBeTruthy()
       if (browserMatch(notIOS)) expect(ipl.oldURL).toEqual('') // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 
@@ -113,7 +111,7 @@ describe('attribution tests', () => {
       const ipl = interactionHarvests[0].request.body[0]
 
       expect(ipl.trigger).toEqual('initialPageLoad')
-      expect(ipl.children.length).toEqual(0)
+      expect(ipl.children.length).toEqual(1)
       expect(ipl.isRouteChange).not.toBeTruthy()
       if (browserMatch(notIOS)) expect(ipl.oldURL).toEqual('') // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 
@@ -132,7 +130,7 @@ describe('attribution tests', () => {
       const [interactionHarvests] = await Promise.all([
         interactionsCapture.waitForResult({ totalCount: 2 }),
         await browser.url(
-          await browser.testHandle.assetURL('soft_navigations/soft-nav-interaction-on-click.html', config)
+          await browser.testHandle.assetURL('soft_navigations/soft-nav-interaction-on-click.html')
         ).then(() => browser.waitForAgentLoad()),
         // Perform click after the initial page load interaction is captured
         interactionsCapture.waitForResult({ totalCount: 1 })
@@ -167,7 +165,7 @@ describe('attribution tests', () => {
     it('captures error in xhr', async () => {
       await Promise.all([
         interactionsCapture.waitForResult({ totalCount: 1 }),
-        browser.url(await browser.testHandle.assetURL('soft_navigations/errors/captured-xhr.html', config))
+        browser.url(await browser.testHandle.assetURL('soft_navigations/errors/captured-xhr.html'))
           .then(() => browser.waitForAgentLoad())
       ])
 
@@ -196,7 +194,7 @@ describe('attribution tests', () => {
     it('captures same error in different interactions', async () => {
       await Promise.all([
         interactionsCapture.waitForResult({ totalCount: 1 }),
-        browser.url(await browser.testHandle.assetURL('soft_navigations/errors/captured-custom.html', config))
+        browser.url(await browser.testHandle.assetURL('soft_navigations/errors/captured-custom.html'))
           .then(() => browser.waitForAgentLoad())
       ])
 

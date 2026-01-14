@@ -13,7 +13,6 @@ import { Instrument as JSErrors } from '../../src/features/jserrors/instrument'
 import { Instrument as SessionTrace } from '../../src/features/session_trace/instrument'
 import { Instrument as SessionReplay } from '../../src/features/session_replay/instrument'
 import { Instrument as SoftNavigations } from '../../src/features/soft_navigations/instrument'
-import { Instrument as SPA } from '../../src/features/spa/instrument'
 import { Instrument as GenericEvents } from '../../src/features/generic_events/instrument'
 
 import { setupSetCustomAttributeAPI } from '../../src/loaders/api/setCustomAttribute'
@@ -110,10 +109,6 @@ describe('API tests', () => {
       ;['recordReplay', 'pauseReplay'].forEach(apiName => checkApiExists(apiName, true))
 
       await initializeFeature(SoftNavigations, agent)
-      ;['interaction'].forEach(apiName => checkApiExists(apiName, true))
-
-      delete agent.interaction
-      await initializeFeature(SPA, agent)
       ;['interaction'].forEach(apiName => checkApiExists(apiName, true))
 
       delete agent.register
@@ -257,21 +252,12 @@ describe('API tests', () => {
       })
     })
 
-    describe('setCurrentRouteName - SPA', () => {
-      test('should execute as expected', () => {
-        agent.setCurrentRouteName('test')
-
-        expectHandled('storeSupportabilityMetrics', ['API/setCurrentRouteName/called'])
-        expectHandled('api-routeName', [expect.toBeNumber(), 'test'])
-      })
-    })
-
     describe('setCurrentRouteName - SoftNav', () => {
       test('should execute as expected', () => {
         agent.setCurrentRouteName('test')
 
         expectHandled('storeSupportabilityMetrics', ['API/setCurrentRouteName/called'])
-        expectHandled('api-routeName', [expect.toBeNumber(), 'test'])
+        expectHandled('api-ixn-routeName', [expect.toBeNumber(), 'test'])
       })
     })
 
@@ -428,6 +414,86 @@ describe('API tests', () => {
 
         expect(agent.info.jsAttributes['enduser.id']).toEqual(undefined)
       })
+
+      test('should not reset session when setUserId is called with reset session true and current user is undefined', () => {
+        const originalSessionId = agent.runtime.session.state.value
+
+        expect(agent.info.jsAttributes['enduser.id']).toEqual(undefined)
+
+        agent.setUserId('user1', true) // simulate trying to reset session when setting userid for first time
+
+        expect(agent.runtime.session.state.value).toEqual(originalSessionId)
+        expect(agent.info.jsAttributes['enduser.id']).toEqual('user1')
+        expect(handleModule.handle).not.toHaveBeenCalledWith('storeSupportabilityMetrics', ['API/setUserId/resetSession/called'], undefined, 'metrics', expect.any(Object))
+      })
+
+      test('should not reset session when setUserId is called with reset session true and current user is null', () => {
+        agent.setUserId(null)
+        expect(agent.info.jsAttributes['enduser.id']).toEqual(undefined)
+
+        const originalSessionId = agent.runtime.session.state.value
+
+        agent.setUserId('user1', true)
+
+        expect(agent.runtime.session.state.value).toEqual(originalSessionId)
+        expect(agent.info.jsAttributes['enduser.id']).toEqual('user1')
+        expect(handleModule.handle).not.toHaveBeenCalledWith('storeSupportabilityMetrics', ['API/setUserId/resetSession/called'], undefined, 'metrics', expect.any(Object))
+      })
+
+      test('should not reset session when setUserId is called with userid and false for reset session argument', () => {
+        agent.setUserId('user1')
+
+        const originalSessionId = agent.runtime.session.state.value
+
+        const secondUserId = 'user2'
+        agent.setUserId(secondUserId, false) // simulate updating user id without resetting session
+
+        expect(agent.runtime.session.state.value).toEqual(originalSessionId)
+        expect(agent.info.jsAttributes['enduser.id']).toEqual('user2')
+        expect(handleModule.handle).not.toHaveBeenCalledWith('storeSupportabilityMetrics', ['API/setUserId/resetSession/called'], undefined, 'metrics', expect.any(Object))
+      })
+
+      test('should not reset session when setUserId is called with reset session true and current user is the same userid', () => {
+        const origUserId = 'user1'
+        agent.setUserId(origUserId)
+        expect(agent.info.jsAttributes['enduser.id']).toEqual(origUserId)
+
+        const originalSessionId = agent.runtime.session.state.value
+
+        agent.setUserId(origUserId, true)
+
+        expect(agent.runtime.session.state.value).toEqual(originalSessionId)
+        expect(agent.info.jsAttributes['enduser.id']).toEqual('user1')
+        expect(handleModule.handle).not.toHaveBeenCalledWith('storeSupportabilityMetrics', ['API/setUserId/resetSession/called'], undefined, 'metrics', expect.any(Object))
+      })
+
+      test('should reset session when setUserId is called with a diff userid and true for reset session argument', () => {
+        agent.setUserId('user1')
+
+        agent.runtime.session.state.value = faker.string.uuid()
+        const originalSessionId = agent.runtime.session.state.value
+
+        const secondUserId = 'user2'
+        agent.setUserId(secondUserId, true)
+
+        expect(agent.runtime.session.state.value).not.toEqual(originalSessionId)
+        expect(agent.info.jsAttributes['enduser.id']).toEqual('user2')
+        expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['API/setUserId/resetSession/called'], undefined, 'metrics', expect.any(Object))
+      })
+
+      test('should reset session when setUserId is called with userId = null, reset session true and currentId is not null', () => {
+        const origUserId = faker.string.uuid()
+        agent.setUserId(origUserId)
+
+        agent.runtime.session.state.value = faker.string.uuid()
+        const originalSessionId = agent.runtime.session.state.value
+
+        agent.setUserId(null, true) // simulate unsetting user id + resetting session
+
+        expect(agent.runtime.session.state.value).not.toEqual(originalSessionId)
+        expect(agent.info.jsAttributes['enduser.id']).toEqual(undefined)
+        expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['API/setUserId/resetSession/called'], undefined, 'metrics', expect.any(Object))
+      })
     })
 
     describe('setApplicationVersion', () => {
@@ -551,6 +617,12 @@ describe('API tests', () => {
         }).length).toEqual(count)
       }
 
+      beforeAll(async () => {
+        await initializeFeature(Logging, agent)
+        await initializeFeature(JSErrors, agent)
+        await initializeFeature(GenericEvents, agent)
+      })
+
       beforeEach(async () => {
         agent.init.api.allow_registered_children = true
         id = faker.string.uuid()
@@ -629,6 +701,132 @@ describe('API tests', () => {
         agent.init.api.duplicate_registered_data = false
       })
 
+      test('should add child.id and child.type to duplicated data - log', () => {
+        agent.init.api.duplicate_registered_data = true
+        const target = { id, name }
+        const myApi = agent.register(target)
+
+        const customAttrs = { foo: 'bar' }
+
+        myApi.log('test', { customAttributes: customAttrs })
+
+        // Find the handle calls for 'log'
+        const logCalls = handleModule.handle.mock.calls.filter(call => call[0] === 'log')
+        expect(logCalls.length).toBe(2)
+
+        // First call is the duplicate to container - should have child.id and child.type
+        const containerCall = logCalls[0]
+        expect(containerCall[1][2]).toEqual({ foo: 'bar', 'child.id': id, 'child.type': 'MFE' })
+
+        // Second call is to the registered entity target - should not have child.id or child.type
+        const targetCall = logCalls[1]
+        expect(targetCall[1][2]).toEqual({ foo: 'bar' })
+        expect(targetCall[1][2]).not.toHaveProperty('child.id')
+        expect(targetCall[1][2]).not.toHaveProperty('child.type')
+
+        agent.init.api.duplicate_registered_data = false
+      })
+
+      test('should add child.id and child.type to duplicated data - addPageAction', () => {
+        agent.init.api.duplicate_registered_data = true
+        const target = { id, name }
+        const myApi = agent.register(target)
+
+        const customAttrs = { foo: 'bar' }
+
+        myApi.addPageAction('test', customAttrs)
+
+        // Find the handle calls for 'api-addPageAction'
+        const pageActionCalls = handleModule.handle.mock.calls.filter(call => call[0] === 'api-addPageAction')
+        expect(pageActionCalls.length).toBe(2)
+
+        console.log('pageActionCalls:', pageActionCalls)
+
+        // First call is the duplicate to container - should have child.id and child.type
+        const containerCall = pageActionCalls[0]
+        expect(containerCall[1][2]).toEqual({ foo: 'bar', 'child.id': id, 'child.type': 'MFE' })
+
+        // Second call is to the registered entity target - should not have child.id or child.type
+        const targetCall = pageActionCalls[1]
+        expect(targetCall[1][2]).toEqual({ foo: 'bar' })
+        agent.init.api.duplicate_registered_data = false
+      })
+
+      test('should add child.id and child.type to duplicated data - noticeError', () => {
+        agent.init.api.duplicate_registered_data = true
+        const target = { id, name }
+        const myApi = agent.register(target)
+
+        const err = new Error('test')
+        const customAttrs = { foo: 'bar' }
+
+        myApi.noticeError(err, customAttrs)
+
+        // Find the handle calls for 'err'
+        const errorCalls = handleModule.handle.mock.calls.filter(call => call[0] === 'err')
+        expect(errorCalls.length).toBe(2)
+
+        // First call is the duplicate to container - should have child.id and child.type
+        const containerCall = errorCalls[0]
+        expect(containerCall[1][3]).toEqual({ foo: 'bar', 'child.id': id, 'child.type': 'MFE' })
+
+        // Second call is to the registered entity target - should not have child.id or child.type
+        const targetCall = errorCalls[1]
+        expect(targetCall[1][3]).toEqual({ foo: 'bar' })
+
+        agent.init.api.duplicate_registered_data = false
+      })
+
+      test('should add child.id and child.type to duplicated data - measure', () => {
+        agent.init.api.duplicate_registered_data = true
+        const target = { id, name }
+        const myApi = agent.register(target)
+
+        myApi.measure('test', { customAttributes: { foo: 'bar' } })
+
+        // Find the handle calls for 'api-measure'
+        const measureCalls = handleModule.handle.mock.calls.filter(call => call[0] === 'api-measure')
+        expect(measureCalls.length).toBe(2)
+
+        console.log('measureCalls:', measureCalls[0][1])
+
+        // First call is the duplicate to container - should have child.id and child.type in customAttributes
+        const containerCall = measureCalls[0]
+        expect(containerCall[1][0].customAttributes).toEqual({ foo: 'bar', 'child.id': id, 'child.type': 'MFE' })
+
+        // Second call is to the registered entity target - should not have child.id or child.type
+        const targetCall = measureCalls[1]
+        expect(targetCall[1][0].customAttributes).toEqual({ foo: 'bar' })
+
+        agent.init.api.duplicate_registered_data = false
+      })
+
+      test('should add child.id and child.type to duplicated data - recordCustomEvent', () => {
+        console.log('THE TEST IN QUESTION')
+        agent.init.api.duplicate_registered_data = true
+        const target = { id, name }
+        const myApi = agent.register(target)
+
+        const customAttrs = { foo: 'bar' }
+
+        myApi.recordCustomEvent('testEvent', customAttrs)
+
+        // Find the handle calls for 'api-recordCustomEvent'
+        const customEventCalls = handleModule.handle.mock.calls.filter(call => call[0] === 'api-recordCustomEvent')
+        expect(customEventCalls.length).toBe(2)
+
+        // First call is the duplicate to container - should have child.id and child.type
+        const containerCall = customEventCalls[0]
+        console.log('containerCall:', containerCall)
+        expect(containerCall[1][2]).toEqual({ foo: 'bar', 'child.id': id, 'child.type': 'MFE' })
+
+        // Second call is to the registered entity target - should not have child.id or child.type
+        const targetCall = customEventCalls[1]
+        expect(targetCall[1][2]).toEqual({ foo: 'bar' })
+
+        agent.init.api.duplicate_registered_data = false
+      })
+
       test('should duplicate data with config - matching entity guid', async () => {
         agent.init.api.duplicate_registered_data = [entityGuid]
         const target = { id, name }
@@ -689,6 +887,95 @@ describe('API tests', () => {
           expectHandle('storeSupportabilityMetrics', 'API/register/called')
           expectHandle('storeSupportabilityMetrics', 'API/register/log/called')
           expectHandle('log', 'test')
+        })
+      })
+
+      describe('tags', () => {
+        test('should add tags as source attributes', () => {
+          const target = { id, name, tags: ['tag1', 'tag2', 'tag3'] }
+          const myApi = agent.register(target)
+
+          expect(myApi.metadata.customAttributes).toEqual({
+            'source.tag1': true,
+            'source.tag2': true,
+            'source.tag3': true
+          })
+        })
+
+        test('should handle empty tags array', () => {
+          const target = { id, name, tags: [] }
+          const myApi = agent.register(target)
+
+          expect(myApi.metadata.customAttributes).toEqual({})
+        })
+
+        test('should handle missing tags property', () => {
+          const target = { id, name }
+          const myApi = agent.register(target)
+
+          expect(myApi.metadata.customAttributes).toEqual({})
+        })
+
+        test('should handle non-array tags by defaulting to empty array', () => {
+          const target = { id, name, tags: 'not-an-array' }
+          const myApi = agent.register(target)
+
+          expect(myApi.metadata.customAttributes).toEqual({})
+        })
+
+        test('should include tags in reported data', () => {
+          const target = { id, name, tags: ['frontend', 'checkout'] }
+          const myApi = agent.register(target)
+
+          const err = new Error('test')
+          myApi.noticeError(err)
+
+          const calls = handleModule.handle.mock.calls.filter(call => call[0] === 'err')
+          expect(calls.length).toBeGreaterThan(0)
+
+          const errorCall = calls.find(call => call[1]?.[0] === err)
+          expect(errorCall).toBeDefined()
+          expect(errorCall[1][3]).toMatchObject({
+            'source.frontend': true,
+            'source.checkout': true
+          })
+        })
+
+        test('should combine tags with other custom attributes', () => {
+          const target = { id, name, tags: ['module1'] }
+          const myApi = agent.register(target)
+
+          myApi.setCustomAttribute('foo', 'bar')
+          myApi.setApplicationVersion('1.0.0')
+
+          expect(myApi.metadata.customAttributes).toEqual({
+            'source.module1': true,
+            foo: 'bar',
+            'application.version': '1.0.0'
+          })
+        })
+
+        test('should exclude protected "name" and "id" keys from tags', () => {
+          const target = { id, name, tags: ['name', 'id', 'valid-tag', 'another-tag'] }
+          const myApi = agent.register(target)
+
+          // Should only include valid-tag and another-tag, not name or id
+          expect(myApi.metadata.customAttributes).toEqual({
+            'source.valid-tag': true,
+            'source.another-tag': true
+          })
+
+          // Verify source.name and source.id are not created from tags
+          expect(myApi.metadata.customAttributes['source.name']).toBeUndefined()
+          expect(myApi.metadata.customAttributes['source.id']).toBeUndefined()
+        })
+
+        test('should handle tags array with only protected keys', () => {
+          const target = { id, name, tags: ['name', 'id'] }
+          const myApi = agent.register(target)
+
+          // Should result in empty custom attributes since all tags are protected
+          expect(myApi.metadata.customAttributes).toEqual({})
         })
       })
     })

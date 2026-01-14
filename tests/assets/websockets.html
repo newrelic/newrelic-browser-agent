@@ -14,7 +14,7 @@
     <script>
       // preload socket
       window.bamServer = NREUM.info.beacon
-      window.preLoadSocket = new WebSocket(`ws://${bamServer}/websocket?loaded=pre`)
+      window.preLoadSocket = new WebSocket(`ws://${bamServer}/websocket/pre?param=shouldbedropped`)
 
       // Connection opened
       preLoadSocket.addEventListener("open", (event) => {
@@ -33,7 +33,7 @@
     <script>
       window.addEventListener('load', () => {
       // postload socket
-        window.postLoadSocket = new WebSocket(`ws://${bamServer}/websocket?loaded=post`)
+        window.postLoadSocket = new WebSocket(`ws://${bamServer}/websocket/post?param=shouldbedropped`)
 
         // Connection opened
         postLoadSocket.addEventListener("open", (event) => {

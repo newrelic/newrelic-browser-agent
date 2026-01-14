@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { stringify } from '../../../common/util/stringify'
@@ -14,7 +14,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
-import { getVersion2Attributes } from '../../../common/util/mfe'
+import { getVersion2Attributes } from '../../../common/util/v2'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME

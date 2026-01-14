@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { warn } from '../common/util/console'
@@ -84,9 +84,10 @@ export class ApiBase {
    * Adds a user-defined identifier string to subsequent events on the page.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/setuserid/}
    * @param {string|null} value A string identifier for the end-user, useful for tying all browser events to specific users. The value parameter does not have to be unique. If IDs should be unique, the caller is responsible for that validation. Passing a null value unsets any existing user ID.
+   * @param {boolean} [resetSession=false] Optional param. When true, resets the current session ONLY when changing user id from an existing value to another value or null. If the current user id is null when calling the API, the session cannot be reset.
    */
-  setUserId (value) {
-    return this.#callMethod(SET_USER_ID, value)
+  setUserId (value, resetSession = false) {
+    return this.#callMethod(SET_USER_ID, value, resetSession)
   }
 
   /**

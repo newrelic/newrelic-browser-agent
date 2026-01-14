@@ -391,6 +391,14 @@ module.exports = fp(async function (fastify, testServer) {
       socket.send(`hi - ${message} - We saw you on the server`)
     })
   })
+  fastify.get('/websocket/*', {
+    websocket: true
+  }, (socket, req) => {
+    socket.on('message', message => {
+      // message.toString() === 'hi from client'
+      socket.send(`hi - ${message} - We saw you on the server`)
+    })
+  })
 
   // WebSocket endpoint that echoes back all data types for testing
   fastify.get('/websocket-echo', {

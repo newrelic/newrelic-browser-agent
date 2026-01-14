@@ -98,19 +98,28 @@ if (['dev', 'staging'].includes(args.environment)) {
 
     const experimentScripts = []
     for (const experiment of experimentsList) {
+      // Fetch the config file
+      const experimentConfigUrl = `https://js-agent.newrelic.com/${experiment}config.js`
+      const configRequest = await fetchRetry(`${experimentConfigUrl}?_nocache=${uuidv4()}`, { retry: 3 })
+      
+      // Fetch the loader file
       const experimentLoader = `https://js-agent.newrelic.com/${experiment}nr-loader-experimental.min.js`
-      const experimentScriptRequest = await fetchRetry(`${experimentLoader}?_nocache=${uuidv4()}`, { retry: 3 })
+      const loaderRequest = await fetchRetry(`${experimentLoader}?_nocache=${uuidv4()}`, { retry: 3 })
 
-      if (!experimentScriptRequest.ok || typeof experimentScriptRequest.text !== 'function') {
+      if (!configRequest.ok || typeof configRequest.text !== 'function') {
+        console.warn(`Could not retrieve the ${experiment} config.js file.`)
+      } else if (!loaderRequest.ok || typeof loaderRequest.text !== 'function') {
         console.warn(`Could not retrieve the ${experiment} experimental loader script.`)
       } else {
-        experimentScripts.push((await experimentScriptRequest.text()).replace(/\/\/# sourceMappingURL=.*?\.map/, ''))
+        // Stitch config and loader together
+        const configContent = (await configRequest.text()).replace(/\/\/# sourceMappingURL=.*?\.map/, '')
+        const loaderContent = (await loaderRequest.text()).replace(/\/\/# sourceMappingURL=.*?\.map/, '')
+        experimentScripts.push(configContent)
+        experimentsScripts.push(loaderContent)
       }
     }
 
-    if (experimentScripts.length === 0) {
-      console.log(`No experiments found for ${args.environment} environment.`)
-    }
+    console.log(`Found ${experimentScripts.length} experiments for ${args.environment} environment.`)
 
     const experimentsScriptOutput = path.join(outputDir, `${args.environment}-experiments.js`)
     const experimentsScriptTemplate = Handlebars.compile(await fs.promises.readFile(path.resolve(__dirname, './templates/experiments.js'), 'utf-8'))

@@ -44,6 +44,21 @@ jobs:
         run: echo "results=$(echo '${{ github.ref }}' | sed 's/refs\/heads\///g' | sed 's/[^[:alnum:].-]/-/g')" >> $GITHUB_OUTPUT
       - name: Build experiment
         run: npm run cdn:build:experiment -- --env branchName='${{ inputs.nr_environment }}/${{ steps.clean-branch-name.outputs.results }}'
+      - name: Create experiment config file
+        run: |
+          cat > $GITHUB_WORKSPACE/build/config.js << 'EOF'
+          // Config for this experiment
+          window.NREUM.loader_config.agentID = '${{ inputs.nr_environment == 'dev' && secrets.INTERNAL_AB_DEV_APPLICATION_ID || secrets.INTERNAL_AB_STAGING_APPLICATION_ID }}'
+          window.NREUM.loader_config.applicationID = '${{ inputs.nr_environment == 'dev' && secrets.INTERNAL_AB_DEV_APPLICATION_ID || secrets.INTERNAL_AB_STAGING_APPLICATION_ID }}'
+          window.NREUM.loader_config.licenseKey = '${{ secrets.INTERNAL_AB_LICENSE_KEY }}'
+          window.NREUM.info.applicationID = '${{ inputs.nr_environment == 'dev' && secrets.INTERNAL_AB_DEV_APPLICATION_ID || secrets.INTERNAL_AB_STAGING_APPLICATION_ID }}'
+          window.NREUM.info.licenseKey = '${{ secrets.INTERNAL_AB_LICENSE_KEY }}'
+          window.NREUM.init.proxy = {} // Proxy won't work for experiments
+          window.NREUM.init.session_replay.enabled = true
+          window.NREUM.init.session_trace.enabled = true
+          window.NREUM.init.feature_flags = ['ajax_metrics_deny_list']
+          window.NREUM.init.user_actions = {elementAttributes: ['id', 'className', 'tagName', 'type', 'ariaLabel', 'alt', 'title']}
+          EOF
       - name: Upload experiment
         id: s3-upload
         uses: ./.github/actions/s3-upload

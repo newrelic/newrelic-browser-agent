@@ -433,7 +433,8 @@ describe('newrelic api', () => {
       })
     })
 
-    it('should exclude protected "name" and "id" keys from tags', async () => {
+    it('should exclude protected keys from tags', async () => {
+      // excluded keys right now are [name, id, type]
       const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
         { test: testMFEErrorsRequest }
       ])

@@ -355,7 +355,7 @@ describe('registered-entity', () => {
       window.agent2 = new RegisteredEntity({
         id: 2,
         name: 'backend-agent',
-        tags: { module: 'api', type: 'graphql' }
+        tags: { module: 'api', apiType: 'graphql' }
       })
 
       window.agent1.noticeError('error1')
@@ -374,9 +374,11 @@ describe('registered-entity', () => {
       expect(error1.custom['source.module']).toEqual('checkout')
       expect(error1.custom['source.feature']).toEqual('payment')
       expect(error1.custom['source.name']).toEqual('frontend-agent')
+      expect(error1.custom['source.type']).toEqual('MFE') // type comes from entity type, not tags
 
       expect(error2.custom['source.module']).toEqual('api')
-      expect(error2.custom['source.type']).toEqual('graphql')
+      expect(error2.custom['source.apiType']).toEqual('graphql')
+      expect(error2.custom['source.type']).toEqual('MFE') // type comes from entity type, not tags
       expect(error2.custom['source.name']).toEqual('backend-agent')
     })
   })

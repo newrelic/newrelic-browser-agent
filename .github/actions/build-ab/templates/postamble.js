@@ -154,28 +154,32 @@ try {
       const MfeToMfeParent = newrelic.initializedAgents[agentIdentifier].register({
         id: 'mfe-to-mfe-parent',
         name: 'MFE_TEST_PARENT',
+        tags: ['Nested MFE Parent']
       })
 
       const MfeToMfeChild = MfeToMfeParent.register({
         id: 'mfe-to-mfe-child',
         name: 'MFE_TEST_CHILD',
+        tags: ['Nested MFE Child', 'Nested MFE Parent']
       })
 
       const MfeToMfeGrandchild = MfeToMfeChild.register({
         id: 'mfe-to-mfe-grandchild',
         name: 'MFE_TEST_GRANDCHILD',
+        tags: ['Nested MFE Child']
       })
 
       const jseOnlyMfe = newrelic.initializedAgents[agentIdentifier].register({
         id: 'jse-only-mfe',
         name: 'JSE_ONLY_MFE',
+        tags: ['Errors Only MFE']
       })
 
       jseOnlyMfe.noticeError(new Error('NRBA: This is a test error from JSE_ONLY_MFE'));
 
 
       // Register the MFE API
-      const mfeApi = newrelic.initializedAgents[agentIdentifier].register({ id: randomId, name: mfeName });
+      const mfeApi = newrelic.initializedAgents[agentIdentifier].register({ id: randomId, name: mfeName, tags: ['Standalone MFE'] });
       
       // Generate a random sentence for logging
       const randomSentences = [

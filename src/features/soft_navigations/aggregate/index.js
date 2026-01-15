@@ -4,6 +4,7 @@
  */
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
+import { webdriverDetected } from '../../../common/util/webdriver-detection'
 import { loadTime } from '../../../common/vitals/load-time'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
@@ -25,6 +26,7 @@ export class Aggregate extends AggregateBase {
     this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentRef)
     this.initialPageLoadInteraction.onDone.push(() => { // this ensures the .end() method also works with iPL
       if (agentRef.runtime.session?.isNew) this.initialPageLoadInteraction.customAttributes.isFirstOfSession = true // mark the hard page load as first of its session
+      this.initialPageLoadInteraction.customAttributes.webdriverDetected = webdriverDetected
       this.initialPageLoadInteraction.forceSave = true // unless forcibly ignored, iPL always finish by default
       const ixn = this.initialPageLoadInteraction
       this.events.add(ixn) // add the iPL ixn to the buffer for harvest

@@ -20,6 +20,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { send } from '../../../common/harvest/harvester'
 import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { getSubmitMethod } from '../../../common/util/submit-data'
+import { webdriverDetected } from '../../../common/util/webdriver-detection'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -87,10 +88,7 @@ export class Aggregate extends AggregateBase {
 
     if (this.agentRef.runtime.session) queryParameters.fsh = Number(this.agentRef.runtime.session.isNew) // "first session harvest" aka RUM request or PageView event of a session
 
-    let body
-    if (typeof customAttributes === 'object' && Object.keys(customAttributes).length > 0) {
-      body = applyFnToProps({ ja: customAttributes }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
-    }
+    let body = applyFnToProps({ ja: { ...customAttributes, webdriverDetected } }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
 
     if (globalScope.performance) {
       if (supportsNavTimingL2()) { // Navigation Timing level 2 API that replaced PerformanceTiming & PerformanceNavigation

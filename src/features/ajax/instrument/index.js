@@ -14,7 +14,7 @@ import { parseUrl } from '../../../common/url/parse-url'
 import { DT } from './distributed-tracing'
 import { responseSizeFromXhr } from './response-size'
 import { InstrumentBase } from '../../utils/instrument-base'
-import { FEATURE_NAME } from '../constants'
+import { CAPTURE_PAYLOAD_SETTINGS, FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC } from '../../metrics/constants'
 import { now } from '../../../common/timing/now'
@@ -27,6 +27,7 @@ var handlersLen = handlers.length
 var origRequest = gosNREUMOriginals().o.REQ
 var origXHR = gosNREUMOriginals().o.XHR
 const NR_CAT_HEADER = 'X-NewRelic-App-Data'
+const INTERNAL_ERROR = 'internal-error'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -62,16 +63,18 @@ export class Instrument extends InstrumentBase {
     wrapFetch(this.ee)
     wrapXhr(this.ee)
     subscribeToEvents(agentRef, this.ee, this.handler, this.dt)
-
     this.importAggregator(agentRef, () => import(/* webpackChunkName: "ajax-aggregate" */ '../aggregate/index.js'))
   }
 }
 
 function subscribeToEvents (agentRef, ee, handler, dt) {
+  const shouldInterceptPayloads = [CAPTURE_PAYLOAD_SETTINGS.ALL, CAPTURE_PAYLOAD_SETTINGS.FAILURES].includes(agentRef.init.ajax?.capture_payloads)
+
   ee.on('new-xhr', onNewXhr)
   ee.on('open-xhr-start', onOpenXhrStart)
   ee.on('open-xhr-end', onOpenXhrEnd)
   ee.on('send-xhr-start', onSendXhrStart)
+  ee.on('setRequestHeader-xhr-start', onSetRequestHeader)
   ee.on('xhr-cb-time', onXhrCbTime)
   ee.on('xhr-load-added', onXhrLoadAdded)
   ee.on('xhr-load-removed', onXhrLoadRemoved)
@@ -147,6 +150,14 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     }
   }
 
+  function onSetRequestHeader (args, xhr) {
+    // args[0] = header name, args[1] = header value
+    if (shouldInterceptPayloads && args.length >= 2) {
+      this.requestHeaders ??= {}
+      this.requestHeaders[args[0].toLowerCase()] = args[1]
+    }
+  }
+
   function onSendXhrStart (args, xhr) {
     var metrics = this.metrics
     var data = args[0]
@@ -159,7 +170,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
 
     this.startTime = now()
 
-    this.body = data
+    this.requestBody = data
 
     this.listener = function (evt) {
       try {
@@ -169,7 +180,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
         if (evt.type !== 'load' || ((context.called === context.totalCbs) && (context.onloadCalled || typeof (xhr.onload) !== 'function') && typeof context.end === 'function')) context.end(xhr)
       } catch (e) {
         try {
-          ee.emit('internal-error', [e])
+          ee.emit(INTERNAL_ERROR, [e])
         } catch (err) {
           // do nothing
         }
@@ -324,9 +335,29 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     var method = ('' + ((target && target instanceof origRequest && target.method) ||
       opts.method || 'GET')).toUpperCase()
     this.params.method = method
-    this.body = opts.body
 
     this.txSize = dataSize(opts.body) || 0
+
+    // Capture request headers
+    try {
+      var headers = opts.headers || (target && target.headers)
+      if (shouldInterceptPayloads && headers) {
+        this.requestHeaders ??= {}
+        if (headers instanceof Headers) {
+          headers.forEach(function (value, key) {
+            this.requestHeaders[key.toLowerCase()] = value
+          }.bind(this))
+        } else if (typeof headers === 'object') {
+          for (var key in headers) {
+            this.requestHeaders[key.toLowerCase()] = headers[key]
+          }
+        }
+      }
+    } catch (e) {
+      // Silently fail if we can't access headers
+    }
+
+    this.requestBody = opts.body
   }
 
   // we capture failed call as status 0, the actual error is ignored
@@ -338,19 +369,43 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
 
     this.params.status = res ? res.status : 0
 
-    // convert rxSize to a number
-    let responseSize
-    if (typeof this.rxSize === 'string' && this.rxSize.length > 0) {
-      responseSize = +this.rxSize
+    const finishAndReport = () => {
+      // convert rxSize to a number
+      let responseSize
+      if (typeof this.rxSize === 'string' && this.rxSize.length > 0) {
+        responseSize = +this.rxSize
+      }
+
+      const metrics = {
+        txSize: this.txSize,
+        rxSize: responseSize,
+        duration: now() - this.startTime
+      }
+
+      handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax)
     }
 
-    const metrics = {
-      txSize: this.txSize,
-      rxSize: responseSize,
-      duration: now() - this.startTime
+    /** Since accessing fetch bodies is an async process, these are
+     * reasonable conditions to check to not do needless extra work */
+    if (!res || !shouldInterceptPayloads) {
+      finishAndReport()
+      return
     }
 
-    handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax)
+    // Clone the response to read the body without consuming the original
+    res.clone().text().then((text) => {
+      this.responseBody = text
+      if (res?.headers) {
+        this.responseHeaders = {}
+        res.headers.forEach(function (value, key) {
+          this.responseHeaders[key.toLowerCase()] = value
+        }.bind(this))
+      }
+    }).catch((err) => {
+      ee.emit(INTERNAL_ERROR, [err])
+    }).finally(() => {
+      finishAndReport()
+    })
   }
 
   // Create report for XHR request that has finished
@@ -376,6 +431,18 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
 
     // Always send cbTime, even if no noticeable time was taken.
     metrics.cbTime = this.cbTime
+
+    try {
+      this.responseBody = xhr.responseText
+    } catch (e) {
+      this.responseBody = xhr.response
+    }
+
+    try {
+      this.responseHeaders = parseResponseHeaders(xhr.getAllResponseHeaders())
+    } catch (err) {
+      ee.emit(INTERNAL_ERROR, [err])
+    }
 
     handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'], this, FEATURE_NAMES.ajax)
   }
@@ -409,6 +476,22 @@ function addUrl (ctx, url) {
   params.pathname = parsed.pathname
   ctx.parsedOrigin = parsed
   ctx.sameOrigin = parsed.sameOrigin
+}
+
+function parseResponseHeaders (headerStr) {
+  const headers = {}
+  if (!headerStr) return headers
+
+  headerStr.split('\r\n').forEach(function (line) {
+    const separatorIndex = line.indexOf(': ')
+    if (separatorIndex > 0) {
+      const name = line.substring(0, separatorIndex)
+      const value = line.substring(separatorIndex + 2)
+      headers[name.toLowerCase()] = value
+    }
+  })
+
+  return headers
 }
 
 export const Ajax = Instrument

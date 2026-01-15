@@ -32,7 +32,7 @@ describe.withBrowsersMatching(onlyIOS)('ios webview', () => {
       $('-ios predicate string: type == "XCUIElementTypeButton" AND name == "Return"').click()
     ])
 
-    expect(rumHarvests[0].request.body).toEqual('')
+    expect(rumHarvests[0].request.body).toEqual({ ja: { webdriverDetected: false } })
     expect(rumHarvests[0].request.query).toEqual(expect.objectContaining({
       ref: url.slice(0, url.indexOf('?')),
       t: 'Unnamed Transaction'

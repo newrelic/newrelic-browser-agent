@@ -458,13 +458,13 @@ EventBuffer/soft_navigations/Dropped/Bytes
 <!-- Harvester retried a harvest -->
 * 'Harvester/Retry/Attempted/<feature_name>'
 <!-- Retry failed codes (dynamic) -->
-* 'Harvester/Retry/Failed/<code>'
+* 'Harvester/Retry/Failed/\<code>'
 <!-- Retry succeeded codes (dynamic) -->
-* 'Harvester/Retry/Succeeded/<code>'
+* 'Harvester/Retry/Succeeded/\<code>'
   
 ### Browser Connect Response Metrics
 <!--- HTTP status code of failed browser connect response --->
-* 'Browser/Supportability/BCS/Error/<code>'
+* 'Browser/Supportability/BCS/Error/\<code>'
 <!--- Total dropped payload size of failed browser connect response --->
 * Browser/Supportability/BCS/Error/Dropped/Bytes
 <!--- Response time of failed browser connect response --->

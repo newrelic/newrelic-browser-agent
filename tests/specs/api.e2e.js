@@ -5,6 +5,9 @@ import { LOGGING_MODE } from '../../src/features/logging/constants'
 import { lambdaTestWebdriverFalse } from '../../tools/browser-matcher/common-matchers.mjs'
 
 describe('newrelic api', () => {
+  beforeEach(async () => {
+    await browser.enableLogging()
+  })
   afterEach(async () => {
     await browser.destroyAgentSession()
   })

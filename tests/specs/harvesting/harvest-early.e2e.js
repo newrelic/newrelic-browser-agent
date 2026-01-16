@@ -17,6 +17,8 @@ describe('should harvest early', () => {
       { test: testMetricsRequest },
       { test: testBlobTraceRequest }
     ])
+
+    await browser.enableLogging()
   })
 
   it('should harvest early when exceeding ideal size', async () => {

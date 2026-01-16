@@ -92,8 +92,8 @@ describe('class setup', () => {
 })
 
 describe('payloads', () => {
-  beforeEach(() => {
-    mockLoggingRumResponse(LOGGING_MODE.INFO, LOGGING_MODE.INFO)
+  beforeEach(async () => {
+    await mockLoggingRumResponse(LOGGING_MODE.INFO, LOGGING_MODE.INFO)
   })
 
   test('fills buffered logs with event emitter messages and prepares matching payload', async () => {

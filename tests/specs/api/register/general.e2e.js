@@ -1,6 +1,6 @@
 import { testMFEErrorsRequest } from '../../../../tools/testing-server/utils/expect-tests'
 
-describe('Registered Entity - General Behaviors', () => {
+describe('Register API - General Behaviors', () => {
   beforeEach(async () => {
     await browser.enableLogging()
   })

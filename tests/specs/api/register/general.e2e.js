@@ -164,7 +164,7 @@ describe('Register API - General Behaviors', () => {
       expect(error1.custom['source.name']).toEqual('frontend-agent')
 
       expect(error2.custom['source.module']).toEqual('api')
-      expect(error2.custom['source.type']).toEqual('graphql')
+      expect(error2.custom['source.type']).toEqual('MFE') // type is a protected key, should not come from tags
       expect(error2.custom['source.name']).toEqual('backend-agent')
     })
   })

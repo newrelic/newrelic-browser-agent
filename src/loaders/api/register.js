@@ -21,6 +21,8 @@ import { recordCustomEvent } from './recordCustomEvent'
  * @typedef {import('./register-api-types').RegisterAPI} RegisterAPI
  */
 
+const PROTECTED_KEYS = ['name', 'id', 'type']
+
 /**
  * @experimental
  * IMPORTANT: This feature is being developed for use internally and is not in a public-facing production-ready state.
@@ -48,10 +50,17 @@ function register (agentRef, target, parent) {
   target.licenseKey ||= agentRef.info.licenseKey // will inherit the license key from the container agent if not provided for brevity. A future state may dictate that we need different license keys to do different things.
   target.blocked = false
   target.parent = parent || {}
-  if (!Array.isArray(target.tags)) target.tags = []
+  if (typeof target.tags !== 'object' || target.tags === null || Array.isArray(target.tags)) target.tags = {}
 
   const attrs = {}
-  target.tags.forEach(tag => { if (tag !== 'name' && tag !== 'id') attrs[`source.${tag}`] = true })
+
+  // Process tags object and add to attrs, excluding protected keys
+  Object.entries(target.tags).forEach(([key, value]) => {
+    if (!PROTECTED_KEYS.includes(key)) {
+      attrs[`source.${key}`] = value
+    }
+  })
+
   target.isolated ??= true
 
   /** @type {Function} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */

@@ -1062,14 +1062,18 @@ describe('API tests', () => {
       })
 
       describe('timing tracking', () => {
+        beforeEach(() => {
+          jest.useFakeTimers()
+        })
+        afterEach(() => {
+          jest.useRealTimers()
+        })
+
         test('should record MicroFrontEndTiming event on deregister', () => {
           const myApi = agent.register({ id, name })
 
           // Simulate some work
-          const start = Date.now()
-          while (Date.now() - start < 10) {
-            // busy wait
-          }
+          jest.advanceTimersByTime(10)
 
           myApi.deregister()
 
@@ -1124,16 +1128,11 @@ describe('API tests', () => {
         })
 
         test('should calculate timeAlive correctly', () => {
-          const beforeRegister = now()
           const myApi = agent.register({ id, name })
 
           // Do some work
-          const start = Date.now()
-          while (Date.now() - start < 20) {
-            // busy wait
-          }
+          jest.advanceTimersByTime(20)
 
-          const beforeDeregister = now()
           myApi.deregister()
 
           const customEventCall = handleModule.handle.mock.calls.find(call =>
@@ -1144,18 +1143,18 @@ describe('API tests', () => {
 
           // timeAlive should be positive
           expect(attrs.timeAlive).toBeGreaterThan(0)
-          // timeAlive should be approximately the time between register and deregister
-          expect(attrs.timeAlive).toBeLessThanOrEqual(beforeDeregister - beforeRegister + 10)
+          // timeAlive should be exactly 20ms with fake timers
+          expect(attrs.timeAlive).toBe(20)
         })
 
         test('should handle nested MFE timings independently', () => {
           const parent = agent.register({ id: 'parent-id', name: 'parent-mfe' })
 
           // Wait a bit before creating child
-          wait(5)
+          jest.advanceTimersByTime(5)
 
           const child = agent.register({ id: 'child-id', name: 'child-mfe' }, parent)
-          wait(5)
+          jest.advanceTimersByTime(5)
 
           child.deregister()
           parent.deregister()
@@ -1168,16 +1167,19 @@ describe('API tests', () => {
           expect(timingCalls.length).toBe(2)
 
           // Each should have positive timeAlive
-          const aliveTimes = [
-            5, // child wait before deregister
-            10 // parent total wait before deregister
-          ]
-          timingCalls.forEach(call => {
-            const attrs = call[1][2]
-            expect(attrs.timeAlive).toBeGreaterThan(0)
-            expect(attrs.duration).toBeGreaterThan(0)
-            expect(attrs.timeAlive - aliveTimes.shift()).toBeLessThanOrEqual(0) // rounding error allowance
-          })
+          // First call is for child (deregistered first), second is for parent
+          const childCall = timingCalls[0]
+          const parentCall = timingCalls[1]
+
+          const childAttrs = childCall[1][2]
+          expect(childAttrs.timeAlive).toBeGreaterThan(0)
+          expect(childAttrs.duration).toBeGreaterThan(0)
+          expect(childAttrs.timeAlive).toBe(5) // child was alive for 5ms
+
+          const parentAttrs = parentCall[1][2]
+          expect(parentAttrs.timeAlive).toBeGreaterThan(0)
+          expect(parentAttrs.duration).toBeGreaterThan(0)
+          expect(parentAttrs.timeAlive).toBe(10) // parent was alive for 10ms
         })
 
         test('should report all timing metrics with non-negative values', () => {
@@ -1767,11 +1769,4 @@ function expectMessage (calls, tag, args, shouldBeEmitted = true) {
   if (!match) return
   match.checked = true
   if (args) expect(match[1]).toEqual(args)
-}
-
-function wait (ms) {
-  const start = Date.now()
-  while (Date.now() - start < ms) {
-    // busy wait
-  }
 }

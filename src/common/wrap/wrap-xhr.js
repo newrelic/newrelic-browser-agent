@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -80,10 +80,14 @@ export function wrapXhr (sharedEE) {
   /** detect the new relic entity guid header, if found - pass it on to be handled and delete
    * from the actual xhr before sending so as not to interfere with the request/service */
   XHR.prototype.setRequestHeader = function setRequestHeader (header, value) {
-    if (header.toLowerCase() === NEW_RELIC_MFE_ID_HEADER) {
-      const context = ee.context(this)
-      context.mfeId ??= value // only supports the first header found
-      return // do not allow the newrelic mfe id header to be assigned to the request, just use it for context later
+    try {
+      if (header.toLowerCase() === NEW_RELIC_MFE_ID_HEADER) {
+        const context = ee.context(this)
+        context.mfeId ??= value // only supports the first header found
+        return // do not allow the newrelic mfe id header to be assigned to the request, just use it for context later
+      }
+    } catch (e) {
+      ee.emit('internal-error', [e])
     }
     return originalSetRequestHeader.apply(this, arguments)
   }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -71,7 +71,7 @@ export function drain (agentIdentifier = '', featureName = 'feature', force = fa
 
 /** Checks all items in the registry to see if they have been "staged".  If ALL items are staged, it will drain all registry items (drainGroup).  It not, nothing will happen */
 function checkCanDrainAll (agentIdentifier) {
-// Only when the event-groups for all features are ready to drain (staged) do we execute the drain. This has the effect
+  // Only when the event-groups for all features are ready to drain (staged) do we execute the drain. This has the effect
   // that the last feature to call drain triggers drain for all features.
   const items = Array.from(registry[agentIdentifier])
   if (items.every(([key, values]) => values.staged)) {
@@ -115,7 +115,7 @@ function drainGroup (agentIdentifier, group, activateGroup = true) {
           // registration *should* be an array of: [targetEE, eventHandler]
           // certain browser polyfills of .values and .entries pass the prototype methods into the callback,
           // which breaks this assumption and throws errors. So we make sure here that we only call .on() if its an actual NR EE
-          if (registration[0]?.on && registration[0]?.context() instanceof EventContext) registration[0].on(eventType, registration[1])
+          if (registration[0]?.on && registration[0].context() instanceof EventContext && !registration[0].listeners(eventType).includes(registration[1])) registration[0].on(eventType, registration[1])
         })
       })
     }

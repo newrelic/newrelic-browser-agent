@@ -10,13 +10,27 @@ const entityOptsWithString: RegisterAPIConstructor = {
   id: 'app-123', name: 'test-entity'
 }
 
+// Test with object tags
+const entityOptsWithObjectTags: RegisterAPIConstructor = {
+  id: 'app-789', name: 'test-entity', tags: { environment: 'production', version: '1.0.0' }
+}
+
+// Test with complex tags
+const entityOptsWithComplexTags: RegisterAPIConstructor = {
+  id: 'app-101', name: 'test-entity', tags: { environment: 'staging', critical: true, count: 42 }
+}
+
 // Create RegisteredEntity instances
 const registeredEntityWithNumber = new RegisteredEntity(entityOptsWithNumber)
 const registeredEntityWithString = new RegisteredEntity(entityOptsWithString)
+const registeredEntityWithObjectTags = new RegisteredEntity(entityOptsWithObjectTags)
+const registeredEntityWithComplexTags = new RegisteredEntity(entityOptsWithComplexTags)
 
 // fits the definition of both the RegisterAPI and RegisteredEntity because RegisteredEntity object assigns from RegisterAPI here
 expectType<RegisteredEntity>(registeredEntityWithNumber)
 expectType<RegisteredEntity>(registeredEntityWithString)
+expectType<RegisteredEntity>(registeredEntityWithObjectTags)
+expectType<RegisteredEntity>(registeredEntityWithComplexTags)
 
 // Test all registered entity methods for each variant
 ;[registeredEntityWithNumber, registeredEntityWithString].forEach((registeredEntity) => {
@@ -31,6 +45,10 @@ expectType<RegisteredEntity>(registeredEntityWithString)
   expectType<RegisterAPIMetadata>(registeredEntity.metadata)
 })
 
+// Test metadata.target.tags property exists and has correct type
+expectType<{ [x: string]: any; } | undefined>(registeredEntityWithObjectTags.metadata.target.tags)
+expectType<{ [x: string]: any; } | undefined>(registeredEntityWithComplexTags.metadata.target.tags)
+
 // Test error cases for constructor with wrong parameters
 expectError(new RegisteredEntity({})) // Missing required id and name
 expectError(new RegisteredEntity({ id: 123 })) // Missing required name
@@ -38,3 +56,9 @@ expectError(new RegisteredEntity({ name: 'test' })) // Missing required id
 expectError(new RegisteredEntity({ id: true, name: 'test' })) // Wrong id type (boolean)
 expectError(new RegisteredEntity({ id: 123, name: 456 })) // Wrong name type (number)
 expectError(new RegisteredEntity({ id: 123, name: 'test', extraProp: 'invalid' })) // Extra properties
+
+// Test error cases for tags with wrong types
+expectError<RegisterAPIConstructor>({ id: 123, name: 'test', tags: 'not-an-object' }) // tags must be an object
+expectError<RegisterAPIConstructor>({ id: 123, name: 'test', tags: 123 }) // tags must be an object
+// Note: Arrays cannot be prevented at compile-time with TypeScript index signatures ({ [key: string]: any })
+// because arrays are objects with numeric keys. Runtime validation in register.js handles this case.

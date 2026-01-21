@@ -897,18 +897,18 @@ describe('API tests', () => {
 
       describe('tags', () => {
         test('should add tags as source attributes', () => {
-          const target = { id, name, tags: ['tag1', 'tag2', 'tag3'] }
+          const target = { id, name, tags: { tag1: 'value1', tag2: 'value2', tag3: true } }
           const myApi = agent.register(target)
 
           expect(myApi.metadata.customAttributes).toEqual({
-            'source.tag1': true,
-            'source.tag2': true,
+            'source.tag1': 'value1',
+            'source.tag2': 'value2',
             'source.tag3': true
           })
         })
 
-        test('should handle empty tags array', () => {
-          const target = { id, name, tags: [] }
+        test('should handle empty tags object', () => {
+          const target = { id, name, tags: {} }
           const myApi = agent.register(target)
 
           expect(myApi.metadata.customAttributes).toEqual({})
@@ -921,15 +921,22 @@ describe('API tests', () => {
           expect(myApi.metadata.customAttributes).toEqual({})
         })
 
-        test('should handle non-array tags by defaulting to empty array', () => {
-          const target = { id, name, tags: 'not-an-array' }
+        test('should handle non-object tags by defaulting to empty object', () => {
+          const target = { id, name, tags: 'not-an-object' }
+          const myApi = agent.register(target)
+
+          expect(myApi.metadata.customAttributes).toEqual({})
+        })
+
+        test('should handle array tags by defaulting to empty object', () => {
+          const target = { id, name, tags: ['array', 'not', 'allowed'] }
           const myApi = agent.register(target)
 
           expect(myApi.metadata.customAttributes).toEqual({})
         })
 
         test('should include tags in reported data', () => {
-          const target = { id, name, tags: ['frontend', 'checkout'] }
+          const target = { id, name, tags: { frontend: true, checkout: true } }
           const myApi = agent.register(target)
 
           const err = new Error('test')
@@ -947,40 +954,110 @@ describe('API tests', () => {
         })
 
         test('should combine tags with other custom attributes', () => {
-          const target = { id, name, tags: ['module1'] }
+          const target = { id, name, tags: { module1: 'shopping-cart' } }
           const myApi = agent.register(target)
 
           myApi.setCustomAttribute('foo', 'bar')
           myApi.setApplicationVersion('1.0.0')
 
           expect(myApi.metadata.customAttributes).toEqual({
-            'source.module1': true,
+            'source.module1': 'shopping-cart',
             foo: 'bar',
             'application.version': '1.0.0'
           })
         })
 
         test('should exclude protected "name" and "id" keys from tags', () => {
-          const target = { id, name, tags: ['name', 'id', 'valid-tag', 'another-tag'] }
+          const target = { id, name, tags: { name: 'should-not-appear', id: 'also-not', type: 'ignored-too', validTag: 'yes', anotherTag: true } }
           const myApi = agent.register(target)
 
-          // Should only include valid-tag and another-tag, not name or id
+          // Should only include validTag and anotherTag, not name or id or type
           expect(myApi.metadata.customAttributes).toEqual({
-            'source.valid-tag': true,
-            'source.another-tag': true
+            'source.validTag': 'yes',
+            'source.anotherTag': true
           })
 
-          // Verify source.name and source.id are not created from tags
+          // Verify source.name, source.id, and source.type are not created from tags
           expect(myApi.metadata.customAttributes['source.name']).toBeUndefined()
           expect(myApi.metadata.customAttributes['source.id']).toBeUndefined()
+          expect(myApi.metadata.customAttributes['source.type']).toBeUndefined()
         })
 
-        test('should handle tags array with only protected keys', () => {
-          const target = { id, name, tags: ['name', 'id'] }
+        test('should handle tags object with only protected keys', () => {
+          const target = { id, name, tags: { name: 'ignored', id: 'also-ignored', type: 'ignored-too' } }
           const myApi = agent.register(target)
 
           // Should result in empty custom attributes since all tags are protected
           expect(myApi.metadata.customAttributes).toEqual({})
+        })
+
+        test('should handle tags with various value types', () => {
+          const target = {
+            id,
+            name,
+            tags: {
+              environment: 'production',
+              version: '2.1.0',
+              critical: true,
+              count: 42,
+              nullable: null
+            }
+          }
+          const myApi = agent.register(target)
+
+          expect(myApi.metadata.customAttributes).toEqual({
+            'source.environment': 'production',
+            'source.version': '2.1.0',
+            'source.critical': true,
+            'source.count': 42,
+            'source.nullable': null
+          })
+        })
+
+        test('should handle tags with complex object structure', () => {
+          const target = {
+            id,
+            name,
+            tags: {
+              team: 'platform',
+              region: 'us-west-2',
+              staging: false
+            }
+          }
+          const myApi = agent.register(target)
+
+          expect(myApi.metadata.customAttributes).toEqual({
+            'source.team': 'platform',
+            'source.region': 'us-west-2',
+            'source.staging': false
+          })
+        })
+
+        test('should include tags with multiple value types in reported data', () => {
+          const target = {
+            id,
+            name,
+            tags: {
+              frontend: true,
+              environment: 'production',
+              version: '1.0.0'
+            }
+          }
+          const myApi = agent.register(target)
+
+          const err = new Error('test')
+          myApi.noticeError(err)
+
+          const calls = handleModule.handle.mock.calls.filter(call => call[0] === 'err')
+          expect(calls.length).toBeGreaterThan(0)
+
+          const errorCall = calls.find(call => call[1]?.[0] === err)
+          expect(errorCall).toBeDefined()
+          expect(errorCall[1][3]).toMatchObject({
+            'source.frontend': true,
+            'source.environment': 'production',
+            'source.version': '1.0.0'
+          })
         })
       })
 

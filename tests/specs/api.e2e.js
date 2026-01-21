@@ -5,6 +5,9 @@ import { LOGGING_MODE } from '../../src/features/logging/constants'
 import { lambdaTestWebdriverFalse } from '../../tools/browser-matcher/common-matchers.mjs'
 
 describe('newrelic api', () => {
+  beforeEach(async () => {
+    await browser.enableLogging()
+  })
   afterEach(async () => {
     await browser.destroyAgentSession()
   })
@@ -337,13 +340,13 @@ describe('newrelic api', () => {
         window.agent1 = newrelic.register({
           id: 1,
           name: 'frontend-agent',
-          tags: ['checkout', 'payment']
+          tags: { module: 'checkout', feature: 'payment' }
         })
 
         window.agent2 = newrelic.register({
           id: 2,
           name: 'backend-agent',
-          tags: ['api', 'graphql']
+          tags: { module: 'api', type: 'graphql' }
         })
 
         window.agent1.noticeError('error1')
@@ -359,17 +362,17 @@ describe('newrelic api', () => {
         const error1 = data.find(err => err.params.message === 'error1')
         const error2 = data.find(err => err.params.message === 'error2')
 
-        expect(error1.custom['source.checkout']).toEqual(true)
-        expect(error1.custom['source.payment']).toEqual(true)
+        expect(error1.custom['source.module']).toEqual('checkout')
+        expect(error1.custom['source.feature']).toEqual('payment')
         expect(error1.custom['source.name']).toEqual('frontend-agent')
 
-        expect(error2.custom['source.api']).toEqual(true)
-        expect(error2.custom['source.graphql']).toEqual(true)
+        expect(error2.custom['source.module']).toEqual('api')
+        expect(error2.custom['source.type']).toEqual('graphql')
         expect(error2.custom['source.name']).toEqual('backend-agent')
       })
     })
 
-    it('should handle empty tags array', async () => {
+    it('should handle empty tags object', async () => {
       const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
         { test: testMFEErrorsRequest }
       ])
@@ -379,7 +382,7 @@ describe('newrelic api', () => {
         window.agent1 = newrelic.register({
           id: 1,
           name: 'test-agent',
-          tags: []
+          tags: {}
         })
 
         window.agent1.noticeError('error1')
@@ -411,7 +414,7 @@ describe('newrelic api', () => {
         window.agent1 = newrelic.register({
           id: 1,
           name: 'test-agent',
-          tags: ['module1', 'frontend']
+          tags: { module: 'module1', layer: 'frontend' }
         })
 
         window.agent1.setCustomAttribute('customAttr', 'customValue')
@@ -426,14 +429,15 @@ describe('newrelic api', () => {
         expect(data).toHaveLength(1)
 
         const error1 = data[0]
-        expect(error1.custom['source.module1']).toEqual(true)
-        expect(error1.custom['source.frontend']).toEqual(true)
+        expect(error1.custom['source.module']).toEqual('module1')
+        expect(error1.custom['source.layer']).toEqual('frontend')
         expect(error1.custom.customAttr).toEqual('customValue')
         expect(error1.custom['application.version']).toEqual('1.0.0')
       })
     })
 
-    it('should exclude protected "name" and "id" keys from tags', async () => {
+    it('should exclude protected keys from tags', async () => {
+      // excluded keys right now are [name, id, type]
       const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
         { test: testMFEErrorsRequest }
       ])
@@ -443,7 +447,7 @@ describe('newrelic api', () => {
         window.agent1 = newrelic.register({
           id: 1234,
           name: 'test-agent',
-          tags: ['name', 'id', 'valid-tag']
+          tags: { name: 'should-not-appear', id: 'also-not', type: 'ignored-too', validTag: 'yes' }
         })
 
         window.agent1.noticeError('error1')
@@ -457,16 +461,19 @@ describe('newrelic api', () => {
 
         const error1 = data[0]
 
-        // Should only have source.valid-tag, not source.name or source.id from tags
-        expect(error1.custom['source.valid-tag']).toEqual(true)
+        // Should only have source.validTag, not source.name or source.id or source.type from tags
+        expect(error1.custom['source.validTag']).toEqual('yes')
         expect(error1.custom['source.name']).toEqual('test-agent') // This comes from the name property
         expect(error1.custom['source.id']).toEqual(1234) // This comes from the id property
+        expect(error1.custom['source.type']).toEqual('MFE') // This comes from the type property
 
         // Verify there are no duplicate or conflicting attributes
         const sourceNameKeys = Object.keys(error1.custom).filter(k => k === 'source.name')
         const sourceIdKeys = Object.keys(error1.custom).filter(k => k === 'source.id')
+        const sourceTypeKeys = Object.keys(error1.custom).filter(k => k === 'source.type')
         expect(sourceNameKeys.length).toBe(1)
         expect(sourceIdKeys.length).toBe(1)
+        expect(sourceTypeKeys.length).toBe(1)
       })
     })
 
@@ -480,7 +487,7 @@ describe('newrelic api', () => {
         window.agent1 = newrelic.register({
           id: 1234,
           name: 'test-agent',
-          tags: ['name', 'id']
+          tags: { name: 'ignored', id: 'also-ignored', type: 'ignored-too' }
         })
 
         window.agent1.noticeError('error1')
@@ -502,6 +509,36 @@ describe('newrelic api', () => {
         const sourceKeys = Object.keys(error1.custom).filter(k => k.startsWith('source.'))
         expect(sourceKeys).toEqual(expect.arrayContaining(['source.name', 'source.id', 'source.type']))
         expect(sourceKeys.length).toBe(3)
+      })
+    })
+
+    it('should handle tags with various value types', async () => {
+      const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testMFEErrorsRequest }
+      ])
+      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+      await browser.execute(function () {
+        window.agent1 = newrelic.register({
+          id: 1234,
+          name: 'test-agent',
+          tags: { environment: 'production', version: '2.1.0', region: 'us-west-2', critical: true }
+        })
+
+        window.agent1.noticeError('error1')
+      })
+
+      const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+      errorsHarvests.forEach(({ request: { query, body } }) => {
+        const data = body.err
+        expect(data).toHaveLength(1)
+
+        const error1 = data[0]
+        expect(error1.custom['source.environment']).toEqual('production')
+        expect(error1.custom['source.version']).toEqual('2.1.0')
+        expect(error1.custom['source.region']).toEqual('us-west-2')
+        expect(error1.custom['source.critical']).toEqual(true)
       })
     })
 

@@ -65,6 +65,91 @@ describe('wrap-websocket', () => {
     expect(global.WebSocket).toBeUndefined()
   })
 
+  it('cleans URLs by removing query params and hash routes', () => {
+    const testCases = [
+      {
+        input: 'ws://example.com/socket?token=abc123&session=xyz',
+        expected: 'ws://example.com/socket'
+      },
+      {
+        input: 'wss://localhost:3000/ws?id=12345',
+        expected: 'wss://localhost:3000/ws'
+      },
+      {
+        input: 'ws://example.com/path/to/socket?a=1&b=2',
+        expected: 'ws://example.com/path/to/socket'
+      }
+    ]
+
+    testCases.forEach(({ input, expected }) => {
+      const testWs = new window.WebSocket(input)
+      expect(testWs.nrData.requestedUrl).toBe(expected)
+    })
+  })
+
+  it('cleans currentUrl by removing query params and hash routes', () => {
+    const originalHref = window.location.href
+
+    const testCases = [
+      {
+        pageUrl: 'https://example.com/page?user=john&token=secret123',
+        expectedCurrentUrl: 'https://example.com/page'
+      },
+      {
+        pageUrl: 'https://example.com/app#section1',
+        expectedCurrentUrl: 'https://example.com/app'
+      },
+      {
+        pageUrl: 'https://example.com/dashboard?id=456&filter=active#top',
+        expectedCurrentUrl: 'https://example.com/dashboard'
+      },
+      {
+        pageUrl: 'https://example.com/simple',
+        expectedCurrentUrl: 'https://example.com/simple'
+      }
+    ]
+
+    testCases.forEach(({ pageUrl, expectedCurrentUrl }) => {
+      // Mock window.location.href
+      delete window.location
+      window.location = { href: pageUrl }
+
+      const testWs = new window.WebSocket('ws://example.com/socket')
+      expect(testWs.nrData.currentUrl).toBe(expectedCurrentUrl)
+    })
+
+    // Restore original href
+    delete window.location
+    window.location = { href: originalHref }
+  })
+
+  it('cleans messageOrigin by removing query params and hash routes', () => {
+    const testCases = [
+      {
+        origin: 'ws://example.com:8080?token=secret',
+        expected: 'ws://example.com:8080'
+      },
+      {
+        origin: 'wss://api.example.com#section',
+        expected: 'wss://api.example.com'
+      },
+      {
+        origin: 'ws://localhost:3000?id=123&key=abc#top',
+        expected: 'ws://localhost:3000'
+      },
+      {
+        origin: 'ws://clean.example.com',
+        expected: 'ws://clean.example.com'
+      }
+    ]
+
+    testCases.forEach(({ origin, expected }) => {
+      const testWs = new window.WebSocket('ws://example.com/socket')
+      testWs.dispatchEvent(new MessageEvent('message', { data: 'test', origin }))
+      expect(testWs.nrData.messageOrigin).toBe(expected)
+    })
+  })
+
   it('tracks nr metadata on websocket instance through lifecycle', () => {
     expect(typeof ws.nrData).toBe('object')
     let expectNrData = {
@@ -72,7 +157,17 @@ describe('wrap-websocket', () => {
       currentUrl: expect.any(String),
       socketId: expect.any(String),
       requestedUrl: 'ws://foo.com/websocket',
-      requestedProtocols: ''
+      requestedProtocols: '',
+      messageCount: 0,
+      messageBytes: 0,
+      messageBytesMin: 0,
+      messageBytesMax: 0,
+      sendCount: 0,
+      sendBytes: 0,
+      sendBytesMin: 0,
+      sendBytesMax: 0,
+      connectedDuration: 0,
+      closeReason: 'unknown'
     }
     expect(ws.nrData).toEqual(expectNrData)
     expect(ws.nrData.openedAt).toBeUndefined()
@@ -86,12 +181,12 @@ describe('wrap-websocket', () => {
       protocol: ws.protocol
     })
     expect(ws.nrData.openedAt).toBeGreaterThanOrEqual(ws.nrData.timestamp)
-    expect(ws.nrData.sendCount).toBeUndefined()
+    expect(ws.nrData.sendCount).toBe(0)
 
     expect(origWebSocket.prototype.send).not.toHaveBeenCalled()
     ws.send('abc') // the readystate is still CONNECTING here, so wrapped send should not track and only call original send
     expect(origWebSocket.prototype.send).toHaveBeenCalledTimes(1)
-    expect(ws.nrData.sendCount).toBeUndefined()
+    expect(ws.nrData.sendCount).toBe(0)
 
     Object.defineProperty(ws, 'readyState', { value: WebSocket.OPEN })
     ws.send('abc')
@@ -104,7 +199,7 @@ describe('wrap-websocket', () => {
       sendBytesMax: 3,
       sendTypes: 'string'
     })
-    expect(ws.nrData.messageCount).toBeUndefined()
+    expect(ws.nrData.messageCount).toBe(0)
 
     ws.dispatchEvent(new MessageEvent('message', { data: 'hello world', origin: 'ws://foo.com' }))
     expect(ws.nrData).toEqual(expectNrData = {

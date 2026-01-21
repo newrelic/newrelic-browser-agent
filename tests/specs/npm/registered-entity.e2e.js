@@ -13,6 +13,7 @@ describe('registered-entity', () => {
       { test: testInsRequest },
       { test: testLogsRequest }
     ])
+    await browser.enableLogging()
   })
 
   const featureFlags = [
@@ -110,6 +111,7 @@ describe('registered-entity', () => {
             expect(err.custom['source.name']).toEqual('agent' + id)
             expect(err.custom['source.type']).toEqual('MFE')
             expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid)
+            expect(err.custom['parent.type']).toEqual('BA') // parent is container (Browser Agent)
           } else {
             if (testSet.includes('register') && testSet.includes('register.jserrors')) {
               expect(err.custom.appId).toEqual(42)
@@ -135,6 +137,7 @@ describe('registered-entity', () => {
               expect(ins['source.name']).toEqual('agent' + id)
               expect(ins['source.type']).toEqual('MFE')
               expect(ins['parent.id']).toEqual(containerAgentEntityGuid)
+              expect(ins['parent.type']).toEqual('BA') // parent is container (Browser Agent)
             } else {
               if (testSet.includes('register') && testSet.includes('register.generic_events')) {
                 expect(ins.appId).toEqual(42)
@@ -180,6 +183,7 @@ describe('registered-entity', () => {
             expect(log.attributes['source.name']).toEqual('agent' + id)
             expect(log.attributes['source.type']).toEqual('MFE')
             expect(log.attributes['parent.id']).toEqual(containerAgentEntityGuid)
+            expect(log.attributes['parent.type']).toEqual('BA') // parent is container (Browser Agent)
           } else {
             if (testSet.includes('register')) {
               expect(log.attributes.appId).toEqual(42)
@@ -202,7 +206,35 @@ describe('registered-entity', () => {
     })
   })
 
-  it('should use newest name of matching register', async () => {
+  it('should still harvest scoped data after deregistering', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+    await browser.execute(function () {
+      window.agent1 = new RegisteredEntity({
+        id: 1,
+        name: 'agent1'
+      })
+      window.agent1.noticeError('1')
+      window.agent1.deregister()
+    })
+
+    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+    // should still get a harvest even tho the MFE was deregistered
+    expect(errorsHarvests.length).toEqual(1)
+
+    // should not get future data now that the MFE was deregistered
+    await browser.execute(function () {
+      window.agent1.noticeError('2')
+    })
+
+    const errorsHarvests2 = await mfeErrorsCapture.waitForResult({ timeout: 10000 })
+
+    // should not have gotten more data
+    expect(errorsHarvests2.length).toEqual(errorsHarvests.length)
+  })
+
+  it('should allow multiple registers with same id', async () => {
     await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
 
     await browser.execute(function () {
@@ -221,11 +253,43 @@ describe('registered-entity', () => {
 
     const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
 
-    // should get ALL data as "agent2" since it replaced the name of agent 1 of the same id
     errorsHarvests.forEach(({ request: { query, body } }) => {
       const data = body.err
-      data.forEach(err => {
-        expect(err.custom['source.name']).toEqual('agent2')
+      data.forEach((err, idx) => {
+        expect(Number(err.params.message)).toEqual(idx + 1)
+        expect(err.custom['source.name']).toEqual('agent' + (idx + 1))
+      })
+    })
+  })
+
+  it('should allow to share a registration', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+    await browser.execute(function () {
+      window.agent1 = new RegisteredEntity({
+        id: 1,
+        name: 'my agent',
+        isolated: false
+      })
+      window.agent2 = new RegisteredEntity({
+        id: 1,
+        isolated: false
+      })
+      // should get data as "agent2"
+      window.agent1.setCustomAttribute('sharedAttr', 'shared for both instances')
+      window.agent1.noticeError('1')
+      window.agent2.noticeError('2')
+    })
+
+    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+    errorsHarvests.forEach(({ request: { query, body } }) => {
+      const data = body.err
+      data.forEach((err, idx) => {
+        expect(Number(err.params.message)).toEqual(idx + 1)
+        expect(err.custom['source.id']).toEqual(1)
+        expect(err.custom['source.name']).toEqual('my agent')
+        expect(err.custom.sharedAttr).toEqual('shared for both instances')
       })
     })
   })
@@ -263,10 +327,310 @@ describe('registered-entity', () => {
       const data = body.err
       data.forEach((err, idx) => {
         expect(err.custom['source.name']).toEqual('agent' + (idx + 1))
-        if (idx === 0) expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid) // first app should have container as its parent
-        if (idx === 1) expect(err.custom['parent.id']).toEqual(1) // second app should have first app as its parent
-        if (idx === 2) expect(err.custom['parent.id']).toEqual(2) // third app should have second app as its parent
+        if (idx === 0) {
+          expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid) // first app should have container as its parent
+          expect(err.custom['parent.type']).toEqual('BA') // parent is container (Browser Agent)
+        }
+        if (idx === 1) {
+          expect(err.custom['parent.id']).toEqual(1) // second app should have first app as its parent
+          expect(err.custom['parent.type']).toEqual('MFE') // parent is a registered MFE
+        }
+        if (idx === 2) {
+          expect(err.custom['parent.id']).toEqual(2) // third app should have second app as its parent
+          expect(err.custom['parent.type']).toEqual('MFE') // parent is a registered MFE
+        }
       })
     })
+  })
+
+  it('should include tags as source attributes', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+    await browser.execute(function () {
+      window.agent1 = new RegisteredEntity({
+        id: 1,
+        name: 'frontend-agent',
+        tags: { module: 'checkout', feature: 'payment' }
+      })
+
+      window.agent2 = new RegisteredEntity({
+        id: 2,
+        name: 'backend-agent',
+        tags: { module: 'api', apiType: 'graphql' }
+      })
+
+      window.agent1.noticeError('error1')
+      window.agent2.noticeError('error2')
+    })
+
+    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+    errorsHarvests.forEach(({ request: { query, body } }) => {
+      const data = body.err
+      expect(data).toHaveLength(2)
+
+      const error1 = data.find(err => err.params.message === 'error1')
+      const error2 = data.find(err => err.params.message === 'error2')
+
+      expect(error1.custom['source.module']).toEqual('checkout')
+      expect(error1.custom['source.feature']).toEqual('payment')
+      expect(error1.custom['source.name']).toEqual('frontend-agent')
+      expect(error1.custom['source.type']).toEqual('MFE') // type comes from entity type, not tags
+
+      expect(error2.custom['source.module']).toEqual('api')
+      expect(error2.custom['source.apiType']).toEqual('graphql')
+      expect(error2.custom['source.type']).toEqual('MFE') // type comes from entity type, not tags
+      expect(error2.custom['source.name']).toEqual('backend-agent')
+    })
+  })
+
+  it('should handle empty tags object', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+    await browser.execute(function () {
+      window.agent1 = new RegisteredEntity({
+        id: 1234,
+        name: 'test-agent',
+        tags: {}
+      })
+
+      window.agent1.noticeError('error1')
+    })
+
+    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+    errorsHarvests.forEach(({ request: { query, body } }) => {
+      const data = body.err
+      expect(data).toHaveLength(1)
+
+      const error1 = data[0]
+      expect(error1.custom['source.name']).toEqual('test-agent')
+
+      // Should not have any source.* attributes except source.name, source.id, source.type
+      const sourceKeys = Object.keys(error1.custom).filter(k => k.startsWith('source.'))
+      expect(sourceKeys).toEqual(expect.arrayContaining(['source.name', 'source.id', 'source.type']))
+      expect(sourceKeys.length).toBe(3)
+    })
+  })
+
+  it('should combine tags with custom attributes', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+    await browser.execute(function () {
+      window.agent1 = new RegisteredEntity({
+        id: 1234,
+        name: 'test-agent',
+        tags: { module: 'module1', layer: 'frontend' }
+      })
+
+      window.agent1.setCustomAttribute('customAttr', 'customValue')
+      window.agent1.setApplicationVersion('1.0.0')
+      window.agent1.noticeError('error1')
+    })
+
+    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+    errorsHarvests.forEach(({ request: { query, body } }) => {
+      const data = body.err
+      expect(data).toHaveLength(1)
+
+      const error1 = data[0]
+      expect(error1.custom['source.module']).toEqual('module1')
+      expect(error1.custom['source.layer']).toEqual('frontend')
+      expect(error1.custom.customAttr).toEqual('customValue')
+      expect(error1.custom['application.version']).toEqual('1.0.0')
+    })
+  })
+
+  it('should exclude protected "name" and "id" keys from tags', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+    await browser.execute(function () {
+      window.agent1 = new RegisteredEntity({
+        id: 1234,
+        name: 'test-agent',
+        tags: { name: 'should-not-appear', id: 'also-not', type: 'ignored-too', validTag: 'yes' }
+      })
+
+      window.agent1.noticeError('error1')
+    })
+
+    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+    errorsHarvests.forEach(({ request: { query, body } }) => {
+      const data = body.err
+      expect(data).toHaveLength(1)
+
+      const error1 = data[0]
+
+      // Should only have source.validTag, not source.name or source.id or source.type from tags
+      expect(error1.custom['source.validTag']).toEqual('yes')
+      expect(error1.custom['source.name']).toEqual('test-agent') // This comes from the name property
+      expect(error1.custom['source.id']).toEqual(1234) // This comes from the id property
+      expect(error1.custom['source.type']).toEqual('MFE') // This comes from the type property
+
+      // Verify there are no duplicate or conflicting attributes
+      const sourceNameKeys = Object.keys(error1.custom).filter(k => k === 'source.name')
+      const sourceIdKeys = Object.keys(error1.custom).filter(k => k === 'source.id')
+      const sourceTypeKeys = Object.keys(error1.custom).filter(k => k === 'source.type')
+      expect(sourceNameKeys.length).toBe(1)
+      expect(sourceIdKeys.length).toBe(1)
+      expect(sourceTypeKeys.length).toBe(1)
+    })
+  })
+
+  it('should handle tags with only protected keys', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+    await browser.execute(function () {
+      window.agent1 = new RegisteredEntity({
+        id: 1234,
+        name: 'test-agent',
+        tags: { name: 'ignored', id: 'also-ignored', type: 'ignored-too' }
+      })
+
+      window.agent1.noticeError('error1')
+    })
+
+    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+    errorsHarvests.forEach(({ request: { query, body } }) => {
+      const data = body.err
+      expect(data).toHaveLength(1)
+
+      const error1 = data[0]
+
+      // Should have source.name and source.id from properties, not from tags
+      expect(error1.custom['source.name']).toEqual('test-agent')
+      expect(error1.custom['source.id']).toEqual(1234)
+
+      // Should not have any other source.* attributes from tags
+      const sourceKeys = Object.keys(error1.custom).filter(k => k.startsWith('source.'))
+      expect(sourceKeys).toEqual(expect.arrayContaining(['source.name', 'source.id', 'source.type']))
+      expect(sourceKeys.length).toBe(3)
+    })
+  })
+
+  it('should handle tags with various value types', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+    await browser.execute(function () {
+      window.agent1 = new RegisteredEntity({
+        id: 1234,
+        name: 'test-agent',
+        tags: { environment: 'production', version: '2.1.0', region: 'us-west-2', critical: true }
+      })
+
+      window.agent1.noticeError('error1')
+    })
+
+    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+    errorsHarvests.forEach(({ request: { query, body } }) => {
+      const data = body.err
+      expect(data).toHaveLength(1)
+
+      const error1 = data[0]
+      expect(error1.custom['source.environment']).toEqual('production')
+      expect(error1.custom['source.version']).toEqual('2.1.0')
+      expect(error1.custom['source.region']).toEqual('us-west-2')
+      expect(error1.custom['source.critical']).toEqual(true)
+    })
+  })
+
+  it('should handle tags with complex structure', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+    await browser.execute(function () {
+      window.agent1 = new RegisteredEntity({
+        id: 1234,
+        name: 'test-agent',
+        tags: {
+          team: 'payments',
+          environment: 'staging',
+          critical: false,
+          version: '3.2.1'
+        }
+      })
+
+      window.agent1.noticeError('error1')
+    })
+
+    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+    errorsHarvests.forEach(({ request: { query, body } }) => {
+      const data = body.err
+      expect(data).toHaveLength(1)
+
+      const error1 = data[0]
+      expect(error1.custom['source.team']).toEqual('payments')
+      expect(error1.custom['source.environment']).toEqual('staging')
+      expect(error1.custom['source.critical']).toEqual(false)
+      expect(error1.custom['source.version']).toEqual('3.2.1')
+    })
+  })
+
+  it('should not throw errors when parent is blocked; children still record data', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors', 'register.generic_events'] } }))
+
+    const { hasErrors } = await browser.execute(function () {
+      let hasErrors = false
+      try {
+        // Blocked parent (invalid id)
+        window.blockedParent = new RegisteredEntity({ id: '', name: 'blocked-parent' })
+
+        // Parent API calls should not throw but should NOT be recorded
+        window.blockedParent.noticeError('PARENT_SHOULD_NOT_RECORD')
+        window.blockedParent.addPageAction('PARENT_SHOULD_NOT_RECORD')
+        window.blockedParent.log('PARENT_SHOULD_NOT_RECORD', { level: 'error' })
+        window.blockedParent.recordCustomEvent('CustomEvent', { val: 'PARENT_SHOULD_NOT_RECORD' })
+
+        // Children should be allowed and record data
+        window.child = window.blockedParent.register({ id: 101, name: 'child' })
+        window.grandchild = window.child.register({ id: 102, name: 'grandchild' })
+
+        window.child.noticeError('CHILD_SHOULD_RECORD')
+        window.child.addPageAction('CHILD_SHOULD_RECORD')
+        window.child.log('CHILD_SHOULD_RECORD', { level: 'error' })
+        window.child.recordCustomEvent('CustomEvent', { val: 'CHILD_SHOULD_RECORD' })
+
+        window.grandchild.noticeError('GRANDCHILD_SHOULD_RECORD')
+        window.grandchild.addPageAction('GRANDCHILD_SHOULD_RECORD')
+        window.grandchild.log('GRANDCHILD_SHOULD_RECORD', { level: 'error' })
+        window.grandchild.recordCustomEvent('CustomEvent', { val: 'GRANDCHILD_SHOULD_RECORD' })
+      } catch (err) {
+        hasErrors = true
+      }
+      return { hasErrors }
+    })
+
+    // No errors thrown creating/using blocked parent and children
+    expect(hasErrors).toBe(false)
+
+    // Errors: children recorded, parent not recorded
+    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+    const errorData = errorsHarvests.flatMap(h => h.request.body.err || [])
+    const messages = errorData.map(err => String(err.params.message || ''))
+    expect(messages.some(m => m.includes('PARENT_SHOULD_NOT_RECORD'))).toBe(false)
+    expect(messages.some(m => m.includes('CHILD_SHOULD_RECORD'))).toBe(true)
+    expect(messages.some(m => m.includes('GRANDCHILD_SHOULD_RECORD'))).toBe(true)
+
+    // Insights (PageAction/CustomEvent/Measures): children recorded, parent not recorded
+    const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+    const insightsData = insightsHarvests.flatMap(h => h.request.body.ins || [])
+    const insightValues = insightsData.map(ins => (ins.val || ins.actionName || ''))
+    expect(insightValues.some(v => v.includes('PARENT_SHOULD_NOT_RECORD'))).toBe(false)
+    expect(insightValues.some(v => v.includes('CHILD_SHOULD_RECORD'))).toBe(true)
+    expect(insightValues.some(v => v.includes('GRANDCHILD_SHOULD_RECORD'))).toBe(true)
+
+    // Logs: children recorded, parent not recorded
+    const logsHarvests = await logsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+    const logsData = logsHarvests.flatMap(h => {
+      try { return JSON.parse(h.request.body)[0]?.logs || [] } catch { return [] }
+    })
+    const logMessages = logsData.map(l => l.message || '')
+    expect(logMessages.some(m => m.includes('PARENT_SHOULD_NOT_RECORD'))).toBe(false)
+    expect(logMessages.some(m => m.includes('CHILD_SHOULD_RECORD'))).toBe(true)
+    expect(logMessages.some(m => m.includes('GRANDCHILD_SHOULD_RECORD'))).toBe(true)
   })
 })

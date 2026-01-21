@@ -30,8 +30,6 @@ if (!agentConfig) {
 
 module.exports.agentConfig = agentConfig
 
-console.log('Starting service using agent config -- ', agentConfig)
-
 const mockEntityGuid = () => {
   return btoa(`${agentConfig.accountID}|BROWSER|APPLICATION|${Math.floor(Math.random() * 1000000)}`).replace(/=/g, '')
 }
@@ -57,6 +55,14 @@ const defaultFlagValue = (flag) => {
   if (flag !== undefined) return flag
   return 1
 }
+
+// logging mode cycles through 1-5
+let lastLogValue = 5
+const getNextLogValue = () => {
+  lastLogValue = (lastLogValue % 5) + 1
+  return lastLogValue
+}
+
 module.exports.rumFlags = (flags = {}, app = {}) => ({
   loaded: defaultFlagValue(flags.loaded), // Used internally to signal the tests that the agent has loaded
   st: defaultFlagValue(flags.st), // session trace entitlements 0|1
@@ -66,8 +72,8 @@ module.exports.rumFlags = (flags = {}, app = {}) => ({
   sr: defaultFlagValue(flags.sr), // session replay entitlements 0|1
   sts: defaultFlagValue(flags.sts), // session trace sampling 0|1|2 - off full error
   srs: defaultFlagValue(flags.srs), // session replay sampling 0|1|2 - off full error
-  log: flags.log ?? 3, // logging auto wrapping sampling 0|1|2|3|4|5 - off error warn info debug trace
-  logapi: flags.logapi ?? 3, // logging manual api sampling 0|1|2|3|4|5
+  log: flags.log ?? getNextLogValue(), // logging sampling 0|1|2|3|4|5 - off error warn info debug trace
+  logapi: flags.logapi ?? lastLogValue, // logging manual api sampling 0|1|2|3|4|5
   app: {
     agents: app.agents || [
       { entityGuid: mockEntityGuid() }

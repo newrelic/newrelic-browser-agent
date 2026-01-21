@@ -10,7 +10,7 @@ describe('SPA session behavior - ', () => {
   })
 
   it('IPL has isFirstOfSession custom attr for new sessions (only)', async () => {
-    const url = await browser.testHandle.assetURL('instrumented.html', { init: { feature_flags: ['soft_nav'] } })
+    const url = await browser.testHandle.assetURL('instrumented.html')
     let [spaHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
       browser.url(url).then(() => browser.waitForAgentLoad())

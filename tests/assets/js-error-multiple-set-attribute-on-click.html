@@ -11,28 +11,27 @@
 
     <script>
       function triggerError() {
+        newrelic.interaction().setAttribute('customParamKey', 1)
         try {
           throw new Error("My error 1")
         } catch (err) {
           newrelic.noticeError(err)
         }
-        newrelic.interaction().setAttribute('customParamKey', 1)
 
+        newrelic.interaction().setAttribute('customParamKey', 2)
         try {
           throw new Error("My error 2")
         } catch (err) {
           newrelic.noticeError(err)
         }
-        newrelic.interaction().setAttribute('customParamKey', 2)
 
+        newrelic.interaction().setAttribute('customParamKey', 3)
         try {
           throw new Error("My error 3")
         } catch (err) {
           newrelic.noticeError(err)
         }
-        newrelic.interaction().setAttribute('customParamKey', 3)
-
-        window.location.hash = Math.random()
+        newrelic.interaction().save().end()
       }
     </script>
 

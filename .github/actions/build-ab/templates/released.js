@@ -1,7 +1,7 @@
 // config
 window.NREUM={
   init: {
-    feature_flags: ['soft_nav', 'register'], // add jserrors and generic events once the consumer(s) support it
+    feature_flags: ['register', 'register.jserrors'], // add generic events flag once the consumer(s) support it
     distributed_tracing: {
       enabled: true
     },

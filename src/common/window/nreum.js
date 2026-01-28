@@ -1,9 +1,10 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { globalScope } from '../constants/runtime'
 import { now } from '../timing/now'
+import { warn } from '../util/console'
 import { isNative } from '../util/monkey-patched'
 
 export const defaults = {
@@ -82,6 +83,11 @@ export function setNREUMInitializedAgent (id, newAgentInstance) {
     date: new Date()
   }
   nr.initializedAgents[id] = newAgentInstance
+
+  // Warn if using more than one agent, but only once per agent load
+  if (Object.keys(nr.initializedAgents).length === 2) {
+    warn(69)
+  }
 }
 
 /**

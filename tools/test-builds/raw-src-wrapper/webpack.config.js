@@ -17,6 +17,14 @@ const htmlTemplate = (script) => `<html>
 const multiAgentHtmlTemplate = `<html>
   <head>
     <title>RUM Unit Test</title>
+    <script>
+      window.test = {
+        agentLogCount: 0
+      }
+      console.debug = function (...args) {
+        if (args[0] === "New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#69") window.test.agentLogCount += 1;
+      };
+    </script>
     {init}
     {config}
     <script src="browser-agent.js"></script>

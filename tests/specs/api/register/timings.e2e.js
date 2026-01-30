@@ -39,7 +39,6 @@ describe('Register API - Timings', () => {
     expect(timingEvents.length).toBeGreaterThanOrEqual(1)
 
     const timing = timingEvents[0]
-    expect(timing).toHaveProperty('duration')
     expect(timing).toHaveProperty('timeToLoad')
     expect(timing).toHaveProperty('timeToBeRequested')
     expect(timing).toHaveProperty('timeToFetch')
@@ -47,7 +46,6 @@ describe('Register API - Timings', () => {
     expect(timing).toHaveProperty('timeAlive')
 
     // All values should be numbers
-    expect(typeof timing.duration).toBe('number')
     expect(typeof timing.timeToLoad).toBe('number')
     expect(typeof timing.timeToBeRequested).toBe('number')
     expect(typeof timing.timeToFetch).toBe('number')
@@ -107,7 +105,7 @@ describe('Register API - Timings', () => {
     expect(timingEvents).toHaveLength(1)
   })
 
-  it('should calculate timeAlive as duration between register and deregister', async () => {
+  it('should calculate timeAlive as time between register and deregister', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
       init: { feature_flags: ['register', 'register.generic_events'] }
     }))
@@ -172,7 +170,6 @@ describe('Register API - Timings', () => {
     // Each should have independent timing calculations
     timingEvents.forEach(timing => {
       expect(timing.timeAlive).toBeGreaterThan(0)
-      expect(timing.duration).toBeGreaterThan(0)
     })
   })
 
@@ -206,7 +203,6 @@ describe('Register API - Timings', () => {
 
     // All should have valid timing data
     timingEvents.forEach(timing => {
-      expect(timing.duration).toBeGreaterThan(0)
       expect(timing.timeAlive).toBeGreaterThanOrEqual(0)
       expect(typeof timing.timeToLoad).toBe('number')
     })
@@ -240,11 +236,69 @@ describe('Register API - Timings', () => {
     const timing = timingEvents[0]
 
     // Verify all timing values are non-negative
-    expect(timing.duration).toBeGreaterThanOrEqual(0)
     expect(timing.timeToLoad).toBeGreaterThanOrEqual(0)
     expect(timing.timeToBeRequested).toBeGreaterThanOrEqual(0)
     expect(timing.timeToFetch).toBeGreaterThanOrEqual(0)
     expect(timing.timeToRegister).toBeGreaterThanOrEqual(0)
     expect(timing.timeAlive).toBeGreaterThanOrEqual(0)
+  })
+
+  describe('Fetch time assumptions work with different types of scripts', () => {
+    const testFiles = [
+      ['instrumented-with-mfe-inline.html', 'inline loader'],
+      ['instrumented-with-mfe-remote copy.html', 'remote loader']
+    ]
+
+    testFiles.forEach(([testFile, description]) => {
+      it(`should report all four MFEs with correct timing attributes for ${description}`, async () => {
+        await browser.url(await browser.testHandle.assetURL(testFile))
+
+        // Click to trigger mfe.js and mfe3.js load
+        await browser.execute(function () {
+          document.body.click()
+        })
+
+        // Wait for all scripts to load and main to deregister
+        await browser.pause(3500)
+
+        // Dispatch pagehide to trigger mfe2 and mfe3 harvest
+        await browser.execute(function () {
+          window.dispatchEvent(new Event('pagehide'))
+        })
+
+        const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 4, timeout: 10000 })
+
+        const timingEvents = insightsHarvests
+          .flatMap(({ request: { body } }) => body.ins)
+          .filter(event => event.eventType === 'MicroFrontEndTiming')
+
+        expect(timingEvents.length).toBeGreaterThanOrEqual(4)
+
+        const mainMfe = timingEvents.find(event => event['source.name'] === 'main')
+        const mfe1 = timingEvents.find(event => event['source.name'] === 'test')
+        const mfe2 = timingEvents.find(event => event['source.name'] === 'test 2')
+        const mfe3 = timingEvents.find(event => event['source.name'] === 'test 3')
+
+        // Main MFE should have zero fetch timings
+        expect(mainMfe).toBeDefined()
+        expect(mainMfe.timeToBeRequested).toBe(0)
+        expect(mainMfe.timeToFetch).toBe(0)
+
+        // MFE1 (test) should have fetch timings
+        expect(mfe1).toBeDefined()
+        expect(mfe1.timeToBeRequested).toBeGreaterThan(0)
+        expect(mfe1.timeToFetch).toBeGreaterThan(0)
+
+        // MFE2 (test 2) should have fetch timings
+        expect(mfe2).toBeDefined()
+        expect(mfe2.timeToBeRequested).toBeGreaterThan(0)
+        expect(mfe2.timeToFetch).toBeGreaterThan(0)
+
+        // MFE3 (test 3) should have fetch timings (loaded via dynamic import)
+        expect(mfe3).toBeDefined()
+        expect(mfe3.timeToBeRequested).toBeGreaterThan(0)
+        expect(mfe3.timeToFetch).toBeGreaterThan(0)
+      })
+    })
   })
 })

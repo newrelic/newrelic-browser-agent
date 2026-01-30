@@ -54,11 +54,15 @@ function register (agentRef, target, parent) {
   target.parent = parent || {}
   if (typeof target.tags !== 'object' || target.tags === null || Array.isArray(target.tags)) target.tags = {}
 
+  // set the stack limit higher to capture more stack frames for script tracking, then set it back to original after
+  const originalStackLimit = Error.stackTraceLimit
+  Error.stackTraceLimit = 50
   const timings = {
     registeredAt: now(),
     reportedAt: undefined,
     ...(findScriptTimingsFromStack(new Error().stack))
   }
+  Error.stackTraceLimit = originalStackLimit
 
   const attrs = {}
 
@@ -148,7 +152,6 @@ function register (agentRef, target, parent) {
     if (timings.reportedAt) return
     timings.reportedAt = now()
     api.recordCustomEvent('MicroFrontEndTiming', {
-      duration: timings.reportedAt, // origin to reportedAt
       timeToLoad: timings.registeredAt - timings.fetchStart, // fetchStart to registeredAt
       timeToBeRequested: timings.fetchStart, // origin to fetchStart
       timeToFetch: timings.fetchEnd - timings.fetchStart, // fetchStart to fetchEnd

@@ -9,21 +9,11 @@ import { cleanURL } from '../url/clean-url'
 const chrome = /^\s*at (?:((?:\[object object\])?(?:[^(]*\([^)]*\))*[^()]*(?: \[as \S+\])?) )?\(?((?:file|http|https|chrome-extension):.*?)?:(\d+)(?::(\d+))?\)?\s*$/i
 const gecko = /^\s*(?:(\S*|global code)(?:\(.*?\))?@)?((?:file|http|https|chrome|safari-extension).*?):(\d+)(?::(\d+))?\s*$/i
 
-/** The scripts loaded on to the page, as observed by the PerformanceObserver */
-const scripts = new Set()
-
-if (globalScope.PerformanceObserver?.supportedEntryTypes.includes('resource')) {
-  const scriptTracker = new PerformanceObserver((list) => {
-    list.getEntries().forEach(entry => scripts.add(entry))
-  })
-  scriptTracker.observe({ type: 'resource', buffered: true, filter: { initiatorType: 'script' } })
-}
-
-// /**
-//  * Extracts URLs from stack traces using the same logic as compute-stack-trace.js
-//  * @param {string} stack The error stack trace
-//  * @returns {string[]} Array of cleaned URLs found in the stack trace
-//  */
+/**
+ * Extracts URLs from stack traces using the same logic as compute-stack-trace.js
+ * @param {string} stack The error stack trace
+ * @returns {string[]} Array of cleaned URLs found in the stack trace
+ */
 function extractUrlsFromStack (stack) {
   if (!stack) return []
 
@@ -37,7 +27,6 @@ function extractUrlsFromStack (stack) {
       urls.add(cleanURL(parts[2]))
     }
   }
-
   return [...urls]
 }
 
@@ -48,18 +37,16 @@ function extractUrlsFromStack (stack) {
  */
 export function findScriptTimingsFromStack (stack) {
   const timings = { fetchStart: 0, fetchEnd: 0 }
-  if (scripts.size < 1 || !stack) return timings
+  /** @type {PerformanceResourceTiming[]} The list of script resource timing entries */
+  const scripts = globalScope.performance?.getEntriesByType('resource').filter(entry => entry.initiatorType === 'script') || []
+  if (scripts.length < 1 || !stack) return timings
 
   try {
-    const stackUrls = extractUrlsFromStack(stack)
-    const match = [...scripts].find(script => {
+    const mfeScriptUrl = extractUrlsFromStack(stack).at(-1) // array of URLs from the stack of the register API caller, the MFE script should be at the bottom
+    const match = scripts.find(script => {
       const scriptUrl = cleanURL(script.name)
-      return stackUrls.some(stackUrl => {
-        // Try exact match, then partial matches for different URL formats
-        return stackUrl === scriptUrl ||
-               stackUrl.endsWith(scriptUrl) ||
-               scriptUrl.endsWith(stackUrl)
-      })
+      // Try exact match, then partial matches for different URL formats
+      return mfeScriptUrl === scriptUrl || mfeScriptUrl.endsWith(scriptUrl) || scriptUrl.endsWith(mfeScriptUrl)
     })
 
     if (match) {

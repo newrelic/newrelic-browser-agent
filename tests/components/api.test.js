@@ -745,8 +745,6 @@ describe('API tests', () => {
         const pageActionCalls = handleModule.handle.mock.calls.filter(call => call[0] === 'api-addPageAction')
         expect(pageActionCalls.length).toBe(2)
 
-        console.log('pageActionCalls:', pageActionCalls)
-
         // First call is the duplicate to container - should have child.id and child.type
         const containerCall = pageActionCalls[0]
         expect(containerCall[1][2]).toEqual({ foo: 'bar', 'child.id': id, 'child.type': 'MFE' })
@@ -793,8 +791,6 @@ describe('API tests', () => {
         const measureCalls = handleModule.handle.mock.calls.filter(call => call[0] === 'api-measure')
         expect(measureCalls.length).toBe(2)
 
-        console.log('measureCalls:', measureCalls[0][1])
-
         // First call is the duplicate to container - should have child.id and child.type in customAttributes
         const containerCall = measureCalls[0]
         expect(containerCall[1][0].customAttributes).toEqual({ foo: 'bar', 'child.id': id, 'child.type': 'MFE' })
@@ -807,7 +803,6 @@ describe('API tests', () => {
       })
 
       test('should add child.id and child.type to duplicated data - recordCustomEvent', () => {
-        console.log('THE TEST IN QUESTION')
         agent.init.api.duplicate_registered_data = true
         const target = { id, name }
         const myApi = agent.register(target)
@@ -822,7 +817,6 @@ describe('API tests', () => {
 
         // First call is the duplicate to container - should have child.id and child.type
         const containerCall = customEventCalls[0]
-        console.log('containerCall:', containerCall)
         expect(containerCall[1][2]).toEqual({ foo: 'bar', 'child.id': id, 'child.type': 'MFE' })
 
         // Second call is to the registered entity target - should not have child.id or child.type
@@ -1097,7 +1091,6 @@ describe('API tests', () => {
           expect(timestamp).toEqual(deregisteredAt)
 
           expect(eventType).toBe('MicroFrontEndTiming')
-          expect(attrs).toHaveProperty('duration')
           expect(attrs).toHaveProperty('timeToLoad')
           expect(attrs).toHaveProperty('timeToBeRequested')
           expect(attrs).toHaveProperty('timeToFetch')
@@ -1105,7 +1098,6 @@ describe('API tests', () => {
           expect(attrs).toHaveProperty('timeAlive')
 
           // All values should be numbers
-          expect(typeof attrs.duration).toBe('number')
           expect(typeof attrs.timeToLoad).toBe('number')
           expect(typeof attrs.timeToBeRequested).toBe('number')
           expect(typeof attrs.timeToFetch).toBe('number')
@@ -1173,12 +1165,10 @@ describe('API tests', () => {
 
           const childAttrs = childCall[1][2]
           expect(childAttrs.timeAlive).toBeGreaterThan(0)
-          expect(childAttrs.duration).toBeGreaterThan(0)
           expect(childAttrs.timeAlive).toBe(5) // child was alive for 5ms
 
           const parentAttrs = parentCall[1][2]
           expect(parentAttrs.timeAlive).toBeGreaterThan(0)
-          expect(parentAttrs.duration).toBeGreaterThan(0)
           expect(parentAttrs.timeAlive).toBe(10) // parent was alive for 10ms
         })
 
@@ -1193,7 +1183,6 @@ describe('API tests', () => {
 
           const attrs = customEventCall[1][2]
 
-          expect(attrs.duration).toBeGreaterThanOrEqual(0)
           expect(attrs.timeToLoad).toBeGreaterThanOrEqual(0)
           expect(attrs.timeToBeRequested).toBeGreaterThanOrEqual(0)
           expect(attrs.timeToFetch).toBeGreaterThanOrEqual(0)

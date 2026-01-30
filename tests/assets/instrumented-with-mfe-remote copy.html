@@ -44,9 +44,6 @@
         const script = document.createElement('script');
         script.src = './js/mfe/mfe.js';
         document.head.appendChild(script);
-        
-        // Import mfe3 using dynamic import
-        import('./js/mfe/mfe/mfe/mfe.js').catch(err => console.error('Failed to load mfe3:', err));
       })
 
       setTimeout(() => {
@@ -60,6 +57,6 @@
         import('./js/mfe/mfe/mfe/mfe.js').catch(err => console.error('Failed to load mfe3:', err));
       })
     </script>
-    
+
   </body>
 </html>

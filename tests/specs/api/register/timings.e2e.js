@@ -246,7 +246,7 @@ describe('Register API - Timings', () => {
   describe('Fetch time assumptions work with different types of scripts', () => {
     const testFiles = [
       ['instrumented-with-mfe-inline.html', 'inline loader'],
-      ['instrumented-with-mfe-remote copy.html', 'remote loader']
+      ['instrumented-with-mfe-remote.html', 'remote loader']
     ]
 
     testFiles.forEach(([testFile, description]) => {
@@ -266,7 +266,7 @@ describe('Register API - Timings', () => {
           window.dispatchEvent(new Event('pagehide'))
         })
 
-        const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 4, timeout: 10000 })
+        const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 10000 })
 
         const timingEvents = insightsHarvests
           .flatMap(({ request: { body } }) => body.ins)

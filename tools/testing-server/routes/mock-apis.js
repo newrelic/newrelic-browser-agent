@@ -188,6 +188,11 @@ module.exports = fp(async function (fastify, testServer) {
   }, (request, reply) => {
     reply.send({ text: 'hi!' })
   })
+  fastify.post('/json', {
+    compress: false
+  }, (request, reply) => {
+    reply.code(500).send({ text: 'hi!' })
+  })
   fastify.post('/gql', {
     compress: false
   }, (request, reply) => {
@@ -198,6 +203,106 @@ module.exports = fp(async function (fastify, testServer) {
         description: 'test description'
       }
     })
+  })
+  fastify.post('/gql-error', {
+    compress: false
+  }, (request, reply) => {
+    reply.code(200).send({
+      errors: [
+        {
+          message: 'Field "unknownField" not found on type "Query"',
+          locations: [{ line: 2, column: 3 }],
+          path: ['unknownField']
+        }
+      ],
+      data: null
+    })
+  })
+  fastify.post('/gql-partial-error', {
+    compress: false
+  }, (request, reply) => {
+    reply.code(200).send({
+      errors: [
+        {
+          message: 'Cannot return null for non-nullable field User.email',
+          path: ['user', 'email']
+        }
+      ],
+      data: {
+        user: {
+          name: 'John Doe',
+          email: null
+        }
+      }
+    })
+  })
+  fastify.post('/json-with-query', {
+    compress: false
+  }, (request, reply) => {
+    reply.send({
+      text: 'hi!',
+      receivedQuery: request.query
+    })
+  })
+  fastify.post('/json-with-headers', {
+    compress: false
+  }, (request, reply) => {
+    reply
+      .header('X-Custom-Header', 'custom-value')
+      .header('X-Request-Id', '12345')
+      .send({
+        text: 'response with headers',
+        requestHeaders: {
+          'content-type': request.headers['content-type'],
+          'x-test-header': request.headers['x-test-header']
+        }
+      })
+  })
+  fastify.post('/xml', {
+    compress: false
+  }, (request, reply) => {
+    reply.type('application/xml').send('<?xml version="1.0"?><root><message>Hello XML</message></root>')
+  })
+  fastify.post('/binary', {
+    compress: false
+  }, (request, reply) => {
+    const buffer = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
+    reply.type('application/octet-stream').send(buffer)
+  })
+  fastify.post('/text-plain', {
+    compress: false
+  }, (request, reply) => {
+    reply.type('text/plain').send('Plain text response')
+  })
+  fastify.post('/echo-body', {
+    compress: false
+  }, (request, reply) => {
+    reply.send({
+      receivedBody: request.body,
+      bodyType: typeof request.body
+    })
+  })
+  fastify.post('/echo-large', {
+    compress: false
+  }, (request, reply) => {
+    reply.send({
+      receivedBody: request.body,
+      bodyType: typeof request.body
+    })
+  })
+  fastify.post('/echo-large-unicode', {
+    compress: false
+  }, (request, reply) => {
+    reply.send({
+      receivedBody: request.body,
+      bodyType: typeof request.body
+    })
+  })
+  fastify.post('/status/:code', {
+    compress: false
+  }, (request, reply) => {
+    const statusCode = parseInt(request.params.code, 10)
+    reply.code(statusCode).send({ status: statusCode, message: 'Custom status code', body: request.body })
   })
   fastify.get('/js', {
     compress: false

@@ -6,12 +6,13 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { stringify } from '../../../common/util/stringify'
 import { handle } from '../../../common/event-emitter/handle'
 import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
-import { FEATURE_NAME } from '../constants'
+import { CAPTURE_PAYLOAD_SETTINGS, FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { parseGQL } from './gql'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { gosNREUMOriginals } from '../../../common/window/nreum'
+import { hasGQLErrors, parseGQL } from './gql'
+import { isLikelyHumanReadable, parseQueryString, truncateAsString } from './payloads'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -93,6 +94,23 @@ export class Aggregate extends AggregateBase {
       callbackDuration: metrics.cbTime
     }
 
+    event.gql = params.gql = parseGQL({
+      body: ctx.requestBody,
+      query: ctx.parsedOrigin?.search
+    })
+    if (event.gql) event.gql.operationHasErrors = params.gql.operationHasErrors = hasGQLErrors(ctx.responseBody)
+
+    const capturePayloadSetting = this.agentRef.init.ajax.capture_payloads
+    const canCapturePayload = capturePayloadSetting === CAPTURE_PAYLOAD_SETTINGS.ALL || (capturePayloadSetting === CAPTURE_PAYLOAD_SETTINGS.FAILURES && (params.status === 0 || params.status >= 400 || event.gql?.operationHasErrors === true))
+
+    if (canCapturePayload) {
+      params.requestQuery = event.requestQuery = truncateAsString(parseQueryString(ctx.parsedOrigin?.search))
+      params.requestHeaders = event.requestHeaders = truncateAsString(ctx.requestHeaders)
+      params.responseHeaders = event.responseHeaders = truncateAsString(ctx.responseHeaders)
+      if (isLikelyHumanReadable(ctx.requestHeaders, ctx.requestBody)) params.requestBody = event.requestBody = truncateAsString(ctx.requestBody)
+      if (isLikelyHumanReadable(ctx.responseHeaders, ctx.responseBody)) params.responseBody = event.responseBody = truncateAsString(ctx.responseBody)
+    }
+
     if (ctx.dt) {
       event.spanId = ctx.dt.spanId
       event.traceId = ctx.dt.traceId
@@ -101,11 +119,6 @@ export class Aggregate extends AggregateBase {
       )
     }
 
-    // parsed from the AJAX body, looking for operationName param & parsing query for operationType
-    event.gql = params.gql = parseGQL({
-      body: ctx.body,
-      query: ctx.parsedOrigin?.search
-    })
     if (event.gql) this.reportSupportabilityMetric('Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length)
 
     const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
@@ -154,7 +167,17 @@ export class Aggregate extends AggregateBase {
 
       // add custom attributes
       // gql decorators are added as custom attributes to alleviate need for new BEL schema
-      const attrParts = addCustomAttributes({ ...(jsAttributes || {}), ...(event.gql || {}) }, addString)
+      const customAttrs = {
+        ...(jsAttributes || {}),
+        ...(event.gql || {})
+      }
+      // do these checks to avoid adding undefined values which serializer will translate into `"nullAttribute"` nodes and waste space
+      if (event.requestBody) customAttrs.requestBody = event.requestBody
+      if (event.requestHeaders) customAttrs.requestHeaders = event.requestHeaders
+      if (event.requestQuery) customAttrs.requestQuery = event.requestQuery
+      if (event.responseBody) customAttrs.responseBody = event.responseBody
+      if (event.responseHeaders) customAttrs.responseHeaders = event.responseHeaders
+      const attrParts = addCustomAttributes(customAttrs, addString)
       fields.unshift(numeric(attrParts.length))
 
       insert += fields.join(',')

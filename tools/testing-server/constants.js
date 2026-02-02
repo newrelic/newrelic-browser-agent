@@ -85,7 +85,12 @@ module.exports.rumFlags = (flags = {}, app = {}) => ({
 const enabled = true; const autoStart = true
 const enabledFeature = { enabled, autoStart }
 module.exports.defaultInitBlock = {
-  ajax: { deny_list: [], block_internal: false, ...enabledFeature },
+  ajax: {
+    deny_list: [],
+    block_internal: false,
+    capture_payloads: 'off', // off by default to not break existing ajax/spa tests. payload tests are conducted separately and explicitly.
+    ...enabledFeature
+  },
   api: {
     allow_registered_children: false,
     duplicate_registered_data: false // if an array of entity guids are supplied, can be more granular - true|false will be all or nothing

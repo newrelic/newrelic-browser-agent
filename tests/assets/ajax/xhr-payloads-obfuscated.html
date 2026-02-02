@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>XHR with Payloads</title>
+    {init} {config}
+    <script>
+      NREUM.init.obfuscate = [
+        {
+          regex: /text\/plain/g,
+          replacement: 'HEADER REDACTED'
+        },
+        {
+          regex: /plain text/g,
+          replacement: 'BODY REDACTED'
+        }
+      ]
+    </script>
+    {loader}
+  </head>
+  <body>
+    <div>Test page for XHR with payload capture in different modes</div>
+    <script>
+      // readable 200 JSON
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/echo-body");
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.setRequestHeader("X-Test-Header", "test-value");
+      xhr.send(JSON.stringify({ message: "success request" }));
+
+      // readable 200 text
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/text-plain");
+      xhr.setRequestHeader("Content-Type", "text/plain");
+      xhr.send("just some plain text");
+
+      // readable 200 xml
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/xml");
+      xhr.setRequestHeader("Content-Type", "text/plain");
+      xhr.send("<note><body>This is a test</body></note>");
+
+      // readable 200 with query, no body, no headers
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/json-with-query?param1=value1&param2=value2");
+      xhr.send();
+
+      // unreadable 200
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/binary");
+      xhr.setRequestHeader("Content-Type", "text/plain");
+      xhr.send('send me back some binary');
+
+      // 400
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/status/400");
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.send(JSON.stringify({ message: "error request" }));
+      
+      // 500
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/status/500");
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.send(JSON.stringify({ message: "error request" }));
+      
+      // gqlError
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/gql-error");
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.send(
+        JSON.stringify({
+          query: "query { unknownField }",
+          operationName: "TestQuery",
+        })
+      );
+
+      // large payload that should be truncated
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/echo-large");
+      xhr.setRequestHeader("Content-Type", "application/json");
+      var largeData = { data: "x".repeat(5000) };
+      xhr.send(JSON.stringify(largeData));
+
+      // large payload with non-ASCII characters that should be truncated
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/echo-large-unicode");
+      xhr.setRequestHeader("Content-Type", "application/json");
+      var largeUnicodeData = { message: "Hello 世界 🌍 ".repeat(500) };
+      xhr.send(JSON.stringify(largeUnicodeData));
+    </script>
+  </body>
+</html>

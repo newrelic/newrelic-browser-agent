@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Fetch with Payloads</title>
+    {init} {config} {loader}
+  </head>
+  <body>
+    <div>Test page for Fetch with payload capture in different modes</div>
+    <script>
+      // readable 200 JSON
+      fetch("/echo-body", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Test-Header": "test-value"
+        },
+        body: JSON.stringify({ message: "success request" })
+      });
+
+      // readable 200 text
+      fetch("/text-plain", {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain"
+        },
+        body: "just some plain text"
+      });
+
+      // readable 200 xml
+      fetch("/xml", {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain"
+        },
+        body: "<note><body>This is a test</body></note>"
+      });
+
+      // readable 200 with query, no body, no headers
+      fetch("/json-with-query?param1=value1&param2=value2", {
+        method: "POST"
+      });
+
+      // unreadable 200
+      fetch("/binary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain"
+        },
+        body: "send me back some binary"
+      });
+
+      // 400
+      fetch("/status/400", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message: "error request" })
+      });
+      
+      // 500
+      fetch("/status/500", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message: "error request" })
+      });
+      
+      // gqlError
+      fetch("/gql-error", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          query: "query { unknownField }",
+          operationName: "TestQuery"
+        })
+      });
+
+      // large payload that should be truncated
+      fetch("/echo-large", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ data: "x".repeat(5000) })
+      });
+
+      // large payload with non-ASCII characters that should be truncated
+      fetch("/echo-large-unicode", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message: "Hello 世界 🌍 ".repeat(500) })
+      });
+    </script>
+  </body>
+</html>

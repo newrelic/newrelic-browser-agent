@@ -25,6 +25,9 @@ describe('monkey-patched globals', () => {
     expect(logs[0][0].includes('New Relic Warning') && logs[0][0].includes('64')).toEqual(true) // 64 is the warning code for monkey-patched globals
     expect(logs[0][1]).toEqual('debug')
 
-    expect(logs.filter(log => log[1].includes('nrWrapper')).length).toEqual(0) // should not have logged anything about nrWrapper
+    expect(logs[1][0].includes('New Relic Warning') && logs[1][0].includes('69')).toEqual(true) // 69 is the warning code for multiple agents on page
+    expect(logs[1][1]).toEqual(null)
+
+    expect(logs.filter(log => log[1]?.includes('nrWrapper')).length).toEqual(0) // should not have logged anything about nrWrapper
   })
 })

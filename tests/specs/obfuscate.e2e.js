@@ -1,3 +1,5 @@
+import { LOGGING_MODE } from '../../src/features/logging/constants'
+import { rumFlags } from '../../tools/testing-server/constants'
 import { testAjaxEventsRequest, testBlobTraceRequest, testErrorsRequest, testInsRequest, testInteractionEventsRequest, testLogsRequest, testRumRequest, testTimingEventsRequest } from '../../tools/testing-server/utils/expect-tests'
 
 const config = {
@@ -34,7 +36,11 @@ describe('obfuscate rules', () => {
   let logsCapture
 
   beforeEach(async () => {
-    [rumCapture, timingEventsCapture, ajaxEventsCapture, errorsCapture, insightsCapture, tracesCapture, interactionEventsCapture, logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+    await browser.testHandle.scheduleReply('bamServer', {
+      test: testRumRequest,
+      body: JSON.stringify(rumFlags({ log: LOGGING_MODE.TRACE, logapi: LOGGING_MODE.TRACE }))
+    })
+    ;[rumCapture, timingEventsCapture, ajaxEventsCapture, errorsCapture, insightsCapture, tracesCapture, interactionEventsCapture, logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testRumRequest },
       { test: testTimingEventsRequest },
       { test: testAjaxEventsRequest },

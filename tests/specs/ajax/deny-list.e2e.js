@@ -10,7 +10,7 @@ describe('xhr events deny list', () => {
     const [ajaxEvents, interactionEvents] = await Promise.all([
       ajaxCapture.waitForResult({ timeout: 10000 }),
       spaCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('spa/ajax-deny-list.html', { init: { ajax: { block_internal: true } } }))
+      browser.url(await browser.testHandle.assetURL('nr-server-time/xhr-before-load.html', { init: { ajax: { block_internal: true } } }))
     ])
 
     expect(ajaxEvents.length).toEqual(0)
@@ -35,7 +35,7 @@ describe('xhr events deny list', () => {
 
     const [interactionEvents] = await Promise.all([
       interactionCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('spa/ajax-deny-list.html', { init: { ajax: { block_internal: false } } }))
+      browser.url(await browser.testHandle.assetURL('nr-server-time/xhr-before-load.html', { init: { ajax: { block_internal: false } } }))
     ])
 
     expect(extractAjaxEvents(interactionEvents[0].request.body)).toEqual(expect.arrayContaining([
@@ -59,7 +59,7 @@ describe('xhr events deny list', () => {
 
     const [ajaxMetrics] = await Promise.all([
       ajaxCapture.waitForResult({ timeout: 10000 }),
-      browser.url(await browser.testHandle.assetURL('spa/ajax-deny-list.html', { init: { ajax: { block_internal: true }, feature_flags: ['ajax_metrics_deny_list'] } }))
+      browser.url(await browser.testHandle.assetURL('nr-server-time/xhr-before-load.html', { init: { ajax: { block_internal: true }, feature_flags: ['ajax_metrics_deny_list'] } }))
     ])
 
     expect(ajaxMetrics.length).toEqual(0)
@@ -70,7 +70,7 @@ describe('xhr events deny list', () => {
 
     const [ajaxMetrics] = await Promise.all([
       ajaxCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('spa/ajax-deny-list.html', { init: { ajax: { block_internal: true } } }))
+      browser.url(await browser.testHandle.assetURL('nr-server-time/xhr-before-load.html', { init: { ajax: { block_internal: true } } }))
     ])
 
     expect(ajaxMetrics[0].request.body.xhr).toEqual(expect.arrayContaining([

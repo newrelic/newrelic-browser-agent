@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>XHR DT Same Origin</title>
+    {init}
+    {config}
+    {loader}
+  </head>
+  <body>
+    <div>This page fires an XHR and records rawTimes for timing validation.</div>
+    <script type="text/javascript">
+      window.rawTimes = []
+      var xhr = new XMLHttpRequest()
+
+      var url = '/dt/' + NREUM.info.licenseKey
+
+      xhr.open('GET', url)
+      window.rawTimes.push(Math.floor(performance.now()))
+      xhr.send()
+
+      let offset = 100
+      for (var i = 0; i < 3; i++) {
+        setTimeout(function () {
+          var xhr = new XMLHttpRequest()
+
+          var url = '/json'
+          xhr.open('GET', url)
+          window.rawTimes.push(Math.floor(performance.now()))
+          xhr.send()
+        }, offset)
+        offset += 100
+      }
+    </script>
+  </body>
+</html>

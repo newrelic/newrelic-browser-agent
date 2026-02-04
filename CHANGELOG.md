@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.309.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.308.0...v1.309.0) (2026-02-03)
+
+
+### Features
+
+* Add WebDriver detection attribute to PageView & PageViewTiming ([#1679](https://github.com/newrelic/newrelic-browser-agent/issues/1679)) ([cd70213](https://github.com/newrelic/newrelic-browser-agent/commit/cd70213f6ef9898d1e40678fad850fbf03150570))
+* Improve MFE tag setting ([#1683](https://github.com/newrelic/newrelic-browser-agent/issues/1683)) ([73c0f4c](https://github.com/newrelic/newrelic-browser-agent/commit/73c0f4cd13b9ae894caefcc071b84a6d2d2ad7d6))
+* Warn when more than one agent is running ([#1686](https://github.com/newrelic/newrelic-browser-agent/issues/1686)) ([0deae4b](https://github.com/newrelic/newrelic-browser-agent/commit/0deae4b1743b3dd7674e0abd729fc9c9aba6582c))
+
+
+### Bug Fixes
+
+* allow child registrations from blocked parents ([#1677](https://github.com/newrelic/newrelic-browser-agent/issues/1677)) ([f3880e4](https://github.com/newrelic/newrelic-browser-agent/commit/f3880e41a638e68200572190ad0eb1af21f99ad4))
+* Micro agent duplicate handlers ([#1658](https://github.com/newrelic/newrelic-browser-agent/issues/1658)) ([203aa30](https://github.com/newrelic/newrelic-browser-agent/commit/203aa303a939d9de67e62276d457f6ba6378e931))
+
 ## [1.308.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.307.0...v1.308.0) (2026-01-08)
 
 

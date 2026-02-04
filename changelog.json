@@ -5,6 +5,55 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "0deae4b1743b3dd7674e0abd729fc9c9aba6582c",
+          "message": "Warn when more than one agent is running",
+          "issues": [
+            "1686"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "73c0f4cd13b9ae894caefcc071b84a6d2d2ad7d6",
+          "message": "Improve MFE tag setting",
+          "issues": [
+            "1683"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "203aa303a939d9de67e62276d457f6ba6378e931",
+          "message": "Micro agent duplicate handlers",
+          "issues": [
+            "1658"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "cd70213f6ef9898d1e40678fad850fbf03150570",
+          "message": "Add WebDriver detection attribute to PageView & PageViewTiming",
+          "issues": [
+            "1679"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "f3880e41a638e68200572190ad0eb1af21f99ad4",
+          "message": "allow child registrations from blocked parents",
+          "issues": [
+            "1677"
+          ]
+        }
+      ],
+      "version": "1.309.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "e6df4c18-74e7-4a9a-8f6f-9b8b47eda664",
+      "createTime": "2026-02-03T20:18:42.712Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "8a835b39ea62389d5922d4fedb3b55b4479dd523",
           "message": "add support for mfe tags with the register API",
           "issues": [
@@ -3625,5 +3674,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-01-08T23:19:29.193Z"
+  "updateTime": "2026-02-03T20:18:42.712Z"
 }

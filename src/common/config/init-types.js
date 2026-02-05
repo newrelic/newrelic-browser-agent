@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  */
@@ -80,9 +80,6 @@
  * @property {Object} [soft_navigations]
  * @property {boolean} [soft_navigations.enabled] - Turn on/off the soft navigations feature (on by default).
  * @property {boolean} [soft_navigations.autoStart] - If true, the agent will automatically start the soft navigations feature. Otherwise, it will be in a deferred state until the `start` API method is called.
- * @property {Object} [spa]
- * @property {boolean} [spa.enabled] - Turn on/off the single page application feature (on by default). NOTE: the SPA feature is deprecated and under removal procedure.
- * @property {boolean} [spa.autoStart] - If true, the agent will automatically start the single page application feature. Otherwise, it will be in a deferred state until the `start` API method is called.
  * @property {boolean} [ssl] - If explicitly false, the agent will use HTTP instead of HTTPS. This setting should NOT be used.
  * @property {Object} [browser_consent_mode]
  * @property {boolean} [browser_consent_mode.enabled] - If true, the agent will use consent mode for whether to allow or disallow data harvest.

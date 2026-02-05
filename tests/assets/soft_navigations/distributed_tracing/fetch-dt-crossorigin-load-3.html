@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Fetch DT Cross Origin (Request object)</title>
+    {init}
+    {config}
+    {loader}
+    <script type="text/javascript">
+      var url = 'http://' + NREUM.info.beacon + '/dt/' + NREUM.info.licenseKey
+      var request = new Request(url)
+      window.fetch(request)
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

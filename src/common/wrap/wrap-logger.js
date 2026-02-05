@@ -1,11 +1,11 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 /**
  * @file Wraps native timeout and interval methods for instrumentation.
- * This module is used by: jserrors, spa.
+ * This module is used by: logging.
  */
 
 import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -24,8 +24,7 @@ export const FEATURE_NAMES = {
   pageViewTiming: 'page_view_timing',
   sessionReplay: 'session_replay',
   sessionTrace: 'session_trace',
-  softNav: 'soft_navigations',
-  spa: 'spa'
+  softNav: 'soft_navigations'
 }
 
 /**
@@ -37,20 +36,18 @@ export const featurePriority = {
   [FEATURE_NAMES.pageViewTiming]: 2,
   [FEATURE_NAMES.metrics]: 3,
   [FEATURE_NAMES.jserrors]: 4,
-  [FEATURE_NAMES.spa]: 5,
+  [FEATURE_NAMES.softNav]: 5,
   [FEATURE_NAMES.ajax]: 6,
   [FEATURE_NAMES.sessionTrace]: 7,
-  [FEATURE_NAMES.softNav]: 8,
-  [FEATURE_NAMES.sessionReplay]: 9,
-  [FEATURE_NAMES.logging]: 10,
-  [FEATURE_NAMES.genericEvents]: 11
+  [FEATURE_NAMES.sessionReplay]: 8,
+  [FEATURE_NAMES.logging]: 9,
+  [FEATURE_NAMES.genericEvents]: 10
 }
 
 export const FEATURE_TO_ENDPOINT = {
   [FEATURE_NAMES.pageViewEvent]: RUM,
   [FEATURE_NAMES.pageViewTiming]: EVENTS,
   [FEATURE_NAMES.ajax]: EVENTS,
-  [FEATURE_NAMES.spa]: EVENTS,
   [FEATURE_NAMES.softNav]: EVENTS,
   [FEATURE_NAMES.metrics]: JSERRORS,
   [FEATURE_NAMES.jserrors]: JSERRORS,

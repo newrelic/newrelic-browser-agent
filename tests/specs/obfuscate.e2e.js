@@ -38,7 +38,8 @@ describe('obfuscate rules', () => {
   beforeEach(async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify(rumFlags({ log: LOGGING_MODE.TRACE, logapi: LOGGING_MODE.TRACE }))
+      body: JSON.stringify(rumFlags({ log: LOGGING_MODE.TRACE, logapi: LOGGING_MODE.TRACE })),
+      permanent: true
     })
     ;[rumCapture, timingEventsCapture, ajaxEventsCapture, errorsCapture, insightsCapture, tracesCapture, interactionEventsCapture, logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testRumRequest },

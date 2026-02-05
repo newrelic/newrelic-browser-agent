@@ -1,4 +1,3 @@
-const { notIOS, notAndroid } = require('../../../../tools/browser-matcher/common-matchers.mjs')
 const { testMFEInsRequest } = require('../../../../tools/testing-server/utils/expect-tests')
 
 let mfeInsightsCapture
@@ -251,15 +250,15 @@ describe('Register API - Timings', () => {
     ]
 
     testFiles.forEach(([testFile, description]) => {
-      // the click + performance getEntries behavior is flaky in safari/android when running in LT over the wire. Seems to work fine locally
-      it.withBrowsersMatching(notIOS, notAndroid)(`should report all four MFEs with correct timing attributes for ${description}`, async () => {
+      // the pagehide event is fickle for these mobile browsers in LT, works locally though
+      it(`should report all four MFEs with correct timing attributes for ${description}`, async () => {
         await browser.url(await browser.testHandle.assetURL(testFile))
           .then(() => browser.waitForAgentLoad())
 
-        // Click to trigger mfe.js and mfe3.js load
+        // Click to trigger async MFEs to load
         await $('body').click()
 
-        // Wait for all scripts to load and main to deregister
+        // Wait for all scripts to load and do their things
         await browser.pause(3500)
 
         // Dispatch pagehide to trigger mfe2 and mfe3 harvest

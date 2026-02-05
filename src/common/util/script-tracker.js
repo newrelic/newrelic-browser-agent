@@ -5,9 +5,7 @@
 
 import { globalScope } from '../constants/runtime'
 import { cleanURL } from '../url/clean-url'
-
-const chrome = /^\s*at (?:((?:\[object object\])?(?:[^(]*\([^)]*\))*[^()]*(?: \[as \S+\])?) )?\(?((?:file|http|https|chrome-extension):.*?)?:(\d+)(?::(\d+))?\)?\s*$/i
-const gecko = /^\s*(?:(\S*|global code)(?:\(.*?\))?@)?((?:file|http|https|chrome|safari-extension).*?):(\d+)(?::(\d+))?\s*$/i
+import { chrome, gecko } from './browser-stack-matchers'
 
 /**
  * Extracts URLs from stack traces using the same logic as compute-stack-trace.js
@@ -36,7 +34,7 @@ function extractUrlsFromStack (stack) {
  * @returns {{fetchStart: number, fetchEnd: number}}
  */
 export function findScriptTimingsFromStack (stack) {
-  const timings = { fetchStart: 0, fetchEnd: 0 }
+  const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined }
   /** @type {PerformanceResourceTiming[]} The list of script resource timing entries */
   const scripts = globalScope.performance?.getEntriesByType('resource').filter(entry => entry.initiatorType === 'script') || []
   if (scripts.length < 1 || !stack) return timings
@@ -52,6 +50,7 @@ export function findScriptTimingsFromStack (stack) {
     if (match) {
       timings.fetchStart = Math.floor(match.startTime)
       timings.fetchEnd = Math.floor(match.responseEnd)
+      timings.asset = match.name
     }
   } catch (error) {
     // Don't let stack parsing errors break anything

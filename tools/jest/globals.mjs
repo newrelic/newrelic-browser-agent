@@ -6,4 +6,10 @@ if (typeof window !== 'undefined') {
   window.Response = jest.fn()
 }
 
+/** silence unneeded console debug (warn(...)) noise during tests */
+if (typeof console !== 'undefined') {
+  console.error = jest.fn()
+  console.debug = jest.fn()
+}
+
 jest.retryTimes(3)

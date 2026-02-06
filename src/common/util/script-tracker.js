@@ -41,6 +41,7 @@ export function findScriptTimingsFromStack (stack) {
 
   try {
     const mfeScriptUrl = extractUrlsFromStack(stack).at(-1) // array of URLs from the stack of the register API caller, the MFE script should be at the bottom
+    if (!mfeScriptUrl) return timings
     const match = scripts.find(script => {
       const scriptUrl = cleanURL(script.name)
       // Try exact match, then partial matches for different URL formats

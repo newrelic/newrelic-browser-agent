@@ -26,7 +26,7 @@ import { now } from '../../src/common/timing/now'
 
 // Mock script-tracker to avoid PerformanceObserver requirement
 jest.mock('../../src/common/util/script-tracker', () => ({
-  findScriptTimingsFromStack: jest.fn(() => ({ fetchStart: 0, fetchEnd: 0 }))
+  findScriptTimings: jest.fn(() => ({ fetchStart: 0, fetchEnd: 0, asset: undefined }))
 }))
 
 jest.retryTimes(0)

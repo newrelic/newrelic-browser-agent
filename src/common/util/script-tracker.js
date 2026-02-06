@@ -13,7 +13,7 @@ import { chrome, gecko } from './browser-stack-matchers'
  * @returns {string[]} Array of cleaned URLs found in the stack trace
  */
 function extractUrlsFromStack (stack) {
-  if (!stack) return []
+  if (!stack || typeof stack !== 'string') return []
 
   const urls = new Set()
   const lines = stack.split('\n')
@@ -29,13 +29,29 @@ function extractUrlsFromStack (stack) {
 }
 
 /**
- * Given an error stack, return script timing information if a script can be found with the resource timing API
- * @param {Error.stack} stack
- * @returns {{fetchStart: number, fetchEnd: number}}
+ * Returns a deep stack trace by temporarily increasing the stack trace limit.
+ * @returns {Error.stack | undefined}
  */
-export function findScriptTimingsFromStack (stack) {
+function getDeepStackTrace () {
+  let stack
+  try {
+    const originalStackLimit = Error.stackTraceLimit
+    Error.stackTraceLimit = 50
+    stack = new Error().stack
+    Error.stackTraceLimit = originalStackLimit
+  } catch (e) {
+    stack = new Error().stack
+  }
+  return stack
+}
+
+/**
+ * Uses the stack of the initiator function, returns script timing information if a script can be found with the resource timing API matching the URL found in the stack.
+ * @returns {{fetchStart: number, fetchEnd: number, asset: string|undefined}} Object containing script fetch start and end times, and the asset URL if found
+ */
+export function findScriptTimings () {
+  const stack = getDeepStackTrace()
   const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined }
-  /** @type {PerformanceResourceTiming[]} The list of script resource timing entries */
   const scripts = globalScope.performance?.getEntriesByType('resource').filter(entry => entry.initiatorType === 'script') || []
   if (scripts.length < 1 || !stack) return timings
 

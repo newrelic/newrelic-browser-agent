@@ -16,8 +16,8 @@ import { noticeError } from './noticeError'
 import { single } from '../../common/util/invoke'
 import { measure } from './measure'
 import { recordCustomEvent } from './recordCustomEvent'
-import { findScriptTimingsFromStack } from '../../common/util/script-tracker'
 import { subscribeToPageUnload } from '../../common/window/page-visibility'
+import { findScriptTimings } from '../../common/util/script-tracker'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPI} RegisterAPI
@@ -54,15 +54,11 @@ function register (agentRef, target, parent) {
   target.parent = parent || {}
   if (typeof target.tags !== 'object' || target.tags === null || Array.isArray(target.tags)) target.tags = {}
 
-  // set the stack limit higher to capture more stack frames for script tracking, then set it back to original after
-  const originalStackLimit = Error.stackTraceLimit
-  Error.stackTraceLimit = 50
   const timings = {
     registeredAt: now(),
     reportedAt: undefined,
-    ...(findScriptTimingsFromStack(new Error().stack))
+    ...findScriptTimings()
   }
-  Error.stackTraceLimit = originalStackLimit
 
   const attrs = {}
 

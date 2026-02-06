@@ -33,7 +33,7 @@ export const supportsWebSocketsTesting = new SpecMatcher()
   .include('chrome')
   .include('edge')
   .include('firefox')
-  .include('safari')
+  .include('safari<26.0')
   .include('ios>=26.0')
 
 export const notIOS = new SpecMatcher()

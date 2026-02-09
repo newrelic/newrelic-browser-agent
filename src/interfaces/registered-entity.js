@@ -21,6 +21,7 @@ export class RegisteredEntity {
   /** @type {RegisterAPIMetadata} */
   metadata = {
     target: {},
+    timings: {},
     customAttributes: {}
   }
 

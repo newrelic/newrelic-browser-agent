@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init} {config}
+    <script>
+      NREUM.init.feature_flags = ["register", 'register.generic_events', 'register.jserrors'];
+      NREUM.init.performance = {capture_marks: false, capture_measures: false, resources: {enabled: false}}
+      NREUM.init.user_actions.enabled = false
+    </script>
+    <script src="/build/nr-loader-full.min.js"></script>
+  </head>
+  <body>
+    Instrumented
+    <script>
+      mainApi = newrelic.register({
+        id: 9999,
+        name: "main",
+      });
+      let iterations = 0;
+      while (iterations++ < 5000) {
+        const div = document.createElement("div");
+        div.textContent = "Inline DIV " + Math.random().toString(36).substring(7);
+        div.id = "mfe9999-div-" + iterations;
+        document.body.appendChild(div);
+      }
+
+      while (iterations-- > 0) {
+        const divToRemove = document.getElementById("mfe9999-div-" + iterations);
+        if (divToRemove) {
+          divToRemove.remove();
+        }
+      }
+
+      const div = document.createElement("div");
+      div.textContent = "Added and removed lots of nodes across scripts";
+      document.body.appendChild(div);
+
+      document.addEventListener('click', () => {
+        const script = document.createElement('script');
+        script.src = './js/mfe/mfe.js';
+        document.head.appendChild(script);
+      })
+
+      setTimeout(() => {
+        // simulate taking ~3s to deregister
+        mainApi.deregister()
+      }, 3000);
+    </script>
+    <script type="module">
+      document.addEventListener('click', () => {
+        // Import mfe3 using dynamic import
+        import('./js/mfe/mfe/mfe/mfe.js').catch(err => console.error('Failed to load mfe3:', err));
+      })
+    </script>
+
+  </body>
+</html>

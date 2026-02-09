@@ -509,128 +509,369 @@ describe('registered-entity', () => {
       expect(sourceKeys).toEqual(expect.arrayContaining(['source.name', 'source.id', 'source.type']))
       expect(sourceKeys.length).toBe(3)
     })
-  })
 
-  it('should handle tags with various value types', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+    it('should not throw errors when parent is blocked; children still record data', async () => {
+      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors', 'register.generic_events'] } }))
 
-    await browser.execute(function () {
-      window.agent1 = new RegisteredEntity({
-        id: 1234,
-        name: 'test-agent',
-        tags: { environment: 'production', version: '2.1.0', region: 'us-west-2', critical: true }
-      })
-
-      window.agent1.noticeError('error1')
-    })
-
-    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
-
-    errorsHarvests.forEach(({ request: { query, body } }) => {
-      const data = body.err
-      expect(data).toHaveLength(1)
-
-      const error1 = data[0]
-      expect(error1.custom['source.environment']).toEqual('production')
-      expect(error1.custom['source.version']).toEqual('2.1.0')
-      expect(error1.custom['source.region']).toEqual('us-west-2')
-      expect(error1.custom['source.critical']).toEqual(true)
-    })
-  })
-
-  it('should handle tags with complex structure', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
-
-    await browser.execute(function () {
-      window.agent1 = new RegisteredEntity({
-        id: 1234,
-        name: 'test-agent',
-        tags: {
-          team: 'payments',
-          environment: 'staging',
-          critical: false,
-          version: '3.2.1'
-        }
-      })
-
-      window.agent1.noticeError('error1')
-    })
-
-    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
-
-    errorsHarvests.forEach(({ request: { query, body } }) => {
-      const data = body.err
-      expect(data).toHaveLength(1)
-
-      const error1 = data[0]
-      expect(error1.custom['source.team']).toEqual('payments')
-      expect(error1.custom['source.environment']).toEqual('staging')
-      expect(error1.custom['source.critical']).toEqual(false)
-      expect(error1.custom['source.version']).toEqual('3.2.1')
-    })
-  })
-
-  it('should not throw errors when parent is blocked; children still record data', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors', 'register.generic_events'] } }))
-
-    const { hasErrors } = await browser.execute(function () {
-      let hasErrors = false
-      try {
+      const { hasErrors } = await browser.execute(function () {
+        let hasErrors = false
+        try {
         // Blocked parent (invalid id)
-        window.blockedParent = new RegisteredEntity({ id: '', name: 'blocked-parent' })
+          window.blockedParent = new RegisteredEntity({ id: '', name: 'blocked-parent' })
 
-        // Parent API calls should not throw but should NOT be recorded
-        window.blockedParent.noticeError('PARENT_SHOULD_NOT_RECORD')
-        window.blockedParent.addPageAction('PARENT_SHOULD_NOT_RECORD')
-        window.blockedParent.log('PARENT_SHOULD_NOT_RECORD', { level: 'error' })
-        window.blockedParent.recordCustomEvent('CustomEvent', { val: 'PARENT_SHOULD_NOT_RECORD' })
+          // Parent API calls should not throw but should NOT be recorded
+          window.blockedParent.noticeError('PARENT_SHOULD_NOT_RECORD')
+          window.blockedParent.addPageAction('PARENT_SHOULD_NOT_RECORD')
+          window.blockedParent.log('PARENT_SHOULD_NOT_RECORD', { level: 'error' })
+          window.blockedParent.recordCustomEvent('CustomEvent', { val: 'PARENT_SHOULD_NOT_RECORD' })
 
-        // Children should be allowed and record data
-        window.child = window.blockedParent.register({ id: 101, name: 'child' })
-        window.grandchild = window.child.register({ id: 102, name: 'grandchild' })
+          // Children should be allowed and record data
+          window.child = window.blockedParent.register({ id: 101, name: 'child' })
+          window.grandchild = window.child.register({ id: 102, name: 'grandchild' })
 
-        window.child.noticeError('CHILD_SHOULD_RECORD')
-        window.child.addPageAction('CHILD_SHOULD_RECORD')
-        window.child.log('CHILD_SHOULD_RECORD', { level: 'error' })
-        window.child.recordCustomEvent('CustomEvent', { val: 'CHILD_SHOULD_RECORD' })
+          window.child.noticeError('CHILD_SHOULD_RECORD')
+          window.child.addPageAction('CHILD_SHOULD_RECORD')
+          window.child.log('CHILD_SHOULD_RECORD', { level: 'error' })
+          window.child.recordCustomEvent('CustomEvent', { val: 'CHILD_SHOULD_RECORD' })
 
-        window.grandchild.noticeError('GRANDCHILD_SHOULD_RECORD')
-        window.grandchild.addPageAction('GRANDCHILD_SHOULD_RECORD')
-        window.grandchild.log('GRANDCHILD_SHOULD_RECORD', { level: 'error' })
-        window.grandchild.recordCustomEvent('CustomEvent', { val: 'GRANDCHILD_SHOULD_RECORD' })
-      } catch (err) {
-        hasErrors = true
-      }
-      return { hasErrors }
+          window.grandchild.noticeError('GRANDCHILD_SHOULD_RECORD')
+          window.grandchild.addPageAction('GRANDCHILD_SHOULD_RECORD')
+          window.grandchild.log('GRANDCHILD_SHOULD_RECORD', { level: 'error' })
+          window.grandchild.recordCustomEvent('CustomEvent', { val: 'GRANDCHILD_SHOULD_RECORD' })
+        } catch (err) {
+          hasErrors = true
+        }
+        return { hasErrors }
+      })
+
+      // No errors thrown creating/using blocked parent and children
+      expect(hasErrors).toBe(false)
+
+      // Errors: children recorded, parent not recorded
+      const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+      const errorData = errorsHarvests.flatMap(h => h.request.body.err || [])
+      const messages = errorData.map(err => String(err.params.message || ''))
+      expect(messages.some(m => m.includes('PARENT_SHOULD_NOT_RECORD'))).toBe(false)
+      expect(messages.some(m => m.includes('CHILD_SHOULD_RECORD'))).toBe(true)
+      expect(messages.some(m => m.includes('GRANDCHILD_SHOULD_RECORD'))).toBe(true)
+
+      // Insights (PageAction/CustomEvent/Measures): children recorded, parent not recorded
+      const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+      const insightsData = insightsHarvests.flatMap(h => h.request.body.ins || [])
+      const insightValues = insightsData.map(ins => (ins.val || ins.actionName || ''))
+      expect(insightValues.some(v => v.includes('PARENT_SHOULD_NOT_RECORD'))).toBe(false)
+      expect(insightValues.some(v => v.includes('CHILD_SHOULD_RECORD'))).toBe(true)
+      expect(insightValues.some(v => v.includes('GRANDCHILD_SHOULD_RECORD'))).toBe(true)
+
+      // Logs: children recorded, parent not recorded
+      const logsHarvests = await logsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+      const logsData = logsHarvests.flatMap(h => {
+        try { return JSON.parse(h.request.body)[0]?.logs || [] } catch { return [] }
+      })
+      const logMessages = logsData.map(l => l.message || '')
+      expect(logMessages.some(m => m.includes('PARENT_SHOULD_NOT_RECORD'))).toBe(false)
+      expect(logMessages.some(m => m.includes('CHILD_SHOULD_RECORD'))).toBe(true)
+      expect(logMessages.some(m => m.includes('GRANDCHILD_SHOULD_RECORD'))).toBe(true)
+    })
+  })
+
+  describe('MFE timing tracking', () => {
+    it('should handle tags with various value types', async () => {
+      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+      await browser.execute(function () {
+        window.agent1 = new RegisteredEntity({
+          id: 1234,
+          name: 'test-agent',
+          tags: { environment: 'production', version: '2.1.0', region: 'us-west-2', critical: true }
+        })
+
+        window.agent1.noticeError('error1')
+      })
+
+      const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+      errorsHarvests.forEach(({ request: { query, body } }) => {
+        const data = body.err
+        expect(data).toHaveLength(1)
+
+        const error1 = data[0]
+        expect(error1.custom['source.environment']).toEqual('production')
+        expect(error1.custom['source.version']).toEqual('2.1.0')
+        expect(error1.custom['source.region']).toEqual('us-west-2')
+        expect(error1.custom['source.critical']).toEqual(true)
+      })
     })
 
-    // No errors thrown creating/using blocked parent and children
-    expect(hasErrors).toBe(false)
+    it('should handle tags with complex structure', async () => {
+      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
 
-    // Errors: children recorded, parent not recorded
-    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
-    const errorData = errorsHarvests.flatMap(h => h.request.body.err || [])
-    const messages = errorData.map(err => String(err.params.message || ''))
-    expect(messages.some(m => m.includes('PARENT_SHOULD_NOT_RECORD'))).toBe(false)
-    expect(messages.some(m => m.includes('CHILD_SHOULD_RECORD'))).toBe(true)
-    expect(messages.some(m => m.includes('GRANDCHILD_SHOULD_RECORD'))).toBe(true)
+      await browser.execute(function () {
+        window.agent1 = new RegisteredEntity({
+          id: 1234,
+          name: 'test-agent',
+          tags: {
+            team: 'payments',
+            environment: 'staging',
+            critical: false,
+            version: '3.2.1'
+          }
+        })
 
-    // Insights (PageAction/CustomEvent/Measures): children recorded, parent not recorded
-    const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
-    const insightsData = insightsHarvests.flatMap(h => h.request.body.ins || [])
-    const insightValues = insightsData.map(ins => (ins.val || ins.actionName || ''))
-    expect(insightValues.some(v => v.includes('PARENT_SHOULD_NOT_RECORD'))).toBe(false)
-    expect(insightValues.some(v => v.includes('CHILD_SHOULD_RECORD'))).toBe(true)
-    expect(insightValues.some(v => v.includes('GRANDCHILD_SHOULD_RECORD'))).toBe(true)
+        window.agent1.noticeError('error1')
+      })
 
-    // Logs: children recorded, parent not recorded
-    const logsHarvests = await logsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
-    const logsData = logsHarvests.flatMap(h => {
-      try { return JSON.parse(h.request.body)[0]?.logs || [] } catch { return [] }
+      const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+      errorsHarvests.forEach(({ request: { query, body } }) => {
+        const data = body.err
+        expect(data).toHaveLength(1)
+
+        const error1 = data[0]
+        expect(error1.custom['source.team']).toEqual('payments')
+        expect(error1.custom['source.environment']).toEqual('staging')
+        expect(error1.custom['source.critical']).toEqual(false)
+        expect(error1.custom['source.version']).toEqual('3.2.1')
+      })
     })
-    const logMessages = logsData.map(l => l.message || '')
-    expect(logMessages.some(m => m.includes('PARENT_SHOULD_NOT_RECORD'))).toBe(false)
-    expect(logMessages.some(m => m.includes('CHILD_SHOULD_RECORD'))).toBe(true)
-    expect(logMessages.some(m => m.includes('GRANDCHILD_SHOULD_RECORD'))).toBe(true)
+
+    it('should not throw errors when parent is blocked; children still record data', async () => {
+      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors', 'register.generic_events'] } }))
+
+      it('should report MicroFrontEndTiming event with all timing attributes on deregister', async () => {
+        await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', {
+          init: { feature_flags: ['register', 'register.generic_events'] }
+        }))
+        await browser.execute(function () {
+          const mfe = new RegisteredEntity({ id: 1, name: 'test-mfe' })
+
+          // Simulate some work
+          const start = Date.now()
+          while (Date.now() - start < 10) {
+          // busy wait for ~10ms
+          }
+
+          mfe.deregister()
+        })
+
+        const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+        expect(insightsHarvests.length).toBeGreaterThanOrEqual(1)
+
+        const timingEvents = insightsHarvests
+          .flatMap(({ request: { body } }) => body.ins)
+          .filter(event => event.eventType === 'MicroFrontEndTiming')
+
+        expect(timingEvents.length).toBeGreaterThanOrEqual(1)
+
+        const timing = timingEvents[0]
+        expect(timing).toHaveProperty('duration')
+        expect(timing).toHaveProperty('timeToLoad')
+        expect(timing).toHaveProperty('timeToBeRequested')
+        expect(timing).toHaveProperty('timeToFetch')
+        expect(timing).toHaveProperty('timeToRegister')
+        expect(timing).toHaveProperty('timeAlive')
+
+        // All values should be numbers
+        expect(typeof timing.duration).toBe('number')
+        expect(typeof timing.timeToLoad).toBe('number')
+        expect(typeof timing.timeToBeRequested).toBe('number')
+        expect(typeof timing.timeToFetch).toBe('number')
+        expect(typeof timing.timeToRegister).toBe('number')
+        expect(typeof timing.timeAlive).toBe('number')
+
+        // timeAlive should be positive since work was done
+        expect(timing.timeAlive).toBeGreaterThan(0)
+      })
+
+      it('should report MicroFrontEndTiming event on pagehide', async () => {
+        await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', {
+          init: { feature_flags: ['register', 'register.generic_events'] }
+        }))
+
+        await browser.execute(function () {
+          window.mfe = new RegisteredEntity({ id: 1, name: 'test-mfe' })
+
+          // Simulate some work
+          const start = Date.now()
+          while (Date.now() - start < 10) {
+          // busy wait
+          }
+
+          // Trigger pagehide instead of deregister
+          window.dispatchEvent(new Event('pagehide'))
+        })
+
+        const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+
+        const timingEvents = insightsHarvests
+          .flatMap(({ request: { body } }) => body.ins)
+          .filter(event => event.eventType === 'MicroFrontEndTiming')
+
+        expect(timingEvents.length).toBeGreaterThanOrEqual(1)
+        expect(timingEvents[0].timeAlive).toBeGreaterThan(0)
+      })
+
+      it('should not report timing twice if deregistered before pagehide', async () => {
+        await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', {
+          init: { feature_flags: ['register', 'register.generic_events'] }
+        }))
+
+        await browser.execute(function () {
+          const mfe = new RegisteredEntity({ id: 1, name: 'test-mfe' })
+          mfe.deregister()
+          window.dispatchEvent(new Event('pagehide'))
+        })
+
+        const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+
+        const timingEvents = insightsHarvests
+          .flatMap(({ request: { body } }) => body.ins)
+          .filter(event => event.eventType === 'MicroFrontEndTiming')
+
+        // Should only get one timing event despite both deregister and pagehide
+        expect(timingEvents).toHaveLength(1)
+      })
+
+      it('should calculate timeAlive as duration between register and deregister', async () => {
+        await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', {
+          init: { feature_flags: ['register', 'register.generic_events'] }
+        }))
+
+        const waitTime = await browser.execute(function () {
+          const waitMs = 100
+          const mfe = new RegisteredEntity({ id: 1, name: 'timed-mfe' })
+
+          setTimeout(() => {
+            mfe.deregister()
+          }, waitMs)
+
+          return waitMs
+        })
+
+        const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+
+        const timingEvents = insightsHarvests
+          .flatMap(({ request: { body } }) => body.ins)
+          .filter(event => event.eventType === 'MicroFrontEndTiming')
+
+        expect(timingEvents.length).toBeGreaterThanOrEqual(1)
+
+        const timing = timingEvents[0]
+        // timeAlive should be approximately the wait time (with some tolerance for execution time)
+        expect(timing.timeAlive).toBeGreaterThanOrEqual(waitTime - 50)
+        expect(timing.timeAlive).toBeLessThan(waitTime + 200)
+      })
+
+      it('should track separate timings for nested MFEs', async () => {
+        await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', {
+          init: { feature_flags: ['register', 'register.generic_events'] }
+        }))
+
+        await browser.execute(function () {
+          const parent = new RegisteredEntity({ id: 1, name: 'parent-mfe' })
+
+          // Wait a bit before creating child
+          const start = Date.now()
+          while (Date.now() - start < 10) {
+          // busy wait
+          }
+
+          const child = new RegisteredEntity({ id: 2, name: 'child-mfe' }, parent)
+
+          // Deregister child first, then parent
+          setTimeout(() => {
+            child.deregister()
+            parent.deregister()
+          }, 50)
+        })
+
+        const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+
+        const timingEvents = insightsHarvests
+          .flatMap(({ request: { body } }) => body.ins)
+          .filter(event => event.eventType === 'MicroFrontEndTiming')
+
+        // Should get timing events for both parent and child
+        expect(timingEvents.length).toBeGreaterThanOrEqual(2)
+
+        // Each should have independent timing calculations
+        timingEvents.forEach(timing => {
+          expect(timing.timeAlive).toBeGreaterThan(0)
+          expect(timing.duration).toBeGreaterThan(0)
+        })
+      })
+
+      it('should handle rapid registration and deregistration of multiple MFEs', async () => {
+        await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', {
+          init: { feature_flags: ['register', 'register.generic_events'] }
+        }))
+
+        await browser.execute(function () {
+          const mfes = []
+
+          // Create multiple MFEs rapidly
+          for (let i = 1; i <= 5; i++) {
+            mfes.push(new RegisteredEntity({ id: i, name: `mfe-${i}` }))
+          }
+
+          // Deregister all after a short delay
+          setTimeout(() => {
+            mfes.forEach(mfe => mfe.deregister())
+          }, 30)
+        })
+
+        const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+
+        const timingEvents = insightsHarvests
+          .flatMap(({ request: { body } }) => body.ins)
+          .filter(event => event.eventType === 'MicroFrontEndTiming')
+
+        // Should get timing events for all 5 MFEs
+        expect(timingEvents.length).toBeGreaterThanOrEqual(5)
+
+        // All should have valid timing data
+        timingEvents.forEach(timing => {
+          expect(timing.duration).toBeGreaterThan(0)
+          expect(timing.timeAlive).toBeGreaterThanOrEqual(0)
+          expect(typeof timing.timeToLoad).toBe('number')
+        })
+      })
+
+      it('should report timing metrics with correct relationships', async () => {
+        await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', {
+          init: { feature_flags: ['register', 'register.generic_events'] }
+        }))
+
+        await browser.execute(function () {
+          const mfe = new RegisteredEntity({ id: 1, name: 'test-mfe' })
+
+          // Do some work
+          const start = Date.now()
+          while (Date.now() - start < 20) {
+          // busy wait
+          }
+
+          mfe.deregister()
+        })
+
+        const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+
+        const timingEvents = insightsHarvests
+          .flatMap(({ request: { body } }) => body.ins)
+          .filter(event => event.eventType === 'MicroFrontEndTiming')
+
+        expect(timingEvents).toHaveLength(1)
+
+        const timing = timingEvents[0]
+
+        // Verify all timing values are non-negative
+        expect(timing.duration).toBeGreaterThanOrEqual(0)
+        expect(timing.timeToLoad).toBeGreaterThanOrEqual(0)
+        expect(timing.timeToBeRequested).toBeGreaterThanOrEqual(0)
+        expect(timing.timeToFetch).toBeGreaterThanOrEqual(0)
+        expect(timing.timeToRegister).toBeGreaterThanOrEqual(0)
+        expect(timing.timeAlive).toBeGreaterThanOrEqual(0)
+      })
+    })
   })
 })

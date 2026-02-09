@@ -16,6 +16,8 @@ import { noticeError } from './noticeError'
 import { single } from '../../common/util/invoke'
 import { measure } from './measure'
 import { recordCustomEvent } from './recordCustomEvent'
+import { subscribeToPageUnload } from '../../common/window/page-visibility'
+import { findScriptTimings } from '../../common/util/script-tracker'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPI} RegisterAPI
@@ -51,6 +53,12 @@ function register (agentRef, target, parent) {
   target.blocked = false
   target.parent = parent || {}
   if (typeof target.tags !== 'object' || target.tags === null || Array.isArray(target.tags)) target.tags = {}
+
+  const timings = {
+    registeredAt: now(),
+    reportedAt: undefined,
+    ...findScriptTimings()
+  }
 
   const attrs = {}
 
@@ -96,6 +104,7 @@ function register (agentRef, target, parent) {
     addPageAction: (name, attributes = {}) => report(addPageAction, [name, { ...attrs, ...attributes }, agentRef], target),
     deregister: () => {
       /** note: blocking this instance will disable access for all entities sharing the instance, and will invalidate it from the v2 checks */
+      reportTimings()
       block(single(() => warn(68)))
     },
     log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
@@ -109,7 +118,8 @@ function register (agentRef, target, parent) {
     /** metadata */
     metadata: {
       customAttributes: attrs,
-      target
+      target,
+      timings
     }
   }
 
@@ -123,7 +133,28 @@ function register (agentRef, target, parent) {
   }
 
   /** only allow registered APIs to be tracked in the agent runtime */
-  if (!isBlocked()) registeredEntities.push(api)
+  if (!isBlocked()) {
+    registeredEntities.push(api)
+    subscribeToPageUnload(reportTimings)
+  }
+
+  /**
+   * Reports the gathered timings for the registered entity through a custom event to the container agent. Only reports once
+   * by checking for the presence of the reportedAt timing.
+   * @returns {void}
+   */
+  function reportTimings () {
+    // only ever report the timings the first time this is called
+    if (timings.reportedAt) return
+    timings.reportedAt = now()
+    api.recordCustomEvent('MicroFrontEndTiming', {
+      timeToLoad: timings.registeredAt - timings.fetchStart, // fetchStart to registeredAt
+      timeToBeRequested: timings.fetchStart, // origin to fetchStart
+      timeToFetch: timings.fetchEnd - timings.fetchStart, // fetchStart to fetchEnd
+      timeToRegister: timings.registeredAt - timings.fetchEnd, // fetchEnd to registeredAt
+      timeAlive: timings.reportedAt - timings.registeredAt // registeredAt to reportedAt
+    })
+  }
 
   /**
    * Sets a value local to the registered API attrs. Will do nothing if APIs are deregistered.

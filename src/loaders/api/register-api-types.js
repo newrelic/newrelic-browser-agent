@@ -30,6 +30,12 @@
 /**
  * @typedef {Object} RegisterAPIMetadata
  * @property {Object} customAttributes - The custom attributes for the registered entity.
+ * @property {Object} timings - The timing metrics for the registered entity.
+ * @property {number} timings.registeredAt - The timestamp when the registered entity was created.
+ * @property {number} [timings.reportedAt] - The timestamp when the registered entity was deregistered.
+ * @property {number} timings.fetchStart - The timestamp when the registered entity began fetching.
+ * @property {number} timings.fetchEnd - The timestamp when the registered entity finished fetching.
+ * @property {Object} [timings.asset] - The asset path (if found) for the registered entity.
  * @property {Object} target - The options for the registered entity.
  * @property {string} [target.licenseKey] - The license key for the registered entity. If none was supplied, it will assume the license key from the main agent.
  * @property {string} target.id - The ID for the registered entity.

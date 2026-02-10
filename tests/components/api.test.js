@@ -201,7 +201,7 @@ describe('API tests', () => {
         expectHandled('bstApi', [{ e: expect.toBeNumber(), n: 'Event Name', o: 'Origin of event', s: expect.toBeNumber(), t: 'api' }])
 
         const payload = handleModule.handle.mock.calls.find(callArr => callArr[0] === 'bstApi')[1][0]
-        expect(payload.e - payload.s).toEqual(1000) // end - start was 1000ms apart in API call
+        expect(payload.e - payload.s).toBeCloseTo(1000, -1) // a little flaky, sometimes reports as "1001" due to rounding error
       })
 
       test('should return error code for negative timestamps', () => {

@@ -268,6 +268,11 @@ module.exports = fp(async function (fastify, testServer) {
   }, (request, reply) => {
     reply.code(200).send('')
   })
+  fastify.get('/mock/*', {
+    compress: false
+  }, (request, reply) => {
+    reply.code(200).send('')
+  })
   fastify.get('/session-replay', async (request, reply) => {
     const replayData = await retrieveReplayData(request.query.sessionId)
     if (replayData) {

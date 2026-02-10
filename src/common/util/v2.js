@@ -15,6 +15,18 @@ export const V2_TYPES = {
 }
 
 /**
+ * Returns the registered target associated with a given ID. Returns undefined if not found.
+ * @param {string|number} id
+ * @param {*} aggregateInstance
+ * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget | undefined}
+ */
+export function getRegisteredTargetFromId (id, aggregateInstance) {
+  if (!id) return
+  const registeredEntities = aggregateInstance?.agentRef.runtime.registeredEntities
+  return registeredEntities?.find(entity => String(entity.metadata.target.id) === String(id))?.metadata.target
+}
+
+/**
  * When given a valid target, returns an object with the V2 payload attributes.  Returns an empty object otherwise.
  * @note Field names may change as the schema is finalized
  *

@@ -57,7 +57,7 @@ const registeredEntityHtmlTemplate = (script) => `<html>
       NREUM.init.page_view_timing.enabled = false
       NREUM.init.session_replay.enabled = false
       NREUM.init.session_trace.enabled = false
-      NREUM.init.spa.enabled = false
+      NREUM.init.soft_navigations.enabled = false
     </script>
     {loader}
     <script src="${script}.js"></script>

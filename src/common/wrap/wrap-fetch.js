@@ -1,11 +1,11 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 /**
  * @file Wraps `fetch` and related methods for instrumentation.
- * This module is used by: ajax, spa.
+ * This module is used by: ajax.
  */
 import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { globalScope } from '../constants/runtime'

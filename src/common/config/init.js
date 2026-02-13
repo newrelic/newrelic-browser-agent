@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { FEATURE_FLAGS } from '../../features/generic_events/constants'
@@ -134,7 +134,6 @@ const InitModelFn = () => {
     },
     session_trace: { enabled: true, autoStart: true },
     soft_navigations: { enabled: true, autoStart: true },
-    spa: { enabled: true, autoStart: true },
     ssl: undefined,
     user_actions: { enabled: true, elementAttributes: ['id', 'className', 'tagName', 'type'] }
   }

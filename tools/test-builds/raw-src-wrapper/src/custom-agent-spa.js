@@ -7,7 +7,6 @@ import { PageViewEvent } from '@newrelic/browser-agent/src/features/page_view_ev
 import { PageViewTiming } from '@newrelic/browser-agent/src/features/page_view_timing'
 import { SessionTrace } from '@newrelic/browser-agent/src/features/session_trace'
 import { SessionReplay } from '@newrelic/browser-agent/src/features/session_replay'
-import { Spa } from '@newrelic/browser-agent/src/features/spa'
 import { SoftNav } from '@newrelic/browser-agent/src/features/soft_navigations'
 
 window.agent = new Agent({
@@ -20,7 +19,6 @@ window.agent = new Agent({
     PageViewTiming,
     SessionTrace,
     SessionReplay,
-    Spa,
     SoftNav
   ],
   loaderType: 'spa'

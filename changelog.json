@@ -5,6 +5,31 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "81bfd8f686611b6443132d34e31fdb79b95808a1",
+          "message": "Removing old SPA feature & related wrappings entirely",
+          "issues": [
+            "1689"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "6824f1eaf002d8732ca948f0e5b4d6bd7802d199",
+          "message": "Capture MFE timings as MicroFrontEndTiming Events",
+          "issues": [
+            "1676"
+          ]
+        }
+      ],
+      "version": "1.310.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "53a49ead-80b9-4bbb-b498-b4d381c545c8",
+      "createTime": "2026-02-13T19:27:12.064Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "0deae4b1743b3dd7674e0abd729fc9c9aba6582c",
           "message": "Warn when more than one agent is running",
           "issues": [
@@ -3674,5 +3699,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-02-03T20:18:42.712Z"
+  "updateTime": "2026-02-13T19:27:12.064Z"
 }

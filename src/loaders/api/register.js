@@ -54,11 +54,7 @@ function register (agentRef, target, parent) {
   target.parent = parent || {}
   if (typeof target.tags !== 'object' || target.tags === null || Array.isArray(target.tags)) target.tags = {}
 
-  const timings = {
-    registeredAt: now(),
-    reportedAt: undefined,
-    ...findScriptTimings()
-  }
+  const timings = findScriptTimings()
 
   const attrs = {}
 
@@ -148,6 +144,8 @@ function register (agentRef, target, parent) {
     if (timings.reportedAt) return
     timings.reportedAt = now()
     api.recordCustomEvent('MicroFrontEndTiming', {
+      assetUrl: timings.asset, // the url of the script that was registered, or undefined if it could not be determined (inline or no match)
+      assetType: timings.type, // the type of asset that was associated with the timings, one of 'script', 'link' (if preloaded and found in the resource timing buffer), 'preload' (if preloaded but not found in the resource timing buffer), or "unknown" if it could not be determined
       timeToLoad: timings.registeredAt - timings.fetchStart, // fetchStart to registeredAt
       timeToBeRequested: timings.fetchStart, // origin to fetchStart
       timeToFetch: timings.fetchEnd - timings.fetchStart, // fetchStart to fetchEnd

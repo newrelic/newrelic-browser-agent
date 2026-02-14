@@ -105,28 +105,28 @@ const testCases = [
 const fetchScenarios = [
   {
     name: 'when fetch is called with one string argument',
-    sameOriginFile: 'spa/dt/fetch-dt-sameorigin-load.html',
-    crossOriginFile: 'spa/dt/fetch-dt-crossorigin-load.html'
+    sameOriginFile: 'soft_navigations/distributed_tracing/fetch-dt-sameorigin-load.html',
+    crossOriginFile: 'soft_navigations/distributed_tracing/fetch-dt-crossorigin-load.html'
   },
   {
     name: 'when fetch is called with URL string and options arguments',
-    sameOriginFile: 'spa/dt/fetch-dt-sameorigin-load-2.html',
-    crossOriginFile: 'spa/dt/fetch-dt-crossorigin-load-2.html'
+    sameOriginFile: 'soft_navigations/distributed_tracing/fetch-dt-sameorigin-load-2.html',
+    crossOriginFile: 'soft_navigations/distributed_tracing/fetch-dt-crossorigin-load-2.html'
   },
   {
     name: 'when fetch is called with a Request argument',
-    sameOriginFile: 'spa/dt/fetch-dt-sameorigin-load-3.html',
-    crossOriginFile: 'spa/dt/fetch-dt-crossorigin-load-3.html'
+    sameOriginFile: 'soft_navigations/distributed_tracing/fetch-dt-sameorigin-load-3.html',
+    crossOriginFile: 'soft_navigations/distributed_tracing/fetch-dt-crossorigin-load-3.html'
   },
   {
     name: 'when fetch is called with a URL object argument',
-    sameOriginFile: 'spa/dt/fetch-dt-sameorigin-load-4.html',
-    crossOriginFile: 'spa/dt/fetch-dt-crossorigin-load-4.html'
+    sameOriginFile: 'soft_navigations/distributed_tracing/fetch-dt-sameorigin-load-4.html',
+    crossOriginFile: 'soft_navigations/distributed_tracing/fetch-dt-crossorigin-load-4.html'
   },
   {
     name: 'when fetch is called with an object argument containing a toString function',
-    sameOriginFile: 'spa/dt/fetch-dt-sameorigin-load-5.html',
-    crossOriginFile: 'spa/dt/fetch-dt-crossorigin-load-5.html'
+    sameOriginFile: 'soft_navigations/distributed_tracing/fetch-dt-sameorigin-load-5.html',
+    crossOriginFile: 'soft_navigations/distributed_tracing/fetch-dt-crossorigin-load-5.html'
   }
 ]
 
@@ -143,10 +143,10 @@ describe('xhr distributed tracing', () => {
 
   testCases.forEach(testCase => {
     it(testCase.name, async () => {
-      let targetAsset = 'spa/dt/xhr-dt-sameorigin-load.html'
+      let targetAsset = 'soft_navigations/distributed_tracing/xhr-dt-sameorigin-load.html'
       let targetServer = 'assetServer'
       if (!testCase.sameOrigin) {
-        targetAsset = 'spa/dt/xhr-dt-crossorigin-load.html'
+        targetAsset = 'soft_navigations/distributed_tracing/xhr-dt-crossorigin-load.html'
         targetServer = 'bamServer'
       }
       const ajaxCapture = await browser.testHandle.createNetworkCaptures(targetServer, { test: assetServerTraceTest })
@@ -241,13 +241,13 @@ describe('xhr distributed tracing', () => {
       it(testCase.name, async () => {
         const assetAjaxTest = function (request) {
           const url = new URL(request.url, 'resolve://')
-          return url.pathname === '/tests/assets/spa/dt/fetch-dt-sameorigin-load-empty-string.html'
+          return url.pathname === '/tests/assets/soft_navigations/distributed_tracing/fetch-dt-sameorigin-load-empty-string.html'
         }
         const ajaxCapture = await browser.testHandle.createNetworkCaptures('assetServer', { test: assetAjaxTest })
 
         const [ajaxRequest] = await Promise.all([
           ajaxCapture.waitForResult({ totalCount: 2 }),
-          browser.url(await browser.testHandle.assetURL('spa/dt/fetch-dt-sameorigin-load-empty-string.html', {
+          browser.url(await browser.testHandle.assetURL('soft_navigations/distributed_tracing/fetch-dt-sameorigin-load-empty-string.html', {
             config,
             injectUpdatedLoaderConfig: true,
             init: {

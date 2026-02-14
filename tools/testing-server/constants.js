@@ -112,6 +112,5 @@ module.exports.defaultInitBlock = {
   session_trace: enabledFeature,
   ssl: !!args.B,
   soft_navigations: enabledFeature,
-  spa: enabledFeature,
   user_actions: { enabled: true, elementAttributes: ['id', 'className', 'tagName', 'type'] }
 }

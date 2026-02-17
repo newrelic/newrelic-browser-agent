@@ -5,6 +5,8 @@
 -->
 <html>
   <head>
+    <!-- preloaded JS asset wont have a performance entry, the MFE timing will be 0 for fetch data -->
+    <link rel="preload" href="./js/mfe/mfe-preload.js" as="script" crossorigin>
     <title>RUM Unit Test</title>
     {init} {config}
     <script>
@@ -16,6 +18,8 @@
   </head>
   <body>
     Instrumented
+    <!-- this was a case seen in NR1 where a preloaded script was not captured in the performance entries -->
+    <script src="./js/mfe/mfe-preload.js" crossorigin="anonymous"></script>
     <script>
       mainApi = newrelic.register({
         id: 9999,
@@ -57,6 +61,5 @@
         import('./js/mfe/mfe/mfe/mfe.js').catch(err => console.error('Failed to load mfe3:', err));
       })
     </script>
-
   </body>
 </html>

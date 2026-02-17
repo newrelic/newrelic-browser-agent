@@ -9,12 +9,14 @@
     <link rel="preload" href="./js/mfe/mfe-preload.js" as="script" crossorigin>
     <title>RUM Unit Test</title>
     {init} {config}
+    <!-- we want to test that an overloaded resource buffer still allows capture -->
     <script>
+      performance.setResourceTimingBufferSize(0)
       NREUM.init.feature_flags = ["register", 'register.generic_events', 'register.jserrors'];
       NREUM.init.performance = {capture_marks: false, capture_measures: false, resources: {enabled: false}}
       NREUM.init.user_actions.enabled = false
     </script>
-    <script src="/build/nr-loader-full.min.js"></script>
+    {loader}
   </head>
   <body>
     Instrumented
@@ -61,6 +63,5 @@
         import('./js/mfe/mfe/mfe/mfe.js').catch(err => console.error('Failed to load mfe3:', err));
       })
     </script>
-
   </body>
 </html>

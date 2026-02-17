@@ -5,6 +5,47 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "92a83e522e39cd145b751728df8083cc63a5d162",
+          "message": "better MFE timing handling",
+          "issues": [
+            "1692"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "dd2951bd4786a96f5d1aea9c062da79d16b603ef",
+          "message": "Update measure API types",
+          "issues": [
+            "1694"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "81bfd8f686611b6443132d34e31fdb79b95808a1",
+          "message": "Removing old SPA feature & related wrappings entirely",
+          "issues": [
+            "1689"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "6824f1eaf002d8732ca948f0e5b4d6bd7802d199",
+          "message": "Capture MFE timings as MicroFrontEndTiming Events",
+          "issues": [
+            "1676"
+          ]
+        }
+      ],
+      "version": "1.310.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "17b5f3a6-6d82-4f2b-882a-14a83adc9e82",
+      "createTime": "2026-02-17T22:11:19.817Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "0deae4b1743b3dd7674e0abd729fc9c9aba6582c",
           "message": "Warn when more than one agent is running",
           "issues": [
@@ -3674,5 +3715,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-02-03T20:18:42.712Z"
+  "updateTime": "2026-02-17T22:11:19.817Z"
 }

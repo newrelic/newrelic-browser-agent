@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.310.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.309.0...v1.310.0) (2026-02-17)
+
+
+### Features
+
+* better MFE timing handling ([#1692](https://github.com/newrelic/newrelic-browser-agent/issues/1692)) ([92a83e5](https://github.com/newrelic/newrelic-browser-agent/commit/92a83e522e39cd145b751728df8083cc63a5d162))
+* Capture MFE timings as MicroFrontEndTiming Events ([#1676](https://github.com/newrelic/newrelic-browser-agent/issues/1676)) ([6824f1e](https://github.com/newrelic/newrelic-browser-agent/commit/6824f1eaf002d8732ca948f0e5b4d6bd7802d199))
+* Removing old SPA feature & related wrappings entirely ([#1689](https://github.com/newrelic/newrelic-browser-agent/issues/1689)) ([81bfd8f](https://github.com/newrelic/newrelic-browser-agent/commit/81bfd8f686611b6443132d34e31fdb79b95808a1))
+
+
+### Bug Fixes
+
+* Update measure API types ([#1694](https://github.com/newrelic/newrelic-browser-agent/issues/1694)) ([dd2951b](https://github.com/newrelic/newrelic-browser-agent/commit/dd2951bd4786a96f5d1aea9c062da79d16b603ef))
+
 ## [1.309.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.308.0...v1.309.0) (2026-02-03)
 
 

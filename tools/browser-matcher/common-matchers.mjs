@@ -83,6 +83,12 @@ export const onlySafari = new SpecMatcher()
   .include('safari')
   .include('ios')
 
+export const fullySupportsPreloadResourceTimings = new SpecMatcher()
+  .include('chrome')
+  .include('firefox')
+  .include('edge')
+  .include('android')
+
 export const supportsFirstPaint = new SpecMatcher()
   .include('android')
   .include('chrome')

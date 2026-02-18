@@ -1,7 +1,7 @@
 // config
 window.NREUM={
   init: {
-    feature_flags: ['register', 'register.jserrors'],
+    feature_flags: ['register', 'register.jserrors', 'register.generic_events'],
     distributed_tracing: {
       enabled: true
     },

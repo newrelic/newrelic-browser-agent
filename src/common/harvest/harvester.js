@@ -35,7 +35,7 @@ export class Harvester {
         if (typeof aggregateInst.harvestOpts.beforeUnload === 'function') aggregateInst.harvestOpts.beforeUnload()
       })
       this.initializedAggregates.forEach(aggregateInst => this.triggerHarvestFor(aggregateInst, { isFinalHarvest: true }))
-      /* This callback should run in bubble phase, so that that CWV api, like "onLCP", is called before the final harvest so that emitted timings are part of last outgoing. */
+      /* This callback should run in bubble phase, so that CWV api, like "onLCP", is called before the final harvest so that emitted timings are part of last outgoing. */
     }, false)
   }
 

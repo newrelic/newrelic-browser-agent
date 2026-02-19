@@ -99,7 +99,7 @@ export class Aggregate extends AggregateBase {
   /**
    *
    * @param {Error|UncaughtError} err The error instance to be processed
-   * @param {number} time the relative ms (to origin) timestamp of occurence
+   * @param {number} time the relative ms (to origin) timestamp of occurrence
    * @param {boolean=} internal if the error was "caught" and deemed "internal" before reporting to the jserrors feature
    * @param {object=} customAttributes  any custom attributes to be included in the error payload
    * @param {boolean=} hasReplay a flag indicating if the error occurred during a replay session

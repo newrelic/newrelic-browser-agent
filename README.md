@@ -47,7 +47,7 @@ Before instrumenting your app using the NPM package, a Browser App should be con
 
 For best results, import and instantiate the `BrowserAgent` class as close to the top of the `head` element of your app's HTML output as possible. The specific location and method will vary based on your application's architecture or framework. See [Library Support](#library-support) for more information.
 
-Populate the `options` parameter using configuration values found in the the *Copy/Paste JavaScript* box in your browser app's *Application settings* page in New Relic.
+Populate the `options` parameter using configuration values found in the *Copy/Paste JavaScript* box in your browser app's *Application settings* page in New Relic.
 
 ```javascript
 import { BrowserAgent } from '@newrelic/browser-agent/loaders/browser-agent'

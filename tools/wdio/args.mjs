@@ -19,7 +19,7 @@ const args = yargs(hideBin(process.argv))
   .alias('b', 'browsers')
   .describe(
     'b',
-    'a comma seperated list of browsers with an optional semver range. (eg. chrome@>39)'
+    'a comma separated list of browsers with an optional semver range. (eg. chrome@>39)'
   )
 
   .number('concurrent')
@@ -48,7 +48,7 @@ const args = yargs(hideBin(process.argv))
   .default('t', 85000)
 
   .number('session-timeout')
-  .describe('session-timeout', 'timout in ms for LambdaTest browser session')
+  .describe('session-timeout', 'timeout in ms for LambdaTest browser session')
   .default('session-timeout', 120000)
 
   .boolean('d')

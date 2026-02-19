@@ -57,7 +57,7 @@ async function getLoaderScript (scriptType, loaderFilePath, nonce, injectionDela
 
 /**
  * Transforms requests for HTML files that contain the \{loader\} string with the
- * built loader JS. By default, the full loader will be used but can be overriden
+ * built loader JS. By default, the full loader will be used but can be overridden
  * by passing the loader query param.
  */
 module.exports = function (request, reply, testServer) {

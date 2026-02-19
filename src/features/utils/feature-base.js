@@ -14,7 +14,7 @@ export class FeatureBase {
     /** @type {string} */
     this.featureName = featureName
     /**
-     * Blocked can be used to prevent aggregation and harvest after inititalization time of the feature.
+     * Blocked can be used to prevent aggregation and harvest after initialization time of the feature.
      * This can currently happen if RUM response setToken flag is 0, which is tied to ingest account entitlement info.
      * @type {boolean}
      */

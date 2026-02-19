@@ -4,6 +4,23 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "a21277667d7ff05642c9a01ea77a492ecb8c0522",
+          "message": "Enhance LCP entry with fallback attribution values",
+          "issues": [
+            "1701"
+          ]
+        }
+      ],
+      "version": "1.310.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "319dcab3-cbf1-42cd-a752-cc1a5928a4ba",
+      "createTime": "2026-02-19T14:30:11.075Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "92a83e522e39cd145b751728df8083cc63a5d162",
           "message": "better MFE timing handling",
@@ -3715,5 +3732,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-02-17T22:11:19.817Z"
+  "updateTime": "2026-02-19T14:30:11.075Z"
 }

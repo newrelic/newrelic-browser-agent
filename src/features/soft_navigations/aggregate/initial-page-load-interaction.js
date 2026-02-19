@@ -28,13 +28,13 @@ export class InitialPageLoadInteraction extends Interaction {
   get navTiming () {
     if (!navTimingValues.length) return
     /*
-    1. we initialize the seperator to ',' (seperates the nodeType id from the first value)
+    1. we initialize the separator to ',' (separates the nodeType id from the first value)
     2. we initialize the navTiming node to 'b' (the nodeType id)
-    3. if the value is present, we add the seperator followed by the value;
+    3. if the value is present, we add the separator followed by the value;
        otherwise:
-        - we add null seperator ('!') to the navTimingNode
-        - we set the seperator to an empty string since we already wrote it above
-      the reason for writing the null seperator instead of setting the seperator
+        - we add null separator ('!') to the navTimingNode
+        - we set the separator to an empty string since we already wrote it above
+      the reason for writing the null separator instead of setting the separator
       is to ensure we still write it if the null is the last navTiming value.
     */
     let seperator = ','

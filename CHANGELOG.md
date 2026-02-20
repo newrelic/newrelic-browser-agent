@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.310.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.310.0...v1.310.1) (2026-02-19)
+
+
+### Bug Fixes
+
+* Enhance LCP entry with fallback attribution values ([#1701](https://github.com/newrelic/newrelic-browser-agent/issues/1701)) ([a212776](https://github.com/newrelic/newrelic-browser-agent/commit/a21277667d7ff05642c9a01ea77a492ecb8c0522))
+
 ## [1.310.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.309.0...v1.310.0) (2026-02-17)
 
 

@@ -272,4 +272,87 @@ jobs:
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
 
+  # Create change tracking events for staging environment
+  create-staging-change-tracking:
+    needs: [publish-dev-to-s3]
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 2
+      - name: Check if released.js changed
+        id: check-released
+        run: |
+          if git diff HEAD^ HEAD --name-only | grep -q ".github/actions/build-ab/templates/released.js"; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Released.js was changed in this commit"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "Released.js was not changed in this commit"
+          fi
+      - name: Check if latest.js changed
+        id: check-latest
+        run: |
+          if git diff HEAD^ HEAD --name-only | grep -q ".github/actions/build-ab/templates/latest.js"; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Latest.js was changed in this commit"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "Latest.js was not changed in this commit"
+          fi
+      - name: Create staging feature flag event for released.js (Account 1067061)
+        if: steps.check-released.outputs.changed == 'true'
+        uses: ./.github/actions/change-tracking
+        with:
+          accountId: '1067061'
+          entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_STAGING }}
+          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          region: 'Staging'
+          version: staging-latest
+          category: 'Feature Flag'
+          type: 'Basic'
+          featureFlagId: 'hardcoded feature flag'
+          description: 'Feature flag configuration updated in released.js'
+          shortDescription: 'Staging: Feature flags updated (released.js)'
+          commit: ${{ github.sha }}
+          user: ${{ github.actor }}
+          groupId: '${{ github.run_id }}-${{ github.sha }}'
+      - name: Create staging basic deployment event (Account 550352)
+        uses: ./.github/actions/change-tracking
+        with:
+          accountId: '550352'
+          entityGuid: ${{ secrets.NR_ENTITY_GUID_BROWSER_STAGING }}
+          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_BROWSER }}
+          region: 'Staging'
+          version: staging-latest
+          category: 'Deployment'
+          type: 'Basic'
+          description: 'Staging deployment when PR merged to main'
+          shortDescription: 'Staging: main branch deployment'
+          commit: ${{ github.sha }}
+          user: ${{ github.actor }}
+          groupId: '${{ github.run_id }}-${{ github.sha }}'
+      - name: Create staging feature flag event for latest.js (Account 550352)
+        if: steps.check-latest.outputs.changed == 'true'
+        uses: ./.github/actions/change-tracking
+        with:
+          accountId: '550352'
+          entityGuid: ${{ secrets.NR_ENTITY_GUID_BROWSER_STAGING }}
+          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_BROWSER }}
+          region: 'Staging'
+          version: staging-latest
+          category: 'Feature Flag'
+          type: 'Basic'
+          featureFlagId: 'latest feature flag'
+          description: 'Feature flag configuration updated in latest.js'
+          shortDescription: 'Staging: Feature flags updated (latest.js)'
+          commit: ${{ github.sha }}
+          user: ${{ github.actor }}
+          groupId: '${{ github.run_id }}-${{ github.sha }}'
+
 

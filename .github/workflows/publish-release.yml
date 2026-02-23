@@ -172,6 +172,90 @@ jobs:
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
 
+  # Create change tracking event for US production
+  create-us-prod-change-tracking:
+    needs: [publish-current-to-s3]
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get version number
+        id: agent-loader-version
+        run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Create US production change tracking event (Account 1067061)
+        uses: ./.github/actions/change-tracking
+        with:
+          accountId: '1067061'
+          entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_US_PROD }}
+          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          region: 'US'
+          version: ${{ steps.agent-loader-version.outputs.results }}
+          type: 'Rolling'
+          description: 'Production release v${{ steps.agent-loader-version.outputs.results }}'
+          shortDescription: 'US Prod: v${{ steps.agent-loader-version.outputs.results }}'
+          commit: ${{ github.sha }}
+          user: ${{ github.actor }}
+          groupId: '${{ github.run_id }}-${{ github.sha }}'
+
+  # Create change tracking event for EU production
+  create-eu-prod-change-tracking:
+    needs: [publish-current-to-s3]
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get version number
+        id: agent-loader-version
+        run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Create EU production change tracking event (Account 1067061)
+        uses: ./.github/actions/change-tracking
+        with:
+          accountId: '1067061'
+          entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_EU_PROD }}
+          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          region: 'EU'
+          version: ${{ steps.agent-loader-version.outputs.results }}
+          type: 'Rolling'
+          description: 'EU production release v${{ steps.agent-loader-version.outputs.results }}'
+          shortDescription: 'EU Prod: v${{ steps.agent-loader-version.outputs.results }}'
+          commit: ${{ github.sha }}
+          user: ${{ github.actor }}
+          groupId: '${{ github.run_id }}-${{ github.sha }}'
+
+  # Create change tracking event for staging environment (1067061 only)
+  create-staging-release-change-tracking:
+    needs: [publish-current-to-s3]
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get version number
+        id: agent-loader-version
+        run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Create staging change tracking event (Account 1067061)
+        uses: ./.github/actions/change-tracking
+        with:
+          accountId: '1067061'
+          entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_STAGING }}
+          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          region: 'Staging'
+          version: ${{ steps.agent-loader-version.outputs.results }}
+          type: 'Basic'
+          description: 'Staging updated to production release v${{ steps.agent-loader-version.outputs.results }}'
+          shortDescription: 'Staging: Prod release v${{ steps.agent-loader-version.outputs.results }}'
+          commit: ${{ github.sha }}
+          user: ${{ github.actor }}
+          groupId: '${{ github.run_id }}-${{ github.sha }}'
+
   # Publish the loaders to nr prod
   publish-to-nr-prod:
     needs: [publish-prod-to-s3]

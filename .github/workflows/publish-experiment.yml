@@ -135,7 +135,7 @@ jobs:
     if: ${{ inputs.nr_environment != 'standalone' && inputs.nr_environment != 'dev' }}
     needs: [publish-experiment-to-s3]
     runs-on: Browser-Agent-Assigned-IP-Linux
-    timeout-minutes: 30
+    timeout-minutes: 5
     defaults:
       run:
         shell: bash

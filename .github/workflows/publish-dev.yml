@@ -279,7 +279,7 @@ jobs:
   create-staging-change-tracking:
     needs: [publish-dev-to-s3]
     runs-on: Browser-Agent-Assigned-IP-Linux
-    timeout-minutes: 30
+    timeout-minutes: 5
     defaults:
       run:
         shell: bash

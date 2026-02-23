@@ -12,6 +12,9 @@ on:
     branches:
       - 'main'
 
+permissions:
+  contents: read
+
 # Only allow one instance of this workflow to run at a time
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

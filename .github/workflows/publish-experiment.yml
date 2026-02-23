@@ -127,7 +127,7 @@ jobs:
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
 
-  # Create change tracking events for experiment
+  # Create change tracking events for staging experiment
   create-experiment-change-tracking:
     if: ${{ inputs.nr_environment != 'standalone' && inputs.nr_environment != 'dev' }}
     needs: [publish-experiment-to-s3]

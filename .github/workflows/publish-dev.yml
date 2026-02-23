@@ -305,6 +305,21 @@ jobs:
             echo "changed=false" >> $GITHUB_OUTPUT
             echo "Latest.js was not changed in this commit"
           fi
+      - name: Create staging basic deployment event (Account 550352)
+        uses: ./.github/actions/change-tracking
+        with:
+          accountId: '550352'
+          entityGuid: ${{ secrets.NR_ENTITY_GUID_BROWSER_STAGING }}
+          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_BROWSER }}
+          region: 'Staging'
+          version: staging-latest
+          category: 'Deployment'
+          type: 'Basic'
+          description: 'Staging deployment when PR merged to main'
+          shortDescription: 'Staging: main branch deployment'
+          commit: ${{ github.sha }}
+          user: ${{ github.actor }}
+          groupId: '${{ github.run_id }}-${{ github.sha }}'
       - name: Create staging feature flag event for released.js (Account 1067061)
         if: steps.check-released.outputs.changed == 'true'
         uses: ./.github/actions/change-tracking
@@ -322,21 +337,6 @@ jobs:
           commit: ${{ github.sha }}
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
-      - name: Create staging basic deployment event (Account 550352)
-        uses: ./.github/actions/change-tracking
-        with:
-          accountId: '550352'
-          entityGuid: ${{ secrets.NR_ENTITY_GUID_BROWSER_STAGING }}
-          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_BROWSER }}
-          region: 'Staging'
-          version: staging-latest
-          category: 'Deployment'
-          type: 'Basic'
-          description: 'Staging deployment when PR merged to main'
-          shortDescription: 'Staging: main branch deployment'
-          commit: ${{ github.sha }}
-          user: ${{ github.actor }}
-          groupId: '${{ github.run_id }}-${{ github.sha }}'
       - name: Create staging feature flag event for latest.js (Account 550352)
         if: steps.check-latest.outputs.changed == 'true'
         uses: ./.github/actions/change-tracking
@@ -348,7 +348,7 @@ jobs:
           version: staging-latest
           category: 'Feature Flag'
           type: 'Basic'
-          featureFlagId: 'latest feature flag'
+          featureFlagId: 'latest.js feature flag'
           description: 'Feature flag configuration updated in latest.js'
           shortDescription: 'Staging: Feature flags updated (latest.js)'
           commit: ${{ github.sha }}

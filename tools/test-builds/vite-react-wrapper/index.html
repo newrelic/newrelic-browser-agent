@@ -6,6 +6,11 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     {init}
     {config}
+    <script>
+      localStorage.clear()
+      NREUM.init.feature_flags = ['register','register.jserrors','register.generic_events']
+    </script>
+    {loader}
     <title>Vite Template</title>
   </head>
   <body>

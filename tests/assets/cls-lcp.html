@@ -8,9 +8,18 @@
     <title>RUM Unit Test</title>
     {init}
     {config}
+    <script>
+      NREUM.init.feature_flags = ['register', 'register.generic_events']
+    </script>
     {loader}
+    <script>
+      api = newrelic.register({
+          id: 5678,
+          name: 'test'
+      })
+    </script>
   </head>
-  <body>
+  <body data-nr-mfe-id="5678">
     <div id="initial">initial content (32 characters)</div>
 
     <!-- this is clicked by the test to stop collecting LCP and trigger harvest -->

@@ -61,7 +61,7 @@ export class Aggregate extends AggregateBase {
 
       let addUserAction = () => { /** no-op */ }
       if (isBrowserScope && agentRef.init.user_actions.enabled) {
-        this.#userActionAggregator = new UserActionsAggregator()
+        this.#userActionAggregator = new UserActionsAggregator(this)
         this.harvestOpts.beforeUnload = () => addUserAction?.(this.#userActionAggregator.aggregationEvent)
 
         addUserAction = (aggregatedUserAction) => {
@@ -90,7 +90,7 @@ export class Aggregate extends AggregateBase {
                 ...(aggregatedUserAction.deadClick && { deadClick: true }),
                 ...(aggregatedUserAction.errorClick && { errorClick: true })
               }
-              this.addEvent(userActionEvent)
+              this.addEvent(userActionEvent, aggregatedUserAction.target)
               this.#trackUserActionSM(userActionEvent)
 
               /**

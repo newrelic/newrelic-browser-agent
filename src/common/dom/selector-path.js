@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { getRegisteredTargetFromId } from '../util/v2'
+
 /**
  * Generates a CSS selector path for the given element, if possible.
  * Also gather metadata about the element's nearest fields, and whether there are any links or buttons in the path.
@@ -14,8 +16,8 @@
  * @param {Array<string>} [targetFields=[]] specifies which fields to gather from the nearest element in the path
  * @returns {{path: (undefined|string), nearestFields: {}, hasButton: boolean, hasLink: boolean}}
  */
-export const analyzeElemPath = (elem, targetFields = []) => {
-  const result = { path: undefined, nearestFields: {}, hasButton: false, hasLink: false }
+export const analyzeElemPath = (elem, targetFields = [], aggregateInstance) => {
+  const result = { path: undefined, nearestFields: {}, target: undefined, hasButton: false, hasLink: false }
   if (!elem) return result
   if (elem === window) { result.path = 'window'; return result }
   if (elem === document) { result.path = 'document'; return result }
@@ -30,6 +32,12 @@ export const analyzeElemPath = (elem, targetFields = []) => {
       result.hasButton ||= tagName === 'button' || (tagName === 'input' && elem.type.toLowerCase() === 'button')
 
       targetFields.forEach(field => { result.nearestFields[nearestAttrName(field)] ||= (elem[field]?.baseVal || elem[field]) })
+
+      const dataAttrs = elem?.dataset
+      if (dataAttrs.nrMfeId && !result.target) {
+        result.target = getRegisteredTargetFromId(dataAttrs.nrMfeId, aggregateInstance)
+      }
+
       pathSelector = buildPathSelector(elem, pathSelector)
       elem = elem.parentNode
     }

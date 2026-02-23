@@ -12,12 +12,13 @@ export class VitalMetric {
     this.roundingMethod = typeof roundingMethod === 'function' ? roundingMethod : Math.floor
   }
 
-  update ({ value, attrs = {} }) {
+  update ({ value, attrs = {}, element }) {
     if (value === undefined || value === null || value < 0) return
     const state = {
       value: this.roundingMethod(value),
       name: this.name,
-      attrs
+      attrs,
+      element
     }
 
     this.history.push(state)

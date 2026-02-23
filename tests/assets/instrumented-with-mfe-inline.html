@@ -54,6 +54,8 @@
         // simulate taking ~3s to deregister
         mainApi.deregister()
       }, 3000);
+
+      throw new Error('test')
     </script>
     <script type="module">
       document.addEventListener('click', () => {

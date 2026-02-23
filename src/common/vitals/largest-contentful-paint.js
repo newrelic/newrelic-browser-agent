@@ -18,6 +18,7 @@ if (isBrowserScope) {
     let attrs
     const lcpEntry = attribution.lcpEntry
     if (lcpEntry) {
+      // lcpEntry.element
       attrs = {
         size: lcpEntry.size,
         eid: lcpEntry.id,
@@ -33,6 +34,6 @@ if (isBrowserScope) {
       if (lcpEntry.element?.tagName) attrs.elTag = lcpEntry.element.tagName
     }
 
-    largestContentfulPaint.update({ value, attrs })
+    largestContentfulPaint.update({ value, attrs, element: lcpEntry.element })
   })
 }

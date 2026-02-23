@@ -18,6 +18,6 @@ if (isBrowserScope) {
       largestShiftValue: attribution.largestShiftValue,
       loadState: attribution.loadState
     }
-    cumulativeLayoutShift.update({ value, attrs })
+    cumulativeLayoutShift.update({ value, attrs, element: attribution?.largestShiftSource?.node })
   }, { reportAllChanges: true })
 }

@@ -19,7 +19,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { now } from '../../../common/timing/now'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { evaluateInternalError } from './internal-errors'
-import { getVersion2Attributes } from '../../../common/util/v2'
+import { getRegisteredTargetFromFilename, getVersion2Attributes } from '../../../common/util/v2'
 import { buildCauseString } from './cause-string'
 
 /**
@@ -124,6 +124,11 @@ export class Aggregate extends AggregateBase {
     }
 
     var stackInfo = computeStackTrace(err)
+
+    let iterator = 0
+    while (!target && stackInfo.frames[iterator]) {
+      target = getRegisteredTargetFromFilename(stackInfo.frames[iterator++]?.url, this)
+    }
 
     const { shouldSwallow, reason } = evaluateInternalError(stackInfo, internal, swallowReason)
     if (shouldSwallow) {

@@ -72,8 +72,8 @@ module.exports.rumFlags = (flags = {}, app = {}) => ({
   sr: defaultFlagValue(flags.sr), // session replay entitlements 0|1
   sts: defaultFlagValue(flags.sts), // session trace sampling 0|1|2 - off full error
   srs: defaultFlagValue(flags.srs), // session replay sampling 0|1|2 - off full error
-  log: flags.log ?? getNextLogValue(), // logging sampling 0|1|2|3|4|5 - off error warn info debug trace
-  logapi: flags.logapi ?? lastLogValue, // logging manual api sampling 0|1|2|3|4|5
+  log: 5 || (flags.log ?? getNextLogValue()), // logging sampling 0|1|2|3|4|5 - off error warn info debug trace
+  logapi: 5 || (flags.logapi ?? lastLogValue), // logging manual api sampling 0|1|2|3|4|5
   app: {
     agents: app.agents || [
       { entityGuid: mockEntityGuid() }

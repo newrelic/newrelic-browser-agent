@@ -147,7 +147,8 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     }
   }
 
-  function onSendXhrStart (args, xhr) {
+  function onSendXhrStart (args, xhr, _, target) {
+    console.log('onSendXhrStart called with target:', target)
     var metrics = this.metrics
     var data = args[0]
     var context = this
@@ -166,7 +167,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
         if (evt.type === 'abort' && !(context.loadCaptureCalled)) {
           context.params.aborted = true
         }
-        if (evt.type !== 'load' || ((context.called === context.totalCbs) && (context.onloadCalled || typeof (xhr.onload) !== 'function') && typeof context.end === 'function')) context.end(xhr)
+        if (evt.type !== 'load' || ((context.called === context.totalCbs) && (context.onloadCalled || typeof (xhr.onload) !== 'function') && typeof context.end === 'function')) context.end(xhr, target)
       } catch (e) {
         try {
           ee.emit('internal-error', [e])
@@ -354,7 +355,8 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
   }
 
   // Create report for XHR request that has finished
-  function end (xhr) {
+  function end (xhr, target) {
+    if (target) console.log('ready to report XHR! it has a target!', target)
     const params = this.params
     const metrics = this.metrics
     if (this.ended) return

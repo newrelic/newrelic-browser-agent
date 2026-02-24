@@ -128,7 +128,7 @@ function drainGroup (agentIdentifier, group, activateGroup = true) {
 
 /**
  * Processes the specified event using all relevant handler functions associated with a particular feature, based on
- * whether the the handler is meant to apply to events of this type. (Event type is a descriptive string set at the
+ * whether the handler is meant to apply to events of this type. (Event type is a descriptive string set at the
  * time an event is originally created by instrumentation, as with calls to the `handle` method.)
  * @param {*} evt - A single event to be emitted to (processed by) eligible handler functions.
  * @param {*} groupHandlers - A set of handler functions associated with a particular feature's event-group.

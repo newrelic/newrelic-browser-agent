@@ -144,3 +144,112 @@ describe('triggerHarvestFor', () => {
     expect(harvester.triggerHarvestFor(fakeAggregate, { })).toEqual({ payload: 'fakePayload', ranSend: true, endpointVersion: 2 })
   })
 })
+
+describe('FAILING: baseQueryString URL capture behavior', () => {
+  let mockSubmit
+  let agentRefWithBeacon
+
+  beforeEach(() => {
+    mockSubmit = jest.fn(() => ({ addEventListener: jest.fn() }))
+    agentRefWithBeacon = {
+      init: {
+        harvest: { interval: 1 },
+        ssl: true,
+        proxy: {}
+      },
+      info: {
+        errorBeacon: 'bam.nr-data.net',
+        applicationID: 'test-app-id',
+        licenseKey: 'test-license-key'
+      },
+      runtime: {
+        obfuscator: {
+          obfuscateString: jest.fn(url => url) // Just return the URL as-is for testing
+        },
+        session: {
+          state: {
+            value: 'test-session-id'
+          }
+        },
+        maxBytes: 1000000
+      },
+      ee: {
+        on: jest.fn()
+      }
+    }
+
+    // Mock the globalScope.location
+    delete global.window.location
+    global.window.location = {
+      href: 'https://example.com/original-page',
+      toString: () => 'https://example.com/original-page'
+    }
+  })
+
+  test('FAILING: should capture original page URL not current URL after soft navigation', () => {
+    const { send } = require('../../../../src/common/harvest/harvester')
+
+    // Initial page load at /original-page
+    const initialUrl = 'https://example.com/original-page'
+    global.window.location.href = initialUrl
+    global.window.location.toString = () => initialUrl
+
+    // Simulate a soft navigation (SPA route change)
+    const newUrl = 'https://example.com/new-page'
+    global.window.location.href = newUrl
+    global.window.location.toString = () => newUrl
+
+    // Now send a harvest - this should use the ORIGINAL URL, not the current one
+    const result = send(agentRefWithBeacon, {
+      endpoint: 'jserrors',
+      targetApp: 'test-app',
+      payload: { body: { test: 'data' } },
+      localOpts: {},
+      submitMethod: mockSubmit
+    })
+
+    expect(result).toBe(true)
+    expect(mockSubmit).toHaveBeenCalled()
+
+    const callArgs = mockSubmit.mock.calls[0][0]
+    const sentUrl = callArgs.url
+
+    // This assertion will FAIL because the harvester uses globalScope.location at send time
+    // It should have sent the original URL but it sends the current URL
+    expect(sentUrl).toContain('ref=https://example.com/original-page')
+    // But it actually contains the NEW URL:
+    // expect(sentUrl).toContain('ref=https://example.com/new-page')
+  })
+
+  test('FAILING: demonstrates URL is captured at harvest time, not page load time', () => {
+    const { send } = require('../../../../src/common/harvest/harvester')
+
+    // Simulate the real-world scenario from the investigation:
+    // 1. Page loads at /slots with FCP of 1200ms
+    global.window.location.href = 'https://example.com/groceries/en-GB/slots'
+    global.window.location.toString = () => 'https://example.com/groceries/en-GB/slots'
+
+    // 2. User navigates to /shop via SPA (soft navigation happens at 15 seconds)
+    global.window.location.href = 'https://example.com/groceries/en-GB/shop'
+    global.window.location.toString = () => 'https://example.com/groceries/en-GB/shop'
+
+    // 3. At 30 seconds, harvest happens and sends FCP from /slots
+    //    But URL is captured NOW (at harvest time), which is /shop
+    send(agentRefWithBeacon, {
+      endpoint: 'jserrors',
+      targetApp: 'test-app',
+      payload: { body: { fcp: 1200 } }, // FCP from slots page
+      localOpts: {},
+      submitMethod: mockSubmit
+    })
+
+    const callArgs = mockSubmit.mock.calls[0][0]
+    const sentUrl = callArgs.url
+
+    // This assertion will FAIL - we expect slots page URL but get shop page URL
+    // The FCP metric from /slots gets mis-attributed to /shop
+    expect(sentUrl).toContain('ref=https://example.com/groceries/en-GB/slots')
+    // But it actually sends:
+    // expect(sentUrl).toContain('ref=https://example.com/groceries/en-GB/shop')
+  })
+})

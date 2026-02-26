@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       accountId:
-        description: 'New Relic Account ID (e.g., 1067061, 550352)'
+        description: 'New Relic Account ID'
         required: true
         type: choice
         options:

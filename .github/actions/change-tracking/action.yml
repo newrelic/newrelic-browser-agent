@@ -15,7 +15,7 @@ inputs:
     description: 'New Relic User API key for the account'
     required: true
   application:
-    description: 'New Relic application name (for logging purposes only, all API calls go to staging)'
+    description: 'New Relic application name'
     required: true
   version:
     description: 'Version being deployed (required for Deployment category)'

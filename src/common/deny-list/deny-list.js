@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -94,5 +94,5 @@ function convertToRegularExpression (filter, isPathname = false) {
   const newFilter = filter
     .replace(/[.+?^${}()|[\]\\]/g, (m) => '\\' + m) // use a replacer function to not break apm injection
     .replace(/\*/g, '.*?') // use lazy matching instead of greedy
-  return new RegExp((isPathname ? '^' : '') + newFilter + '$')
+  return new RegExp((isPathname ? '^' : '') + newFilter + '\x24') // x24 == $, but using a literal $ causes webpack to to break when building unminified
 }

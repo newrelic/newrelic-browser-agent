@@ -1,5 +1,8 @@
 name: Create Change Tracking Event
 
+permissions:
+  contents: read
+
 on:
   workflow_dispatch:
     inputs:

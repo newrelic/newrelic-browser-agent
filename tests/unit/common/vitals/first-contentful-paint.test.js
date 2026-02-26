@@ -168,4 +168,37 @@ describe('fcp', () => {
       done()
     })
   })
+
+  test('FAILING: should include pageUrl from navigationEntry to prevent soft-nav misattribution', (done) => {
+    const fcpAttributionWithNavEntry = {
+      timeToFirstByte: 12,
+      firstByteToFCP: 23,
+      loadState: 'dom-interactive',
+      navigationEntry: {
+        name: 'https://example.com/original-page?query=param#hash'
+      }
+    }
+
+    jest.doMock('web-vitals/attribution', () => ({
+      onFCP: jest.fn(cb => { cb({ value: 1234, attribution: fcpAttributionWithNavEntry }) })
+    }))
+    jest.doMock('../../../../src/common/constants/runtime', () => ({
+      __esModule: true,
+      iOSBelow16: false,
+      initiallyHidden: false,
+      isBrowserScope: true
+    }))
+
+    getFreshFCPImport(firstContentfulPaint => {
+      firstContentfulPaint.subscribe(({ value, attrs }) => {
+        expect(value).toEqual(1234)
+        expect(attrs.timeToFirstByte).toEqual(12)
+        expect(attrs.firstByteToFCP).toEqual(23)
+        expect(attrs.loadState).toEqual('dom-interactive')
+        // This assertion will FAIL because FCP doesn't currently include pageUrl like LCP does
+        expect(attrs.pageUrl).toEqual('https://example.com/original-page')
+        done()
+      })
+    })
+  })
 })

@@ -90,4 +90,35 @@ describe('cls', () => {
       })
     })
   })
+
+  test('FAILING: should include pageUrl from navigationEntry to prevent soft-nav misattribution', (done) => {
+    const clsAttributionWithNavEntry = {
+      largestShiftTarget: 'element',
+      largestShiftTime: 12345,
+      largestShiftValue: 0.9712,
+      loadState: 'dom-content-loaded',
+      navigationEntry: {
+        name: 'https://example.com/slots/page?query=param#hash'
+      }
+    }
+
+    jest.doMock('web-vitals/attribution', () => ({
+      onCLS: jest.fn(cb => cb({ value: 0.123, attribution: clsAttributionWithNavEntry, id: 'testid' }))
+    }))
+    jest.doMock('../../../../src/common/constants/runtime', () => ({
+      __esModule: true,
+      isBrowserScope: true
+    }))
+
+    getFreshCLSImport(metric => {
+      metric.subscribe(({ value, attrs }) => {
+        expect(value).toEqual(0.123)
+        expect(attrs.largestShiftTarget).toEqual('element')
+        expect(attrs.metricId).toEqual('testid')
+        // This assertion will FAIL because CLS doesn't currently include pageUrl like LCP does
+        expect(attrs.pageUrl).toEqual('https://example.com/slots/page')
+        done()
+      })
+    })
+  })
 })

@@ -93,4 +93,39 @@ describe('inp', () => {
       done()
     })
   })
+
+  test('FAILING: should include pageUrl from navigationEntry to prevent soft-nav misattribution', (done) => {
+    const inpAttributionWithNavEntry = {
+      interactionType: 'keyboard',
+      interactionTarget: 'html',
+      interactionTime: 100,
+      inputDelay: 0,
+      nextPaintTime: 200,
+      processingDuration: 0,
+      presentationDelay: 0,
+      loadState: 'complete',
+      navigationEntry: {
+        name: 'https://example.com/favourites/page?query=param#hash'
+      }
+    }
+
+    jest.doMock('web-vitals/attribution', () => ({
+      onINP: jest.fn(cb => cb({ value: 8, attribution: inpAttributionWithNavEntry, id: 'testid' }))
+    }))
+    jest.doMock('../../../../src/common/constants/runtime', () => ({
+      __esModule: true,
+      isBrowserScope: true
+    }))
+
+    getFreshINPImport(metric => {
+      metric.subscribe(({ value, attrs }) => {
+        expect(value).toEqual(8)
+        expect(attrs.interactionTarget).toEqual('html')
+        expect(attrs.metricId).toEqual('testid')
+        // This assertion will FAIL because INP doesn't currently include pageUrl like LCP does
+        expect(attrs.pageUrl).toEqual('https://example.com/favourites/page')
+        done()
+      })
+    })
+  })
 })

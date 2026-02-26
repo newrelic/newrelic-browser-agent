@@ -91,7 +91,7 @@ describe('cls', () => {
     })
   })
 
-  test('FAILING: should include pageUrl from navigationEntry to prevent soft-nav misattribution', (done) => {
+  test('FAILING: should include pageUrl from navigationEntry to prevent soft-nav misattribution', async (done) => {
     const clsAttributionWithNavEntry = {
       largestShiftTarget: 'element',
       largestShiftTime: 12345,
@@ -110,15 +110,14 @@ describe('cls', () => {
       isBrowserScope: true
     }))
 
-    getFreshCLSImport(metric => {
-      metric.subscribe(({ value, attrs }) => {
-        expect(value).toEqual(0.123)
-        expect(attrs.largestShiftTarget).toEqual('element')
-        expect(attrs.metricId).toEqual('testid')
-        // This assertion will FAIL because CLS doesn't currently include pageUrl like LCP does
-        expect(attrs.pageUrl).toEqual('https://example.com/slots/page')
-        done()
-      })
+    const { cumulativeLayoutShift } = await import('../../../../src/common/vitals/cumulative-layout-shift')
+    cumulativeLayoutShift.subscribe(({ value, attrs }) => {
+      expect(value).toEqual(0.123)
+      expect(attrs.largestShiftTarget).toEqual('element')
+      expect(attrs.metricId).toEqual('testid')
+      // This assertion will FAIL because CLS doesn't currently include pageUrl like LCP does
+      expect(attrs.pageUrl).toEqual('https://example.com/slots/page')
+      done()
     })
   })
 })

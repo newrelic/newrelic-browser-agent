@@ -169,7 +169,7 @@ describe('fcp', () => {
     })
   })
 
-  test('FAILING: should include pageUrl from navigationEntry to prevent soft-nav misattribution', (done) => {
+  test('FAILING: should include pageUrl from navigationEntry to prevent soft-nav misattribution', async (done) => {
     const fcpAttributionWithNavEntry = {
       timeToFirstByte: 12,
       firstByteToFCP: 23,
@@ -180,7 +180,7 @@ describe('fcp', () => {
     }
 
     jest.doMock('web-vitals/attribution', () => ({
-      onFCP: jest.fn(cb => { cb({ value: 1234, attribution: fcpAttributionWithNavEntry }) })
+      onFCP: jest.fn(cb => { cb({ value: 1, attribution: fcpAttributionWithNavEntry }) })
     }))
     jest.doMock('../../../../src/common/constants/runtime', () => ({
       __esModule: true,
@@ -189,16 +189,15 @@ describe('fcp', () => {
       isBrowserScope: true
     }))
 
-    getFreshFCPImport(firstContentfulPaint => {
-      firstContentfulPaint.subscribe(({ value, attrs }) => {
-        expect(value).toEqual(1234)
-        expect(attrs.timeToFirstByte).toEqual(12)
-        expect(attrs.firstByteToFCP).toEqual(23)
-        expect(attrs.loadState).toEqual('dom-interactive')
-        // This assertion will FAIL because FCP doesn't currently include pageUrl like LCP does
-        expect(attrs.pageUrl).toEqual('https://example.com/original-page')
-        done()
-      })
+    const { firstContentfulPaint } = await import('../../../../src/common/vitals/first-contentful-paint')
+    firstContentfulPaint.subscribe(({ value, attrs }) => {
+      expect(value).toEqual(1)
+      expect(attrs.timeToFirstByte).toEqual(12)
+      expect(attrs.firstByteToFCP).toEqual(23)
+      expect(attrs.loadState).toEqual('dom-interactive')
+      // This assertion will FAIL because FCP doesn't currently include pageUrl like LCP does
+      expect(attrs.pageUrl).toEqual('https://example.com/original-page')
+      done()
     })
   })
 })

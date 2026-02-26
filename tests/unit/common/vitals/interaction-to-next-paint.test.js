@@ -94,7 +94,7 @@ describe('inp', () => {
     })
   })
 
-  test('FAILING: should include pageUrl from navigationEntry to prevent soft-nav misattribution', (done) => {
+  test('FAILING: should include pageUrl from navigationEntry to prevent soft-nav misattribution', async (done) => {
     const inpAttributionWithNavEntry = {
       interactionType: 'keyboard',
       interactionTarget: 'html',
@@ -117,15 +117,14 @@ describe('inp', () => {
       isBrowserScope: true
     }))
 
-    getFreshINPImport(metric => {
-      metric.subscribe(({ value, attrs }) => {
-        expect(value).toEqual(8)
-        expect(attrs.interactionTarget).toEqual('html')
-        expect(attrs.metricId).toEqual('testid')
-        // This assertion will FAIL because INP doesn't currently include pageUrl like LCP does
-        expect(attrs.pageUrl).toEqual('https://example.com/favourites/page')
-        done()
-      })
+    const { interactionToNextPaint } = await import('../../../../src/common/vitals/interaction-to-next-paint')
+    interactionToNextPaint.subscribe(({ value, attrs }) => {
+      expect(value).toEqual(8)
+      expect(attrs.interactionTarget).toEqual('html')
+      expect(attrs.metricId).toEqual('testid')
+      // This assertion will FAIL because INP doesn't currently include pageUrl like LCP does
+      expect(attrs.pageUrl).toEqual('https://example.com/favourites/page')
+      done()
     })
   })
 })

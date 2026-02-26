@@ -13,14 +13,14 @@ on:
         options:
           - '1067061'
           - '550352'
-      region:
-        description: 'New Relic Region'
+      application:
+        description: 'New Relic Application'
         required: true
         type: choice
         options:
-          - 'US'
-          - 'EU'
-          - 'Staging'
+          - 'New Relic One - Staging'
+          - 'New Relic One - EU Production'
+          - 'New Relic One - Production'
       version:
         description: 'Version being deployed (required for Deployment category)'
         required: true
@@ -84,7 +84,10 @@ jobs:
         id: entity-config
         run: |
           ACCOUNT_ID="${{ inputs.accountId }}"
-          REGION="${{ inputs.region }}"
+          APPLICATION="${{ inputs.application }}"
+          
+          # Note: All API calls go to staging-api.newrelic.com
+          # The application parameter determines which entity GUID to use
           
           # Determine API key based on account ID
           if [ "$ACCOUNT_ID" = "1067061" ]; then
@@ -96,30 +99,37 @@ jobs:
             exit 1
           fi
           
-          # Determine entity GUID based on account ID and region
-          if [ "$ACCOUNT_ID" = "1067061" ]; then
-            case "$REGION" in
-              "US")
-                echo "entityGuid=${{ secrets.NR_ENTITY_GUID_NR1_US_PROD }}" >> $GITHUB_OUTPUT
+          # Determine entity GUID based on account ID and application
+          if [ "$ACCOUNT_ID" = "550352" ]; then
+            case "$APPLICATION" in
+              "New Relic One - Staging")
+                echo "entityGuid=${{ secrets.NR_ENTITY_GUID_BROWSER_STAGING }}" >> $GITHUB_OUTPUT
                 ;;
-              "EU")
-                echo "entityGuid=${{ secrets.NR_ENTITY_GUID_NR1_EU_PROD }}" >> $GITHUB_OUTPUT
-                ;;
-              "Staging")
-                echo "entityGuid=${{ secrets.NR_ENTITY_GUID_NR1_STAGING }}" >> $GITHUB_OUTPUT
+              "New Relic One - EU Production"|"New Relic One - Production")
+                echo "Error: Account 550352 only supports 'New Relic One - Staging' application"
+                exit 1
                 ;;
               *)
-                echo "Error: Invalid region $REGION for account $ACCOUNT_ID"
+                echo "Error: Unknown application: $APPLICATION"
                 exit 1
                 ;;
             esac
-          elif [ "$ACCOUNT_ID" = "550352" ]; then
-            if [ "$REGION" = "Staging" ]; then
-              echo "entityGuid=${{ secrets.NR_ENTITY_GUID_BROWSER_STAGING }}" >> $GITHUB_OUTPUT
-            else
-              echo "Error: Account 550352 only supports Staging region"
-              exit 1
-            fi
+          elif [ "$ACCOUNT_ID" = "1067061" ]; then
+            case "$APPLICATION" in
+              "New Relic One - Production")
+                echo "entityGuid=${{ secrets.NR_ENTITY_GUID_NR1_US_PROD }}" >> $GITHUB_OUTPUT
+                ;;
+              "New Relic One - EU Production")
+                echo "entityGuid=${{ secrets.NR_ENTITY_GUID_NR1_EU_PROD }}" >> $GITHUB_OUTPUT
+                ;;
+              "New Relic One - Staging")
+                echo "entityGuid=${{ secrets.NR_ENTITY_GUID_NR1_STAGING }}" >> $GITHUB_OUTPUT
+                ;;
+              *)
+                echo "Error: Unknown application: $APPLICATION"
+                exit 1
+                ;;
+            esac
           fi
       
       - name: Create Change Tracking Event
@@ -128,7 +138,7 @@ jobs:
           accountId: ${{ inputs.accountId }}
           entityGuid: ${{ steps.entity-config.outputs.entityGuid }}
           apiKey: ${{ steps.entity-config.outputs.apiKey }}
-          region: ${{ inputs.region }}
+          application: ${{ inputs.application }}
           version: ${{ inputs.version }}
           category: ${{ inputs.category }}
           type: ${{ inputs.type }}
@@ -148,7 +158,7 @@ jobs:
           echo "**Category:** ${{ inputs.category }}" >> $GITHUB_STEP_SUMMARY
           echo "**Type:** ${{ inputs.type }}" >> $GITHUB_STEP_SUMMARY
           echo "**Account ID:** ${{ inputs.accountId }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Region:** ${{ inputs.region }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Application:** ${{ inputs.application }}" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** ${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
           if [ -n "${{ inputs.featureFlagId }}" ]; then
             echo "**Feature Flag ID:** ${{ inputs.featureFlagId }}" >> $GITHUB_STEP_SUMMARY

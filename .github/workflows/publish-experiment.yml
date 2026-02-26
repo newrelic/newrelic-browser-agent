@@ -152,7 +152,7 @@ jobs:
           accountId: '550352'
           entityGuid: ${{ secrets.NR_ENTITY_GUID_BROWSER_STAGING }}
           apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_BROWSER }}
-          region: 'Staging'
+          application: 'New Relic One - Staging'
           version: ${{ inputs.nr_environment }}-${{ steps.clean-branch-name.outputs.results }}
           type: 'Shadow'
           description: 'Experiment deployment for branch ${{ steps.clean-branch-name.outputs.results }}'

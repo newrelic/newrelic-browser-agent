@@ -14,8 +14,8 @@ inputs:
   apiKey:
     description: 'New Relic User API key for the account'
     required: true
-  region:
-    description: 'New Relic region (US, EU, Staging)'
+  application:
+    description: 'New Relic application name (for logging purposes only, all API calls go to staging)'
     required: true
   version:
     description: 'Version being deployed (required for Deployment category)'
@@ -69,7 +69,7 @@ runs:
       env:
         ENTITY_GUID: ${{ inputs.entityGuid }}
         API_KEY: ${{ inputs.apiKey }}
-        REGION: ${{ inputs.region }}
+        APPLICATION: ${{ inputs.application }}
         VERSION: ${{ inputs.version }}
         CATEGORY: ${{ inputs.category }}
         TYPE: ${{ inputs.type }}
@@ -82,28 +82,15 @@ runs:
         GROUP_ID: ${{ inputs.groupId }}
         SHORT_DESCRIPTION: ${{ inputs.shortDescription }}
       run: |
-        # Determine NerdGraph API endpoint based on region
-        case "$REGION" in
-          "US")
-            API_ENDPOINT="https://api.newrelic.com/graphql"
-            ;;
-          "EU")
-            API_ENDPOINT="https://api.eu.newrelic.com/graphql"
-            ;;
-          "Staging")
-            API_ENDPOINT="https://staging-api.newrelic.com/graphql"
-            ;;
-          *)
-            echo "Error: Unknown region: $REGION"
-            exit 1
-            ;;
-        esac
+        # All NerdGraph API calls go to staging
+        API_ENDPOINT="https://staging-api.newrelic.com/graphql"
 
         echo "Creating change tracking event via NerdGraph..."
         echo "  Category: $CATEGORY"
         echo "  Type: $TYPE"
         echo "  Entity GUID: $ENTITY_GUID"
-        echo "  Region: $REGION"
+        echo "  Application: $APPLICATION"
+        echo "  API Endpoint: $API_ENDPOINT"
 
         # Convert category to uppercase with underscores (e.g., "Feature Flag" -> "FEATURE_FLAG")
         CATEGORY_GQL=$(echo "$CATEGORY" | tr '[:lower:]' '[:upper:]' | sed 's/ /_/g')

@@ -41,7 +41,7 @@ on:
         options:
           - 'Basic'
           - 'Rolling'
-          - 'Rollback'
+          - 'Other'
           - 'Blue Green'
           - 'Canary'
           - 'Shadow'

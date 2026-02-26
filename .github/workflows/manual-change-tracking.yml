@@ -1,0 +1,157 @@
+name: Create Change Tracking Event
+
+on:
+  workflow_dispatch:
+    inputs:
+      accountId:
+        description: 'New Relic Account ID (e.g., 1067061, 550352)'
+        required: true
+        type: choice
+        options:
+          - '1067061'
+          - '550352'
+      region:
+        description: 'New Relic Region'
+        required: true
+        type: choice
+        options:
+          - 'US'
+          - 'EU'
+          - 'Staging'
+      version:
+        description: 'Version being deployed (required for Deployment category)'
+        required: true
+        type: string
+      category:
+        description: 'Event Category'
+        required: true
+        type: choice
+        default: 'Deployment'
+        options:
+          - 'Deployment'
+          - 'Feature Flag'
+      type:
+        description: 'Deployment Type'
+        required: true
+        type: choice
+        default: 'Basic'
+        options:
+          - 'Basic'
+          - 'Rolling'
+          - 'Rollback'
+          - 'Blue Green'
+          - 'Canary'
+          - 'Shadow'
+      featureFlagId:
+        description: 'Feature Flag ID (required when category is Feature Flag)'
+        required: false
+        type: string
+      description:
+        description: 'Description of the event'
+        required: true
+        type: string
+      shortDescription:
+        description: 'Short description for the event'
+        required: true
+        type: string
+      changelog:
+        description: 'Changelog for the deployment (URL or text)'
+        required: false
+        type: string
+      deepLink:
+        description: 'Deep link URL for the deployment'
+        required: false
+        type: string
+      groupId:
+        description: 'String to correlate two or more events'
+        required: false
+        type: string
+
+jobs:
+  create-change-tracking-event:
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Determine Entity GUID and API Key
+        id: entity-config
+        run: |
+          ACCOUNT_ID="${{ inputs.accountId }}"
+          REGION="${{ inputs.region }}"
+          
+          # Determine API key based on account ID
+          if [ "$ACCOUNT_ID" = "1067061" ]; then
+            echo "apiKey=${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}" >> $GITHUB_OUTPUT
+          elif [ "$ACCOUNT_ID" = "550352" ]; then
+            echo "apiKey=${{ secrets.NR_CHANGE_TRACKING_API_KEY_BROWSER }}" >> $GITHUB_OUTPUT
+          else
+            echo "Error: Unknown account ID: $ACCOUNT_ID"
+            exit 1
+          fi
+          
+          # Determine entity GUID based on account ID and region
+          if [ "$ACCOUNT_ID" = "1067061" ]; then
+            case "$REGION" in
+              "US")
+                echo "entityGuid=${{ secrets.NR_ENTITY_GUID_NR1_US_PROD }}" >> $GITHUB_OUTPUT
+                ;;
+              "EU")
+                echo "entityGuid=${{ secrets.NR_ENTITY_GUID_NR1_EU_PROD }}" >> $GITHUB_OUTPUT
+                ;;
+              "Staging")
+                echo "entityGuid=${{ secrets.NR_ENTITY_GUID_NR1_STAGING }}" >> $GITHUB_OUTPUT
+                ;;
+              *)
+                echo "Error: Invalid region $REGION for account $ACCOUNT_ID"
+                exit 1
+                ;;
+            esac
+          elif [ "$ACCOUNT_ID" = "550352" ]; then
+            if [ "$REGION" = "Staging" ]; then
+              echo "entityGuid=${{ secrets.NR_ENTITY_GUID_BROWSER_STAGING }}" >> $GITHUB_OUTPUT
+            else
+              echo "Error: Account 550352 only supports Staging region"
+              exit 1
+            fi
+          fi
+      
+      - name: Create Change Tracking Event
+        uses: ./.github/actions/change-tracking
+        with:
+          accountId: ${{ inputs.accountId }}
+          entityGuid: ${{ steps.entity-config.outputs.entityGuid }}
+          apiKey: ${{ steps.entity-config.outputs.apiKey }}
+          region: ${{ inputs.region }}
+          version: ${{ inputs.version }}
+          category: ${{ inputs.category }}
+          type: ${{ inputs.type }}
+          featureFlagId: ${{ inputs.featureFlagId }}
+          description: ${{ inputs.description }}
+          shortDescription: ${{ inputs.shortDescription }}
+          changelog: ${{ inputs.changelog }}
+          commit: ${{ github.sha }}
+          deepLink: ${{ inputs.deepLink }}
+          user: ${{ github.actor }}
+          groupId: ${{ inputs.groupId }}
+      
+      - name: Summary
+        run: |
+          echo "## Change Tracking Event Created! :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Category:** ${{ inputs.category }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Type:** ${{ inputs.type }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Account ID:** ${{ inputs.accountId }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Region:** ${{ inputs.region }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ inputs.featureFlagId }}" ]; then
+            echo "**Feature Flag ID:** ${{ inputs.featureFlagId }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -n "${{ inputs.description }}" ]; then
+            echo "**Description:** ${{ inputs.description }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**User:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY

@@ -69,7 +69,8 @@ runs:
       run: |
         echo "Installing New Relic CLI..."
         sudo snap install newrelic-cli
-        newrelic version
+        export PATH="/snap/bin:$PATH"
+        /snap/bin/newrelic version
 
     - name: Create change tracking event
       shell: bash
@@ -126,6 +127,6 @@ runs:
         echo "  Region: $REGION"
         
         NEW_RELIC_REGION="$REGION" NEW_RELIC_API_KEY="$API_KEY" \
-          newrelic changeTracking create "${args[@]}"
+          /snap/bin/newrelic changeTracking create "${args[@]}"
         
         echo "Change tracking event created successfully!"

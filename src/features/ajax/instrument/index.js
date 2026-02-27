@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { gosNREUMOriginals } from '../../../common/window/nreum'
@@ -233,7 +233,8 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
   }
 
   // this event only handles DT
-  function onFetchBeforeStart (args) {
+  function onFetchBeforeStart (args, harvestTarget) {
+    console.log('onFetchBeforeStart called with harvestTarget:', harvestTarget)
     var opts = args[1] || {}
     var url
     if (typeof args[0] === 'string') {
@@ -309,7 +310,8 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     }
   }
 
-  function onFetchStart (fetchArguments, dtPayload) {
+  function onFetchStart (fetchArguments, dtPayload, harvestTarget) {
+    console.log('onFetchStart called with harvestTarget:', harvestTarget)
     this.params = {}
     this.metrics = {}
     this.startTime = now()
@@ -332,7 +334,8 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
 
   // we capture failed call as status 0, the actual error is ignored
   // eslint-disable-next-line handle-callback-err
-  function onFetchDone (_, res) {
+  function onFetchDone (_, res, harvestTarget) {
+    console.log('onFetchDone called with harvestTarget:', harvestTarget)
     this.endTime = now()
     if (!this.params) this.params = {}
     if (hasUndefinedHostname(this.params)) return // don't bother with fetch to url with no hostname

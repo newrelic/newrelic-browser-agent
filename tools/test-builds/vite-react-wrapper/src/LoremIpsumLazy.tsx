@@ -13,6 +13,7 @@ export function LoremIpsumLazy() {
       </p>
       <button onClick={() => {
         console.log("log from lazy")
+        fetch('/json')
         throw new Error('lazy test');
       }}>Click Me To Throw An Error From Lazy Loaded Module</button>
     </div>

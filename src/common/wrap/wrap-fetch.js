@@ -9,6 +9,8 @@
  */
 import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { globalScope } from '../constants/runtime'
+import { extractUrlsFromStack, getDeepStackTrace } from '../util/script-tracker'
+import { getRegisteredTargetFromFilename } from '../util/v2'
 
 var prefix = 'fetch-'
 var bodyPrefix = prefix + 'body-'
@@ -44,16 +46,16 @@ export function wrapFetch (sharedEE) {
   })
   wrapPromiseMethod(globalScope, 'fetch', prefix)
 
-  ee.on(prefix + 'end', function (err, res) {
+  ee.on(prefix + 'end', function (err, res, harvestTarget) {
     var ctx = this
     if (res) {
       var size = res.headers.get('content-length')
       if (size !== null) {
         ctx.rxSize = size
       }
-      ee.emit(prefix + 'done', [null, res], ctx)
+      ee.emit(prefix + 'done', [null, res, harvestTarget], ctx)
     } else {
-      ee.emit(prefix + 'done', [err], ctx)
+      ee.emit(prefix + 'done', [err, undefined, harvestTarget], ctx)
     }
   })
 
@@ -67,26 +69,34 @@ export function wrapFetch (sharedEE) {
    */
   function wrapPromiseMethod (target, name, prefix) {
     var fn = target[name]
+
+    let harvestTarget; let iterator = 0
+
     if (typeof fn === 'function') {
       target[name] = function () {
+        var urls = extractUrlsFromStack(getDeepStackTrace()).reverse()
+        while (!harvestTarget && urls[iterator]) {
+          harvestTarget = getRegisteredTargetFromFilename(urls[iterator++], Object.values(newrelic.initializedAgents)[0].features.page_view_event.featAggregate)
+        }
+
         var args = [...arguments]
 
         var ctx = {}
         // we are wrapping args in an array so we can preserve the reference
-        ee.emit(prefix + 'before-start', [args], ctx)
+        ee.emit(prefix + 'before-start', [args, harvestTarget], ctx)
         var dtPayload
         if (ctx[contextId] && ctx[contextId].dt) dtPayload = ctx[contextId].dt
 
         var origPromiseFromFetch = fn.apply(this, args)
 
-        ee.emit(prefix + 'start', [args, dtPayload], origPromiseFromFetch)
+        ee.emit(prefix + 'start', [args, dtPayload, harvestTarget], origPromiseFromFetch)
 
         // Note we need to cast the returned (orig) Promise from native APIs into the current global Promise, which may or may not be our WrappedPromise.
         return origPromiseFromFetch.then(function (val) {
-          ee.emit(prefix + 'end', [null, val], origPromiseFromFetch)
+          ee.emit(prefix + 'end', [null, val, harvestTarget], origPromiseFromFetch)
           return val
         }, function (err) {
-          ee.emit(prefix + 'end', [err], origPromiseFromFetch)
+          ee.emit(prefix + 'end', [err, undefined, harvestTarget], origPromiseFromFetch)
           throw err
         })
       }

@@ -3,18 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { setTopLevelCallers } from '../api/topLevelCallers'
-import { addToNREUM, gosCDN } from '../../common/window/nreum'
+import { gosCDN } from '../../common/window/nreum'
 import { mergeInfo } from '../../common/config/info'
 import { mergeInit } from '../../common/config/init'
 import { mergeRuntime } from '../../common/config/runtime'
-import { activatedFeatures } from '../../common/util/feature-flags'
 import { isWorkerScope } from '../../common/constants/runtime'
 import { redefinePublicPath } from './public-path'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 import { mergeLoaderConfig } from '../../common/config/loader-config'
-
-const alreadySetOnce = new Set() // the configure() function can run multiple times in agent lifecycle for different agents
 
 /**
  * Sets or re-sets the agent's configuration values from global settings. This also attach those as properties to the agent instance.
@@ -44,7 +41,9 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   const updatedInit = agent.init
   const internalTrafficList = [info.beacon, info.errorBeacon]
 
-  if (!alreadySetOnce.has(agent.agentIdentifier)) {
+  agent.utils ??= {}
+
+  if (!agent.utils.configured) {
     if (updatedInit.proxy.assets) {
       redefinePublicPath(updatedInit.proxy.assets)
       internalTrafficList.push(updatedInit.proxy.assets)
@@ -53,7 +52,6 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
     agent.beacons = [...internalTrafficList]
 
     setTopLevelCallers(agent) // no need to set global APIs on newrelic obj more than once
-    addToNREUM('activatedFeatures', activatedFeatures)
   }
 
   runtime.denyList = [
@@ -64,19 +62,20 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   runtime.loaderType = loaderType
   agent.runtime = mergeRuntime(runtime)
 
-  if (!alreadySetOnce.has(agent.agentIdentifier)) {
+  if (!agent.utils.configured) {
     agent.ee = ee.get(agent.agentIdentifier)
+    agent.utils.drainRegistry = new Map()
+    agent.utils.activatedFeatures = {}
+
     agent.exposed = exposed
 
     dispatchGlobalEvent({
-      agentIdentifier: agent.agentIdentifier,
-      drained: !!activatedFeatures?.[agent.agentIdentifier],
       type: 'lifecycle',
       name: 'initialize',
       feature: undefined,
       data: agent.config
     })
-  }
 
-  alreadySetOnce.add(agent.agentIdentifier)
+    agent.utils.configured = true
+  }
 }

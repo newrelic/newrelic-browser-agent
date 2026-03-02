@@ -28,7 +28,7 @@ beforeEach(async () => {
   softNavAggregate.initialPageLoadInteraction.done(1) // so that IPL doesn't muddy the ixn seeking logic
 })
 afterEach(() => {
-  resetAgent(mainAgent.agentIdentifier)
+  resetAgent(mainAgent)
 })
 
 test('on interaction cancel, buffered jserrors are flushed as standalone', () => {

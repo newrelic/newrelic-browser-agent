@@ -11,6 +11,11 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  // Clear the circular reference to prevent Jest serialization issues
+  if (mockNREUM && mockNREUM.ee) {
+    delete mockNREUM.ee
+  }
+  mockNREUM = null
   jest.resetModules()
   jest.resetAllMocks()
 })
@@ -167,7 +172,7 @@ describe('event-emitter buffer', () => {
     expect(mockListener).toHaveReturnedTimes(0) // wont return until drain is called
 
     registerHandler(eventType, mockListener, undefined, ee)
-    drain('globalEE')
+    drain({ ee, utils: { drainRegistry: new Map() } })
 
     handle(eventType, eventArgs, undefined, undefined, ee)
     handle(eventType, eventArgs, undefined, undefined, ee)

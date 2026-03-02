@@ -65,11 +65,11 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   return fakeAgent
 }
 
-export function resetAgent (agentIdentifier) {
-  resetAgentEventEmitter(agentIdentifier)
-  resetAggregator(agentIdentifier)
-  resetSession(agentIdentifier)
-  getNREUMInitializedAgent(agentIdentifier).runtime.isRecording = false
+export function resetAgent (agentRef) {
+  resetAgentEventEmitter(agentRef)
+  resetAggregator(agentRef)
+  resetSession(agentRef)
+  agentRef.runtime.isRecording = false
 }
 
 function setBeacons (info, init) {
@@ -78,24 +78,21 @@ function setBeacons (info, init) {
   return [...beacons]
 }
 
-function resetAgentEventEmitter (agentIdentifier) {
-  const eventEmitter = ee.get(agentIdentifier)
-  const listeners = [
-    ...jest.mocked(eventEmitter.on).mock.calls,
-    ...jest.mocked(eventEmitter.addEventListener).mock.calls
-  ]
+function resetAgentEventEmitter (agentRef) {
+  const eventEmitter = agentRef.ee
+  const onCalls = eventEmitter.on?.mock?.calls || []
+  const addEventListenerCalls = eventEmitter.addEventListener?.mock?.calls || []
+  const listeners = [...onCalls, ...addEventListenerCalls]
 
   listeners.forEach(([type, fn]) => eventEmitter.removeEventListener(type, fn))
 
   eventEmitter.backlog = {}
 }
 
-function resetAggregator (agentIdentifier) {
-  const agent = getNREUMInitializedAgent(agentIdentifier)
-  agent.sharedAggregator.clear()
+function resetAggregator (agentRef) {
+  agentRef.sharedAggregator.clear()
 }
 
-function resetSession (agentIdentifier) {
-  const agent = getNREUMInitializedAgent(agentIdentifier)
-  agent.runtime.session.reset()
+function resetSession (agentRef) {
+  agentRef.runtime.session.reset()
 }

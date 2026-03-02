@@ -79,7 +79,7 @@ export class Aggregate extends AggregateBase {
       us: info.user,
       ac: info.account,
       pr: info.product,
-      af: getActivatedFeaturesFlags(this.agentIdentifier).join(','),
+      af: getActivatedFeaturesFlags(this.agentRef).join(','),
       ...measures,
       xx: info.extra,
       ua: info.userAttributes,

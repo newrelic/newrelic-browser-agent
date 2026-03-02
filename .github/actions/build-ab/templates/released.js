@@ -29,6 +29,7 @@ window.NREUM={
     performance: {
       capture_marks: false,
       capture_measures: true,
+      capture_detail: true,
       resources: {
         enabled: true,
         ignore_newrelic: false,

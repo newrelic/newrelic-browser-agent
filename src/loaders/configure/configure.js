@@ -65,11 +65,11 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   if (!agent.utils.configured) {
     agent.ee = ee.get(agent.agentIdentifier)
     agent.utils.drainRegistry = new Map()
-    agent.utils.activatedFeatures = {}
 
     agent.exposed = exposed
 
     dispatchGlobalEvent({
+      drained: !!agent.utils.activatedFeatures,
       type: 'lifecycle',
       name: 'initialize',
       feature: undefined,

@@ -32,14 +32,14 @@ beforeEach(async () => {
 
 afterEach(() => {
   jest.useRealTimers() // Ensure timers are reset even if a test fails
-  
+
   // Clear any pending timers and observers in the soft nav aggregate
   if (softNavAggregate) {
     // Disconnect DOM observer
     if (softNavAggregate.domObserver && softNavAggregate.domObserver.disconnect) {
       softNavAggregate.domObserver.disconnect()
     }
-    
+
     // Clear timers in active interactions
     if (softNavAggregate.interactionInProgress) {
       clearTimeout(softNavAggregate.interactionInProgress.cancellationTimer)
@@ -54,7 +54,7 @@ afterEach(() => {
       clearTimeout(ixn.watchLongtaskTimer)
     })
   }
-  
+
   resetAgent(mainAgent)
   jest.clearAllMocks()
   softNavAggregate = null

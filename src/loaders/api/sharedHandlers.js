@@ -27,6 +27,7 @@ export function setupAPI (name, fn, agent, obj) {
   api[name] = function () {
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
     dispatchGlobalEvent({
+      drained: !!agent.utils?.activatedFeatures,
       type: 'data',
       name: 'api',
       feature: prefix + name,

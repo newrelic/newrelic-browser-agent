@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { getNREUMInitializedAgent, setNREUMInitializedAgent } from '../../src/common/window/nreum'
+import { setNREUMInitializedAgent } from '../../src/common/window/nreum'
 import { configure } from '../../src/loaders/configure/configure'
 import { ee } from '../../src/common/event-emitter/contextual-ee'
 import { TimeKeeper } from '../../src/common/timing/time-keeper'

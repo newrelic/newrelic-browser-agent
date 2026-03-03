@@ -1,6 +1,8 @@
 const { testMFEInsRequest } = require('../../../../tools/testing-server/utils/expect-tests')
 const { fullySupportsPreloadResourceTimings } = require('../../../../tools/browser-matcher/common-matchers.mjs')
 
+const acceptedAssetTypes = ['script', 'link', 'preload', 'inline', 'fetch', 'unknown']
+
 let mfeInsightsCapture
 describe('Register API - Timings', () => {
   beforeEach(async () => {
@@ -57,7 +59,7 @@ describe('Register API - Timings', () => {
 
     // assetType should be a string with valid value
     expect(typeof timing.assetType).toBe('string')
-    expect(['script', 'link', 'preload', 'inline', 'unknown']).toContain(timing.assetType)
+    expect(acceptedAssetTypes).toContain(timing.assetType)
 
     // timeAlive should be positive since work was done
     expect(timing.timeAlive).toBeGreaterThan(0)
@@ -251,7 +253,7 @@ describe('Register API - Timings', () => {
 
     // Verify assetType is present and valid
     expect(timing.assetType).toBeDefined()
-    expect(['script', 'link', 'preload', 'inline', 'unknown']).toContain(timing.assetType)
+    expect(acceptedAssetTypes).toContain(timing.assetType)
   })
 
   it('should report correct assetType for inline scripts', async () => {
@@ -375,7 +377,7 @@ describe('Register API - Timings', () => {
 
     // assetType should be one of the valid values for all events
     timingEvents.forEach(timing => {
-      expect(['script', 'link', 'preload', 'inline', 'unknown']).toContain(timing.assetType)
+      expect(acceptedAssetTypes).toContain(timing.assetType)
       expect(timing.assetUrl).toBeDefined()
     })
   })
@@ -407,7 +409,7 @@ describe('Register API - Timings', () => {
     expect(evalMfe).toBeDefined()
 
     // Eval'd code should still have a valid assetType (likely 'inline' because stack points to page URL)
-    expect(['script', 'link', 'preload', 'inline', 'unknown']).toContain(evalMfe.assetType)
+    expect(['script', 'link', 'preload', 'inline', 'fetch', 'unknown']).toContain(evalMfe.assetType)
   })
 
   describe('Fetch time assumptions work with different types of scripts', () => {
@@ -438,13 +440,14 @@ describe('Register API - Timings', () => {
           .flatMap(({ request: { body } }) => body.ins)
           .filter(event => event.eventType === 'MicroFrontEndTiming')
 
-        expect(timingEvents.length).toBeGreaterThanOrEqual(5)
+        expect(timingEvents.length).toBeGreaterThanOrEqual(6)
 
         const mainMfe = timingEvents.find(event => event['source.name'] === 'main')
         const mfe1 = timingEvents.find(event => event['source.name'] === 'test')
         const mfe2 = timingEvents.find(event => event['source.name'] === 'test 2')
         const mfe3 = timingEvents.find(event => event['source.name'] === 'test 3')
         const mfe4 = timingEvents.find(event => event['source.name'] === 'test 4')
+        const mfe5 = timingEvents.find(event => event['source.name'] === 'test 5')
 
         // Main MFE should have zero fetch timings and be inline type
         expect(mainMfe).toBeDefined()
@@ -485,6 +488,17 @@ describe('Register API - Timings', () => {
         }
         expect(mfe4.assetType).toEqual('link')
         expect(mfe4.assetUrl).toBeDefined()
+
+        // MFE5 (test 5) tests webpack-style loader pattern with eval+sourceURL
+        // This validates that scripts loaded via fetch() and executed with eval()
+        // using //# sourceURL directives are properly attributed to the eval'd script,
+        // not the loader/runtime that appears at the stack root
+        expect(mfe5).toBeDefined()
+        expect(mfe5.timeToBeRequested).toBeGreaterThan(0)
+        expect(mfe5.timeToFetch).toBeGreaterThan(0)
+        expect(mfe5.assetType).toEqual('fetch') // fetch + eval like some webpack implementation
+        expect(mfe5.assetUrl).toBeDefined()
+        expect(mfe5.assetUrl).toContain('mfe-preload-late.js')
       })
     })
   })

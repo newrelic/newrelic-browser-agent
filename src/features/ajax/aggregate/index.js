@@ -12,6 +12,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { parseGQL } from './gql'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { gosNREUMOriginals } from '../../../common/window/nreum'
+import { getVersion2Attributes } from '../../../common/util/v2'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -108,10 +109,21 @@ export class Aggregate extends AggregateBase {
     })
     if (event.gql) this.reportSupportabilityMetric('Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length)
 
+    const containerAgentEvent = {
+      ...event,
+      ...(!!ctx.target && { 'child.id': ctx.target.id })
+    }
+
     const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
     if (softNavInUse) { // when SN is running, pass the event w/ info to it for evaluation -- either part of an interaction or is given back
-      handle('ajax', [event, ctx], undefined, FEATURE_NAMES.softNav, this.ee)
+      handle('ajax', [containerAgentEvent, ctx], undefined, FEATURE_NAMES.softNav, this.ee)
     } else {
+      this.events.add(containerAgentEvent)
+    }
+
+    /** make a copy of the event for the MFE target if it exists */
+    if (ctx.target) {
+      event.target = ctx.target
       this.events.add(event)
     }
   }
@@ -154,7 +166,12 @@ export class Aggregate extends AggregateBase {
 
       // add custom attributes
       // gql decorators are added as custom attributes to alleviate need for new BEL schema
-      const attrParts = addCustomAttributes({ ...(jsAttributes || {}), ...(event.gql || {}) }, addString)
+      const attrParts = addCustomAttributes({
+        ...(jsAttributes || {}),
+        ...(event.gql || {}),
+        ...(getVersion2Attributes(event.target, this)) // event.target only exists if we saw the right headers on the request.  The helper will know what to do with that
+      }, addString)
+
       fields.unshift(numeric(attrParts.length))
 
       insert += fields.join(',')

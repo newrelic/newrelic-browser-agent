@@ -20,6 +20,8 @@ import { SUPPORTABILITY_METRIC } from '../../metrics/constants'
 import { now } from '../../../common/timing/now'
 import { hasUndefinedHostname } from '../../../common/deny-list/deny-list'
 import { extractUrl } from '../../../common/url/extract-url'
+import { extractUrlsFromStack, getDeepStackTrace } from '../../../common/util/script-tracker'
+import { getRegisteredTargetFromFilename } from '../../../common/util/v2'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
@@ -147,8 +149,8 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     }
   }
 
-  function onSendXhrStart (args, xhr, _, target) {
-    console.log('onSendXhrStart called with target:', target)
+  function onSendXhrStart (args, xhr) {
+    console.log('onSendXhrStart called with xhr:', xhr, 'this:', this)
     var metrics = this.metrics
     var data = args[0]
     var context = this
@@ -163,11 +165,12 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     this.body = data
 
     this.listener = function (evt) {
+      console.log('sendXhrStart listener fired', evt.type, xhr)
       try {
         if (evt.type === 'abort' && !(context.loadCaptureCalled)) {
           context.params.aborted = true
         }
-        if (evt.type !== 'load' || ((context.called === context.totalCbs) && (context.onloadCalled || typeof (xhr.onload) !== 'function') && typeof context.end === 'function')) context.end(xhr, target)
+        if (evt.type !== 'load' || ((context.called === context.totalCbs) && (context.onloadCalled || typeof (xhr.onload) !== 'function') && typeof context.end === 'function')) context.end(xhr)
       } catch (e) {
         try {
           ee.emit('internal-error', [e])
@@ -233,8 +236,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
   }
 
   // this event only handles DT
-  function onFetchBeforeStart (args, harvestTarget) {
-    console.log('onFetchBeforeStart called with harvestTarget:', harvestTarget)
+  function onFetchBeforeStart (args) {
     var opts = args[1] || {}
     var url
     if (typeof args[0] === 'string') {
@@ -310,12 +312,13 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     }
   }
 
-  function onFetchStart (fetchArguments, dtPayload, harvestTarget) {
-    console.log('onFetchStart called with harvestTarget:', harvestTarget)
+  function onFetchStart (fetchArguments, dtPayload) {
     this.params = {}
     this.metrics = {}
     this.startTime = now()
     this.dt = dtPayload
+
+    console.log('target from stack for onFetchStart:', getTargetFromStack())
 
     if (fetchArguments.length >= 1) this.target = fetchArguments[0]
     if (fetchArguments.length >= 2) this.opts = fetchArguments[1]
@@ -334,8 +337,8 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
 
   // we capture failed call as status 0, the actual error is ignored
   // eslint-disable-next-line handle-callback-err
-  function onFetchDone (_, res, harvestTarget) {
-    console.log('onFetchDone called with harvestTarget:', harvestTarget)
+  function onFetchDone (_, res) {
+    console.log('target from stack for onFetchDone:', getTargetFromStack())
     this.endTime = now()
     if (!this.params) this.params = {}
     if (hasUndefinedHostname(this.params)) return // don't bother with fetch to url with no hostname
@@ -358,8 +361,8 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
   }
 
   // Create report for XHR request that has finished
-  function end (xhr, target) {
-    if (target) console.log('ready to report XHR! it has a target!', target)
+  function end (xhr) {
+    console.log('end called for ', xhr, 'this', this)
     const params = this.params
     const metrics = this.metrics
     if (this.ended) return
@@ -400,6 +403,17 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     }
 
     ctx.loadCaptureCalled = true
+  }
+
+  function getTargetFromStack () {
+    let iterator = 0
+    let target
+
+    var urls = extractUrlsFromStack(getDeepStackTrace()).reverse()
+    while (!target && urls[iterator]) {
+      target = getRegisteredTargetFromFilename(urls[iterator++], Object.values(newrelic.initializedAgents)[0].features.page_view_event.featAggregate)
+    }
+    return target
   }
 }
 

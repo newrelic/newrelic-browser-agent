@@ -10,7 +10,9 @@
 import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { globalScope } from '../constants/runtime'
 import { extractUrlsFromStack, getDeepStackTrace } from '../util/script-tracker'
-import { getRegisteredTargetFromFilename } from '../util/v2'
+import { getRegisteredTargetFromFilename, getRegisteredTargetFromId } from '../util/v2'
+import { NEW_RELIC_MFE_ID_HEADER } from '../constants/agent-constants'
+import { stringify } from '../util/stringify'
 
 var prefix = 'fetch-'
 var bodyPrefix = prefix + 'body-'
@@ -46,16 +48,16 @@ export function wrapFetch (sharedEE) {
   })
   wrapPromiseMethod(globalScope, 'fetch', prefix)
 
-  ee.on(prefix + 'end', function (err, res, harvestTarget) {
+  ee.on(prefix + 'end', function (err, res) {
     var ctx = this
     if (res) {
       var size = res.headers.get('content-length')
       if (size !== null) {
         ctx.rxSize = size
       }
-      ee.emit(prefix + 'done', [null, res, harvestTarget], ctx)
+      ee.emit(prefix + 'done', [null, res], ctx)
     } else {
-      ee.emit(prefix + 'done', [err, undefined, harvestTarget], ctx)
+      ee.emit(prefix + 'done', [err, undefined], ctx)
     }
   })
 
@@ -70,33 +72,57 @@ export function wrapFetch (sharedEE) {
   function wrapPromiseMethod (target, name, prefix) {
     var fn = target[name]
 
-    let harvestTarget; let iterator = 0
+    let iterator = 0
 
     if (typeof fn === 'function') {
       target[name] = function () {
-        var urls = extractUrlsFromStack(getDeepStackTrace()).reverse()
-        while (!harvestTarget && urls[iterator]) {
-          harvestTarget = getRegisteredTargetFromFilename(urls[iterator++], Object.values(newrelic.initializedAgents)[0].features.page_view_event.featAggregate)
-        }
-
         var args = [...arguments]
 
+        let mfeId
+        try {
+          const headers = args?.[0]?.headers || args?.[1]?.headers
+          if (headers) {
+            const isHeaderInstance = headers instanceof Headers
+            const entries = isHeaderInstance ? Array.from(headers.entries()) : Object.entries(headers)
+            for (const [key, val] of entries) {
+              if (String(key).toLowerCase() === NEW_RELIC_MFE_ID_HEADER) {
+                const stringVal = stringify(val)
+                if (stringVal) mfeId = stringVal
+                try {
+                  if (isHeaderInstance) headers.delete(key)
+                  else delete headers[key]
+                } catch {}
+                if (mfeId) break // Stop processing once we have a valid MFE ID
+              }
+            }
+          }
+        } catch {}
+
         var ctx = {}
+        ctx[contextId] ??= {}
+
+        if (mfeId) ctx[contextId].target = getRegisteredTargetFromId(mfeId)
+        else {
+          var urls = extractUrlsFromStack(getDeepStackTrace()).reverse()
+          while (!ctx[contextId].target && urls[iterator]) {
+            ctx[contextId].target = getRegisteredTargetFromFilename(urls[iterator++], Object.values(newrelic.initializedAgents)[0].features.page_view_event.featAggregate)
+          }
+        }
         // we are wrapping args in an array so we can preserve the reference
-        ee.emit(prefix + 'before-start', [args, harvestTarget], ctx)
+        ee.emit(prefix + 'before-start', [args], ctx)
         var dtPayload
         if (ctx[contextId] && ctx[contextId].dt) dtPayload = ctx[contextId].dt
 
         var origPromiseFromFetch = fn.apply(this, args)
 
-        ee.emit(prefix + 'start', [args, dtPayload, harvestTarget], origPromiseFromFetch)
+        ee.emit(prefix + 'start', [args, dtPayload], origPromiseFromFetch)
 
         // Note we need to cast the returned (orig) Promise from native APIs into the current global Promise, which may or may not be our WrappedPromise.
         return origPromiseFromFetch.then(function (val) {
-          ee.emit(prefix + 'end', [null, val, harvestTarget], origPromiseFromFetch)
+          ee.emit(prefix + 'end', [null, val], origPromiseFromFetch)
           return val
         }, function (err) {
-          ee.emit(prefix + 'end', [err, undefined, harvestTarget], origPromiseFromFetch)
+          ee.emit(prefix + 'end', [err, undefined], origPromiseFromFetch)
           throw err
         })
       }

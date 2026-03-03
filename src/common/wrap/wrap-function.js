@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -7,11 +7,8 @@
  * @file Provides helper functions for wrapping functions in various scenarios.
  */
 
-import { computeStackTrace } from '../../features/jserrors/aggregate/compute-stack-trace'
 import { ee } from '../event-emitter/contextual-ee'
 import { bundleId } from '../ids/bundle-id'
-import { extractUrlsFromStack, getDeepStackTrace } from '../util/script-tracker'
-import { getRegisteredTargetFromFilename } from '../util/v2'
 
 export const flag = `nr@original:${bundleId}`
 const LONG_TASK_THRESHOLD = 50
@@ -81,17 +78,10 @@ export function createWrapperWithEmitter (emitter, always) {
       var ctx
       var result
       let thrownError
-      let target
-      let iterator = 0
 
       try {
         originalThis = this
         args = [...arguments]
-
-        var urls = extractUrlsFromStack(getDeepStackTrace()).reverse()
-        while (!target && urls[iterator]) {
-          target = getRegisteredTargetFromFilename(urls[iterator++], Object.values(newrelic.initializedAgents)[0].features.page_view_event.featAggregate)
-        }
 
         if (typeof getContext === 'function') {
           ctx = getContext(args, originalThis)
@@ -103,7 +93,7 @@ export function createWrapperWithEmitter (emitter, always) {
       }
 
       // Warning: start events may mutate args!
-      safeEmit(prefix + 'start', [args, originalThis, methodName, target], ctx, bubble)
+      safeEmit(prefix + 'start', [args, originalThis, methodName], ctx, bubble)
 
       const fnStartTime = performance.now()
       let fnEndTime
@@ -133,7 +123,7 @@ export function createWrapperWithEmitter (emitter, always) {
           safeEmit('long-task', [task, originalThis], ctx, bubble)
         }
         // -end message also includes the task execution info
-        safeEmit(prefix + 'end', [args, originalThis, result, target], ctx, bubble)
+        safeEmit(prefix + 'end', [args, originalThis, result], ctx, bubble)
       }
     }
   }

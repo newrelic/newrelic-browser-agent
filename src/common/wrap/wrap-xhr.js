@@ -5,7 +5,7 @@
 
 /**
  * @file Wraps AJAX (XHR) related methods for instrumentation.
- * This module is used by: ajax, jserrors, spa.
+ * This module is used by: ajax, jserrors.
  */
 
 import { wrapEvents } from './wrap-events'

@@ -1,11 +1,11 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 /**
  * @file Wraps `pushState` and `replaceState` methods of `window.history` object for instrumentation.
- * This module is used by: session_trace, spa.
+ * This module is used by: session_trace, soft_navigations.
  */
 import { ee as globalEE } from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn } from './wrap-function'

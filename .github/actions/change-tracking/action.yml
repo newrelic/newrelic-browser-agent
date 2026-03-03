@@ -1,0 +1,131 @@
+# This composite action creates New Relic change tracking events for deployments.
+# Call this action once per entity/account combination.
+
+name: 'Create Change Tracking Event'
+description: 'Creates a New Relic change tracking event for a single entity'
+
+inputs:
+  accountId:
+    description: 'New Relic account ID (e.g., 1067061, 550352)'
+    required: true
+  entityGuid:
+    description: 'Entity GUID for the application'
+    required: true
+  apiKey:
+    description: 'New Relic User API key for the account'
+    required: true
+  region:
+    description: 'New Relic region (US, EU, Staging)'
+    required: true
+  version:
+    description: 'Version being deployed (required for Deployment category)'
+    required: true
+  category:
+    description: 'Category of event. Valid values: Deployment, Feature Flag'
+    required: false
+    default: 'Deployment'
+  type:
+    description: 'Type of deployment event. Valid values: Basic, Rollback, Blue Green, Canary, Rolling, Shadow'
+    required: false
+    default: 'Basic'
+  featureFlagId:
+    description: 'ID of the feature flag (required when category is Feature Flag)'
+    required: false
+    default: ''
+  description:
+    description: 'Description of the event'
+    required: false
+    default: ''
+  changelog:
+    description: 'Changelog for the deployment (URL or text)'
+    required: false
+    default: ''
+  commit:
+    description: 'Commit hash for the deployment'
+    required: false
+    default: ''
+  deepLink:
+    description: 'Deep link URL for the deployment'
+    required: false
+    default: ''
+  user:
+    description: 'Username of the actor or bot'
+    required: false
+    default: ''
+  groupId:
+    description: 'String to correlate two or more events'
+    required: false
+    default: ''
+  shortDescription:
+    description: 'Short description for the event'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install New Relic CLI
+      shell: bash
+      run: |
+        echo "Installing New Relic CLI..."
+        sudo snap install newrelic-cli
+        newrelic version
+
+    - name: Create change tracking event
+      shell: bash
+      env:
+        ACCOUNT_ID: ${{ inputs.accountId }}
+        ENTITY_GUID: ${{ inputs.entityGuid }}
+        API_KEY: ${{ inputs.apiKey }}
+        REGION: ${{ inputs.region }}
+        VERSION: ${{ inputs.version }}
+        CATEGORY: ${{ inputs.category }}
+        TYPE: ${{ inputs.type }}
+        FEATURE_FLAG_ID: ${{ inputs.featureFlagId }}
+        DESCRIPTION: ${{ inputs.description }}
+        CHANGELOG: ${{ inputs.changelog }}
+        COMMIT: ${{ inputs.commit }}
+        DEEP_LINK: ${{ inputs.deepLink }}
+        USER: ${{ inputs.user }}
+        GROUP_ID: ${{ inputs.groupId }}
+        SHORT_DESCRIPTION: ${{ inputs.shortDescription }}
+      run: |
+        # Build command arguments array
+        args=(
+          "--entitySearch" "id = '$ENTITY_GUID'"
+          "--category" "$CATEGORY"
+          "--type" "$TYPE"
+        )
+        
+        # Add category-specific required fields
+        if [ "$CATEGORY" = "Deployment" ]; then
+          args+=("--version" "$VERSION")
+          [ -n "$CHANGELOG" ] && args+=("--changelog" "$CHANGELOG")
+          [ -n "$COMMIT" ] && args+=("--commit" "$COMMIT")
+          [ -n "$DEEP_LINK" ] && args+=("--deepLink" "$DEEP_LINK")
+        elif [ "$CATEGORY" = "Feature Flag" ]; then
+          [ -n "$FEATURE_FLAG_ID" ] && args+=("--featureFlagId" "$FEATURE_FLAG_ID")
+        fi
+        
+        # Add common optional fields
+        [ -n "$DESCRIPTION" ] && args+=("--description" "$DESCRIPTION")
+        [ -n "$USER" ] && args+=("--user" "$USER")
+        [ -n "$GROUP_ID" ] && args+=("--groupId" "$GROUP_ID")
+        [ -n "$SHORT_DESCRIPTION" ] && args+=("--shortDescription" "$SHORT_DESCRIPTION")
+
+        # Create change tracking event
+        echo "Creating change tracking event for account $ACCOUNT_ID..."
+        echo "  Category: $CATEGORY"
+        echo "  Type: $TYPE"
+        if [ "$CATEGORY" = "Deployment" ]; then
+          echo "  Version: $VERSION"
+        elif [ "$CATEGORY" = "Feature Flag" ]; then
+          echo "  Feature Flag ID: $FEATURE_FLAG_ID"
+        fi
+        echo "  GUID: $ENTITY_GUID"
+        echo "  Region: $REGION"
+        
+        NEW_RELIC_REGION="$REGION" NEW_RELIC_API_KEY="$API_KEY" \
+          newrelic changeTracking create "${args[@]}"
+        
+        echo "Change tracking event created successfully!"

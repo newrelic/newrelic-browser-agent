@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { onLCP } from 'web-vitals/attribution'
@@ -15,23 +15,22 @@ if (isBrowserScope) {
   /* Largest Contentful Paint - As of WV v3, it still imperfectly tries to detect document vis state asap and isn't supposed to report if page starts hidden. */
     if (initiallyHidden || largestContentfulPaint.isValid) return
 
-    let attrs
+    let attrs = {
+      timeToFirstByte: attribution.timeToFirstByte,
+      resourceLoadDelay: attribution.resourceLoadDelay,
+      resourceLoadDuration: attribution.resourceLoadDuration,
+      resourceLoadTime: attribution.resourceLoadDuration, // kept for NR backwards compatibility, deprecated in v3->v4
+      elementRenderDelay: attribution.elementRenderDelay
+    }
     const lcpEntry = attribution.lcpEntry
     if (lcpEntry) {
-      attrs = {
-        size: lcpEntry.size,
-        eid: lcpEntry.id,
-        element: attribution.element,
-        timeToFirstByte: attribution.timeToFirstByte,
-        resourceLoadDelay: attribution.resourceLoadDelay,
-        resourceLoadDuration: attribution.resourceLoadDuration,
-        resourceLoadTime: attribution.resourceLoadDuration, // kept for NR backwards compatibility, deprecated in v3->v4
-        elementRenderDelay: attribution.elementRenderDelay,
-        ...(attribution.navigationEntry && { pageUrl: cleanURL(attribution.navigationEntry.name) }) // used to ensure the LCP gets the correct URL at harvest time if a soft nav has occurred before page load
-      }
-      if (attribution.url) attrs.elUrl = cleanURL(attribution.url)
+      attrs.size = lcpEntry.size
+      attrs.eid = lcpEntry.id
       if (lcpEntry.element?.tagName) attrs.elTag = lcpEntry.element.tagName
     }
+    if (attribution.element) attrs.element = attribution.element
+    if (attribution.navigationEntry) attrs.pageUrl = cleanURL(attribution.navigationEntry.name) // used to ensure the LCP gets the correct URL at harvest time if a soft nav has occurred before page load
+    if (attribution.url) attrs.elUrl = cleanURL(attribution.url)
 
     largestContentfulPaint.update({ value, attrs })
   })

@@ -174,9 +174,35 @@ try {
         name: 'JSE_ONLY_MFE',
         tags: { isParent: false, isChild: false, dataTypes: 'errors' }
       })
-
       jseOnlyMfe.noticeError(new Error('NRBA: This is a test error from JSE_ONLY_MFE'));
 
+      const pageActionOnlyMfe = newrelic.initializedAgents[agentIdentifier].register({
+        id: 'page-action-only-mfe',
+        name: 'PAGE_ACTION_ONLY_MFE',
+        tags: { isParent: false, isChild: false, dataTypes: 'page actions' }
+      })
+      pageActionOnlyMfe.addPageAction('TestPageAction', { message: 'This is a test page action from PAGE_ACTION_ONLY_MFE' });
+
+      const customEventOnlyMfe = newrelic.initializedAgents[agentIdentifier].register({
+        id: 'custom-event-only-mfe',
+        name: 'CUSTOM_EVENT_ONLY_MFE',
+        tags: { isParent: false, isChild: false, dataTypes: 'custom events' }
+      })
+      customEventOnlyMfe.recordCustomEvent('TestCustomEvent', { message: 'This is a test custom event from CUSTOM_EVENT_ONLY_MFE' });
+
+      const measuresOnlyMfe = newrelic.initializedAgents[agentIdentifier].register({
+        id: 'measures-only-mfe',
+        name: 'MEASURES_ONLY_MFE',
+        tags: { isParent: false, isChild: false, dataTypes: 'measures' }
+      })
+      measuresOnlyMfe.measure('TestMeasure');
+
+      const timingsTestMfe = newrelic.initializedAgents[agentIdentifier].register({
+        id: 'timings-test-mfe',
+        name: 'TIMINGS_TEST_MFE',
+        tags: { isParent: false, isChild: false, dataTypes: 'micro frontend timings' }
+      })
+      timingsTestMfe.deregister()
 
       // Register the MFE API
       const mfeApi = newrelic.initializedAgents[agentIdentifier].register({ id: randomId, name: mfeName, tags: { isParent: false, isChild: false, dataTypes: 'all' } });
@@ -198,8 +224,8 @@ try {
       
       // Call log with error level
       mfeApi.log(randomSentence, { level: 'error' });
-
       mfeApi.noticeError(new Error(`NRBA: This is a test error from ${mfeName}`));
+      mfeApi.addPageAction('TestPageAction', { message: `This is a test page action from ${mfeName}` });
 
       MfeToMfeParent.log('This is a test log from MFE_TO_MFE_PARENT', { level: 'error' });
       MfeToMfeChild.log('This is a test log from MFE_TO_MFE_CHILD', { level: 'error' });
@@ -208,6 +234,10 @@ try {
       MfeToMfeParent.noticeError(new Error('NRBA: This is a test error from MFE_TO_MFE_PARENT'));
       MfeToMfeChild.noticeError(new Error('NRBA: This is a test error from MFE_TO_MFE_CHILD'));
       MfeToMfeGrandchild.noticeError(new Error('NRBA: This is a test error from MFE_TO_MFE_GRANDCHILD'));
+
+      MfeToMfeParent.addPageAction('TestPageAction', { message: 'This is a test page action from MFE_TO_MFE_PARENT' });
+      MfeToMfeChild.addPageAction('TestPageAction', { message: 'This is a test page action from MFE_TO_MFE_CHILD' });
+      MfeToMfeGrandchild.addPageAction('TestPageAction', { message: 'This is a test page action from MFE_TO_MFE_GRANDCHILD' });
     }
   }
 } catch (e) {

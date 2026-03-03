@@ -220,7 +220,7 @@ export class ApiBase {
    * Measures a task that is recorded as a BrowserPerformance event.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/measure/}
    * @param {string} name The name of the task
-   * @param {{start: number, end: number, duration: number, customAttributes: object}} [options] An object used to control the way the measure API operates
+   * @param {{start?: number|PerformanceMark, end?: number|PerformanceMark, customAttributes?: object}} [options] An object used to control the way the measure API operates
    * @returns {{start: number, end: number, duration: number, customAttributes: object}} Measurement details
    */
   measure (name, options) {

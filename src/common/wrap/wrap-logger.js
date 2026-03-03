@@ -5,7 +5,7 @@
 
 /**
  * @file Wraps native timeout and interval methods for instrumentation.
- * This module is used by: jserrors, spa.
+ * This module is used by: logging.
  */
 
 import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'

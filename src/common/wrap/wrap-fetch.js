@@ -5,7 +5,7 @@
 
 /**
  * @file Wraps `fetch` and related methods for instrumentation.
- * This module is used by: ajax, spa.
+ * This module is used by: ajax.
  */
 import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { globalScope } from '../constants/runtime'

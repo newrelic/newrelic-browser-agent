@@ -66,7 +66,7 @@ function extractUrlsFromStack (stack) {
       urls.add(cleanURL(parts[2]))
     } else {
       // Fallback: match URLs using a generic .js pattern
-      const fallbackMatch = line.match(/\(?((?:https?:\/\/)?[^):\s]+\.js):\d+:\d+\)?/)
+      const fallbackMatch = line.match(/\(?((?:(?:https?|file):\/\/)?[^):\s]+\.js):\d+:\d+\)?/)
       if (fallbackMatch && fallbackMatch[1]) {
         urls.add(cleanURL(fallbackMatch[1]))
       }

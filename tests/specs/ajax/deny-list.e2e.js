@@ -1,5 +1,5 @@
 import { extractAjaxEvents } from '../../util/xhr'
-import { testAjaxEventsRequest, testAjaxTimeSlicesRequest, testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testAjaxEventsRequest, testAjaxTimeSlicesRequest, testInteractionEventsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('xhr events deny list', () => {
   it('does not capture events when blocked', async () => {
@@ -110,5 +110,19 @@ describe('xhr events deny list', () => {
       .flatMap(harvest => harvest.xhr)
       .find(obj => obj.params.host.startsWith('undefined'))
     expect(undefinedHostMetric).toBeUndefined()
+  })
+
+  it('sends RUM request with unminified loader', async () => { // regression test for bug NR-528802
+    const rumCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testRumRequest })
+
+    await browser.url(
+      await browser.testHandle.assetURL('instrumented.html?minified=false')
+    ).then(() => browser.waitForAgentLoad())
+
+    const [rumRequests] = await Promise.all([ // if there was a syntax error in the unminified loader, the agent won't function and we won't see a RUM request
+      rumCapture.waitForResult({ timeout: 10000 })
+    ])
+
+    expect(rumRequests.length).toBeGreaterThan(0)
   })
 })

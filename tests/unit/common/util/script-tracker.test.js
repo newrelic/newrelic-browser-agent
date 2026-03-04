@@ -742,6 +742,54 @@ init@https://cdn.example.com/gecko-app.js:20:10`
         Object.defineProperty(Error, 'stackTraceLimit', originalDescriptor)
       }
     })
+
+    test('selects MFE script from generator pattern stack trace (not root runtime)', () => {
+      // Setup: Simulate generator/runner pattern like NR1's one-vbp
+      // Stack shows: agent (top) → MFE chunk (middle) → generator runtime (bottom)
+      const mfeChunkEntry = {
+        name: 'https://staging-one.nr-assets.net/nerdpacks/browser-entity-preview~b21d8a93.js',
+        initiatorType: 'script',
+        startTime: 150.5,
+        responseEnd: 280.3
+      }
+
+      const runtimeEntry = {
+        name: 'https://staging-one.nr-assets.net/platform/one-vbp-543fd763.js',
+        initiatorType: 'script',
+        startTime: 50.2,
+        responseEnd: 100.8
+      }
+
+      global.performance.getEntriesByType = jest.fn((type) => {
+        if (type === 'navigation') {
+          return [{ initiatorType: 'navigation', name: 'https://one.newrelic.com/launcher' }]
+        }
+        if (type === 'resource') {
+          return [mfeChunkEntry, runtimeEntry]
+        }
+        return []
+      })
+
+      // Generator pattern stack trace (matching production pattern from PR description):
+      // - Agent at top (internal)
+      // - MFE chunk in middle (the actual nerdpack code calling register)
+      // - Generator runtime at bottom (one-vbp driving execution)
+      mockStack = `Error
+    at Object.register (internal:18:84024)
+    at register (internal:18:84952)
+    at mfe5-module (https://staging-one.nr-assets.net/nerdpacks/browser-entity-preview~b21d8a93.js:1:3275)
+    at Generator.<anonymous> (https://staging-one.nr-assets.net/platform/one-vbp-543fd763.js:1:32670)
+    at Generator.next (https://staging-one.nr-assets.net/platform/one-vbp-543fd763.js:1:33653)`
+
+      const result = scriptTrackerModule.findScriptTimings()
+
+      // Should select MFE chunk (middle), not generator runtime (bottom)
+      // This is the file closest to the agent after filtering
+      expect(result.asset).toBe('https://staging-one.nr-assets.net/nerdpacks/browser-entity-preview~b21d8a93.js')
+      expect(result.fetchStart).toBe(150)
+      expect(result.fetchEnd).toBe(280)
+      expect(result.type).toBe('script')
+    })
   })
 
   describe('PerformanceObserver availability', () => {

@@ -314,7 +314,7 @@ jobs:
           accountId: '550352'
           entityGuid: ${{ secrets.NR_ENTITY_GUID_BROWSER_STAGING }}
           apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_BROWSER }}
-          region: 'Staging'
+          application: 'New Relic One - Staging'
           version: staging-latest
           category: 'Deployment'
           type: 'Basic'
@@ -330,7 +330,7 @@ jobs:
           accountId: '1067061'
           entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_STAGING }}
           apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
-          region: 'Staging'
+          application: 'New Relic One - Staging'
           version: staging-latest
           category: 'Feature Flag'
           type: 'Basic'
@@ -347,7 +347,7 @@ jobs:
           accountId: '550352'
           entityGuid: ${{ secrets.NR_ENTITY_GUID_BROWSER_STAGING }}
           apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_BROWSER }}
-          region: 'Staging'
+          application: 'New Relic One - Staging'
           version: staging-latest
           category: 'Feature Flag'
           type: 'Basic'

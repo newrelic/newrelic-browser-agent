@@ -14,8 +14,8 @@ inputs:
   apiKey:
     description: 'New Relic User API key for the account'
     required: true
-  region:
-    description: 'New Relic region (US, EU, Staging)'
+  application:
+    description: 'New Relic application name'
     required: true
   version:
     description: 'Version being deployed (required for Deployment category)'
@@ -64,20 +64,12 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Install New Relic CLI
-      shell: bash
-      run: |
-        echo "Installing New Relic CLI..."
-        sudo snap install newrelic-cli
-        newrelic version
-
-    - name: Create change tracking event
+    - name: Create change tracking event via NerdGraph
       shell: bash
       env:
-        ACCOUNT_ID: ${{ inputs.accountId }}
         ENTITY_GUID: ${{ inputs.entityGuid }}
         API_KEY: ${{ inputs.apiKey }}
-        REGION: ${{ inputs.region }}
+        APPLICATION: ${{ inputs.application }}
         VERSION: ${{ inputs.version }}
         CATEGORY: ${{ inputs.category }}
         TYPE: ${{ inputs.type }}
@@ -90,42 +82,136 @@ runs:
         GROUP_ID: ${{ inputs.groupId }}
         SHORT_DESCRIPTION: ${{ inputs.shortDescription }}
       run: |
-        # Build command arguments array
-        args=(
-          "--entitySearch" "id = '$ENTITY_GUID'"
-          "--category" "$CATEGORY"
-          "--type" "$TYPE"
-        )
-        
-        # Add category-specific required fields
-        if [ "$CATEGORY" = "Deployment" ]; then
-          args+=("--version" "$VERSION")
-          [ -n "$CHANGELOG" ] && args+=("--changelog" "$CHANGELOG")
-          [ -n "$COMMIT" ] && args+=("--commit" "$COMMIT")
-          [ -n "$DEEP_LINK" ] && args+=("--deepLink" "$DEEP_LINK")
-        elif [ "$CATEGORY" = "Feature Flag" ]; then
-          [ -n "$FEATURE_FLAG_ID" ] && args+=("--featureFlagId" "$FEATURE_FLAG_ID")
-        fi
-        
-        # Add common optional fields
-        [ -n "$DESCRIPTION" ] && args+=("--description" "$DESCRIPTION")
-        [ -n "$USER" ] && args+=("--user" "$USER")
-        [ -n "$GROUP_ID" ] && args+=("--groupId" "$GROUP_ID")
-        [ -n "$SHORT_DESCRIPTION" ] && args+=("--shortDescription" "$SHORT_DESCRIPTION")
+        # All NerdGraph API calls go to staging
+        API_ENDPOINT="https://staging-api.newrelic.com/graphql"
 
-        # Create change tracking event
-        echo "Creating change tracking event for account $ACCOUNT_ID..."
+        echo "Creating change tracking event via NerdGraph..."
         echo "  Category: $CATEGORY"
         echo "  Type: $TYPE"
+        echo "  Entity GUID: $ENTITY_GUID"
+        echo "  Application: $APPLICATION"
+        echo "  API Endpoint: $API_ENDPOINT"
+
+        # Convert category to uppercase with underscores (e.g., "Feature Flag" -> "FEATURE_FLAG")
+        CATEGORY_GQL=$(echo "$CATEGORY" | tr '[:lower:]' '[:upper:]' | sed 's/ /_/g')
+        
+        # Convert type to PascalCase without spaces (e.g., "Blue Green" -> "BlueGreen")
+        TYPE_GQL=$(echo "$TYPE" | sed -e 's/\b\(.\)/\u\1/g' -e 's/ //g')
+
+        # Build categoryFields based on category
+        CATEGORY_FIELDS=""
         if [ "$CATEGORY" = "Deployment" ]; then
           echo "  Version: $VERSION"
+          
+          # Escape quotes in values
+          VERSION_ESC=$(echo "$VERSION" | sed 's/"/\\"/g')
+          CATEGORY_FIELDS="deployment: { version: \\\"$VERSION_ESC\\\""
+          
+          if [ -n "$CHANGELOG" ]; then
+            CHANGELOG_ESC=$(echo "$CHANGELOG" | sed 's/"/\\"/g')
+            CATEGORY_FIELDS="$CATEGORY_FIELDS, changelog: \\\"$CHANGELOG_ESC\\\""
+          fi
+          if [ -n "$COMMIT" ]; then
+            COMMIT_ESC=$(echo "$COMMIT" | sed 's/"/\\"/g')
+            CATEGORY_FIELDS="$CATEGORY_FIELDS, commit: \\\"$COMMIT_ESC\\\""
+          fi
+          if [ -n "$DEEP_LINK" ]; then
+            DEEP_LINK_ESC=$(echo "$DEEP_LINK" | sed 's/"/\\"/g')
+            CATEGORY_FIELDS="$CATEGORY_FIELDS, deepLink: \\\"$DEEP_LINK_ESC\\\""
+          fi
+          CATEGORY_FIELDS="$CATEGORY_FIELDS }"
+          
         elif [ "$CATEGORY" = "Feature Flag" ]; then
           echo "  Feature Flag ID: $FEATURE_FLAG_ID"
+          FEATURE_FLAG_ID_ESC=$(echo "$FEATURE_FLAG_ID" | sed 's/"/\\"/g')
+          CATEGORY_FIELDS="featureFlag: { featureFlagId: \\\"$FEATURE_FLAG_ID_ESC\\\" }"
         fi
-        echo "  GUID: $ENTITY_GUID"
-        echo "  Region: $REGION"
-        
-        NEW_RELIC_REGION="$REGION" NEW_RELIC_API_KEY="$API_KEY" \
-          newrelic changeTracking create "${args[@]}"
-        
-        echo "Change tracking event created successfully!"
+
+        # Build optional fields with proper escaping
+        OPTIONAL_FIELDS=""
+        if [ -n "$USER" ]; then
+          USER_ESC=$(echo "$USER" | sed 's/"/\\"/g')
+          OPTIONAL_FIELDS="$OPTIONAL_FIELDS, user: \\\"$USER_ESC\\\""
+        fi
+        if [ -n "$DESCRIPTION" ]; then
+          DESCRIPTION_ESC=$(echo "$DESCRIPTION" | sed 's/"/\\"/g' | sed 's/$//')
+          OPTIONAL_FIELDS="$OPTIONAL_FIELDS, description: \\\"$DESCRIPTION_ESC\\\""
+        fi
+        if [ -n "$SHORT_DESCRIPTION" ]; then
+          SHORT_DESCRIPTION_ESC=$(echo "$SHORT_DESCRIPTION" | sed 's/"/\\"/g')
+          OPTIONAL_FIELDS="$OPTIONAL_FIELDS, shortDescription: \\\"$SHORT_DESCRIPTION_ESC\\\""
+        fi
+        if [ -n "$GROUP_ID" ]; then
+          GROUP_ID_ESC=$(echo "$GROUP_ID" | sed 's/"/\\"/g')
+          OPTIONAL_FIELDS="$OPTIONAL_FIELDS, groupId: \\\"$GROUP_ID_ESC\\\""
+        fi
+
+        # Build the complete GraphQL mutation
+        MUTATION_QUERY="mutation {
+          changeTrackingCreateEvent(
+            changeTrackingEvent: {
+              categoryAndTypeData: {
+                ${CATEGORY_FIELDS:+categoryFields: { $CATEGORY_FIELDS },}
+                kind: { category: \\\"$CATEGORY_GQL\\\", type: \\\"$TYPE_GQL\\\" }
+              },
+              entitySearch: { query: \\\"id = '$ENTITY_GUID'\\\" }
+              $OPTIONAL_FIELDS
+            }
+          ) {
+            changeTrackingEvent {
+              changeTrackingId
+              timestamp
+              category
+              type
+              user
+              shortDescription
+              description
+              groupId
+            }
+          }
+        }"
+
+        # Create JSON payload
+        PAYLOAD=$(jq -n --arg query "$MUTATION_QUERY" '{"query": $query}')
+
+        # Execute the NerdGraph mutation
+        RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_ENDPOINT" \
+          -H "Content-Type: application/json" \
+          -H "API-Key: $API_KEY" \
+          -d "$PAYLOAD")
+
+        # Split response body and status code
+        HTTP_BODY=$(echo "$RESPONSE" | sed '$d')
+        HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
+
+        echo ""
+        echo "HTTP Status: $HTTP_STATUS"
+        echo "Response:"
+        echo "$HTTP_BODY" | jq '.' 2>/dev/null || echo "$HTTP_BODY"
+
+        # Check HTTP status
+        if [ "$HTTP_STATUS" != "200" ]; then
+          echo ""
+          echo "Error: HTTP request failed with status $HTTP_STATUS"
+          exit 1
+        fi
+
+        # Check for GraphQL errors
+        if echo "$HTTP_BODY" | jq -e '.errors' > /dev/null 2>&1; then
+          echo ""
+          echo "Error: Change tracking event creation failed!"
+          echo "$HTTP_BODY" | jq '.errors'
+          exit 1
+        fi
+
+        # Extract and display tracking ID
+        TRACKING_ID=$(echo "$HTTP_BODY" | jq -r '.data.changeTrackingCreateEvent.changeTrackingEvent.changeTrackingId // empty')
+        if [ -n "$TRACKING_ID" ]; then
+          echo ""
+          echo "✓ Change tracking event created successfully!"
+          echo "  Tracking ID: $TRACKING_ID"
+        else
+          echo ""
+          echo "Error: Tracking ID not found in response"
+          exit 1
+        fi

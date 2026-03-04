@@ -150,7 +150,6 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
   }
 
   function onSendXhrStart (args, xhr) {
-    console.log('onSendXhrStart called with xhr:', xhr, 'this:', this)
     var metrics = this.metrics
     var data = args[0]
     var context = this
@@ -165,7 +164,6 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     this.body = data
 
     this.listener = function (evt) {
-      console.log('sendXhrStart listener fired', evt.type, xhr)
       try {
         if (evt.type === 'abort' && !(context.loadCaptureCalled)) {
           context.params.aborted = true
@@ -318,16 +316,14 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     this.startTime = now()
     this.dt = dtPayload
 
-    console.log('target from stack for onFetchStart:', getTargetFromStack())
+    let target
+    let opts = {}
+    if (fetchArguments.length >= 1) target = fetchArguments[0]
+    if (fetchArguments.length >= 2) opts = fetchArguments[1]
 
-    if (fetchArguments.length >= 1) this.target = fetchArguments[0]
-    if (fetchArguments.length >= 2) this.opts = fetchArguments[1]
-
-    var opts = this.opts || {}
-    var target = this.target
     addUrl(this, extractUrl(target))
 
-    var method = ('' + ((target && target instanceof origRequest && target.method) ||
+    const method = ('' + ((target && target instanceof origRequest && target.method) ||
       opts.method || 'GET')).toUpperCase()
     this.params.method = method
     this.body = opts.body
@@ -338,7 +334,6 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
   // we capture failed call as status 0, the actual error is ignored
   // eslint-disable-next-line handle-callback-err
   function onFetchDone (_, res) {
-    console.log('target from stack for onFetchDone:', getTargetFromStack())
     this.endTime = now()
     if (!this.params) this.params = {}
     if (hasUndefinedHostname(this.params)) return // don't bother with fetch to url with no hostname
@@ -362,7 +357,6 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
 
   // Create report for XHR request that has finished
   function end (xhr) {
-    console.log('end called for ', xhr, 'this', this)
     const params = this.params
     const metrics = this.metrics
     if (this.ended) return
@@ -403,17 +397,6 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     }
 
     ctx.loadCaptureCalled = true
-  }
-
-  function getTargetFromStack () {
-    let iterator = 0
-    let target
-
-    var urls = extractUrlsFromStack(getDeepStackTrace()).reverse()
-    while (!target && urls[iterator]) {
-      target = getRegisteredTargetFromFilename(urls[iterator++], Object.values(newrelic.initializedAgents)[0].features.page_view_event.featAggregate)
-    }
-    return target
   }
 }
 

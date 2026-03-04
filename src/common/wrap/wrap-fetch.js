@@ -48,13 +48,15 @@ export function wrapFetch (sharedEE) {
   })
   wrapPromiseMethod(globalScope, 'fetch', prefix)
 
-  ee.on(prefix + 'end', function (err, res) {
+  ee.on(prefix + 'end', function (err, res, target) {
     var ctx = this
     if (res) {
       var size = res.headers.get('content-length')
       if (size !== null) {
         ctx.rxSize = size
       }
+      if (target) ctx.target = target
+
       ee.emit(prefix + 'done', [null, res], ctx)
     } else {
       ee.emit(prefix + 'done', [err, undefined], ctx)
@@ -99,13 +101,13 @@ export function wrapFetch (sharedEE) {
         } catch {}
 
         var ctx = {}
-        ctx[contextId] ??= {}
+        let target
 
-        if (mfeId) ctx[contextId].target = getRegisteredTargetFromId(mfeId)
+        if (mfeId) target = getRegisteredTargetFromId(mfeId)
         else {
           var urls = extractUrlsFromStack(getDeepStackTrace()).reverse()
-          while (!ctx[contextId].target && urls[iterator]) {
-            ctx[contextId].target = getRegisteredTargetFromFilename(urls[iterator++], Object.values(newrelic.initializedAgents)[0].features.page_view_event.featAggregate)
+          while (!target && urls[iterator]) {
+            target = getRegisteredTargetFromFilename(urls[iterator++], Object.values(newrelic.initializedAgents)[0].features.page_view_event.featAggregate)
           }
         }
         // we are wrapping args in an array so we can preserve the reference
@@ -119,10 +121,10 @@ export function wrapFetch (sharedEE) {
 
         // Note we need to cast the returned (orig) Promise from native APIs into the current global Promise, which may or may not be our WrappedPromise.
         return origPromiseFromFetch.then(function (val) {
-          ee.emit(prefix + 'end', [null, val], origPromiseFromFetch)
+          ee.emit(prefix + 'end', [null, val, target], origPromiseFromFetch)
           return val
         }, function (err) {
-          ee.emit(prefix + 'end', [err, undefined], origPromiseFromFetch)
+          ee.emit(prefix + 'end', [err, undefined, target], origPromiseFromFetch)
           throw err
         })
       }

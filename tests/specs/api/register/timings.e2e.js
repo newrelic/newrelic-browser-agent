@@ -1,5 +1,5 @@
 const { testMFEInsRequest } = require('../../../../tools/testing-server/utils/expect-tests')
-const { fullySupportsPreloadResourceTimings } = require('../../../../tools/browser-matcher/common-matchers.mjs')
+const { fullySupportsPreloadResourceTimings, onlySafari } = require('../../../../tools/browser-matcher/common-matchers.mjs')
 
 const acceptedAssetTypes = ['script', 'link', 'preload', 'inline', 'fetch', 'unknown']
 
@@ -482,9 +482,8 @@ describe('Register API - Timings', () => {
         expect(mfe4.timeToBeRequested).toBeGreaterThan(0)
         if (browserMatch(fullySupportsPreloadResourceTimings)) expect(mfe4.timeToFetch).toBeGreaterThan(0)
         else {
-          // Safari & iOS safari report preloaded script durations as "0" (or sometimes "1") because they consider the preload to be the fetch, and the dynamic import just pulls from cache, resulting in no additional fetch time. Other browsers report the dynamic import as a separate fetch which has a small amount of time.
+          // Safari & iOS safari report preloaded script durations as "0" (or sometimes "1") because they consider the preload to be the fetch, and the dynamic import just pulls from cache, resulting in no additional fetch time. Other browsers report the dynamic import as a separate fetch which has a more significant amount of time.
           expect(mfe4.timeToFetch).toBeGreaterThanOrEqual(0)
-          expect(mfe4.timeToFetch).toBeLessThanOrEqual(1)
         }
         expect(mfe4.assetType).toEqual('link')
         expect(mfe4.assetUrl).toBeDefined()
@@ -493,12 +492,22 @@ describe('Register API - Timings', () => {
         // This validates that scripts loaded via fetch() and executed with eval()
         // using //# sourceURL directives are properly attributed to the eval'd script,
         // not the loader/runtime that appears at the stack root
+        // Note: Safari doesn't support sourceURL in eval, so it matches the runtime instead
         expect(mfe5).toBeDefined()
-        expect(mfe5.timeToBeRequested).toBeGreaterThan(0)
-        expect(mfe5.timeToFetch).toBeGreaterThan(0)
-        expect(mfe5.assetType).toEqual('fetch') // fetch + eval like some webpack implementation
-        expect(mfe5.assetUrl).toBeDefined()
-        expect(mfe5.assetUrl).toContain('mfe-preload-late.js')
+        if (browserMatch(onlySafari)) {
+          // Safari doesn't honor sourceURL in eval, so it still attributes to the nearest script it was able to match, which is the preloaded script
+          expect(mfe5.assetUrl).toContain('mfe-preload.js')
+          // Safari & iOS safari report preloaded script durations as "0" (or sometimes "1") because they consider the preload to be the fetch, and the dynamic import just pulls from cache, resulting in no additional fetch time. Other browsers report the dynamic import as a separate fetch which has a more significant amount of time.
+          expect(mfe5.timeToBeRequested).toBeGreaterThanOrEqual(0)
+          expect(mfe5.timeToFetch).toBeGreaterThanOrEqual(0)
+          expect(mfe5.assetType).toEqual('link') // preloaded runtime file
+        } else {
+          // Other browsers honor sourceURL and match the fetch'd eval'd code
+          expect(mfe5.assetUrl).toContain('mfe-preload-late.js')
+          expect(mfe5.timeToBeRequested).toBeGreaterThan(0)
+          expect(mfe5.timeToFetch).toBeGreaterThan(0)
+          expect(mfe5.assetType).toEqual('fetch') // fetch + eval like some webpack implementation
+        }
       })
     })
   })

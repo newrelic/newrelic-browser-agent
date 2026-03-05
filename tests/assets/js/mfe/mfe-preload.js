@@ -43,7 +43,9 @@
     // (similar to how webpack executes bundled modules)
     try {
       // Add sourceURL so the eval'd code shows proper filename in stack traces
-      const codeWithSourceURL = code + '\n//# sourceURL=mfe-preload-late.js'
+      // Use response.url but strip query params for cross-browser compatibility with stack parsers
+      const urlWithoutQuery = response.url.split('?')[0]
+      const codeWithSourceURL = code + '\n//# sourceURL=' + urlWithoutQuery
       // Use eval to execute - this keeps the generator on the stack
       // eslint-disable-next-line
       eval(codeWithSourceURL)

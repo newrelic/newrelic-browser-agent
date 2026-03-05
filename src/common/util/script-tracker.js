@@ -20,7 +20,7 @@ try {
 }
 
 /** @type {(entry: PerformanceEntry) => boolean} - A shared function to determine if a performance entry is a valid script or link resource for evaluation */
-const validEntryCriteria = entry => entry.initiatorType === 'script' || (entry.initiatorType === 'link' && entry.name.endsWith('.js'))
+const validEntryCriteria = entry => entry.initiatorType === 'script' || (['link', 'fetch'].includes(entry.initiatorType) && entry.name.endsWith('.js'))
 
 /** @type {Set<PerformanceResourceTiming>} - A set of resource timing objects that are "valid" -- see "validEntryCriteria" */
 const scripts = new Set()
@@ -65,8 +65,8 @@ function extractUrlsFromStack (stack) {
     if (parts && parts[2]) {
       urls.add(cleanURL(parts[2]))
     } else {
-      // Fallback: match URLs using a generic .js pattern
-      const fallbackMatch = line.match(/\(?((?:(?:https?|file):\/\/)?[^):\s]+\.js):\d+:\d+\)?/)
+      // Fallback: match URLs using a generic .js pattern (non-greedy to handle ports and query params)
+      const fallbackMatch = line.match(/\(?((?:(?:https?|file):\/\/)?.*?\.js):\d+:\d+\)?/)
       if (fallbackMatch && fallbackMatch[1]) {
         urls.add(cleanURL(fallbackMatch[1]))
       }

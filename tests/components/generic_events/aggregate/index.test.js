@@ -24,7 +24,7 @@ beforeEach(async () => {
 
 afterEach(() => {
   jest.clearAllMocks()
-  resetAgent(mainAgent.agentIdentifier)
+  resetAgent(mainAgent)
 })
 
 test('should use default values', () => {

@@ -7,7 +7,6 @@ import { isValid } from '../../common/config/info'
 import { configure } from '../../loaders/configure/configure'
 import { gosCDN } from '../../common/window/nreum'
 import { drain } from '../../common/drain/drain'
-import { activatedFeatures } from '../../common/util/feature-flags'
 import { Obfuscator } from '../../common/util/obfuscate'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { Harvester } from '../../common/harvest/harvester'
@@ -24,8 +23,7 @@ export class AggregateBase extends FeatureBase {
    * @param {string} featureName The name of the feature creating the instance.
    */
   constructor (agentRef, featureName) {
-    super(agentRef.agentIdentifier, featureName)
-    this.agentRef = agentRef
+    super(agentRef, featureName)
     this.checkConfiguration(agentRef)
     this.doOnceForAllAggregate(agentRef)
 
@@ -112,8 +110,8 @@ export class AggregateBase extends FeatureBase {
    */
   waitForFlags (flagNames = []) {
     const flagsPromise = new Promise((resolve, reject) => {
-      if (activatedFeatures[this.agentIdentifier]) {
-        resolve(buildOutput(activatedFeatures[this.agentIdentifier]))
+      if (this.agentRef.utils?.activatedFeatures) {
+        resolve(buildOutput(this.agentRef.utils.activatedFeatures))
       } else {
         this.ee.on('rumresp', (resp = {}) => {
           resolve(buildOutput(resp))
@@ -137,7 +135,7 @@ export class AggregateBase extends FeatureBase {
    * Stages the feature to be drained
    */
   drain () {
-    drain(this.agentIdentifier, this.featureName)
+    drain(this.agentRef, this.featureName)
   }
 
   preHarvestChecks (opts) {

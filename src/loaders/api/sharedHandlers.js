@@ -1,12 +1,11 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 import { handle } from '../../common/event-emitter/handle'
 import { now } from '../../common/timing/now'
 import { warn } from '../../common/util/console'
-import { activatedFeatures } from '../../common/util/feature-flags'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { AgentBase } from '../agent-base'
 import { FEATURE_NAMES } from '../features/features'
@@ -28,8 +27,7 @@ export function setupAPI (name, fn, agent, obj) {
   api[name] = function () {
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
     dispatchGlobalEvent({
-      agentIdentifier: agent.agentIdentifier,
-      drained: !!activatedFeatures?.[agent.agentIdentifier],
+      drained: !!agent.utils?.activatedFeatures,
       type: 'data',
       name: 'api',
       feature: prefix + name,

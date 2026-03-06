@@ -1,13 +1,16 @@
 import * as qp from '@newrelic/nr-querypack'
 import { Aggregate } from '../../../../../src/features/page_view_timing/aggregate'
+import { ee } from '../../../../../src/common/event-emitter/contextual-ee'
 
 jest.mock('../../../../../src/common/harvest/harvester')
 jest.mock('../../../../../src/common/util/webdriver-detection', () => ({
   webdriverDetected: false
 }))
 
+const agentIdentifier = 'abcd'
 const agentInst = {
-  agentIdentifier: 'abcd',
+  agentIdentifier,
+  ee: ee.get(agentIdentifier),
   info: {},
   init: { page_view_timing: {} },
   runtime: {}

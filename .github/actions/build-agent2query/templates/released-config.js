@@ -30,8 +30,8 @@ NREUM.init = {
     cookies_enabled: true
   },
   ajax: {
-    deny_list: ['staging-bam-cell.nr-data.net']
+    deny_list: ['bam.nr-data.net']
   }
 }
 NREUM.feature_flags = ['soft_nav', 'websockets']
-NREUM.info = { beacon: 'staging-bam-cell.nr-data.net', errorBeacon: 'staging-bam-cell.nr-data.net', licenseKey: '{{{releasedLicenseKey}}}', applicationID: '275822177', sa: 1 }
+NREUM.info = { beacon: 'bam.nr-data.net', errorBeacon: 'bam.nr-data.net', licenseKey: '{{{releasedLicenseKey}}}', applicationID: '1431909786', sa: 1 }

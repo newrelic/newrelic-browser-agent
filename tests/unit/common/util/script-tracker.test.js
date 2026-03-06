@@ -13,6 +13,8 @@ let performanceObserverCallback
 let scriptTrackerModule
 // Allows tests to control Error.stack content
 let mockStack = null
+// Control what getNavigationEntry returns
+let mockNavigationEntry = null
 
 // Helper to construct error with custom stack
 const OriginalError = global.Error
@@ -26,12 +28,18 @@ class MockError extends OriginalError {
   }
 }
 
+jest.mock('../../../../src/common/constants/runtime', () => ({
+  globalScope: global.window,
+  getNavigationEntry: () => mockNavigationEntry
+}))
+
 beforeEach(() => {
   // Reset module state to ensure clean test isolation
   jest.resetModules()
   jest.clearAllMocks()
   performanceObserverCallback = null
   mockStack = null
+  mockNavigationEntry = null
 
   // Setup custom Error class to control stack traces
   global.Error = MockError
@@ -97,9 +105,11 @@ describe('script-tracker', () => {
 
     test('identifies inline script when URL matches navigation', () => {
       // Setup: Mock navigation entry with page URL
+      mockNavigationEntry = { name: 'https://example.com/page.html' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/page.html' }]
+        if (type === 'resource') {
+          return []
         }
         return []
       })
@@ -127,10 +137,9 @@ describe('script-tracker', () => {
         responseEnd: 250.8
       }
 
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
         if (type === 'resource') {
           return [mockResourceEntry]
         }
@@ -163,13 +172,9 @@ describe('script-tracker', () => {
       }
 
       // Setup: Script not in static buffer, only in observer
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
-        if (type === 'resource') {
-          return [] // Not in static buffer
-        }
         return []
       })
 
@@ -209,10 +214,9 @@ describe('script-tracker', () => {
         responseEnd: 120.5
       }
 
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
         return []
       })
 
@@ -254,10 +258,9 @@ describe('script-tracker', () => {
         return []
       })
 
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
         return []
       })
 
@@ -294,10 +297,9 @@ describe('script-tracker', () => {
         return []
       })
 
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
         return []
       })
 
@@ -426,10 +428,9 @@ describe('script-tracker', () => {
         responseEnd: 200
       }
 
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
         if (type === 'resource') {
           return [mockResourceEntry]
         }
@@ -458,10 +459,9 @@ describe('script-tracker', () => {
         responseEnd: 200
       }
 
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
         if (type === 'resource') {
           return [mockResourceEntry]
         }
@@ -487,10 +487,9 @@ describe('script-tracker', () => {
         responseEnd: 180.6
       }
 
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
         if (type === 'resource') {
           return [mockResourceEntry]
         }
@@ -519,10 +518,9 @@ init@https://cdn.example.com/gecko-app.js:20:10`
         responseEnd: 210.4
       }
 
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
         if (type === 'resource') {
           return [mockResourceEntry]
         }
@@ -552,10 +550,9 @@ init@https://cdn.example.com/gecko-app.js:20:10`
         responseEnd: 150
       }
 
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
         if (type === 'resource') {
           return [mockResourceEntry]
         }

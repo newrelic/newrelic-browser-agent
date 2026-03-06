@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { globalScope } from '../constants/runtime'
+import { globalScope, getNavigationEntry } from '../constants/runtime'
 import { now } from '../timing/now'
 import { cleanURL } from '../url/clean-url'
 import { chrome, gecko } from './browser-stack-matchers'
@@ -107,7 +107,7 @@ export function findScriptTimings () {
   const timings = { registeredAt: now(), reportedAt: undefined, fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown' }
   const stack = getDeepStackTrace()
   if (!stack) return timings
-  const navUrl = globalScope.performance?.getEntriesByType('navigation')?.find(entry => entry.initiatorType === 'navigation')?.name || ''
+  const navUrl = getNavigationEntry()?.name || ''
 
   try {
     const mfeScriptUrl = extractUrlsFromStack(stack).at(-1) // array of URLs from the stack of the register API caller, the MFE script should be at the bottom

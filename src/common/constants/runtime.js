@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -84,4 +84,20 @@ export const ffVersion = (() => {
  */
 export const originTime = Date.now() - now()
 
-export const supportsNavTimingL2 = () => typeof PerformanceNavigationTiming !== 'undefined' && globalScope?.performance?.getEntriesByType('navigation')?.[0]?.responseStart
+/**
+ * Gets the first navigation entry from the Performance Timeline API.
+ * Matches web-vitals validation: checks that responseStart exists and is valid.
+ * Returns undefined if the entry is not available or invalid.
+ * @returns {PerformanceNavigationTiming | undefined}
+ */
+export const getNavigationEntry = () => {
+  const navigationEntry = globalScope?.performance?.getEntriesByType?.('navigation')?.[0]
+  // Web-vitals validates that responseStart is present and valid.
+  // In some cases no value is reported (privacy/security) or the value is
+  // negative or larger than current time (bugs). Ignore these cases.
+  if (navigationEntry &&
+      navigationEntry.responseStart > 0 &&
+      navigationEntry.responseStart < performance.now()) {
+    return navigationEntry
+  }
+}

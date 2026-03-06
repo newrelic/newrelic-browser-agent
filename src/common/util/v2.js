@@ -27,15 +27,27 @@ export function getRegisteredTargetFromId (id, aggregateInstance) {
 }
 
 /**
- * Returns the registered target associated with a given filename if found in the resource timing API during registration. Returns undefined if not found.
+ * Returns the registered target(s) associated with a given filename if found in the resource timing API during registration. Returns an empty array if not found.
  * @param {string} filename
  * @param {*} aggregateInstance
- * @returns @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget | undefined}
+ * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget[] | []}
  */
-export function getRegisteredTargetFromFilename (filename, aggregateInstance) {
-  if (!filename) return
+export function getRegisteredTargetsFromFilename (filename, aggregateInstance) {
+  if (!filename) return []
   const registeredEntities = aggregateInstance?.agentRef.runtime.registeredEntities
-  return registeredEntities?.filter(x => x).find(entity => entity.metadata.timings.asset?.endsWith(filename))?.metadata.target
+  return registeredEntities?.filter(entity => entity.metadata.timings?.asset?.endsWith(filename)).map(entity => entity.metadata.target) || []
+}
+
+/**
+ * Returns the registered instance(s) associated with a given filename if found in the resource timing API during registration. Returns an empty array if not found.
+ * @param {string} filename
+ * @param {*} aggregateInstance
+ * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget[] | []}
+ */
+export function getInstanceFromFilename (filename, aggregateInstance) {
+  if (!filename) return []
+  const registeredEntities = aggregateInstance?.agentRef.runtime.registeredEntities
+  return registeredEntities?.filter(entity => entity.metadata.timings?.asset?.endsWith(filename)) || []
 }
 
 /**
@@ -62,6 +74,7 @@ export function getVersion2Attributes (target, aggregateInstance) {
     'source.name': target.name,
     'source.type': target.type,
     'parent.id': target.parent?.id || containerAgentEntityGuid,
-    'parent.type': target.parent?.type || V2_TYPES.BA
+    'parent.type': target.parent?.type || V2_TYPES.BA,
+    ...(target.customAttributes)
   }
 }

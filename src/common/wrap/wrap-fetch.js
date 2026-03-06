@@ -10,7 +10,7 @@
 import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { globalScope } from '../constants/runtime'
 import { extractUrlsFromStack, getDeepStackTrace } from '../util/script-tracker'
-import { getRegisteredTargetFromFilename, getRegisteredTargetFromId } from '../util/v2'
+import { getRegisteredTargetsFromFilename, getRegisteredTargetFromId } from '../util/v2'
 import { NEW_RELIC_MFE_ID_HEADER } from '../constants/agent-constants'
 import { stringify } from '../util/stringify'
 
@@ -48,14 +48,14 @@ export function wrapFetch (sharedEE) {
   })
   wrapPromiseMethod(globalScope, 'fetch', prefix)
 
-  ee.on(prefix + 'end', function (err, res, target) {
+  ee.on(prefix + 'end', function (err, res, targets) {
     var ctx = this
     if (res) {
       var size = res.headers.get('content-length')
       if (size !== null) {
         ctx.rxSize = size
       }
-      if (target) ctx.target = target
+      ctx.targets = targets || []
 
       ee.emit(prefix + 'done', [null, res], ctx)
     } else {
@@ -101,13 +101,13 @@ export function wrapFetch (sharedEE) {
         } catch {}
 
         var ctx = {}
-        let target
+        const targets = []
 
-        if (mfeId) target = getRegisteredTargetFromId(mfeId)
+        if (mfeId) targets.push(getRegisteredTargetFromId(mfeId))
         else {
           var urls = extractUrlsFromStack(getDeepStackTrace()).reverse()
-          while (!target && urls[iterator]) {
-            target = getRegisteredTargetFromFilename(urls[iterator++], Object.values(newrelic.initializedAgents)[0].features.page_view_event.featAggregate)
+          while (urls[iterator]) {
+            targets.push(...getRegisteredTargetsFromFilename(urls[iterator++], Object.values(newrelic.initializedAgents)[0].features.page_view_event.featAggregate))
           }
         }
         // we are wrapping args in an array so we can preserve the reference
@@ -121,10 +121,10 @@ export function wrapFetch (sharedEE) {
 
         // Note we need to cast the returned (orig) Promise from native APIs into the current global Promise, which may or may not be our WrappedPromise.
         return origPromiseFromFetch.then(function (val) {
-          ee.emit(prefix + 'end', [null, val, target], origPromiseFromFetch)
+          ee.emit(prefix + 'end', [null, val, targets], origPromiseFromFetch)
           return val
         }, function (err) {
-          ee.emit(prefix + 'end', [err, undefined, target], origPromiseFromFetch)
+          ee.emit(prefix + 'end', [err, undefined, targets], origPromiseFromFetch)
           throw err
         })
       }

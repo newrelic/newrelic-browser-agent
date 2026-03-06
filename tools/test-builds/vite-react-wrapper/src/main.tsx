@@ -7,7 +7,18 @@ import { App } from "./App";
 
 const myApi = new RegisteredEntity({
     id: 5678,
-    name: 'test'
+    name: 'test',
+    tags: {
+        testAttr: 'first'
+    }
+})
+
+const myOtherApi = new RegisteredEntity({
+    id: 5678,
+    name: 'test',
+    tags:{
+        testAttr: 'second'
+    }
 })
 
 const root = createRoot(document.getElementById("app") as HTMLElement);

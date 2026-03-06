@@ -31,8 +31,8 @@ export class Aggregate extends AggregateBase {
 
     registerHandler('returnAjax', event => this.events.add(event), this.featureName, this.ee)
 
-    registerHandler('xhr', function () { // the EE-drain system not only switches "this" but also passes a new EventContext with info. Should consider platform refactor to another system which passes a mutable context around separately and predictably to avoid problems like this.
-      classThis.storeXhr(...arguments, this) // this switches the context back to the class instance while passing the NR context as an argument -- see "ctx" in storeXhr
+    registerHandler('xhr', function (params, metrics, startTime, endTime, type, instance) { // the EE-drain system not only switches "this" but also passes a new EventContext with info. Should consider platform refactor to another system which passes a mutable context around separately and predictably to avoid problems like this.
+      classThis.storeXhr(params, metrics, startTime, endTime, type, instance, this) // this switches the context back to the class instance while passing the NR context as an argument -- see "ctx" in storeXhr
     }, this.featureName, this.ee)
 
     this.ee.on('long-task', (task, originator) => {
@@ -45,7 +45,7 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(([])).then(() => this.drain())
   }
 
-  storeXhr (params, metrics, startTime, endTime, type, ctx) {
+  storeXhr (params, metrics, startTime, endTime, type, instance, ctx) {
     metrics.time = startTime
 
     // send to session traces
@@ -109,22 +109,18 @@ export class Aggregate extends AggregateBase {
     })
     if (event.gql) this.reportSupportabilityMetric('Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length)
 
-    const containerAgentEvent = {
-      ...event,
-      ...(!!ctx.target && { 'child.id': ctx.target.id })
-    }
-
-    const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
-    if (softNavInUse) { // when SN is running, pass the event w/ info to it for evaluation -- either part of an interaction or is given back
-      handle('ajax', [containerAgentEvent, ctx], undefined, FEATURE_NAMES.softNav, this.ee)
-    } else {
-      this.events.add(containerAgentEvent)
-    }
-
     /** make a copy of the event for the MFE target if it exists */
-    if (ctx.target) {
-      event.target = ctx.target
+    if (instance) {
+      event.target = instance.metadata.target
+      event.instanceAttributes = instance.metadata.customAttributes
       this.events.add(event)
+    } else {
+      const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
+      if (softNavInUse) { // when SN is running, pass the event w/ info to it for evaluation -- either part of an interaction or is given back
+        handle('ajax', [event, ctx], undefined, FEATURE_NAMES.softNav, this.ee)
+      } else {
+        this.events.add(event)
+      }
     }
   }
 

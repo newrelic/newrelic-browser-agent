@@ -15,7 +15,7 @@ import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { globalScope } from '../constants/runtime'
 import { warn } from '../util/console'
 import { NEW_RELIC_MFE_ID_HEADER } from '../constants/agent-constants'
-import { getRegisteredTargetFromFilename, getRegisteredTargetFromId } from '../util/v2'
+import { getRegisteredTargetsFromFilename, getRegisteredTargetFromId } from '../util/v2'
 import { extractUrlsFromStack, getDeepStackTrace } from '../util/script-tracker'
 
 const wrapped = {}
@@ -60,8 +60,9 @@ export function wrapXhr (sharedEE) {
     const context = ee.context(xhr)
     let iterator = 0
     var urls = extractUrlsFromStack(getDeepStackTrace()).reverse()
-    while (!context.target && urls[iterator]) {
-      context.target = getRegisteredTargetFromFilename(urls[iterator++], Object.values(newrelic.initializedAgents)[0].features.page_view_event.featAggregate)
+    while (urls[iterator]) {
+      context.targets ??= []
+      context.targets.push(...getRegisteredTargetsFromFilename(urls[iterator++], Object.values(newrelic.initializedAgents)[0].features.page_view_event.featAggregate))
     }
 
     try {

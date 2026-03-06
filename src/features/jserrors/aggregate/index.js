@@ -19,7 +19,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { now } from '../../../common/timing/now'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { evaluateInternalError } from './internal-errors'
-import { getRegisteredTargetFromFilename, getVersion2Attributes } from '../../../common/util/v2'
+import { getRegisteredTargetsFromFilename, getVersion2Attributes } from '../../../common/util/v2'
 import { buildCauseString } from './cause-string'
 
 /**
@@ -126,9 +126,15 @@ export class Aggregate extends AggregateBase {
     var stackInfo = computeStackTrace(err)
 
     let iterator = 0
-    while (!target && stackInfo.frames[iterator]) {
-      target = getRegisteredTargetFromFilename(stackInfo.frames[iterator++]?.url, this)
+    let targets = []
+    if (!target) {
+      while (!targets.length && stackInfo.frames[iterator]) {
+        targets.push(...getRegisteredTargetsFromFilename(stackInfo.frames[iterator++]?.url, this))
+      }
+    } else {
+      targets.push(target)
     }
+    if (!targets.length || this.agentRef.init.api.duplicate_registered_data) targets.push(undefined)
 
     const { shouldSwallow, reason } = evaluateInternalError(stackInfo, internal, swallowReason)
     if (shouldSwallow) {
@@ -136,81 +142,83 @@ export class Aggregate extends AggregateBase {
       return
     }
 
-    var canonicalStackString = this.buildCanonicalStackString(stackInfo)
+    targets.forEach(target => {
+      var canonicalStackString = this.buildCanonicalStackString(stackInfo)
 
-    const causeStackString = buildCauseString(err)
+      const causeStackString = buildCauseString(err)
 
-    const params = {
-      stackHash: stringHashCode(canonicalStackString),
-      exceptionClass: stackInfo.name,
-      request_uri: globalScope?.location.pathname,
-      ...(causeStackString && { cause: causeStackString })
-    }
-    if (stackInfo.message) params.message = '' + stackInfo.message
-    // Notice if filterOutput isn't false|undefined OR our specified object, this func would've returned already (so it's unnecessary to req-check group).
-    // Do not modify the name ('errorGroup') of params without DEM approval!
-    if (filterOutput?.group) params.errorGroup = filterOutput.group
+      const params = {
+        stackHash: stringHashCode(canonicalStackString),
+        exceptionClass: stackInfo.name,
+        request_uri: globalScope?.location.pathname,
+        ...(causeStackString && { cause: causeStackString })
+      }
+      if (stackInfo.message) params.message = '' + stackInfo.message
+      // Notice if filterOutput isn't false|undefined OR our specified object, this func would've returned already (so it's unnecessary to req-check group).
+      // Do not modify the name ('errorGroup') of params without DEM approval!
+      if (filterOutput?.group) params.errorGroup = filterOutput.group
 
-    // Should only decorate "hasReplay" for the container agent, so check if the target matches the config
-    if (hasReplay && !target) params.hasReplay = hasReplay
-    /**
+      // Should only decorate "hasReplay" for the container agent, so check if the target matches the config
+      if (hasReplay && !target) params.hasReplay = hasReplay
+      /**
      * The bucketHash is different from the params.stackHash because the params.stackHash is based on the canonicalized
      * stack trace and is used downstream in NR1 to attempt to group the same errors across different browsers. However,
      * the canonical stack trace excludes items like the column number increasing the hit-rate of different errors potentially
      * bucketing and ultimately resulting in the loss of data in NR1.
      */
-    var bucketHash = stringHashCode(`${stackInfo.name}_${stackInfo.message}_${stackInfo.stackString}_${params.hasReplay ? 1 : 0}_${target?.id || 'container'}`)
+      var bucketHash = stringHashCode(`${stackInfo.name}_${stackInfo.message}_${stackInfo.stackString}_${params.hasReplay ? 1 : 0}_${target?.id || 'container'}_${target?.instance || ''}`)
 
-    if (!this.stackReported[bucketHash]) {
-      this.stackReported[bucketHash] = true
-      params.stack_trace = truncateSize(stackInfo.stackString)
-      this.observedAt[bucketHash] = Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(time))
-    } else {
-      params.browser_stack_hash = stringHashCode(stackInfo.stackString)
-    }
-    params.releaseIds = stringify(this.agentRef.runtime.releaseIds)
-
-    // When debugging stack canonicalization/hashing, uncomment these lines for
-    // more output in the test logs
-    // params.origStack = err.stack
-    // params.canonicalStack = canonicalStack
-
-    if (!this.pageviewReported[bucketHash]) {
-      params.pageview = 1
-      this.pageviewReported[bucketHash] = true
-    }
-
-    params.firstOccurrenceTimestamp = this.observedAt[bucketHash]
-    params.timestamp = Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(time))
-
-    var type = 'err'
-    var newMetrics = { time }
-
-    // Trace sends the error in its payload, and both trace & replay simply listens for any error to occur.
-    const jsErrorEvent = [type, bucketHash, params, newMetrics, customAttributes]
-    if (!target) handle('trace-jserror', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
-    // still send EE events for other features such as above, but stop this one from aggregating internal data
-    if (this.blocked) return
-
-    if (err.__newrelic?.[this.agentIdentifier]) {
-      params._interactionId = err.__newrelic[this.agentIdentifier].interactionId
-      params._interactionNodeId = err.__newrelic[this.agentIdentifier].interactionNodeId
-    }
-    if (err.__newrelic?.socketId) {
-      customAttributes.socketId = err.__newrelic.socketId
-    }
-
-    if (!target) {
-      const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
-      if (softNavInUse) { // pass the error to soft nav for evaluation - it will return it via 'returnJserror' when interaction is resolved
-        handle('jserror', [jsErrorEvent], undefined, FEATURE_NAMES.softNav, this.ee)
+      if (!this.stackReported[bucketHash]) {
+        this.stackReported[bucketHash] = true
+        params.stack_trace = truncateSize(stackInfo.stackString)
+        this.observedAt[bucketHash] = Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(time))
       } else {
-        this.#storeJserrorForHarvest(jsErrorEvent, false)
+        params.browser_stack_hash = stringHashCode(stackInfo.stackString)
       }
-    }
+      params.releaseIds = stringify(this.agentRef.runtime.releaseIds)
 
-    // always add directly if scoped to a sub-entity, the other pathways above will be deterministic if the main agent should procede
-    if (target) this.#storeJserrorForHarvest([...jsErrorEvent, target], false, params._softNavAttributes)
+      // When debugging stack canonicalization/hashing, uncomment these lines for
+      // more output in the test logs
+      // params.origStack = err.stack
+      // params.canonicalStack = canonicalStack
+
+      if (!this.pageviewReported[bucketHash]) {
+        params.pageview = 1
+        this.pageviewReported[bucketHash] = true
+      }
+
+      params.firstOccurrenceTimestamp = this.observedAt[bucketHash]
+      params.timestamp = Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(time))
+
+      var type = 'err'
+      var newMetrics = { time }
+
+      // Trace sends the error in its payload, and both trace & replay simply listens for any error to occur.
+      const jsErrorEvent = [type, bucketHash, params, newMetrics, customAttributes]
+      if (!target) handle('trace-jserror', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
+      // still send EE events for other features such as above, but stop this one from aggregating internal data
+      if (this.blocked) return
+
+      if (err.__newrelic?.[this.agentIdentifier]) {
+        params._interactionId = err.__newrelic[this.agentIdentifier].interactionId
+        params._interactionNodeId = err.__newrelic[this.agentIdentifier].interactionNodeId
+      }
+      if (err.__newrelic?.socketId) {
+        customAttributes.socketId = err.__newrelic.socketId
+      }
+
+      if (!target) {
+        const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
+        if (softNavInUse) { // pass the error to soft nav for evaluation - it will return it via 'returnJserror' when interaction is resolved
+          handle('jserror', [jsErrorEvent], undefined, FEATURE_NAMES.softNav, this.ee)
+        } else {
+          this.#storeJserrorForHarvest(jsErrorEvent, false)
+        }
+      }
+
+      // always add directly if scoped to a sub-entity, the other pathways above will be deterministic if the main agent should procede
+      if (target) this.#storeJserrorForHarvest([...jsErrorEvent, target], false, params._softNavAttributes)
+    })
   }
 
   #storeJserrorForHarvest (errorInfoArr, softNavCustomAttrs = {}) {

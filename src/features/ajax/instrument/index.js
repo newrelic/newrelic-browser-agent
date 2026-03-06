@@ -20,8 +20,6 @@ import { SUPPORTABILITY_METRIC } from '../../metrics/constants'
 import { now } from '../../../common/timing/now'
 import { hasUndefinedHostname } from '../../../common/deny-list/deny-list'
 import { extractUrl } from '../../../common/url/extract-url'
-import { extractUrlsFromStack, getDeepStackTrace } from '../../../common/util/script-tracker'
-import { getRegisteredTargetFromFilename } from '../../../common/util/v2'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
@@ -62,7 +60,7 @@ export class Instrument extends InstrumentBase {
     }
 
     wrapFetch(this.ee)
-    wrapXhr(this.ee)
+    wrapXhr(agentRef)
     subscribeToEvents(agentRef, this.ee, this.handler, this.dt)
 
     this.importAggregator(agentRef, () => import(/* webpackChunkName: "ajax-aggregate" */ '../aggregate/index.js'))
@@ -352,7 +350,14 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
       duration: now() - this.startTime
     }
 
-    handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax)
+    this.targets.forEach(target => {
+      console.log('found target', target)
+      handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch', target], this, FEATURE_NAMES.ajax)
+    })
+    const hasTargets = !!this.targets?.length
+    if (!hasTargets || (hasTargets && this.agentRef.init.api.duplicate_registered_data)) {
+      handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax)
+    }
   }
 
   // Create report for XHR request that has finished
@@ -379,7 +384,14 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     // Always send cbTime, even if no noticeable time was taken.
     metrics.cbTime = this.cbTime
 
-    handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'], this, FEATURE_NAMES.ajax)
+    this.targets.forEach(target => {
+      console.log('found target', target)
+      handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr', target], this, FEATURE_NAMES.ajax)
+    })
+    const hasTargets = !!this.targets?.length
+    if (!hasTargets || (hasTargets && this.agentRef.init.api.duplicate_registered_data)) {
+      handler('xhr', [params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax)
+    }
   }
 
   function captureXhrData (ctx, xhr) {

@@ -13,8 +13,9 @@ if (isBrowserScope) {
   const perf = globalScope.performance
   const handler = () => {
     if (!loadTime.isValid && perf) {
+      const navEntry = getNavigationEntry()
       loadTime.update({
-        value: getNavigationEntry()?.loadEventEnd || perf.timing?.loadEventEnd - originTime
+        value: navEntry ? navEntry.loadEventEnd : (perf.timing?.loadEventEnd - originTime)
       })
     }
   }

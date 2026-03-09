@@ -86,18 +86,16 @@ export const originTime = Date.now() - now()
 
 /**
  * Gets the first navigation entry from the Performance Timeline API.
- * Matches web-vitals validation: checks that responseStart exists and is valid.
  * Returns undefined if the entry is not available or invalid.
+ * Matches web-vitals validation: checks that responseStart exists, is positive, and is not larger than current time.
+ * See: https://github.com/GoogleChrome/web-vitals/issues/137
  * @returns {PerformanceNavigationTiming | undefined}
  */
 export const getNavigationEntry = () => {
   const navigationEntry = globalScope?.performance?.getEntriesByType?.('navigation')?.[0]
-  // Web-vitals validates that responseStart is present and valid.
-  // In some cases no value is reported (privacy/security) or the value is
-  // negative or larger than current time (bugs). Ignore these cases.
   if (navigationEntry &&
       navigationEntry.responseStart > 0 &&
-      navigationEntry.responseStart < performance.now()) {
+      navigationEntry.responseStart < globalScope.performance.now()) {
     return navigationEntry
   }
 }

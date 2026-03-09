@@ -129,7 +129,7 @@ export class Aggregate extends AggregateBase {
     let targets = []
     if (!target) {
       while (!targets.length && stackInfo.frames[iterator]) {
-        targets.push(...getRegisteredTargetsFromFilename(stackInfo.frames[iterator++]?.url, this))
+        targets.push(...getRegisteredTargetsFromFilename(stackInfo.frames[iterator++]?.url, this.agentRef))
       }
     } else {
       targets.push(target)

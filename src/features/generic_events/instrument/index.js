@@ -46,11 +46,11 @@ export class Instrument extends InstrumentBase {
     setupMeasureAPI(agentRef)
 
     let historyEE, websocketsEE
-    if (websocketsEnabled) websocketsEE = wrapWebSocket(this.ee)
+    if (websocketsEnabled) websocketsEE = wrapWebSocket(this.ee, agentRef)
     if (isBrowserScope) {
-      wrapFetch(this.ee)
-      wrapXhr(this.ee)
-      historyEE = wrapHistory(this.ee)
+      wrapFetch(this.ee, agentRef)
+      wrapXhr(this.ee, agentRef)
+      historyEE = wrapHistory(this.ee, agentRef)
 
       if (agentRef.init.user_actions.enabled) {
         OBSERVED_EVENTS.forEach(eventType =>

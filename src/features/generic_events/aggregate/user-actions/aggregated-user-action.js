@@ -17,7 +17,7 @@ export class AggregatedUserAction {
     this.currentUrl = cleanURL('' + location)
     this.deadClick = false
     this.errorClick = false
-    this.target = selectorInfo.target
+    this.targets = selectorInfo.targets
   }
 
   /**

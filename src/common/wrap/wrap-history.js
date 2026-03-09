@@ -20,7 +20,7 @@ const HISTORY_FNS = ['pushState', 'replaceState']
  * @param {Object} sharedEE - The shared event emitter on which a new scoped event emitter will be based.
  * @returns {Object} Scoped event emitter with a debug ID of `history`.
  */
-export function wrapHistory (sharedEE) {
+export function wrapHistory (sharedEE, agentRef) {
   const ee = scopedEE(sharedEE)
 
   // Notice if our wrapping never ran yet, the falsy NaN will not early return; but if it has,
@@ -29,7 +29,7 @@ export function wrapHistory (sharedEE) {
   if (!isBrowserScope || wrapped[ee.debugId]++) return ee
   wrapped[ee.debugId] = 1 // otherwise, first feature to wrap history
 
-  var wrapFn = wfn(ee)
+  var wrapFn = wfn(ee, undefined, agentRef)
   /*
    * For objects that will be instantiated more than once, we wrap the object's prototype methods. The history object
    * is instantiated only once, so we can wrap its methods directly--and we must wrap the history methods directly as

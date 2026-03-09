@@ -12,7 +12,7 @@ import { subscribeToPageUnload } from '../window/page-visibility'
 const wrapped = {}
 const openWebSockets = new Set() // track all instances to close out metrics on page unload
 
-export function wrapWebSocket (sharedEE) {
+export function wrapWebSocket (sharedEE, agentRef) {
   const originals = gosNREUMOriginals().o
   if (!originals.WS) return sharedEE
 

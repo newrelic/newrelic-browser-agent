@@ -30,7 +30,7 @@ export class Instrument extends InstrumentBase {
 
     if (!isBrowserScope || !gosNREUMOriginals().o.MO) return // soft navigations is not supported outside web env or browsers without the mutation observer API
 
-    const historyEE = wrapHistory(this.ee)
+    const historyEE = wrapHistory(this.ee, agentRef)
     try {
       this.removeOnAbort = new AbortController()
     } catch (e) {}

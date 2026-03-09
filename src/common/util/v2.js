@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { extractUrlsFromStack, getDeepStackTrace } from './script-tracker'
+
 /**
  * @enum {string}
  * @readonly
@@ -17,37 +19,25 @@ export const V2_TYPES = {
 /**
  * Returns the registered target associated with a given ID. Returns undefined if not found.
  * @param {string|number} id
- * @param {*} aggregateInstance
+ * @param {*} agentRef the agent reference
  * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget | undefined}
  */
-export function getRegisteredTargetFromId (id, aggregateInstance) {
+export function getRegisteredTargetsFromId (id, agentRef) {
   if (!id) return
-  const registeredEntities = aggregateInstance?.agentRef.runtime.registeredEntities
-  return registeredEntities?.find(entity => String(entity.metadata.target.id) === String(id))?.metadata.target
+  const registeredEntities = agentRef?.runtime.registeredEntities
+  return registeredEntities?.filter(entity => String(entity.metadata.target.id) === String(id)).map(entity => entity.metadata.target) || []
 }
 
 /**
  * Returns the registered target(s) associated with a given filename if found in the resource timing API during registration. Returns an empty array if not found.
  * @param {string} filename
- * @param {*} aggregateInstance
+ * @param {*} agentRef
  * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget[] | []}
  */
-export function getRegisteredTargetsFromFilename (filename, aggregateInstance) {
+export function getRegisteredTargetsFromFilename (filename, agentRef) {
   if (!filename) return []
-  const registeredEntities = aggregateInstance?.agentRef.runtime.registeredEntities
+  const registeredEntities = agentRef?.runtime.registeredEntities
   return registeredEntities?.filter(entity => entity.metadata.timings?.asset?.endsWith(filename)).map(entity => entity.metadata.target) || []
-}
-
-/**
- * Returns the registered instance(s) associated with a given filename if found in the resource timing API during registration. Returns an empty array if not found.
- * @param {string} filename
- * @param {*} aggregateInstance
- * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget[] | []}
- */
-export function getInstanceFromFilename (filename, aggregateInstance) {
-  if (!filename) return []
-  const registeredEntities = aggregateInstance?.agentRef.runtime.registeredEntities
-  return registeredEntities?.filter(entity => entity.metadata.timings?.asset?.endsWith(filename)) || []
 }
 
 /**
@@ -69,12 +59,21 @@ export function getVersion2Attributes (target, aggregateInstance) {
     }
   }
   /** otherwise, the data belongs to the target (MFE) and should be attributed as such */
-  return {
-    'source.id': target.id,
-    'source.name': target.name,
-    'source.type': target.type,
-    'parent.id': target.parent?.id || containerAgentEntityGuid,
-    'parent.type': target.parent?.type || V2_TYPES.BA,
-    ...(target.customAttributes)
+  return target.attributes
+}
+
+export function findTargetsFromStackTrace (agentRef) {
+  if (!agentRef?.init.api.allow_registered_children) return []
+
+  let iterator = 0
+  const targets = []
+  try {
+    var urls = extractUrlsFromStack(getDeepStackTrace()).reverse()
+    while (urls[iterator]) {
+      targets.push(...getRegisteredTargetsFromFilename(urls[iterator++], agentRef))
+    }
+  } catch (err) {
+    // Silent catch to prevent errors from propagating
   }
+  return targets
 }

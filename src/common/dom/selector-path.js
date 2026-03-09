@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getRegisteredTargetFromId } from '../util/v2'
+import { getRegisteredTargetsFromId } from '../util/v2'
 
 /**
  * Generates a CSS selector path for the given element, if possible.
@@ -14,10 +14,10 @@ import { getRegisteredTargetFromId } from '../util/v2'
  *
  * @param {HTMLElement} elem
  * @param {Array<string>} [targetFields=[]] specifies which fields to gather from the nearest element in the path
- * @returns {{path: (undefined|string), nearestFields: {}, hasButton: boolean, hasLink: boolean}}
+ * @returns {{path: (undefined|string), nearestFields: {}, targets: Array, hasButton: boolean, hasLink: boolean}}
  */
-export const analyzeElemPath = (elem, targetFields = [], aggregateInstance) => {
-  const result = { path: undefined, nearestFields: {}, target: undefined, hasButton: false, hasLink: false }
+export const analyzeElemPath = (elem, targetFields = [], agentRef) => {
+  const result = { path: undefined, nearestFields: {}, targets: [], hasButton: false, hasLink: false }
   if (!elem) return result
   if (elem === window) { result.path = 'window'; return result }
   if (elem === document) { result.path = 'document'; return result }
@@ -34,12 +34,16 @@ export const analyzeElemPath = (elem, targetFields = [], aggregateInstance) => {
       targetFields.forEach(field => { result.nearestFields[nearestAttrName(field)] ||= (elem[field]?.baseVal || elem[field]) })
 
       const dataAttrs = elem?.dataset
-      if (dataAttrs.nrMfeId && !result.target) {
-        result.target = getRegisteredTargetFromId(dataAttrs.nrMfeId, aggregateInstance)
+      if (dataAttrs.nrMfeId) {
+        result.targets.push(...getRegisteredTargetsFromId(dataAttrs.nrMfeId, agentRef))
       }
 
       pathSelector = buildPathSelector(elem, pathSelector)
       elem = elem.parentNode
+    }
+
+    if (result.targets.length === 0 || agentRef.init.api.duplicate_registered_data) {
+      result.targets.push(undefined)
     }
   } catch (err) {
     // do nothing for now

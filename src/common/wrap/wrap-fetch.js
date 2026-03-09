@@ -9,8 +9,7 @@
  */
 import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { globalScope } from '../constants/runtime'
-import { extractUrlsFromStack, getDeepStackTrace } from '../util/script-tracker'
-import { getRegisteredTargetsFromFilename, getRegisteredTargetFromId } from '../util/v2'
+import { findTargetsFromStackTrace, getRegisteredTargetsFromId } from '../util/v2'
 import { NEW_RELIC_MFE_ID_HEADER } from '../constants/agent-constants'
 import { stringify } from '../util/stringify'
 
@@ -31,7 +30,7 @@ const wrapped = {}
  *     event emitter will be based.
  * @returns {Object} Scoped event emitter with a debug ID of `fetch`.
  */
-export function wrapFetch (sharedEE) {
+export function wrapFetch (sharedEE, agentRef) {
   const ee = scopedEE(sharedEE)
   if (!(Req && Res && globalScope.fetch)) {
     return ee
@@ -74,8 +73,6 @@ export function wrapFetch (sharedEE) {
   function wrapPromiseMethod (target, name, prefix) {
     var fn = target[name]
 
-    let iterator = 0
-
     if (typeof fn === 'function') {
       target[name] = function () {
         var args = [...arguments]
@@ -101,14 +98,11 @@ export function wrapFetch (sharedEE) {
         } catch {}
 
         var ctx = {}
-        const targets = []
+        let targets = []
 
-        if (mfeId) targets.push(getRegisteredTargetFromId(mfeId))
+        if (mfeId) targets = getRegisteredTargetsFromId(mfeId, agentRef)
         else {
-          var urls = extractUrlsFromStack(getDeepStackTrace()).reverse()
-          while (urls[iterator]) {
-            targets.push(...getRegisteredTargetsFromFilename(urls[iterator++], Object.values(newrelic.initializedAgents)[0].features.page_view_event.featAggregate))
-          }
+          targets = findTargetsFromStackTrace(agentRef)
         }
         // we are wrapping args in an array so we can preserve the reference
         ee.emit(prefix + 'before-start', [args], ctx)

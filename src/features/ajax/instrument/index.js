@@ -59,8 +59,8 @@ export class Instrument extends InstrumentBase {
       // do nothing
     }
 
-    wrapFetch(this.ee)
-    wrapXhr(agentRef)
+    wrapFetch(this.ee, agentRef)
+    wrapXhr(this.ee, agentRef)
     subscribeToEvents(agentRef, this.ee, this.handler, this.dt)
 
     this.importAggregator(agentRef, () => import(/* webpackChunkName: "ajax-aggregate" */ '../aggregate/index.js'))
@@ -351,11 +351,10 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     }
 
     this.targets.forEach(target => {
-      console.log('found target', target)
       handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch', target], this, FEATURE_NAMES.ajax)
     })
     const hasTargets = !!this.targets?.length
-    if (!hasTargets || (hasTargets && this.agentRef.init.api.duplicate_registered_data)) {
+    if (!hasTargets || (hasTargets && agentRef.init.api.duplicate_registered_data)) {
       handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax)
     }
   }
@@ -385,11 +384,10 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     metrics.cbTime = this.cbTime
 
     this.targets.forEach(target => {
-      console.log('found target', target)
       handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr', target], this, FEATURE_NAMES.ajax)
     })
     const hasTargets = !!this.targets?.length
-    if (!hasTargets || (hasTargets && this.agentRef.init.api.duplicate_registered_data)) {
+    if (!hasTargets || (hasTargets && agentRef.init.api.duplicate_registered_data)) {
       handler('xhr', [params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax)
     }
   }

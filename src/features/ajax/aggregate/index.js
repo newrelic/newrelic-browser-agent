@@ -45,7 +45,7 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(([])).then(() => this.drain())
   }
 
-  storeXhr (params, metrics, startTime, endTime, type, instance, ctx) {
+  storeXhr (params, metrics, startTime, endTime, type, target, ctx) {
     metrics.time = startTime
 
     // send to session traces
@@ -110,9 +110,8 @@ export class Aggregate extends AggregateBase {
     if (event.gql) this.reportSupportabilityMetric('Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length)
 
     /** make a copy of the event for the MFE target if it exists */
-    if (instance) {
-      event.target = instance.metadata.target
-      event.instanceAttributes = instance.metadata.customAttributes
+    if (target) {
+      event.target = target
       this.events.add(event)
     } else {
       const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])

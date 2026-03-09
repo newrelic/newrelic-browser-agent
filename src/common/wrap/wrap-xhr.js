@@ -15,8 +15,7 @@ import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { globalScope } from '../constants/runtime'
 import { warn } from '../util/console'
 import { NEW_RELIC_MFE_ID_HEADER } from '../constants/agent-constants'
-import { getRegisteredTargetsFromFilename, getRegisteredTargetFromId } from '../util/v2'
-import { extractUrlsFromStack, getDeepStackTrace } from '../util/script-tracker'
+import { findTargetsFromStackTrace, getRegisteredTargetsFromId } from '../util/v2'
 
 const wrapped = {}
 const XHR_PROPS = ['open', 'send'] // these are the specific funcs being wrapped on all XMLHttpRequests(.prototype)
@@ -28,7 +27,7 @@ const XHR_PROPS = ['open', 'send'] // these are the specific funcs being wrapped
  * @returns {Object} Scoped event emitter with a debug ID of `xhr`.
  */
 // eslint-disable-next-line
-export function wrapXhr (sharedEE) {
+export function wrapXhr (sharedEE, agentRef) {
   var baseEE = sharedEE || contextualEE
   const ee = scopedEE(baseEE)
 
@@ -39,8 +38,8 @@ export function wrapXhr (sharedEE) {
   if (wrapped[ee.debugId]++) return ee
   wrapped[ee.debugId] = 1 // otherwise, first feature to wrap XHR
 
-  wrapEvents(baseEE) // wrap-events patches XMLHttpRequest.prototype.addEventListener for us
-  var wrapFn = wfn(ee)
+  wrapEvents(baseEE, agentRef) // wrap-events patches XMLHttpRequest.prototype.addEventListener for us
+  var wrapFn = wfn(ee, undefined, agentRef)
 
   var OrigXHR = globalScope.XMLHttpRequest
   const originalSetRequestHeader = OrigXHR.prototype.setRequestHeader
@@ -58,12 +57,7 @@ export function wrapXhr (sharedEE) {
   function newXHR (opts) {
     const xhr = new OrigXHR(opts)
     const context = ee.context(xhr)
-    let iterator = 0
-    var urls = extractUrlsFromStack(getDeepStackTrace()).reverse()
-    while (urls[iterator]) {
-      context.targets ??= []
-      context.targets.push(...getRegisteredTargetsFromFilename(urls[iterator++], Object.values(newrelic.initializedAgents)[0].features.page_view_event.featAggregate))
-    }
+    context.targets = findTargetsFromStackTrace(agentRef)
 
     try {
       ee.emit('new-xhr', [xhr], context)
@@ -91,7 +85,8 @@ export function wrapXhr (sharedEE) {
     try {
       if (header.toLowerCase() === NEW_RELIC_MFE_ID_HEADER) {
         const context = ee.context(this)
-        context.target ??= getRegisteredTargetFromId(value) // only supports the first header found
+        // TODO - make this work
+        context.targets ??= getRegisteredTargetsFromId(value, agentRef) // only supports the first header found
         return // do not allow the newrelic mfe id header to be assigned to the request, just use it for context later
       }
     } catch (e) {

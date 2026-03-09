@@ -26,14 +26,14 @@ const flag = `nr@wrapped:${contextId}`
  *     event emitter will be based.
  * @returns {Object} Scoped event emitter with a debug ID of `events`.
  */
-export function wrapEvents (sharedEE) {
+export function wrapEvents (sharedEE, agentRef) {
   var ee = scopedEE(sharedEE)
 
   // Notice if our wrapping never ran yet, the falsy NaN will not early return; but if it has,
   // then we increment the count to track # of feats using this at runtime.
   if (wrapped[ee.debugId]++) return ee
   wrapped[ee.debugId] = 1 // otherwise, first feature to wrap events
-  var wrapFn = wfn(ee, true)
+  var wrapFn = wfn(ee, true, agentRef)
 
   // Guard against instrumenting environments w/o necessary features
   if ('getPrototypeOf' in Object) {

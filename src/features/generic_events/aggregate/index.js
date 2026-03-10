@@ -14,7 +14,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
-import { getVersion2Attributes } from '../../../common/util/v2'
+import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/util/v2'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -93,6 +93,7 @@ export class Aggregate extends AggregateBase {
                   ...(aggregatedUserAction.errorClick && { errorClick: true })
                 }
                 this.addEvent(userActionEvent, mfeTarget)
+
                 this.#trackUserActionSM(userActionEvent)
 
                 /**
@@ -298,9 +299,7 @@ export class Aggregate extends AggregateBase {
       timestamp: this.#toEpoch(now()),
       /** all generic events require pageUrl(s) */
       pageUrl: cleanURL('' + initialLocation),
-      currentUrl: cleanURL('' + location),
-      /** Specific attributes only supplied if harvesting to endpoint version 2 */
-      ...(getVersion2Attributes(target, this))
+      currentUrl: cleanURL('' + location)
     }
 
     const eventAttributes = {
@@ -312,7 +311,8 @@ export class Aggregate extends AggregateBase {
       ...obj
     }
 
-    this.events.add(eventAttributes)
+    this.events.add({ ...eventAttributes, ...getVersion2Attributes(target, this) })
+    if (shouldDuplicate(target, this.agentRef)) this.addEvent({ ...eventAttributes, ...getVersion2DuplicationAttributes(target, this) })
   }
 
   serializer (eventBuffer) {

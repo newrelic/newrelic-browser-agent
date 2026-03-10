@@ -20,6 +20,7 @@ import { SUPPORTABILITY_METRIC } from '../../metrics/constants'
 import { now } from '../../../common/timing/now'
 import { hasUndefinedHostname } from '../../../common/deny-list/deny-list'
 import { extractUrl } from '../../../common/url/extract-url'
+import { getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/util/v2'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
@@ -350,13 +351,9 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
       duration: now() - this.startTime
     }
 
-    this.targets.forEach(target => {
-      handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch', target], this, FEATURE_NAMES.ajax)
-    })
-    const hasTargets = !!this.targets?.length
-    if (!hasTargets || (hasTargets && agentRef.init.api.duplicate_registered_data)) {
-      handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax)
-    }
+    const payload = [this.params, metrics, this.startTime, this.endTime, 'fetch']
+    this.targets.forEach(target => reportToAgg(payload, this, target))
+    if (!this.targets?.length) reportToAgg(payload, this)
   }
 
   // Create report for XHR request that has finished
@@ -383,13 +380,13 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     // Always send cbTime, even if no noticeable time was taken.
     metrics.cbTime = this.cbTime
 
-    this.targets.forEach(target => {
-      handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr', target], this, FEATURE_NAMES.ajax)
-    })
-    const hasTargets = !!this.targets?.length
-    if (!hasTargets || (hasTargets && agentRef.init.api.duplicate_registered_data)) {
-      handler('xhr', [params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax)
-    }
+    const payload = [params, metrics, this.startTime, this.endTime, 'xhr']
+    this.targets.forEach(target => reportToAgg(payload, this, target))
+    if (!this.targets?.length) reportToAgg(payload, this)
+  }
+
+  function reportToAgg (payload, context, target) {
+    handler('xhr', [...payload, target], context, FEATURE_NAMES.ajax)
   }
 
   function captureXhrData (ctx, xhr) {

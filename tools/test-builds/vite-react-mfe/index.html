@@ -6,10 +6,16 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     {init}
     {config}
-    <title>Vite Template</title>
+    <script>
+      localStorage.clear()
+      NREUM.init.feature_flags = ['register','register.jserrors','register.generic_events', 'register.ajax']
+    </script>
+    {loader}
+    <title>Vite MFE Test - Register API</title>
   </head>
   <body>
     <div id="app"></div>
     <script type="module" src="src/main.tsx"></script>
+    <script src="/assets/js/2nd-mfe.js" async></script>
   </body>
 </html>

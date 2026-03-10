@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -42,7 +42,7 @@ export const analyzeElemPath = (elem, targetFields = [], agentRef) => {
       elem = elem.parentNode
     }
 
-    if (result.targets.length === 0 || agentRef.init.api.duplicate_registered_data) {
+    if (result.targets.length === 0) {
       result.targets.push(undefined)
     }
   } catch (err) {

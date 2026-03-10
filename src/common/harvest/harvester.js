@@ -117,6 +117,8 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
 
   let { body, qs } = cleanPayload(payload)
 
+  console.log(featureName, 'sending', body)
+
   if (Object.keys(body).length === 0 && !localOpts.sendEmptyBody) { // if there's no body to send, just run onfinish stuff and return
     if (cbFinished) cbFinished({ sent: false })
     return false
@@ -140,6 +142,8 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
   // all features going to 'events' endpoint should already be serialized & stringified
   let stringBody = gzip || endpoint === EVENTS ? body : stringify(body)
 
+  console.log('string body directly after', stringBody)
+
   // If body is null, undefined, or an empty object or array after stringifying, send an empty string instead.
   if (!stringBody || stringBody.length === 0 || stringBody === '{}' || stringBody === '[]') stringBody = ''
 
@@ -147,6 +151,8 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
   if (endpoint !== BLOBS && stringBody.length > 750000 && (warnings[endpoint] = (warnings[endpoint] || 0) + 1) === 1) warn(28, endpoint)
 
   const headers = [{ key: 'content-type', value: 'text/plain' }]
+
+  console.log(featureName, 'stringBody', stringBody)
 
   /* Since workers don't support sendBeacon right now, they can only use XHR method.
       Because they still do permit synch XHR, the idea is that at final harvest time (worker is closing),

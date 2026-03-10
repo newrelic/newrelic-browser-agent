@@ -72,8 +72,8 @@ export class Aggregate extends AggregateBase {
 
   addTiming (name, value, attrs, element) {
     if (element) {
-      const elemPath = analyzeElemPath(element, [], this)
-      if (elemPath.target) console.log('FOUND A MICRO FRONT END TARGET FOR ', name, elemPath.target)
+      // const elemPath = analyzeElemPath(element, [], this)
+      // if (elemPath.target) console.log('FOUND A MICRO FRONT END TARGET FOR ', name, elemPath.target)
     }
     attrs = attrs || {}
     addConnectionAttributes(attrs) // network conditions may differ from the actual for VitalMetrics when they were captured

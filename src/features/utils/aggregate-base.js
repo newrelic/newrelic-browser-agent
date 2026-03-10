@@ -156,11 +156,13 @@ export class AggregateBase extends FeatureBase {
 
     if (shouldRetryOnFail) this.events.save(this.harvestOpts)
     const data = this.events.get(this.harvestOpts)
+    console.log(this.featureName, 'data...', data)
     if (!data) return
     this.events.clear(this.harvestOpts)
 
     // A serializer or formatter assists in creating the payload `body` from stored events on harvest when defined by derived feature class.
     const body = this.serializer ? this.serializer(data) : data
+    console.log(this.featureName, body)
     const payload = {
       body
     }

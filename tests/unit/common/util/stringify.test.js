@@ -42,6 +42,37 @@ test('should support serializing circular references by omitting the circular re
   expect(stringify(input)).toEqual('{"a":1,"arr":["foo",null]}')
 })
 
+test('should allow the same object to appear multiple times (duplicate references) without treating it as circular', () => {
+  // Simulates the scenario where the same "params" object is shared across multiple error events
+  const sharedParams = {
+    stackHash: -10208229,
+    exceptionClass: 'Error',
+    message: 'test error'
+  }
+
+  const input = {
+    err: [
+      {
+        params: sharedParams,
+        custom: { 'source.id': 'first' },
+        metrics: { count: 1 }
+      },
+      {
+        params: sharedParams, // Same object reference, but not circular
+        custom: { 'entity.guid': 'second' },
+        metrics: { count: 1 }
+      }
+    ]
+  }
+
+  const result = stringify(input)
+  const parsed = JSON.parse(result)
+
+  // Both err objects should have their params preserved
+  expect(parsed.err[0].params).toEqual(sharedParams)
+  expect(parsed.err[1].params).toEqual(sharedParams)
+})
+
 test('should emit an "internal-error" event and still return a string if an error occurs during JSON.stringify', () => {
   jest.spyOn(eventEmitterModule.ee, 'emit')
   jest.spyOn(JSON, 'stringify').mockImplementation(() => {

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -7,18 +7,35 @@ import { ee } from '../event-emitter/contextual-ee'
 
 /**
  * Returns a function for use as a replacer parameter in JSON.stringify() to handle circular references.
+ * Uses an array to track the current ancestor chain, allowing the same object to appear
+ * multiple times in the structure as long as it's not a circular reference.
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Cyclic_object_value MDN - Cyclical object value}
- * @returns {Function} A function that filters out values it has seen before.
+ * @returns {Function} A function that filters out circular references while allowing duplicate references.
  */
 const getCircularReplacer = () => {
-  const seen = new WeakSet()
-  return (key, value) => {
-    if (typeof value === 'object' && value !== null) {
-      if (seen.has(value)) {
+  const stack = []
+
+  return function (key, value) {
+    if (stack.length > 0) {
+      // Find where we are in the stack
+      const thisPos = stack.indexOf(this)
+      if (~thisPos) {
+        // We're still in the stack, trim it
+        stack.splice(thisPos + 1)
+      } else {
+        // We're not in the stack, add ourselves
+        stack.push(this)
+      }
+
+      // Check if value is in the current ancestor chain
+      if (~stack.indexOf(value)) {
         return
       }
-      seen.add(value)
+    } else {
+      // First call, initialize with root
+      stack.push(value)
     }
+
     return value
   }
 }

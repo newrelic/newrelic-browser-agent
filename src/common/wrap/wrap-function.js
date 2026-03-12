@@ -9,7 +9,6 @@
 
 import { ee } from '../event-emitter/contextual-ee'
 import { bundleId } from '../ids/bundle-id'
-import { findTargetsFromStackTrace } from '../util/v2'
 
 export const flag = `nr@original:${bundleId}`
 const LONG_TASK_THRESHOLD = 50
@@ -35,7 +34,7 @@ export default createWrapperWithEmitter
  * @param {boolean} always - If `true`, emit events even if already emitting an event.
  * @returns {function} The wrapped function.
  */
-export function createWrapperWithEmitter (emitter, always, agentRef) {
+export function createWrapperWithEmitter (emitter, always) {
   emitter || (emitter = ee)
 
   wrapFn.inPlace = inPlace
@@ -79,13 +78,10 @@ export function createWrapperWithEmitter (emitter, always, agentRef) {
       var ctx
       var result
       let thrownError
-      let targets
 
       try {
         originalThis = this
         args = [...arguments]
-
-        targets = findTargetsFromStackTrace(agentRef)
 
         if (typeof getContext === 'function') {
           ctx = getContext(args, originalThis)
@@ -97,7 +93,7 @@ export function createWrapperWithEmitter (emitter, always, agentRef) {
       }
 
       // Warning: start events may mutate args!
-      safeEmit(prefix + 'start', [args, originalThis, methodName, targets], ctx, bubble)
+      safeEmit(prefix + 'start', [args, originalThis, methodName], ctx, bubble)
 
       const fnStartTime = performance.now()
       let fnEndTime
@@ -107,7 +103,7 @@ export function createWrapperWithEmitter (emitter, always, agentRef) {
         return result
       } catch (err) {
         fnEndTime = performance.now()
-        safeEmit(prefix + 'err', [args, originalThis, err, targets], ctx, bubble)
+        safeEmit(prefix + 'err', [args, originalThis, err], ctx, bubble)
         // rethrow error so we don't effect execution by observing.
         thrownError = err
         throw thrownError
@@ -124,10 +120,10 @@ export function createWrapperWithEmitter (emitter, always, agentRef) {
         }
         // standalone long task message
         if (task.isLongTask) {
-          safeEmit('long-task', [task, originalThis, targets], ctx, bubble)
+          safeEmit('long-task', [task, originalThis], ctx, bubble)
         }
         // -end message also includes the task execution info
-        safeEmit(prefix + 'end', [args, originalThis, result, targets], ctx, bubble)
+        safeEmit(prefix + 'end', [args, originalThis, result], ctx, bubble)
       }
     }
   }

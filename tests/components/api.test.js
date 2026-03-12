@@ -1059,8 +1059,8 @@ describe('API tests', () => {
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'])
 
-          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), 'myObservedLogger', []])
-          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined, []])
+          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), 'myObservedLogger'])
+          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined])
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/logging/info/called'])
           expectHandled('log', [expect.any(Number), 'test1', {}, 'INFO', false, undefined])
@@ -1087,8 +1087,8 @@ describe('API tests', () => {
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'])
 
-          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName, []])
-          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined, []])
+          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName])
+          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined])
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/logging/warn/called'])
           expectHandled('log', [expect.any(Number), 'test1', {}, 'warn', false, undefined])
@@ -1108,8 +1108,8 @@ describe('API tests', () => {
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'])
 
-          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName, []])
-          expectEmitted('wrap-logger-end', [['test1', { test2: 2 }, ['test3'], true, 1], expect.any(Object), undefined, []])
+          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName])
+          expectEmitted('wrap-logger-end', [['test1', { test2: 2 }, ['test3'], true, 1], expect.any(Object), undefined])
         })
 
         test('wrapped function should still behave as intended', () => {

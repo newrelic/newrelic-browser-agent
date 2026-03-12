@@ -109,10 +109,8 @@ export class Aggregate extends AggregateBase {
       if (this.events.add(log)) this.reportSupportabilityMetric(LOGGING_EVENT + (autoCaptured ? 'Auto' : 'API') + '/Added')
     }
 
-    if (shouldDuplicate(target, this.agentRef)) {
-      addEvent({ ...attributes, ...getVersion2DuplicationAttributes(target, this) })
-    }
     addEvent({ ...attributes, ...getVersion2Attributes(target, this) })
+    if (shouldDuplicate(target, this.agentRef)) addEvent({ ...attributes, ...getVersion2Attributes(undefined, this), ...getVersion2DuplicationAttributes(target, this) })
   }
 
   serializer (eventBuffer) {

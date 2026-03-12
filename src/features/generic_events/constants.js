@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { FEATURE_NAMES } from '../../loaders/features/features'
@@ -19,5 +19,4 @@ export const RESERVED_EVENT_TYPES = ['PageAction', 'UserAction', 'BrowserPerform
 export const FEATURE_FLAGS = {
   RESOURCES: 'experimental.resources',
   REGISTER: 'register'
-  // register.jserrors and register.generic_events are also used, but not referenced directly so no need to represent here
 }

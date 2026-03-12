@@ -18,7 +18,7 @@ describe('Register API - General Behaviors', () => {
 
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
       init: {
-        feature_flags: ['register', 'register.jserrors', 'register.generic_events'],
+        feature_flags: ['register'],
         api: {
           duplicate_registered_data: true
         }
@@ -60,7 +60,7 @@ describe('Register API - General Behaviors', () => {
     const [errorsHarvests, insightsHarvests, logsHarvests] = await Promise.all([
       mfeErrorsCapture.waitForResult({ totalCount: 2, timeout: 10000 }),
       mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
-      logsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+      logsCapture.waitForResult({ timeout: 10000 })
     ])
 
     const tested = {
@@ -129,12 +129,14 @@ describe('Register API - General Behaviors', () => {
           expect(log.attributes['child.type']).toBeUndefined()
           tested.logs.mfe = true
         } else {
+          if (log.level !== 'DEBUG') { // filter out agent warnings
           // Container logs (duplicated) should HAVE child.id and child.type
-          expect(log.attributes['child.id']).toBeDefined()
-          expect([agent1Id, agent2Id]).toContain(log.attributes['child.id'])
-          expect(log.attributes['child.type']).toEqual('MFE')
-          expect(log.attributes.testAttr).toBeDefined()
-          tested.logs.container = true
+            expect(log.attributes['child.id']).toBeDefined()
+            expect([agent1Id, agent2Id]).toContain(log.attributes['child.id'])
+            expect(log.attributes['child.type']).toEqual('MFE')
+            expect(log.attributes.testAttr).toBeDefined()
+            tested.logs.container = true
+          }
         }
       })
     })
@@ -146,7 +148,7 @@ describe('Register API - General Behaviors', () => {
     const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testMFEErrorsRequest }
     ])
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { feature_flags: ['register'] } }))
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
@@ -177,7 +179,7 @@ describe('Register API - General Behaviors', () => {
     const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testMFEErrorsRequest }
     ])
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { feature_flags: ['register'] } }))
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
@@ -212,7 +214,7 @@ describe('Register API - General Behaviors', () => {
     const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testMFEErrorsRequest }
     ])
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { feature_flags: ['register'] } }))
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
@@ -264,7 +266,7 @@ describe('Register API - General Behaviors', () => {
     const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testMFEErrorsRequest }
     ])
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { feature_flags: ['register'] } }))
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
@@ -306,7 +308,7 @@ describe('Register API - General Behaviors', () => {
     const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testMFEErrorsRequest }
     ])
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { feature_flags: ['register'] } }))
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
@@ -338,7 +340,7 @@ describe('Register API - General Behaviors', () => {
     const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testMFEErrorsRequest }
     ])
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { feature_flags: ['register'] } }))
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
@@ -371,7 +373,7 @@ describe('Register API - General Behaviors', () => {
     const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testMFEErrorsRequest }
     ])
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { feature_flags: ['register'] } }))
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
@@ -411,7 +413,7 @@ describe('Register API - General Behaviors', () => {
     const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testMFEErrorsRequest }
     ])
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { feature_flags: ['register'] } }))
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({

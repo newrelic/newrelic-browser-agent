@@ -15,7 +15,7 @@ describe('Register API - Timings', () => {
 
   it('should report MicroFrontEndTiming event with all timing attributes on deregister', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
-      init: { feature_flags: ['register', 'register.generic_events'] }
+      init: { feature_flags: ['register'] }
     }))
 
     await browser.execute(function () {
@@ -65,7 +65,7 @@ describe('Register API - Timings', () => {
 
   it('should report MicroFrontEndTiming event on pagehide', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
-      init: { feature_flags: ['register', 'register.generic_events'] }
+      init: { feature_flags: ['register'] }
     }))
 
     await browser.execute(function () {
@@ -93,7 +93,7 @@ describe('Register API - Timings', () => {
 
   it('should not report timing twice if deregistered before pagehide', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
-      init: { feature_flags: ['register', 'register.generic_events'] }
+      init: { feature_flags: ['register'] }
     }))
 
     await browser.execute(function () {
@@ -114,7 +114,7 @@ describe('Register API - Timings', () => {
 
   it('should calculate timeAlive as time between register and deregister', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
-      init: { feature_flags: ['register', 'register.generic_events'] }
+      init: { feature_flags: ['register'] }
     }))
 
     const waitTime = await browser.execute(function () {
@@ -144,7 +144,7 @@ describe('Register API - Timings', () => {
 
   it('should track separate timings for nested MFEs', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
-      init: { feature_flags: ['register', 'register.generic_events'] }
+      init: { feature_flags: ['register'] }
     }))
 
     await browser.execute(function () {
@@ -182,7 +182,7 @@ describe('Register API - Timings', () => {
 
   it('should handle rapid registration and deregistration of multiple MFEs', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
-      init: { feature_flags: ['register', 'register.generic_events'] }
+      init: { feature_flags: ['register'] }
     }))
 
     await browser.execute(function () {
@@ -217,7 +217,7 @@ describe('Register API - Timings', () => {
 
   it('should report timing metrics with correct relationships', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
-      init: { feature_flags: ['register', 'register.generic_events'] }
+      init: { feature_flags: ['register'] }
     }))
 
     await browser.execute(function () {
@@ -256,7 +256,7 @@ describe('Register API - Timings', () => {
 
   it('should report correct assetType for inline scripts', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
-      init: { feature_flags: ['register', 'register.generic_events'] }
+      init: { feature_flags: ['register'] }
     }))
 
     await browser.execute(function () {
@@ -382,7 +382,7 @@ describe('Register API - Timings', () => {
 
   it('should handle MFEs with unknown asset type gracefully', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
-      init: { feature_flags: ['register', 'register.generic_events'] }
+      init: { feature_flags: ['register'] }
     }))
 
     await browser.execute(function () {

@@ -85,8 +85,7 @@ export function wrapXhr (sharedEE, agentRef) {
     try {
       if (header.toLowerCase() === NEW_RELIC_MFE_ID_HEADER) {
         const context = ee.context(this)
-        // TODO - make this work
-        context.targets ??= getRegisteredTargetsFromId(value, agentRef) // only supports the first header found
+        context.targets = getRegisteredTargetsFromId(value, agentRef) // only supports the first header found
         return // do not allow the newrelic mfe id header to be assigned to the request, just use it for context later
       }
     } catch (e) {

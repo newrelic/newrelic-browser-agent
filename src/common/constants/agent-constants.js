@@ -12,8 +12,7 @@ export const NEW_RELIC_MFE_ID_HEADER = 'newrelic-mfe-id'
 
 export const SUPPORTS_REGISTERED_ENTITIES = {
   [FEATURE_NAMES.logging]: true,
-  // flip other features here when they are supported by DEM consumers
-  [FEATURE_NAMES.genericEvents]: false,
-  [FEATURE_NAMES.jserrors]: false,
-  [FEATURE_NAMES.ajax]: false
+  [FEATURE_NAMES.genericEvents]: true,
+  [FEATURE_NAMES.jserrors]: true,
+  [FEATURE_NAMES.ajax]: true
 }

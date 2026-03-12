@@ -5,7 +5,7 @@ declare const window: any;
 
 const opts = {
   info: NREUM.info,
-  init: {...NREUM.init, feature_flags: ['register', 'register.jserrors', 'register.generic_events']}
+  init: {...NREUM.init, feature_flags: ['register']}
 }
 
 window.agent = new BrowserAgent(opts);

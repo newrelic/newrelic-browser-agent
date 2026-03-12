@@ -53,7 +53,6 @@ const registeredEntityHtmlTemplate = (script) => `<html>
     {config}
     <script>
       localStorage.clear()
-      NREUM.init.ajax.enabled = false
       NREUM.init.page_view_timing.enabled = false
       NREUM.init.session_replay.enabled = false
       NREUM.init.session_trace.enabled = false

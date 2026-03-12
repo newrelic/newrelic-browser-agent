@@ -81,10 +81,10 @@ export async function runRegisteredEntityTest (testSet) {
 
   const [rumHarvests, errorsHarvests, insightsHarvests, logsHarvest, ajaxHarvest, spaHarvest] = await Promise.all([
     rumCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
-    ((testSet.includes('register') && testSet.includes('register.jserrors')) ? mfeErrorsCapture : regularErrorsCapture).waitForResult({ totalCount: 1, timeout: 10000 }),
-    ((testSet.includes('register') && testSet.includes('register.generic_events')) ? mfeInsightsCapture : regularInsightsCapture).waitForResult({ totalCount: 1, timeout: 10000 }),
+    (testSet.includes('register') ? mfeErrorsCapture : regularErrorsCapture).waitForResult({ totalCount: 1, timeout: 10000 }),
+    (testSet.includes('register') ? mfeInsightsCapture : regularInsightsCapture).waitForResult({ totalCount: 1, timeout: 10000 }),
     logsCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
-    ((testSet.includes('register') && testSet.includes('register.ajax')) ? mfeAjaxCapture : regularAjaxCapture).waitForResult({ timeout: 10000 }),
+    (testSet.includes('register') ? mfeAjaxCapture : regularAjaxCapture).waitForResult({ timeout: 10000 }),
     interactionsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
   ])
 
@@ -103,14 +103,8 @@ export async function runRegisteredEntityTest (testSet) {
 
   expect(rumHarvests).toHaveLength(1)
   expect(errorsHarvests.length).toBeGreaterThanOrEqual(1)
-  // Insights and logs require the base 'register' flag to function properly.
-  // Skip these checks when:
-  // 1. Only register.* sub-flags are present without the base 'register' flag (e.g., ['register.generic_events'])
-  // 2. No flags are present at all (e.g., []) - features may not be enabled by default
-  const hasRegisterSubFlags = testSet.some(flag => flag.startsWith('register.'))
-  const hasOnlySubFlags = hasRegisterSubFlags && !testSet.includes('register')
-  const hasNoFlags = testSet.length === 0
-  if (!hasOnlySubFlags && !hasNoFlags) {
+  // Insights and logs require the 'register' flag to function properly
+  if (testSet.includes('register')) {
     expect(insightsHarvests.length).toBeGreaterThanOrEqual(1)
     expect(logsHarvest.length).toBeGreaterThanOrEqual(1)
   }
@@ -174,7 +168,7 @@ export async function runRegisteredEntityTest (testSet) {
   const mfe2Spa = findAjaxRequests(spaHarvest, '/2', 'source.id', 2, 'and')
 
   // 3 pre, 3 post for each of fetch and xhr = 12 total requests made
-  const expectMFEdata = testSet.includes('register') && testSet.includes('register.ajax')
+  const expectMFEdata = testSet.includes('register')
   // container should capture all the request data, all the time
   expect(containerSpa.map(r => r.path)).toEqual(expect.arrayContaining([
     '/mock/pre/42',
@@ -210,18 +204,18 @@ export async function runRegisteredEntityTest (testSet) {
     data.forEach((err, idx) => {
       // MFEs use source.id attribute; container agent uses appId from query string
       const id = err.custom['source.id'] || query.a
-      if (Number(id) !== 42 && testSet.includes('register.jserrors')) {
+      if (Number(id) !== 42 && testSet.includes('register')) {
         // MFE-scoped errors: validate source attributes and parent relationship
         expect(err.custom['source.name']).toEqual('agent' + id)
         expect(err.custom['source.type']).toEqual('MFE')
         expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid)
       } else {
-        if (testSet.includes('register') && testSet.includes('register.jserrors')) {
+        if (testSet.includes('register')) {
           expect(err.custom.appId).toEqual(42)
         }
       }
       countRuns(id, 'err')
-      if (testSet.includes('register.jserrors')) {
+      if (testSet.includes('register')) {
         expect(ranOnce(id, 'err')).toEqual(true)
         expect(Number(id)).toEqual(Number(err.params.message))
       } else {
@@ -237,13 +231,13 @@ export async function runRegisteredEntityTest (testSet) {
       if (ins.eventType === 'PageAction' || ins.eventType === 'CustomEvent' || (ins.eventType === 'BrowserPerformance' && ins.entryType === 'measure')) {
         // MFEs use source.id attribute; container agent uses appId from query string
         const id = ins['source.id'] || query.a
-        if (Number(id) !== 42 && testSet.includes('register.generic_events')) {
+        if (Number(id) !== 42 && testSet.includes('register')) {
           // MFE-scoped events: validate source attributes and parent relationship
           expect(ins['source.name']).toEqual('agent' + id)
           expect(ins['source.type']).toEqual('MFE')
           expect(ins['parent.id']).toEqual(containerAgentEntityGuid)
         } else {
-          if (testSet.includes('register') && testSet.includes('register.generic_events')) {
+          if (testSet.includes('register')) {
             expect(ins.appId).toEqual(42)
           }
         }
@@ -261,28 +255,24 @@ export async function runRegisteredEntityTest (testSet) {
     })
   })
 
-  if (!testSet.includes('register.generic_events')) {
-    // Without register.generic_events, all PageActions, CustomEvents, and measures are aggregated
-    // under the container agent (id 42). When 'register' is enabled, calls from agent1 and agent2
-    // fall back to container, resulting in 3 total events. Otherwise, only 1 event is captured.
-    expect(tests['42'].pa).toEqual(testSet.includes('register') ? 3 : 1)
-    expect(tests['42'].rce).toEqual(testSet.includes('register') ? 3 : 1)
-    expect(tests['42'].measure).toEqual(testSet.includes('register') ? 3 : 1)
+  if (!testSet.includes('register')) {
+    // Without register, all PageActions, CustomEvents, and measures are aggregated
+    // under the container agent (id 42), so only 1 event is captured.
+    expect(tests['42'].pa).toEqual(1)
+    expect(tests['42'].rce).toEqual(1)
+    expect(tests['42'].measure).toEqual(1)
   } else {
-    if (testSet.includes('register')) {
-      // With both 'register' and 'register.generic_events', each event is properly scoped
-      // to its respective agent (container, agent1, agent2), so we expect one event per agent.
-      expect(ranOnce('42', 'pa')).toEqual(true)
-      expect(ranOnce('42', 'rce')).toEqual(true)
-      expect(ranOnce('42', 'measure')).toEqual(true)
-      expect(ranOnce('1', 'pa')).toEqual(true)
-      expect(ranOnce('1', 'rce')).toEqual(true)
-      expect(ranOnce('1', 'measure')).toEqual(true)
-      expect(ranOnce('2', 'pa')).toEqual(true)
-      expect(ranOnce('2', 'rce')).toEqual(true)
-      expect(ranOnce('2', 'measure')).toEqual(true)
-    }
-    // When 'register.generic_events' is used without base 'register' flag, no insights data is captured
+    // With 'register', each event is properly scoped to its respective agent
+    // (container, agent1, agent2), so we expect one event per agent.
+    expect(ranOnce('42', 'pa')).toEqual(true)
+    expect(ranOnce('42', 'rce')).toEqual(true)
+    expect(ranOnce('42', 'measure')).toEqual(true)
+    expect(ranOnce('1', 'pa')).toEqual(true)
+    expect(ranOnce('1', 'rce')).toEqual(true)
+    expect(ranOnce('1', 'measure')).toEqual(true)
+    expect(ranOnce('2', 'pa')).toEqual(true)
+    expect(ranOnce('2', 'rce')).toEqual(true)
+    expect(ranOnce('2', 'measure')).toEqual(true)
   }
 
   logsHarvest.forEach(({ request: { query, body } }) => {

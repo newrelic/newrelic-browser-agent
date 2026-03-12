@@ -1,6 +1,6 @@
 /* globals RegisteredEntity */
 
-import { testMFEErrorsRequest, testMFEInsRequest, testLogsRequest, testRumRequest, testErrorsRequest, testInsRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testMFEErrorsRequest, testMFEInsRequest, testLogsRequest, testRumRequest, testErrorsRequest, testInsRequest, testMFEAjaxEventsRequest, testAjaxEventsRequest, testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 let rumCapture, mfeErrorsCapture, mfeInsightsCapture, regularErrorsCapture, regularInsightsCapture, logsCapture
 describe('registered-entity', () => {
@@ -11,35 +11,24 @@ describe('registered-entity', () => {
       { test: testMFEInsRequest },
       { test: testErrorsRequest },
       { test: testInsRequest },
-      { test: testLogsRequest }
+      { test: testLogsRequest },
+      { test: testMFEAjaxEventsRequest },
+      { test: testAjaxEventsRequest },
+      { test: testInteractionEventsRequest }
     ])
     await browser.enableLogging()
   })
 
   const featureFlags = [
     [],
-    ['register'],
-    ['register', 'register.jserrors'],
-    ['register', 'register.generic_events'],
-    ['register', 'register.jserrors', 'register.generic_events'],
-    ['register.jserrors', 'register.generic_events'],
-    ['register.jserrors'],
-    ['register.generic_events']
+    ['register']
   ]
   featureFlags.forEach((testSet) => {
     it(`RegisteredEntity -- ${testSet.join(' | ') || 'no flags'}`, async () => {
-      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: testSet } }))
+      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { loader: 'spa', init: { feature_flags: testSet } }))
+        .then(() => browser.waitForAgentLoad())
 
       await browser.execute(function () {
-        window.agent1 = new RegisteredEntity({
-          id: 1,
-          name: 'agent1'
-        })
-        window.agent2 = new RegisteredEntity({
-          id: 2,
-          name: 'agent2'
-        })
-
         // each payload in this test is decorated with data that matches its appId for ease of testing
         window.newrelic.setCustomAttribute('customAttr', '42') // container agent
         window.agent1.setCustomAttribute('customAttr', '1') // micro agent (agent1)
@@ -72,8 +61,8 @@ describe('registered-entity', () => {
       })
       const [rumHarvests, errorsHarvests, insightsHarvests, logsHarvest] = await Promise.all([
         rumCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
-        ((testSet.includes('register') && testSet.includes('register.jserrors')) ? mfeErrorsCapture : regularErrorsCapture).waitForResult({ totalCount: 1, timeout: 10000 }),
-        ((testSet.includes('register') && testSet.includes('register.generic_events')) ? mfeInsightsCapture : regularInsightsCapture).waitForResult({ totalCount: 1, timeout: 10000 }),
+        (testSet.includes('register') ? mfeErrorsCapture : regularErrorsCapture).waitForResult({ totalCount: 1, timeout: 10000 }),
+        (testSet.includes('register') ? mfeInsightsCapture : regularInsightsCapture).waitForResult({ totalCount: 1, timeout: 10000 }),
         logsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
       ])
 
@@ -107,18 +96,18 @@ describe('registered-entity', () => {
         const data = body.err
         data.forEach((err, idx) => {
           const id = err.custom['source.id'] || query.a // MFEs use source.id, regular agents use appId
-          if (Number(id) !== 42 && testSet.includes('register.jserrors')) {
+          if (Number(id) !== 42 && testSet.includes('register')) {
             expect(err.custom['source.name']).toEqual('agent' + id)
             expect(err.custom['source.type']).toEqual('MFE')
             expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid)
             expect(err.custom['parent.type']).toEqual('BA') // parent is container (Browser Agent)
           } else {
-            if (testSet.includes('register') && testSet.includes('register.jserrors')) {
+            if (testSet.includes('register')) {
               expect(err.custom.appId).toEqual(42)
             }
           }
           countRuns(id, 'err')
-          if (testSet.includes('register.jserrors')) {
+          if (testSet.includes('register')) {
             expect(ranOnce(id, 'err')).toEqual(true)
             expect(Number(id)).toEqual(Number(err.params.message))
           } else {
@@ -133,13 +122,13 @@ describe('registered-entity', () => {
         data.forEach((ins, idx) => {
           if (ins.eventType === 'PageAction' || ins.eventType === 'CustomEvent' || (ins.eventType === 'BrowserPerformance' && ins.entryType === 'measure')) {
             const id = ins['source.id'] || query.a // MFEs use source.id, regular agents use appId
-            if (Number(id) !== 42 && testSet.includes('register.generic_events')) {
+            if (Number(id) !== 42 && testSet.includes('register')) {
               expect(ins['source.name']).toEqual('agent' + id)
               expect(ins['source.type']).toEqual('MFE')
               expect(ins['parent.id']).toEqual(containerAgentEntityGuid)
               expect(ins['parent.type']).toEqual('BA') // parent is container (Browser Agent)
             } else {
-              if (testSet.includes('register') && testSet.includes('register.generic_events')) {
+              if (testSet.includes('register')) {
                 expect(ins.appId).toEqual(42)
               }
             }
@@ -156,11 +145,11 @@ describe('registered-entity', () => {
         })
       })
 
-      if (!testSet.includes('register.generic_events')) {
+      if (!testSet.includes('register')) {
         // each item gets lumped together under the same id without the feature flags
-        expect(tests['42'].pa).toEqual(testSet.includes('register') ? 3 : 1)
-        expect(tests['42'].rce).toEqual(testSet.includes('register') ? 3 : 1)
-        expect(tests['42'].measure).toEqual(testSet.includes('register') ? 3 : 1)
+        expect(tests['42'].pa).toEqual(1)
+        expect(tests['42'].rce).toEqual(1)
+        expect(tests['42'].measure).toEqual(1)
       } else {
         if (testSet.includes('register')) {
           expect(ranOnce('42', 'pa')).toEqual(true)
@@ -207,7 +196,7 @@ describe('registered-entity', () => {
   })
 
   it('should still harvest scoped data after deregistering', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register'] } }))
 
     await browser.execute(function () {
       window.agent1 = new RegisteredEntity({
@@ -235,50 +224,42 @@ describe('registered-entity', () => {
   })
 
   it('should allow multiple registers with same id', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register'] } }))
 
     await browser.execute(function () {
-      window.agent1 = new RegisteredEntity({
+      // id 1 already exists on test page
+      window.agent3 = new RegisteredEntity({
         id: 1,
-        name: 'agent1'
+        name: 'agent3'
       })
-      window.agent2 = new RegisteredEntity({
-        id: 1,
-        name: 'agent2'
-      })
-      // should get data as "agent2"
-      window.agent1.noticeError('1')
-      window.agent2.noticeError('2')
+      // should get data with name of "agent3"
+      window.agent3.noticeError('3')
     })
 
     const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
 
-    errorsHarvests.forEach(({ request: { query, body } }) => {
-      const data = body.err
-      data.forEach((err, idx) => {
-        expect(Number(err.params.message)).toEqual(idx + 1)
-        expect(err.custom['source.name']).toEqual('agent' + (idx + 1))
-      })
-    })
+    expect(errorsHarvests[0].request.body.err[0].params.message).toEqual('3')
+    expect(errorsHarvests[0].request.body.err[0].custom['source.name']).toEqual('agent3')
+    expect(errorsHarvests[0].request.body.err[0].custom['source.id']).toEqual(1)
   })
 
   it('should allow to share a registration', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register'] } }))
 
     await browser.execute(function () {
-      window.agent1 = new RegisteredEntity({
-        id: 1,
+      window.sharedAgent = new RegisteredEntity({
+        id: 1234,
         name: 'my agent',
         isolated: false
       })
-      window.agent2 = new RegisteredEntity({
-        id: 1,
+      window.sharedAgent2 = new RegisteredEntity({
+        id: 1234,
         isolated: false
       })
       // should get data as "agent2"
-      window.agent1.setCustomAttribute('sharedAttr', 'shared for both instances')
-      window.agent1.noticeError('1')
-      window.agent2.noticeError('2')
+      window.sharedAgent.setCustomAttribute('sharedAttr', 'shared for both instances')
+      window.sharedAgent.noticeError('1')
+      window.sharedAgent2.noticeError('2')
     })
 
     const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
@@ -287,7 +268,7 @@ describe('registered-entity', () => {
       const data = body.err
       data.forEach((err, idx) => {
         expect(Number(err.params.message)).toEqual(idx + 1)
-        expect(err.custom['source.id']).toEqual(1)
+        expect(err.custom['source.id']).toEqual(1234)
         expect(err.custom['source.name']).toEqual('my agent')
         expect(err.custom.sharedAttr).toEqual('shared for both instances')
       })
@@ -295,7 +276,7 @@ describe('registered-entity', () => {
   })
 
   it('should allow a nested register', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register'] } }))
 
     await browser.execute(function () {
       window.agent1 = new RegisteredEntity({
@@ -344,7 +325,7 @@ describe('registered-entity', () => {
   })
 
   it('should include tags as source attributes', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register'] } }))
 
     await browser.execute(function () {
       window.agent1 = new RegisteredEntity({
@@ -385,7 +366,7 @@ describe('registered-entity', () => {
   })
 
   it('should handle empty tags object', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register'] } }))
 
     await browser.execute(function () {
       window.agent1 = new RegisteredEntity({
@@ -414,7 +395,7 @@ describe('registered-entity', () => {
   })
 
   it('should combine tags with custom attributes', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register'] } }))
 
     await browser.execute(function () {
       window.agent1 = new RegisteredEntity({
@@ -443,7 +424,7 @@ describe('registered-entity', () => {
   })
 
   it('should exclude protected "name" and "id" keys from tags', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register'] } }))
 
     await browser.execute(function () {
       window.agent1 = new RegisteredEntity({
@@ -480,7 +461,7 @@ describe('registered-entity', () => {
   })
 
   it('should handle tags with only protected keys', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register'] } }))
 
     await browser.execute(function () {
       window.agent1 = new RegisteredEntity({
@@ -577,7 +558,7 @@ describe('registered-entity', () => {
 
   describe('MFE timing tracking', () => {
     it('should handle tags with various value types', async () => {
-      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register'] } }))
 
       await browser.execute(function () {
         window.agent1 = new RegisteredEntity({
@@ -604,7 +585,7 @@ describe('registered-entity', () => {
     })
 
     it('should handle tags with complex structure', async () => {
-      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register'] } }))
 
       await browser.execute(function () {
         window.agent1 = new RegisteredEntity({
@@ -640,7 +621,7 @@ describe('registered-entity', () => {
 
       it('should report MicroFrontEndTiming event with all timing attributes on deregister', async () => {
         await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', {
-          init: { feature_flags: ['register', 'register.generic_events'] }
+          init: { feature_flags: ['register'] }
         }))
         await browser.execute(function () {
           const mfe = new RegisteredEntity({ id: 1, name: 'test-mfe' })
@@ -685,7 +666,7 @@ describe('registered-entity', () => {
 
       it('should report MicroFrontEndTiming event on pagehide', async () => {
         await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', {
-          init: { feature_flags: ['register', 'register.generic_events'] }
+          init: { feature_flags: ['register'] }
         }))
 
         await browser.execute(function () {
@@ -713,7 +694,7 @@ describe('registered-entity', () => {
 
       it('should not report timing twice if deregistered before pagehide', async () => {
         await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', {
-          init: { feature_flags: ['register', 'register.generic_events'] }
+          init: { feature_flags: ['register'] }
         }))
 
         await browser.execute(function () {
@@ -734,7 +715,7 @@ describe('registered-entity', () => {
 
       it('should calculate timeAlive as duration between register and deregister', async () => {
         await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', {
-          init: { feature_flags: ['register', 'register.generic_events'] }
+          init: { feature_flags: ['register'] }
         }))
 
         const waitTime = await browser.execute(function () {
@@ -764,7 +745,7 @@ describe('registered-entity', () => {
 
       it('should track separate timings for nested MFEs', async () => {
         await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', {
-          init: { feature_flags: ['register', 'register.generic_events'] }
+          init: { feature_flags: ['register'] }
         }))
 
         await browser.execute(function () {
@@ -803,7 +784,7 @@ describe('registered-entity', () => {
 
       it('should handle rapid registration and deregistration of multiple MFEs', async () => {
         await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', {
-          init: { feature_flags: ['register', 'register.generic_events'] }
+          init: { feature_flags: ['register'] }
         }))
 
         await browser.execute(function () {
@@ -839,7 +820,7 @@ describe('registered-entity', () => {
 
       it('should report timing metrics with correct relationships', async () => {
         await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', {
-          init: { feature_flags: ['register', 'register.generic_events'] }
+          init: { feature_flags: ['register'] }
         }))
 
         await browser.execute(function () {

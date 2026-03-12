@@ -26,10 +26,7 @@ This build validates:
 ## Configuration
 
 Feature flags required:
-- `register` - Enable the register API
-- `register.ajax` - Auto-detect AJAX events
-- `register.jserrors` - Auto-detect error events  
-- `register.generic_events` - Auto-detect user actions and logs
+- `register` - Enable the register API with all auto-detection features (AJAX, errors, user actions, and logs)
 
 API configuration:
 - `allow_registered_children: true` - Enable auto-detection

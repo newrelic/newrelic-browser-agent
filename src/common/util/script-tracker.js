@@ -46,7 +46,7 @@ if (globalScope.PerformanceObserver?.supportedEntryTypes.includes('resource')) {
  * @param {string} stack The error stack trace
  * @returns {string[]} Array of cleaned URLs found in the stack trace
  */
-function extractUrlsFromStack (stack) {
+export function extractUrlsFromStack (stack) {
   if (!stack || typeof stack !== 'string') return []
 
   const urls = new Set()
@@ -66,7 +66,7 @@ function extractUrlsFromStack (stack) {
  * Returns a deep stack trace by temporarily increasing the stack trace limit.
  * @returns {Error.stack | undefined}
  */
-function getDeepStackTrace () {
+export function getDeepStackTrace () {
   let stack
   try {
     const originalStackLimit = Error.stackTraceLimit

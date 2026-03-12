@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { extractUrlsFromStack, getDeepStackTrace } from './script-tracker'
+
 /**
  * @enum {string}
  * @readonly
@@ -12,6 +14,30 @@ export const V2_TYPES = {
   MFE: 'MFE',
   /** Browser Application */
   BA: 'BA'
+}
+
+/**
+ * Returns the registered target associated with a given ID. Returns undefined if not found.
+ * @param {string|number} id
+ * @param {*} agentRef the agent reference
+ * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget | undefined}
+ */
+export function getRegisteredTargetsFromId (id, agentRef) {
+  if (!id || !agentRef?.init.api.allow_registered_children) return
+  const registeredEntities = agentRef?.runtime.registeredEntities
+  return registeredEntities?.filter(entity => String(entity.metadata.target.id) === String(id)).map(entity => entity.metadata.target) || []
+}
+
+/**
+ * Returns the registered target(s) associated with a given filename if found in the resource timing API during registration. Returns an empty array if not found.
+ * @param {string} filename
+ * @param {*} agentRef
+ * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget[] | []}
+ */
+export function getRegisteredTargetsFromFilename (filename, agentRef) {
+  if (!filename || !agentRef?.init.api.allow_registered_children) return []
+  const registeredEntities = agentRef?.runtime.registeredEntities
+  return registeredEntities?.filter(entity => entity.metadata.timings?.asset?.endsWith(filename)).map(entity => entity.metadata.target) || []
 }
 
 /**
@@ -33,11 +59,36 @@ export function getVersion2Attributes (target, aggregateInstance) {
     }
   }
   /** otherwise, the data belongs to the target (MFE) and should be attributed as such */
-  return {
-    'source.id': target.id,
-    'source.name': target.name,
-    'source.type': target.type,
-    'parent.id': target.parent?.id || containerAgentEntityGuid,
-    'parent.type': target.parent?.type || V2_TYPES.BA
+  return target.attributes
+}
+
+/**
+ * Returns the attributes used for duplicating data in version 2 of the harvest endpoint. If not valid for duplication, returns an empty object.
+ * @param {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget} target
+ * @param {*} aggregateInstance the aggregate instance calling the method
+ * @returns {Object}
+ */
+export function getVersion2DuplicationAttributes (target, aggregateInstance) {
+  if (aggregateInstance?.harvestEndpointVersion !== 2 || !shouldDuplicate(target, aggregateInstance?.agentRef)) return {}
+  return { 'child.id': target.id, 'child.type': target.type }
+}
+
+export function shouldDuplicate (target, agentRef) {
+  return !!target && agentRef.init.api.duplicate_registered_data
+}
+
+export function findTargetsFromStackTrace (agentRef) {
+  if (!agentRef?.init.api.allow_registered_children) return []
+
+  let iterator = 0
+  const targets = []
+  try {
+    var urls = extractUrlsFromStack(getDeepStackTrace()).reverse()
+    while (urls[iterator]) {
+      targets.push(...getRegisteredTargetsFromFilename(urls[iterator++], agentRef))
+    }
+  } catch (err) {
+    // Silent catch to prevent errors from propagating
   }
+  return targets
 }

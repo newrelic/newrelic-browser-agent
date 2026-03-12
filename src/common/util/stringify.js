@@ -14,7 +14,6 @@ import { ee } from '../event-emitter/contextual-ee'
  */
 const getCircularReplacer = () => {
   const stack = []
-  const keys = []
 
   return function (key, value) {
     if (stack.length > 0) {
@@ -23,16 +22,14 @@ const getCircularReplacer = () => {
       if (~thisPos) {
         // We're still in the stack, trim it
         stack.splice(thisPos + 1)
-        keys.splice(thisPos, Infinity, key)
       } else {
         // We're not in the stack, add ourselves
         stack.push(this)
-        keys.push(key)
       }
 
       // Check if value is in the current ancestor chain
       if (~stack.indexOf(value)) {
-        return '[Circular]'
+        return
       }
     } else {
       // First call, initialize with root
@@ -51,14 +48,11 @@ const getCircularReplacer = () => {
  */
 export function stringify (val) {
   try {
-    const stringified = JSON.stringify(val, getCircularReplacer())
-    if (!stringified) console.log('failed to stringify... return empty for ', val)
     return JSON.stringify(val, getCircularReplacer()) ?? ''
   } catch (e) {
     try {
       ee.emit('internal-error', [e])
     } catch (err) {
-      console.log('FAILED TO STRINGIFY', val, err)
       // do nothing
     }
     // return a string so that downstream users of the method do not throw errors

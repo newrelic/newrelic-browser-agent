@@ -73,12 +73,6 @@ export class Aggregate extends AggregateBase {
 
     if (!attributes || typeof attributes !== 'object') attributes = {}
 
-    // attributes = {
-    //   ...attributes,
-    //   /** Specific attributes only supplied if harvesting to endpoint version 2 */
-    //   ...(getVersion2Attributes(target, this))
-    // }
-
     if (typeof level === 'string') level = level.toUpperCase()
     if (!isValidLogLevel(level)) return warn(30, level)
     if (modeForThisLog < (LOGGING_MODE[level] || Infinity)) {

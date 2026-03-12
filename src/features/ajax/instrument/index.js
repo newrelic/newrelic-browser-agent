@@ -20,7 +20,6 @@ import { SUPPORTABILITY_METRIC } from '../../metrics/constants'
 import { now } from '../../../common/timing/now'
 import { hasUndefinedHostname } from '../../../common/deny-list/deny-list'
 import { extractUrl } from '../../../common/url/extract-url'
-import { getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/util/v2'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length

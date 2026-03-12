@@ -255,11 +255,6 @@ describe('Register API - Auto-Detection', () => {
     expect(duplicatedLazyUserAction['entity.guid']).toBeDefined()
     expect(duplicatedLazyUserAction['child.type']).toEqual('MFE')
 
-    // Error duplication
-    // Find by custom attributes for original, and by custom.child.* for duplicated
-    // Debug output for error events
-    // eslint-disable-next-line no-console
-    console.log('allMfeErrors:', JSON.stringify(allMfeErrors, null, 2))
     const secondMfeError = allMfeErrors.find(e => e.custom?.['source.id'] === 'vite-second-mfe' && e.params?.message?.includes('2nd mfe error'))
     expect(secondMfeError).toBeDefined()
     const duplicatedSecondMfeError = allMfeErrors.find(e => e.custom?.['child.id'] === 'vite-second-mfe' && e.params?.message?.includes('2nd mfe error'))
@@ -281,20 +276,20 @@ describe('Register API - Auto-Detection', () => {
     // Log duplication
     const secondMfeLog = allMfeLogs.find(l => l.attributes?.['source.id'] === 'vite-second-mfe' && l.message?.includes('2nd mfe log'))
     expect(secondMfeLog).toBeDefined()
-    const duplicatedSecondMfeLog = allMfeLogs.find(l => l.child?.id === 'vite-second-mfe' && l.message?.includes('2nd mfe log'))
+    const duplicatedSecondMfeLog = allMfeLogs.find(l => l.attributes?.['child.id'] === 'vite-second-mfe' && l.message?.includes('2nd mfe log'))
     expect(duplicatedSecondMfeLog).toBeDefined()
-    expect(duplicatedSecondMfeLog.child.type).toEqual('MFE')
+    expect(duplicatedSecondMfeLog.attributes['child.type']).toEqual('MFE')
 
     const mainMfeLog = allMfeLogs.find(l => l.attributes?.['source.id'] === 'vite-main-mfe' && l.message?.includes('click in MFE'))
     expect(mainMfeLog).toBeDefined()
-    const duplicatedMainMfeLog = allMfeLogs.find(l => l.child?.id === 'vite-main-mfe' && l.message?.includes('click in MFE'))
+    const duplicatedMainMfeLog = allMfeLogs.find(l => l.attributes?.['child.id'] === 'vite-main-mfe' && l.message?.includes('click in MFE'))
     expect(duplicatedMainMfeLog).toBeDefined()
-    expect(duplicatedMainMfeLog.child.type).toEqual('MFE')
+    expect(duplicatedMainMfeLog.attributes['child.type']).toEqual('MFE')
 
     const lazyLog = allMfeLogs.find(l => l.attributes?.['source.id'] === 'vite-main-mfe' && l.message?.includes('log from lazy'))
     expect(lazyLog).toBeDefined()
-    const duplicatedLazyLog = allMfeLogs.find(l => l.child?.id === 'vite-main-mfe' && l.message?.includes('log from lazy'))
+    const duplicatedLazyLog = allMfeLogs.find(l => l.attributes?.['child.id'] === 'vite-main-mfe' && l.message?.includes('log from lazy'))
     expect(duplicatedLazyLog).toBeDefined()
-    expect(duplicatedLazyLog.child.type).toEqual('MFE')
+    expect(duplicatedLazyLog.attributes['child.type']).toEqual('MFE')
   })
 })

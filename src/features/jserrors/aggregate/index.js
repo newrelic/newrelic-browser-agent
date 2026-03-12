@@ -26,6 +26,9 @@ import { buildCauseString } from './cause-string'
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
  */
 
+/** A special error used to short-circuit the error processing pipeline */
+class ShortCircuit extends Error {}
+
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
@@ -38,8 +41,8 @@ export class Aggregate extends AggregateBase {
     this.pageviewReported = {}
     this.errorOnPage = false
 
-    register('err', (...args) => this.processError(...args), this.featureName, this.ee)
-    register('ierr', (...args) => this.processError(...args), this.featureName, this.ee)
+    register('err', this.processError.bind(this), this.featureName, this.ee)
+    register('ierr', this.processError.bind(this), this.featureName, this.ee)
     register('returnJserror', (jsErrorEvent, softNavAttrs) => this.#storeJserrorForHarvest(jsErrorEvent, softNavAttrs), this.featureName, this.ee)
 
     // 0 == off, 1 == on
@@ -74,43 +77,67 @@ export class Aggregate extends AggregateBase {
   }
 
   /**
-   * Builds a standardized stack trace string from the frames in the given `stackInfo` object, with each frame separated
-   * by a newline character. Lines take the form `<functionName>@<url>:<lineNumber>`.
+   * Main entry point for processing JavaScript errors. This method orchestrates the complete error processing pipeline.
    *
-   * @param {StackInfo} stackInfo - An object specifying a stack string and individual frames.
-   * @returns {string} A canonical stack string built from the URLs and function names in the given `stackInfo` object.
-   */
-  buildCanonicalStackString (stackInfo) {
-    var canonicalStackString = ''
-
-    for (var i = 0; i < stackInfo.frames.length; i++) {
-      var frame = stackInfo.frames[i]
-      var func = canonicalFunctionName(frame.func)
-
-      if (canonicalStackString) canonicalStackString += '\n'
-      if (func) canonicalStackString += func + '@'
-      if (typeof frame.url === 'string') canonicalStackString += frame.url
-      if (frame.line) canonicalStackString += ':' + frame.line
-    }
-
-    return canonicalStackString
-  }
-
-  /**
+   * Processing Flow:
+   * 1. Filter the error through the customer's onerror handler (if configured and not internal)
+   * 2. Compute the stack trace from the error object
+   * 3. Evaluate if the error should be swallowed (internal errors, known issues, etc.)
+   * 4. Derive target(s) for the error (MFE detection for v2 endpoints, or default target) - Note: "undefined" indicates the default target will be used
+   * 5. Store the error for each derived target. During storage (#storeJserrorForHarvest), duplication for MFE <-> container will be handled
    *
-   * @param {Error|UncaughtError} err The error instance to be processed
-   * @param {number} time the relative ms (to origin) timestamp of occurrence
-   * @param {boolean=} internal if the error was "caught" and deemed "internal" before reporting to the jserrors feature
-   * @param {object=} customAttributes  any custom attributes to be included in the error payload
-   * @param {boolean=} hasReplay a flag indicating if the error occurred during a replay session
-   * @param {string=} swallowReason a string indicating pre-defined reason if swallowing the error.  Mainly used by the internal error SMs.
-   * @param {object=} target the target to buffer and harvest to, if undefined the default configuration target is used
-   * @returns
+   * Important: "ShortCircuit" Pattern:
+   * Several steps in the pipeline can throw a ShortCircuit error to halt processing without
+   * treating it as a reportable error. This pattern is used when:
+   * - The customer's onerror handler returns a truthy value (excluding fingerprinting objects)
+   * - The error is identified as an internal error that shouldn't be reported
+   *
+   * When a ShortCircuit is thrown, processing stops immediately and the error is not stored.
+   * Any other thrown error is re-thrown as it represents an actual problem in the agent code.
+   *
+   * @param {Error|UncaughtError} err - The error instance to be processed
+   * @param {number} [time] - The relative ms (to origin) timestamp of occurrence. Defaults to now()
+   * @param {boolean} [internal=false] - If the error was "caught" and deemed "internal" before reporting to the jserrors feature
+   * @param {object} [customAttributes] - Any custom attributes to be included in the error payload
+   * @param {boolean} [hasReplay=false] - A flag indicating if the error occurred during a replay session
+   * @param {string} [swallowReason] - A string indicating pre-defined reason if swallowing the error. Mainly used by internal error supportability metrics
+   * @param {object} [target] - The target to buffer and harvest to. If undefined, the default configuration target is used
+   * @returns {void}
    */
   processError (err, time, internal, customAttributes, hasReplay, swallowReason, target) {
     if (!err) return
-    // are we in an interaction
     time = time || now()
+    try {
+      const filterOutput = this.#filterError(err, internal)
+      const stackInfo = computeStackTrace(err)
+      this.#swallowError(stackInfo, internal, swallowReason)
+      this.#deriveTargets(stackInfo, target).forEach(target => {
+        this.#storeError(err, time, stackInfo, filterOutput, customAttributes, hasReplay, target)
+      })
+    } catch (e) {
+      if (!(e instanceof ShortCircuit)) {
+        throw e
+      }
+    }
+  }
+
+  /**
+   * Filters an error through the customer's configured onerror handler.
+   *
+   * If the customer has configured a custom onerror handler and the error is not internal,
+   * this method invokes that handler. The handler's return value determines whether the error
+   * should be reported:
+   * - Falsey values (false, null, undefined, etc.) → Report the error normally
+   * - Truthy non-object values → Don't report (throws ShortCircuit)
+   * - Object with 'group' property (non-empty string) → Report with fingerprinting label
+   * - Any other truthy value → Don't report (throws ShortCircuit)
+   *
+   * @param {Error|UncaughtError} err - The error to filter
+   * @param {boolean} internal - Whether this is an internal error (internal errors skip filtering)
+   * @returns {undefined|object} The filter output. If an object with 'group' property, contains fingerprinting data
+   * @throws {ShortCircuit} When the error should not be reported based on the filter output
+   */
+  #filterError (err, internal) {
     let filterOutput
 
     if (!internal && this.agentRef.runtime.onerror) {
@@ -118,48 +145,92 @@ export class Aggregate extends AggregateBase {
       if (filterOutput && !(typeof filterOutput.group === 'string' && filterOutput.group.length)) {
         // All truthy values mean don't report (store) the error, per backwards-compatible usage,
         // - EXCEPT if a fingerprinting label is returned, via an object with key of 'group' and value of non-empty string
-        return
+        throw new ShortCircuit()
       }
       // Again as with previous usage, all falsey values would include the error.
     }
+    return filterOutput
+  }
 
-    const stackInfo = computeStackTrace(err)
+  /**
+   * Evaluates whether an error should be swallowed (not reported) based on internal error criteria.
+   *
+   * This method uses the evaluateInternalError function to determine if the error matches known
+   * internal error patterns (e.g., errors from the agent itself, known browser issues, etc.).
+   * If the error should be swallowed, a supportability metric is recorded and processing is halted.
+   *
+   * @param {StackInfo} stackInfo - The computed stack trace information
+   * @param {boolean} internal - Whether the error was marked as internal
+   * @param {string} [swallowReason] - Optional pre-determined reason for swallowing
+   * @returns {void}
+   * @throws {ShortCircuit} When the error should be swallowed and not reported
+   */
+  #swallowError (stackInfo, internal, swallowReason) {
+    const { shouldSwallow, reason } = evaluateInternalError(stackInfo, internal, swallowReason)
+    if (shouldSwallow) {
+      this.reportSupportabilityMetric('Internal/Error/' + reason)
+      throw new ShortCircuit()
+    }
+  }
+
+  /**
+   * Derives the appropriate targets for reporting the given stack information.
+   *
+   * Targets represent the entities that should receive the error data. This is particularly
+   * important for Micro Frontend (MFE) scenarios where errors may need to be reported to
+   * different applications.
+   *
+   * Logic:
+   * - If a target is explicitly provided (e.g., from the register API), use it
+   * - For v2 endpoints without an explicit target, scan stack frames to detect MFE sources
+   * - If no MFE is detected or v2 is not enabled, use undefined (default target)
+   *
+   * @param {StackInfo} stackInfo - The computed stack trace information containing frames
+   * @param {object} [target] - Explicitly provided target, typically from the register API
+   * @returns {Array<object|undefined>} Array of targets to report the error to. Always contains at least one element.
+   */
+  #deriveTargets (stackInfo, target) {
     const targets = []
     if (target) {
       // reported by the register API directly
       targets.push(target)
     } else {
-      if (this.harvestEndpointVersion === 1) this.storeError({ filterOutput, stackInfo, err, time, internal, customAttributes, hasReplay, swallowReason })
       // we dont know if this is MFE yet, we need to figure it out.
-      for (const frame of stackInfo.frames) {
-        targets.push(...getRegisteredTargetsFromFilename(frame.url, this.agentRef))
-        if (targets.length) break
+      if (this.harvestEndpointVersion === 2) {
+        for (const frame of stackInfo.frames) {
+          targets.push(...getRegisteredTargetsFromFilename(frame.url, this.agentRef))
+          if (targets.length) break
+        }
       }
       if (!targets.length) targets.push(undefined)
-      console.log('targets to report....', targets)
-      targets.forEach(target => this.storeError({ filterOutput, stackInfo, err, time, internal, customAttributes, hasReplay, swallowReason, target }))
     }
+    return targets
   }
 
   /**
+   * Stores error data for eventual harvesting and transmission to the backend.
    *
-   * @param {Error|UncaughtError} err The error instance to be processed
-   * @param {number} time the relative ms (to origin) timestamp of occurrence
-   * @param {boolean=} internal if the error was "caught" and deemed "internal" before reporting to the jserrors feature
-   * @param {object=} customAttributes  any custom attributes to be included in the error payload
-   * @param {boolean=} hasReplay a flag indicating if the error occurred during a replay session
-   * @param {string=} swallowReason a string indicating pre-defined reason if swallowing the error.  Mainly used by the internal error SMs.
-   * @param {object=} target the target to buffer and harvest to, if undefined the default configuration target is used
-   * @returns
+   * This method processes the error through several stages:
+   * 1. Build canonical stack string for cross-browser error grouping
+   * 2. Build cause chain string if the error has a cause property
+   * 3. Create params object with error metadata (stack hash, class, message, etc.)
+   * 4. Create bucket hash for internal deduplication
+   * 5. Store stack trace on first occurrence of this error
+   * 6. Add custom attributes and send to other features (trace, replay)
+   * 7. Route through soft nav if enabled, or directly to harvest storage
+   * 8. Handle MFE duplication for v2 endpoints if needed
+   *
+   * @param {Error|UncaughtError} err - The error instance to be processed
+   * @param {number} time - The relative ms (to origin) timestamp of occurrence
+   * @param {StackInfo} stackInfo - The computed stack trace information
+   * @param {object} [filterOutput] - Output from the customer's onerror handler, may contain fingerprinting group
+   * @param {object} [customAttributes] - Any custom attributes to be included in the error payload
+   * @param {boolean} [hasReplay=false] - A flag indicating if the error occurred during a replay session
+   * @param {object} [target] - The target to buffer and harvest to. If undefined, the default configuration target is used
+   * @returns {void}
    */
-  storeError ({ filterOutput, stackInfo, err, time, internal, customAttributes, hasReplay, swallowReason, target }) {
-    const { shouldSwallow, reason } = evaluateInternalError(stackInfo, internal, swallowReason)
-    if (shouldSwallow) {
-      this.reportSupportabilityMetric('Internal/Error/' + reason)
-      return
-    }
-
-    var canonicalStackString = this.buildCanonicalStackString(stackInfo)
+  #storeError (err, time, stackInfo, filterOutput, customAttributes, hasReplay, target) {
+    var canonicalStackString = this.#buildCanonicalStackString(stackInfo)
 
     const causeStackString = buildCauseString(err)
 
@@ -236,6 +307,61 @@ export class Aggregate extends AggregateBase {
     if (target) this.#storeJserrorForHarvest([...jsErrorEvent, target], false, params._softNavAttributes)
   }
 
+  /**
+   * Builds a standardized (canonical) stack trace string from the frames in the given `stackInfo` object.
+   *
+   * The canonical format is used for cross-browser error grouping in NR1, as different browsers
+   * format stack traces differently. Each frame is separated by a newline character and takes
+   * the form: `<functionName>@<url>:<lineNumber>`
+   *
+   * Note: Column numbers are intentionally excluded from the canonical format to improve
+   * grouping accuracy, as the same error across different minified builds might have different
+   * column numbers but should still be grouped together.
+   *
+   * Example output:
+   * ```
+   * handleClick@https://example.com/app.js:42
+   * EventEmitter.emit@https://example.com/vendor.js:1337
+   * ```
+   *
+   * @param {StackInfo} stackInfo - An object containing parsed stack frames from computeStackTrace
+   * @returns {string} A canonical stack string built from the URLs and function names in the given `stackInfo` object
+   */
+  #buildCanonicalStackString (stackInfo) {
+    var canonicalStackString = ''
+
+    for (var i = 0; i < stackInfo.frames.length; i++) {
+      var frame = stackInfo.frames[i]
+      var func = canonicalFunctionName(frame.func)
+
+      if (canonicalStackString) canonicalStackString += '\n'
+      if (func) canonicalStackString += func + '@'
+      if (typeof frame.url === 'string') canonicalStackString += frame.url
+      if (frame.line) canonicalStackString += ':' + frame.line
+    }
+
+    return canonicalStackString
+  }
+
+  /**
+   * Adds a processed error to the harvest buffer with all custom attributes merged.
+   *
+   * This is the final step before an error is stored to be sent to the backend. It handles:
+   * - Merging all custom attributes (global, soft nav, MFE, and local)
+   * - Creating a unique aggregate hash for deduplication
+   * - Adding the error to the events buffer for harvest
+   * - Duplicating the error for MFE scenarios when needed (v2 endpoints)
+   *
+   * Custom Attribute Precedence (lowest to highest):
+   * 1. Global jsAttributes from agent config
+   * 2. Soft navigation attributes (if from a soft nav interaction)
+   * 3. MFE v2 attributes (source/parent metadata)
+   * 4. Local custom attributes passed with the specific error
+   *
+   * @param {Array} errorInfoArr - Array containing [type, bucketHash, params, metrics, customAttributes, target]
+   * @param {object} [attrs={}] - Additional attributes to merge (e.g., from soft nav interactions)
+   * @returns {void}
+   */
   #storeJserrorForHarvest (errorInfoArr, attrs = {}) {
     let [type, bucketHash, params, newMetrics, localAttrs, target] = errorInfoArr
     const allCustomAttrs = {
@@ -250,8 +376,6 @@ export class Aggregate extends AggregateBase {
 
     const jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
     const aggregateHash = bucketHash + ':' + jsAttributesHash
-
-    console.log('adding', [type, aggregateHash, params, newMetrics, allCustomAttrs])
 
     this.events.add([type, aggregateHash, params, newMetrics, allCustomAttrs])
 

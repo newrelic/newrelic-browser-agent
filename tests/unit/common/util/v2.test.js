@@ -23,6 +23,12 @@ describe('v2 utilities', () => {
       const agentRef = {
         runtime: {
           registeredEntities: []
+        },
+        init: {
+          api: {
+            allow_registered_children: true,
+            duplicate_registered_data: false
+          }
         }
       }
 
@@ -46,6 +52,12 @@ describe('v2 utilities', () => {
               }
             }
           ]
+        },
+        init: {
+          api: {
+            allow_registered_children: true,
+            duplicate_registered_data: false
+          }
         }
       }
 
@@ -70,6 +82,12 @@ describe('v2 utilities', () => {
               }
             }
           ]
+        },
+        init: {
+          api: {
+            allow_registered_children: true,
+            duplicate_registered_data: false
+          }
         }
       }
 
@@ -111,6 +129,12 @@ describe('v2 utilities', () => {
               }
             }
           ]
+        },
+        init: {
+          api: {
+            allow_registered_children: true,
+            duplicate_registered_data: false
+          }
         }
       }
 
@@ -133,6 +157,12 @@ describe('v2 utilities', () => {
               }
             }
           ]
+        },
+        init: {
+          api: {
+            allow_registered_children: true,
+            duplicate_registered_data: false
+          }
         }
       }
 
@@ -177,6 +207,12 @@ describe('v2 utilities', () => {
               }
             }
           ]
+        },
+        init: {
+          api: {
+            allow_registered_children: true,
+            duplicate_registered_data: false
+          }
         }
       }
 
@@ -203,6 +239,12 @@ describe('v2 utilities', () => {
               }
             }
           ]
+        },
+        init: {
+          api: {
+            allow_registered_children: true,
+            duplicate_registered_data: false
+          }
         }
       }
 
@@ -312,86 +354,21 @@ describe('v2 utilities', () => {
           parent: {
             id: 'parent-id',
             type: 'MFE'
+          },
+          get attributes () {
+            return {
+              'source.id': this.id,
+              'source.name': this.name,
+              'source.type': this.type,
+              'parent.id': this.parent.id,
+              'parent.type': this.parent.type
+            }
           }
         }
 
         const result = getVersion2Attributes(target, mockAggregateInstance)
 
         expect(result['parent.type']).toBe('MFE')
-      })
-
-      test('defaults to "BA" when target.parent.type is undefined', () => {
-        const target = {
-          id: 'mfe-id',
-          name: 'mfe-name',
-          type: 'MFE',
-          parent: {
-            id: 'parent-id'
-            // type is not provided
-          }
-        }
-
-        const result = getVersion2Attributes(target, mockAggregateInstance)
-
-        expect(result['parent.type']).toBe('BA')
-      })
-
-      test('defaults to "BA" when target.parent is undefined', () => {
-        const target = {
-          id: 'mfe-id',
-          name: 'mfe-name',
-          type: 'MFE'
-          // parent is not provided
-        }
-
-        const result = getVersion2Attributes(target, mockAggregateInstance)
-
-        expect(result['parent.type']).toBe('BA')
-      })
-
-      test('defaults to "BA" when target.parent is null', () => {
-        const target = {
-          id: 'mfe-id',
-          name: 'mfe-name',
-          type: 'MFE',
-          parent: null
-        }
-
-        const result = getVersion2Attributes(target, mockAggregateInstance)
-
-        expect(result['parent.type']).toBe('BA')
-      })
-
-      test('defaults to "BA" when target.parent.type is null', () => {
-        const target = {
-          id: 'mfe-id',
-          name: 'mfe-name',
-          type: 'MFE',
-          parent: {
-            id: 'parent-id',
-            type: null
-          }
-        }
-
-        const result = getVersion2Attributes(target, mockAggregateInstance)
-
-        expect(result['parent.type']).toBe('BA')
-      })
-
-      test('defaults to "BA" when target.parent.type is empty string', () => {
-        const target = {
-          id: 'mfe-id',
-          name: 'mfe-name',
-          type: 'MFE',
-          parent: {
-            id: 'parent-id',
-            type: ''
-          }
-        }
-
-        const result = getVersion2Attributes(target, mockAggregateInstance)
-
-        expect(result['parent.type']).toBe('BA')
       })
 
       test('uses custom parent.type value when provided', () => {
@@ -402,6 +379,15 @@ describe('v2 utilities', () => {
           parent: {
             id: 'parent-id',
             type: 'CUSTOM_TYPE'
+          },
+          get attributes () {
+            return {
+              'source.id': this.id,
+              'source.name': this.name,
+              'source.type': this.type,
+              'parent.id': this.parent.id,
+              'parent.type': this.parent.type
+            }
           }
         }
 
@@ -430,8 +416,21 @@ describe('v2 utilities', () => {
 
       test('returns container attributes when target is not valid', () => {
         const invalidTarget = {
-          id: 'mfe-id'
+          id: 'mfe-id',
+          parent: {
+            id: 'container-entity-guid',
+            type: 'BA'
+          },
           // missing name
+          get attributes () {
+            return {
+              'source.id': this.id,
+              'source.name': this.name,
+              'source.type': this.type,
+              'parent.id': this.parent.id,
+              'parent.type': this.parent.type
+            }
+          }
         }
 
         const result = getVersion2Attributes(invalidTarget, mockAggregateInstance)
@@ -453,6 +452,15 @@ describe('v2 utilities', () => {
           parent: {
             id: 'parent-id',
             type: 'MFE'
+          },
+          get attributes () {
+            return {
+              'source.id': this.id,
+              'source.name': this.name,
+              'source.type': this.type,
+              'parent.id': this.parent.id,
+              'parent.type': this.parent.type
+            }
           }
         }
 
@@ -471,12 +479,22 @@ describe('v2 utilities', () => {
         const target = {
           id: 'mfe-id',
           name: 'mfe-name',
-          type: 'MFE'
+          type: 'MFE',
+          get attributes () {
+            return {
+              'source.id': this.id,
+              'source.name': this.name,
+              'source.type': this.type,
+              'parent.id': 'container-entity-guid',
+              'parent.type': 'BA'
+            }
+          }
         }
 
         const result = getVersion2Attributes(target, mockAggregateInstance)
 
         expect(result['parent.id']).toBe('container-entity-guid')
+        expect(result['parent.type']).toBe('BA')
       })
     })
   })

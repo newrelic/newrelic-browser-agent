@@ -112,6 +112,7 @@ describe('analyzeElemPath', () => {
       },
       init: {
         api: {
+          allow_registered_children: true,
           duplicate_registered_data: false
         }
       }
@@ -124,7 +125,7 @@ describe('analyzeElemPath', () => {
     document.body.appendChild(div)
 
     const { targets } = analyzeElemPath(childSpan, targetFields, mockAgentRef)
-    
+
     expect(targets).toHaveLength(1)
     expect(targets[0]).toEqual({
       id: 'mfe-123',
@@ -161,6 +162,7 @@ describe('analyzeElemPath', () => {
       },
       init: {
         api: {
+          allow_registered_children: true,
           duplicate_registered_data: false
         }
       }
@@ -171,13 +173,13 @@ describe('analyzeElemPath', () => {
     const innerDiv = document.createElement('div')
     innerDiv.dataset.nrMfeId = 'mfe-2'
     const childSpan = document.createElement('span')
-    
+
     innerDiv.appendChild(childSpan)
     outerDiv.appendChild(innerDiv)
     document.body.appendChild(outerDiv)
 
     const { targets } = analyzeElemPath(childSpan, targetFields, mockAgentRef)
-    
+
     expect(targets).toHaveLength(2)
     expect(targets.map(t => t.id)).toContain('mfe-1')
     expect(targets.map(t => t.id)).toContain('mfe-2')
@@ -201,7 +203,7 @@ describe('analyzeElemPath', () => {
     document.body.appendChild(div)
 
     const { targets } = analyzeElemPath(div, targetFields, mockAgentRef)
-    
+
     expect(targets).toHaveLength(1)
     expect(targets[0]).toBeUndefined()
 
@@ -225,6 +227,7 @@ describe('analyzeElemPath', () => {
       },
       init: {
         api: {
+          allow_registered_children: true,
           duplicate_registered_data: true
         }
       }
@@ -235,10 +238,10 @@ describe('analyzeElemPath', () => {
     document.body.appendChild(div)
 
     const { targets } = analyzeElemPath(div, targetFields, mockAgentRef)
-    
-    expect(targets).toHaveLength(2)
-    expect(targets.map(t => t?.id)).toContain('mfe-123')
-    expect(targets).toContain(undefined)
+    console.log('targets', targets)
+
+    expect(targets).toHaveLength(1)
+    expect(targets[0]).toEqual({ id: 'mfe-123', name: 'Test MFE', type: 'MFE' })
 
     document.body.removeChild(div)
   })

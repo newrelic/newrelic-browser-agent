@@ -24,10 +24,10 @@ const contextMap = new Map()
  * @returns {Object} Scoped event emitter with a debug ID of `logger`.
  */
 // eslint-disable-next-line
-export function wrapLogger(sharedEE, parent, loggerFn, context, autoCaptured = true) {
+export function wrapLogger(sharedEE, parent, loggerFn, context, autoCaptured = true, agentRef) {
   if (!(typeof parent === 'object' && !!parent && typeof loggerFn === 'string' && !!loggerFn && typeof parent[loggerFn] === 'function')) return warn(29)
   const ee = scopedEE(sharedEE)
-  const wrapFn = wfn(ee)
+  const wrapFn = wfn(ee, undefined, agentRef)
 
   /**
    * This section contains the context that will be shared across all invoked calls of the wrapped function,

@@ -36,7 +36,7 @@ test('on interaction cancel, buffered jserrors are flushed as standalone', () =>
   expect(softNavAggregate.interactionInProgress).toBeTruthy()
   // const ixnId = softNavAggregate.interactionInProgress.id
 
-  jserrorsAggregate.processError(new Error('test error'), 200)
+  jserrorsAggregate.storeError(new Error('test error'), 200)
   // Error should not be in jserrors events yet, waiting for soft nav to return it
   expect(jserrorsAggregate.events.get(jserrorsAggregate.harvestOpts)).toBeNull()
 
@@ -53,14 +53,14 @@ test('on interaction cancel, buffered jserrors are flushed as standalone', () =>
 test('on interaction finish, jserrors within time span are associated, others standalone', () => {
   softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
   softNavAggregate.ee.emit('newURL', [150, 'new_location'])
-  jserrorsAggregate.processError(new Error('test1'), 175) // ensure errors happening during default heuristics are associated
+  jserrorsAggregate.storeError(new Error('test1'), 175) // ensure errors happening during default heuristics are associated
   softNavAggregate.ee.emit('newDom', [200])
   expect(softNavAggregate.interactionInProgress).toBeTruthy()
   const ixnId = softNavAggregate.interactionInProgress.id
 
-  jserrorsAggregate.processError(new Error('test2'), 250) // ensure errors happening during wait window for actualized long tasks are associated
+  jserrorsAggregate.storeError(new Error('test2'), 250) // ensure errors happening during wait window for actualized long tasks are associated
   softNavAggregate.interactionInProgress.customEnd = 300 // simulate a long task extending the interaction end time
-  jserrorsAggregate.processError(new Error('test3'), 350) // this one should fall outside the final interaction span and be standalone
+  jserrorsAggregate.storeError(new Error('test3'), 350) // this one should fall outside the final interaction span and be standalone
   // Errors should not be in jserrors events yet, waiting for soft nav to return them
   expect(jserrorsAggregate.events.get(jserrorsAggregate.harvestOpts)).toBeNull()
 

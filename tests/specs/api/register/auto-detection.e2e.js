@@ -1,8 +1,8 @@
 import {
   // testInteractionEventsRequest,
-  // testLogsRequest,
+  testLogsRequest
   // testMFEAjaxEventsRequest,
-  testMFEErrorsRequest
+  // testMFEErrorsRequest
   // testMFEInsRequest
 } from '../../../../tools/testing-server/utils/expect-tests'
 
@@ -48,13 +48,13 @@ describe('Register API - Auto-Detection', () => {
   it('should auto-detect multiple MFEs from different script sources for all event types', async () => {
     const [
       // ajaxCapture,
-      errorsCapture
-      // logsCapture,
+      // errorsCapture
+      logsCapture
       // insCapture
     ] = await browser.testHandle.createNetworkCaptures('bamServer', [
     //   { test: testMFEAjaxEventsRequest },
-      { test: testMFEErrorsRequest }
-    //   { test: testLogsRequest },
+      // { test: testMFEErrorsRequest }
+      { test: testLogsRequest }
     //   { test: testMFEInsRequest }
     ])
 
@@ -77,13 +77,13 @@ describe('Register API - Auto-Detection', () => {
     // Verify AJAX events (fetch and XHR) from both MFEs
     const [
       // ajaxHarvests,
-      errorHarvests
-      // logHarvests,
+      // errorHarvests
+      logsHarvests
       // insHarvests
     ] = await Promise.all([
     //   ajaxCapture.waitForResult({ timeout: 10000 }),
-      errorsCapture.waitForResult({ timeout: 10000 })
-    //   logsCapture.waitForResult({ timeout: 10000 }),
+    //   errorsCapture.waitForResult({ timeout: 10000 }),
+      logsCapture.waitForResult({ timeout: 10000 })
     //   insCapture.waitForResult({ timeout: 10000 })
     ])
 
@@ -115,48 +115,48 @@ describe('Register API - Auto-Detection', () => {
     // expect(secondMfeEvents.length).toBeGreaterThan(0)
 
     // Verify ERROR events from both MFEs
-    const allErrors = errorHarvests.flatMap(harvest => harvest.request.body.err || [])
-    expect(allErrors.length).toBeGreaterThan(0)
+    // const allErrors = errorHarvests.flatMap(harvest => harvest.request.body.err || [])
+    // expect(allErrors.length).toBeGreaterThan(0)
 
     // Verify 2nd-mfe (id: vite-second-mfe) error
-    const secondMfeError = allErrors.find(e => e.params?.message?.includes('2nd mfe error'))
-    expect(secondMfeError).toBeDefined()
-    expect(secondMfeError.custom['source.id']).toEqual('vite-second-mfe')
-    expect(secondMfeError.custom['source.name']).toEqual('2nd-mfe')
+    // const secondMfeError = allErrors.find(e => e.params?.message?.includes('2nd mfe error'))
+    // expect(secondMfeError).toBeDefined()
+    // expect(secondMfeError.custom['source.id']).toEqual('vite-second-mfe')
+    // expect(secondMfeError.custom['source.name']).toEqual('2nd-mfe')
 
     // Verify main MFE (id: vite-main-mfe) error
-    const mainMfeError = allErrors.find(e => e.params?.message?.includes('test'))
-    expect(mainMfeError).toBeDefined()
-    expect(mainMfeError.custom['source.id']).toEqual('vite-main-mfe')
-    expect(mainMfeError.custom['source.name']).toEqual('Main MFE')
+    // const mainMfeError = allErrors.find(e => e.params?.message?.includes('test'))
+    // expect(mainMfeError).toBeDefined()
+    // expect(mainMfeError.custom['source.id']).toEqual('vite-main-mfe')
+    // expect(mainMfeError.custom['source.name']).toEqual('Main MFE')
 
     // Verify lazy loaded module error also reports as vite-main-mfe
-    const lazyError = allErrors.find(e => e.params?.message?.includes('lazy test'))
-    expect(lazyError).toBeDefined()
-    expect(lazyError.custom['source.id']).toEqual('vite-main-mfe')
-    expect(lazyError.custom['source.name']).toEqual('Main MFE')
+    // const lazyError = allErrors.find(e => e.params?.message?.includes('lazy test'))
+    // expect(lazyError).toBeDefined()
+    // expect(lazyError.custom['source.id']).toEqual('vite-main-mfe')
+    // expect(lazyError.custom['source.name']).toEqual('Main MFE')
 
     // Verify LOG events from both MFEs
-    // const allLogs = logHarvests.flatMap(harvest => JSON.parse(harvest.request.body)[0].logs || [])
-    // expect(allLogs.length).toBeGreaterThan(0)
+    const allLogs = logsHarvests.flatMap(harvest => JSON.parse(harvest.request.body)[0].logs || [])
+    expect(allLogs.length).toBeGreaterThan(0)
 
     // // Verify 2nd-mfe (id: vite-second-mfe) log
-    // const secondMfeLog = allLogs.find(l => l.message?.includes('2nd mfe log'))
-    // expect(secondMfeLog).toBeDefined()
-    // expect(secondMfeLog.attributes['source.id']).toEqual('vite-second-mfe')
-    // expect(secondMfeLog.attributes['source.name']).toEqual('2nd-mfe')
+    const secondMfeLog = allLogs.find(l => l.message?.includes('2nd mfe log'))
+    expect(secondMfeLog).toBeDefined()
+    expect(secondMfeLog.attributes['source.id']).toEqual('vite-second-mfe')
+    expect(secondMfeLog.attributes['source.name']).toEqual('2nd-mfe')
 
     // // Verify main MFE (id: vite-main-mfe) log
-    // const mainMfeLog = allLogs.find(l => l.message?.includes('click in MFE'))
-    // expect(mainMfeLog).toBeDefined()
-    // expect(mainMfeLog.attributes['source.id']).toEqual('vite-main-mfe')
-    // expect(mainMfeLog.attributes['source.name']).toEqual('Main MFE')
+    const mainMfeLog = allLogs.find(l => l.message?.includes('click in MFE'))
+    expect(mainMfeLog).toBeDefined()
+    expect(mainMfeLog.attributes['source.id']).toEqual('vite-main-mfe')
+    expect(mainMfeLog.attributes['source.name']).toEqual('Main MFE')
 
     // // Verify lazy loaded module log also reports as vite-main-mfe
-    // const lazyLog = allLogs.find(l => l.message?.includes('log from lazy'))
-    // expect(lazyLog).toBeDefined()
-    // expect(lazyLog.attributes['source.id']).toEqual('vite-main-mfe')
-    // expect(lazyLog.attributes['source.name']).toEqual('Main MFE')
+    const lazyLog = allLogs.find(l => l.message?.includes('log from lazy'))
+    expect(lazyLog).toBeDefined()
+    expect(lazyLog.attributes['source.id']).toEqual('vite-main-mfe')
+    expect(lazyLog.attributes['source.name']).toEqual('Main MFE')
 
     // // Verify UserAction events from both MFEs (INS endpoint)
     // const allUserActions = insHarvests.flatMap(harvest => (harvest.request.body.ins || []))
@@ -184,22 +184,22 @@ describe('Register API - Auto-Detection', () => {
   it('should support duplicate_registered_data with auto-detection', async () => {
     const {
       // testInsRequest,
-      testMFEErrorsRequest
-      // testLogsRequest
+      // testMFEErrorsRequest
+      testLogsRequest
     } = require('../../../../tools/testing-server/utils/expect-tests')
     const [
       // mfeAjaxCapture,
       // containerEventsCapture,
       // mfeInsCapture,
-      mfeErrorsCapture
-      // mfeLogsCapture,
+      // mfeErrorsCapture
+      mfeLogsCapture
       // testInsCapture
     ] = await browser.testHandle.createNetworkCaptures('bamServer', [
     //   { test: testMFEAjaxEventsRequest },
     //   { test: testInteractionEventsRequest },
     //   { test: testMFEInsRequest },
-      { test: testMFEErrorsRequest }
-    //   { test: testLogsRequest },
+      // { test: testMFEErrorsRequest }
+      { test: testLogsRequest }
     //   { test: testInsRequest }
     ])
 
@@ -222,20 +222,20 @@ describe('Register API - Auto-Detection', () => {
     const [
       // mfeAjaxHarvests,
       // mfeInsHarvests,
-      mfeErrorsHarvests
-      // mfeLogsHarvests
+      // mfeErrorsHarvests
+      mfeLogsHarvests
     ] = await Promise.all([
     //   mfeAjaxCapture.waitForResult({ timeout: 10000 }),
     //   mfeInsCapture.waitForResult({ timeout: 10000 }),
-      mfeErrorsCapture.waitForResult({ timeout: 10000 })
-    //   mfeLogsCapture.waitForResult({ timeout: 10000 })
+      // mfeErrorsCapture.waitForResult({ timeout: 10000 })
+      mfeLogsCapture.waitForResult({ timeout: 10000 })
     ])
     // const allMfeAjaxEvents = mfeAjaxHarvests.flatMap(harvest => harvest.request.body)
     // expect(allMfeAjaxEvents.length).toBeGreaterThan(0)
-    const allMfeErrors = mfeErrorsHarvests.flatMap(harvest => harvest.request.body.err || [])
-    expect(allMfeErrors.length).toBeGreaterThan(0)
-    // const allMfeLogs = mfeLogsHarvests.flatMap(harvest => JSON.parse(harvest.request.body)[0].logs || [])
-    // expect(allMfeLogs.length).toBeGreaterThan(0)
+    // const allMfeErrors = mfeErrorsHarvests.flatMap(harvest => harvest.request.body.err || [])
+    // expect(allMfeErrors.length).toBeGreaterThan(0)
+    const allMfeLogs = mfeLogsHarvests.flatMap(harvest => JSON.parse(harvest.request.body)[0].logs || [])
+    expect(allMfeLogs.length).toBeGreaterThan(0)
 
     // Verify MFE events exist with source.id
     // vite-second-mfe was duplicated below in the IPL bIxn
@@ -287,41 +287,41 @@ describe('Register API - Auto-Detection', () => {
     // expect(duplicatedLazyUserAction['entity.guid']).toBeDefined()
     // expect(duplicatedLazyUserAction['child.type']).toEqual('MFE')
 
-    const secondMfeError = allMfeErrors.find(e => e.custom?.['source.id'] === 'vite-second-mfe' && e.params?.message?.includes('2nd mfe error'))
-    expect(secondMfeError).toBeDefined()
-    const duplicatedSecondMfeError = allMfeErrors.find(e => e.custom?.['child.id'] === 'vite-second-mfe' && e.params?.message?.includes('2nd mfe error'))
-    expect(duplicatedSecondMfeError).toBeDefined()
-    expect(duplicatedSecondMfeError.custom['child.type']).toEqual('MFE')
+    // const secondMfeError = allMfeErrors.find(e => e.custom?.['source.id'] === 'vite-second-mfe' && e.params?.message?.includes('2nd mfe error'))
+    // expect(secondMfeError).toBeDefined()
+    // const duplicatedSecondMfeError = allMfeErrors.find(e => e.custom?.['child.id'] === 'vite-second-mfe' && e.params?.message?.includes('2nd mfe error'))
+    // expect(duplicatedSecondMfeError).toBeDefined()
+    // expect(duplicatedSecondMfeError.custom['child.type']).toEqual('MFE')
 
-    const mainMfeError = allMfeErrors.find(e => e.custom?.['source.id'] === 'vite-main-mfe' && e.params?.message?.includes('test'))
-    expect(mainMfeError).toBeDefined()
-    const duplicatedMainMfeError = allMfeErrors.find(e => e.custom?.['child.id'] === 'vite-main-mfe' && e.params?.message?.includes('test'))
-    expect(duplicatedMainMfeError).toBeDefined()
-    expect(duplicatedMainMfeError.custom['child.type']).toEqual('MFE')
+    // const mainMfeError = allMfeErrors.find(e => e.custom?.['source.id'] === 'vite-main-mfe' && e.params?.message?.includes('test'))
+    // expect(mainMfeError).toBeDefined()
+    // const duplicatedMainMfeError = allMfeErrors.find(e => e.custom?.['child.id'] === 'vite-main-mfe' && e.params?.message?.includes('test'))
+    // expect(duplicatedMainMfeError).toBeDefined()
+    // expect(duplicatedMainMfeError.custom['child.type']).toEqual('MFE')
 
-    const lazyError = allMfeErrors.find(e => e.custom?.['source.id'] === 'vite-main-mfe' && e.params?.message?.includes('lazy test'))
-    expect(lazyError).toBeDefined()
-    const duplicatedLazyError = allMfeErrors.find(e => e.custom?.['child.id'] === 'vite-main-mfe' && e.params?.message?.includes('lazy test'))
-    expect(duplicatedLazyError).toBeDefined()
-    expect(duplicatedLazyError.custom['child.type']).toEqual('MFE')
+    // const lazyError = allMfeErrors.find(e => e.custom?.['source.id'] === 'vite-main-mfe' && e.params?.message?.includes('lazy test'))
+    // expect(lazyError).toBeDefined()
+    // const duplicatedLazyError = allMfeErrors.find(e => e.custom?.['child.id'] === 'vite-main-mfe' && e.params?.message?.includes('lazy test'))
+    // expect(duplicatedLazyError).toBeDefined()
+    // expect(duplicatedLazyError.custom['child.type']).toEqual('MFE')
 
     // Log duplication
-    // const secondMfeLog = allMfeLogs.find(l => l.attributes?.['source.id'] === 'vite-second-mfe' && l.message?.includes('2nd mfe log'))
-    // expect(secondMfeLog).toBeDefined()
-    // const duplicatedSecondMfeLog = allMfeLogs.find(l => l.attributes?.['child.id'] === 'vite-second-mfe' && l.message?.includes('2nd mfe log'))
-    // expect(duplicatedSecondMfeLog).toBeDefined()
-    // expect(duplicatedSecondMfeLog.attributes['child.type']).toEqual('MFE')
+    const secondMfeLog = allMfeLogs.find(l => l.attributes?.['source.id'] === 'vite-second-mfe' && l.message?.includes('2nd mfe log'))
+    expect(secondMfeLog).toBeDefined()
+    const duplicatedSecondMfeLog = allMfeLogs.find(l => l.attributes?.['child.id'] === 'vite-second-mfe' && l.message?.includes('2nd mfe log'))
+    expect(duplicatedSecondMfeLog).toBeDefined()
+    expect(duplicatedSecondMfeLog.attributes['child.type']).toEqual('MFE')
 
-    // const mainMfeLog = allMfeLogs.find(l => l.attributes?.['source.id'] === 'vite-main-mfe' && l.message?.includes('click in MFE'))
-    // expect(mainMfeLog).toBeDefined()
-    // const duplicatedMainMfeLog = allMfeLogs.find(l => l.attributes?.['child.id'] === 'vite-main-mfe' && l.message?.includes('click in MFE'))
-    // expect(duplicatedMainMfeLog).toBeDefined()
-    // expect(duplicatedMainMfeLog.attributes['child.type']).toEqual('MFE')
+    const mainMfeLog = allMfeLogs.find(l => l.attributes?.['source.id'] === 'vite-main-mfe' && l.message?.includes('click in MFE'))
+    expect(mainMfeLog).toBeDefined()
+    const duplicatedMainMfeLog = allMfeLogs.find(l => l.attributes?.['child.id'] === 'vite-main-mfe' && l.message?.includes('click in MFE'))
+    expect(duplicatedMainMfeLog).toBeDefined()
+    expect(duplicatedMainMfeLog.attributes['child.type']).toEqual('MFE')
 
-    // const lazyLog = allMfeLogs.find(l => l.attributes?.['source.id'] === 'vite-main-mfe' && l.message?.includes('log from lazy'))
-    // expect(lazyLog).toBeDefined()
-    // const duplicatedLazyLog = allMfeLogs.find(l => l.attributes?.['child.id'] === 'vite-main-mfe' && l.message?.includes('log from lazy'))
-    // expect(duplicatedLazyLog).toBeDefined()
-    // expect(duplicatedLazyLog.attributes['child.type']).toEqual('MFE')
+    const lazyLog = allMfeLogs.find(l => l.attributes?.['source.id'] === 'vite-main-mfe' && l.message?.includes('log from lazy'))
+    expect(lazyLog).toBeDefined()
+    const duplicatedLazyLog = allMfeLogs.find(l => l.attributes?.['child.id'] === 'vite-main-mfe' && l.message?.includes('log from lazy'))
+    expect(duplicatedLazyLog).toBeDefined()
+    expect(duplicatedLazyLog.attributes['child.type']).toEqual('MFE')
   })
 })

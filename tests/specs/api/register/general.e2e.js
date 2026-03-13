@@ -18,7 +18,7 @@ describe('Register API - General Behaviors', () => {
 
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
       init: {
-        feature_flags: ['register', 'register.jserrors', 'register.generic_events'],
+        feature_flags: ['register'],
         api: {
           duplicate_registered_data: true
         }

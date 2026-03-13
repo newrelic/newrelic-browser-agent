@@ -13,7 +13,7 @@ window.NREUM.init.user_actions = { elementAttributes: ['id', 'className', 'tagNa
 try {
   if (!!newrelic && !!newrelic.register) {
     // Generate random ID between 1-3
-    const randomId = Math.floor(Math.random() * 3) + 1;
+    const randomId = String(Math.floor(Math.random() * 3) + 1);
     const mfeName = `MOCK_MFE_${randomId}`;
 
     for (let agentIdentifier in newrelic.initializedAgents) {

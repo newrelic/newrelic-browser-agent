@@ -88,7 +88,7 @@ function register (agentRef, target, parent) {
   }
 
   function hasValidValue (val) {
-    return (typeof val === 'string' && !!val.trim() && val.trim().length < 501) || (typeof val === 'number')
+    return (typeof val === 'string' && !!val.trim() && val.trim().length < 501)
   }
 
   /** primary cases that can block the register API from working at init time */

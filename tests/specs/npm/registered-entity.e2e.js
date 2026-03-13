@@ -526,8 +526,8 @@ describe('registered-entity', () => {
           window.blockedParent.recordCustomEvent('CustomEvent', { val: 'PARENT_SHOULD_NOT_RECORD' })
 
           // Children should be allowed and record data
-          window.child = window.blockedParent.register({ id: 101, name: 'child' })
-          window.grandchild = window.child.register({ id: 102, name: 'grandchild' })
+          window.child = window.blockedParent.register({ id: '101', name: 'child' })
+          window.grandchild = window.child.register({ id: '102', name: 'grandchild' })
 
           window.child.noticeError('CHILD_SHOULD_RECORD')
           window.child.addPageAction('CHILD_SHOULD_RECORD')
@@ -643,7 +643,7 @@ describe('registered-entity', () => {
           init: { feature_flags: ['register', 'register.generic_events'] }
         }))
         await browser.execute(function () {
-          const mfe = new RegisteredEntity({ id: 1, name: 'test-mfe' })
+          const mfe = new RegisteredEntity({ id: '1', name: 'test-mfe' })
 
           // Simulate some work
           const start = Date.now()
@@ -689,7 +689,7 @@ describe('registered-entity', () => {
         }))
 
         await browser.execute(function () {
-          window.mfe = new RegisteredEntity({ id: 1, name: 'test-mfe' })
+          window.mfe = new RegisteredEntity({ id: '1', name: 'test-mfe' })
 
           // Simulate some work
           const start = Date.now()
@@ -717,7 +717,7 @@ describe('registered-entity', () => {
         }))
 
         await browser.execute(function () {
-          const mfe = new RegisteredEntity({ id: 1, name: 'test-mfe' })
+          const mfe = new RegisteredEntity({ id: '1', name: 'test-mfe' })
           mfe.deregister()
           window.dispatchEvent(new Event('pagehide'))
         })
@@ -739,7 +739,7 @@ describe('registered-entity', () => {
 
         const waitTime = await browser.execute(function () {
           const waitMs = 100
-          const mfe = new RegisteredEntity({ id: 1, name: 'timed-mfe' })
+          const mfe = new RegisteredEntity({ id: '1', name: 'timed-mfe' })
 
           setTimeout(() => {
             mfe.deregister()
@@ -768,7 +768,7 @@ describe('registered-entity', () => {
         }))
 
         await browser.execute(function () {
-          const parent = new RegisteredEntity({ id: 1, name: 'parent-mfe' })
+          const parent = new RegisteredEntity({ id: '1', name: 'parent-mfe' })
 
           // Wait a bit before creating child
           const start = Date.now()
@@ -776,7 +776,7 @@ describe('registered-entity', () => {
           // busy wait
           }
 
-          const child = new RegisteredEntity({ id: 2, name: 'child-mfe' }, parent)
+          const child = new RegisteredEntity({ id: '2', name: 'child-mfe' }, parent)
 
           // Deregister child first, then parent
           setTimeout(() => {
@@ -843,7 +843,7 @@ describe('registered-entity', () => {
         }))
 
         await browser.execute(function () {
-          const mfe = new RegisteredEntity({ id: 1, name: 'test-mfe' })
+          const mfe = new RegisteredEntity({ id: '1', name: 'test-mfe' })
 
           // Do some work
           const start = Date.now()

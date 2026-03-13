@@ -1,9 +1,8 @@
 /**
- * Copyright 2020-2026 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
-import { getVersion2Attributes } from '../../../common/util/v2'
 import { NODE_TYPE } from '../constants'
 import { BelNode } from './bel-node'
 
@@ -22,7 +21,6 @@ export class AjaxNode extends BelNode {
     this.traceId = ajaxEvent.traceId
     this.spanTimestamp = ajaxEvent.spanTimestamp
     this.gql = ajaxEvent.gql
-    this.custom = ajaxEvent.custom
 
     this.start = ajaxEvent.startTime
     this.end = ajaxEvent.endTime
@@ -54,11 +52,8 @@ export class AjaxNode extends BelNode {
       addString(this.nodeId),
       nullable(this.spanId, addString, true) + nullable(this.traceId, addString, true) + nullable(this.spanTimestamp, numeric)
     ]
-    let allAttachedNodes = addCustomAttributes({
-      ...(this.gql || {}),
-      ...(this.custom || {}),
-      ...(getVersion2Attributes(this.target, this)) // event.target only exists if we saw the right headers on the request.  The helper will know what to do with that
-    }, addString)
+    let allAttachedNodes = []
+    if (typeof this.gql === 'object') allAttachedNodes = addCustomAttributes(this.gql, addString)
     this.children.forEach(node => allAttachedNodes.push(node.serialize())) // no children is expected under ajax nodes at this time
 
     fields[1] = numeric(allAttachedNodes.length)

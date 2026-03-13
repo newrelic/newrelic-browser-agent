@@ -16,8 +16,7 @@ export class UserActionsAggregator {
   #domObserver = undefined
   #errorClickTimer = undefined
 
-  constructor (agentRef) {
-    this.agentRef = agentRef
+  constructor () {
     if (gosNREUMOriginals().o.MO) {
       this.#domObserver = new MutationObserver(this.isLiveClick.bind(this))
     }
@@ -41,7 +40,7 @@ export class UserActionsAggregator {
   process (evt, targetFields) {
     if (!evt) return
     const targetElem = OBSERVED_WINDOW_EVENTS.includes(evt.type) ? window : evt.target
-    const selectorInfo = analyzeElemPath(targetElem, targetFields, this.agentRef)
+    const selectorInfo = analyzeElemPath(targetElem, targetFields)
 
     // if selectorInfo.path is undefined, aggregation will be skipped for this event
     const aggregationKey = getAggregationKey(evt, selectorInfo.path)

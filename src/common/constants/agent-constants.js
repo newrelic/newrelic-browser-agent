@@ -11,7 +11,7 @@ export const SESSION_ERROR = 'SESSION_ERROR'
 
 export const SUPPORTS_REGISTERED_ENTITIES = {
   [FEATURE_NAMES.logging]: true,
-  [FEATURE_NAMES.genericEvents]: false,
-  [FEATURE_NAMES.jserrors]: false,
+  [FEATURE_NAMES.genericEvents]: true,
+  [FEATURE_NAMES.jserrors]: true,
   [FEATURE_NAMES.ajax]: false
 }

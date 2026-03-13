@@ -41,10 +41,6 @@ export const analyzeElemPath = (elem, targetFields = [], agentRef) => {
       pathSelector = buildPathSelector(elem, pathSelector)
       elem = elem.parentNode
     }
-
-    if (result.targets.length === 0) {
-      result.targets.push(undefined)
-    }
   } catch (err) {
     // do nothing for now
   }

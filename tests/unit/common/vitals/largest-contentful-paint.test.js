@@ -36,8 +36,9 @@ const getFreshLCPImportWithAttribution = async (attribution, codeToRun) => {
 
 describe('lcp', () => {
   test('reports lcp from web-vitals', (done) => {
-    getFreshLCPImport(metric => metric.subscribe(({ value, attrs }) => {
+    getFreshLCPImport(metric => metric.subscribe(({ value, element, attrs }) => {
       expect(value).toEqual(1)
+      expect(element).toEqual(lcpAttribution.element)
       expect(attrs).toStrictEqual({
         size: lcpAttribution.lcpEntry.size,
         eid: lcpAttribution.lcpEntry.id,

@@ -24,8 +24,9 @@ const getFreshINPImport = async (codeToRun) => {
 
 describe('inp', () => {
   test('reports inp from web-vitals', (done) => {
-    getFreshINPImport(metric => metric.subscribe(({ value, attrs }) => {
+    getFreshINPImport(metric => metric.subscribe(({ value, element, attrs }) => {
       expect(value).toEqual(8)
+      expect(element).toEqual(inpAttribution.interactionTarget)
       expect(attrs).toStrictEqual({
         eventTarget: inpAttribution.interactionTarget,
         eventTime: inpAttribution.interactionTime,

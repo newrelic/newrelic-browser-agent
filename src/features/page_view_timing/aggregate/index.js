@@ -20,12 +20,14 @@ import { initiallyHidden } from '../../../common/constants/runtime'
 import { eventOrigin } from '../../../common/util/event-origin'
 import { loadTime } from '../../../common/vitals/load-time'
 import { webdriverDetected } from '../../../common/util/webdriver-detection'
+import { analyzeElemPath } from '../../../common/dom/selector-path'
+import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/util/v2'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
 
-  #handleVitalMetric = ({ name, value, attrs }) => {
-    this.addTiming(name, value, attrs)
+  #handleVitalMetric = ({ name, value, attrs, element }) => {
+    this.addTiming(name, value, attrs, element)
   }
 
   constructor (agentRef) {
@@ -49,9 +51,9 @@ export class Aggregate extends AggregateBase {
         /* Downstream, the event consumer interprets all timing node value as ms-unit and converts it to seconds via division by 1000. CLS is unitless so this normally is a problem.
           bel.6 schema also doesn't support decimal values, of which cls within [0,1). However, the two nicely cancels out, and we can multiply cls by 1000 to both negate the division
           and send an integer > 1. We effectively lose some precision down to 3 decimal places for this workaround. E.g. (real) 0.749132... -> 749.132...-> 749 -> 0.749 (final) */
-        const { name, value, attrs } = cumulativeLayoutShift.current
+        const { name, value, attrs, element } = cumulativeLayoutShift.current
         if (value === undefined) return
-        this.addTiming(name, value * 1000, attrs)
+        this.addTiming(name, value * 1000, attrs, element)
       }, true, true) // CLS node should only reports on vis change rather than on every change
 
       this.drain()
@@ -69,7 +71,7 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  addTiming (name, value, attrs) {
+  addTiming (name, value, attrs, element) {
     attrs = attrs || {}
     addConnectionAttributes(attrs) // network conditions may differ from the actual for VitalMetrics when they were captured
 
@@ -90,7 +92,13 @@ export class Aggregate extends AggregateBase {
       value,
       attrs
     }
-    this.events.add(timing)
+
+    const targets = analyzeElemPath(element, [], this.agentRef).targets
+    if (!targets.length) targets.push(undefined)
+    targets.forEach(target => {
+      this.events.add({ ...timing, attrs: { ...attrs, ...getVersion2Attributes(target, this) } })
+      if (shouldDuplicate(target, this.agentRef)) this.events.add({ ...timing, attrs: { ...attrs, ...getVersion2Attributes(undefined, this), ...getVersion2DuplicationAttributes(target, this) } })
+    })
 
     handle('pvtAdded', [name, value, attrs], undefined, FEATURE_NAMES.sessionTrace, this.ee)
 

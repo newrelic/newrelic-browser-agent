@@ -12,7 +12,7 @@ export const NEW_RELIC_MFE_ID_HEADER = 'newrelic-mfe-id'
 
 export const SUPPORTS_REGISTERED_ENTITIES = {
   [FEATURE_NAMES.logging]: true,
-  [FEATURE_NAMES.genericEvents]: false,
+  [FEATURE_NAMES.genericEvents]: true,
   [FEATURE_NAMES.jserrors]: false,
-  [FEATURE_NAMES.ajax]: true
+  [FEATURE_NAMES.ajax]: false
 }

@@ -9,9 +9,6 @@
  */
 import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { globalScope } from '../constants/runtime'
-import { findTargetsFromStackTrace, getRegisteredTargetsFromId } from '../util/v2'
-import { NEW_RELIC_MFE_ID_HEADER } from '../constants/agent-constants'
-import { stringify } from '../util/stringify'
 
 var prefix = 'fetch-'
 var bodyPrefix = prefix + 'body-'
@@ -30,7 +27,7 @@ const wrapped = {}
  *     event emitter will be based.
  * @returns {Object} Scoped event emitter with a debug ID of `fetch`.
  */
-export function wrapFetch (sharedEE, agentRef) {
+export function wrapFetch (sharedEE) {
   const ee = scopedEE(sharedEE)
   if (!(Req && Res && globalScope.fetch)) {
     return ee
@@ -47,18 +44,16 @@ export function wrapFetch (sharedEE, agentRef) {
   })
   wrapPromiseMethod(globalScope, 'fetch', prefix)
 
-  ee.on(prefix + 'end', function (err, res, targets) {
+  ee.on(prefix + 'end', function (err, res) {
     var ctx = this
     if (res) {
       var size = res.headers.get('content-length')
       if (size !== null) {
         ctx.rxSize = size
       }
-      ctx.targets = targets || []
-
       ee.emit(prefix + 'done', [null, res], ctx)
     } else {
-      ee.emit(prefix + 'done', [err, undefined], ctx)
+      ee.emit(prefix + 'done', [err], ctx)
     }
   })
 
@@ -72,38 +67,11 @@ export function wrapFetch (sharedEE, agentRef) {
    */
   function wrapPromiseMethod (target, name, prefix) {
     var fn = target[name]
-
     if (typeof fn === 'function') {
       target[name] = function () {
         var args = [...arguments]
 
-        let mfeId
-        try {
-          const headers = args?.[0]?.headers || args?.[1]?.headers
-          if (headers) {
-            const isHeaderInstance = headers instanceof Headers
-            const entries = isHeaderInstance ? Array.from(headers.entries()) : Object.entries(headers)
-            for (const [key, val] of entries) {
-              if (String(key).toLowerCase() === NEW_RELIC_MFE_ID_HEADER) {
-                const stringVal = stringify(val)
-                if (stringVal) mfeId = stringVal
-                try {
-                  if (isHeaderInstance) headers.delete(key)
-                  else delete headers[key]
-                } catch {}
-                if (mfeId) break // Stop processing once we have a valid MFE ID
-              }
-            }
-          }
-        } catch {}
-
         var ctx = {}
-        let targets = []
-
-        if (mfeId) targets = getRegisteredTargetsFromId(mfeId, agentRef)
-        else {
-          targets = findTargetsFromStackTrace(agentRef)
-        }
         // we are wrapping args in an array so we can preserve the reference
         ee.emit(prefix + 'before-start', [args], ctx)
         var dtPayload
@@ -115,10 +83,10 @@ export function wrapFetch (sharedEE, agentRef) {
 
         // Note we need to cast the returned (orig) Promise from native APIs into the current global Promise, which may or may not be our WrappedPromise.
         return origPromiseFromFetch.then(function (val) {
-          ee.emit(prefix + 'end', [null, val, targets], origPromiseFromFetch)
+          ee.emit(prefix + 'end', [null, val], origPromiseFromFetch)
           return val
         }, function (err) {
-          ee.emit(prefix + 'end', [err, undefined, targets], origPromiseFromFetch)
+          ee.emit(prefix + 'end', [err], origPromiseFromFetch)
           throw err
         })
       }

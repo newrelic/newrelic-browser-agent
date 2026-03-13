@@ -59,8 +59,8 @@ export class Instrument extends InstrumentBase {
       // do nothing
     }
 
-    wrapFetch(this.ee, agentRef)
-    wrapXhr(this.ee, agentRef)
+    wrapFetch(this.ee)
+    wrapXhr(this.ee)
     subscribeToEvents(agentRef, this.ee, this.handler, this.dt)
 
     this.importAggregator(agentRef, () => import(/* webpackChunkName: "ajax-aggregate" */ '../aggregate/index.js'))
@@ -314,14 +314,14 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     this.startTime = now()
     this.dt = dtPayload
 
-    let target
-    let opts = {}
-    if (fetchArguments.length >= 1) target = fetchArguments[0]
-    if (fetchArguments.length >= 2) opts = fetchArguments[1]
+    if (fetchArguments.length >= 1) this.target = fetchArguments[0]
+    if (fetchArguments.length >= 2) this.opts = fetchArguments[1]
 
+    var opts = this.opts || {}
+    var target = this.target
     addUrl(this, extractUrl(target))
 
-    const method = ('' + ((target && target instanceof origRequest && target.method) ||
+    var method = ('' + ((target && target instanceof origRequest && target.method) ||
       opts.method || 'GET')).toUpperCase()
     this.params.method = method
     this.body = opts.body
@@ -350,9 +350,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
       duration: now() - this.startTime
     }
 
-    const payload = [this.params, metrics, this.startTime, this.endTime, 'fetch']
-    this.targets.forEach(target => reportToAgg(payload, this, target))
-    if (!this.targets?.length) reportToAgg(payload, this)
+    handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax)
   }
 
   // Create report for XHR request that has finished
@@ -379,13 +377,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     // Always send cbTime, even if no noticeable time was taken.
     metrics.cbTime = this.cbTime
 
-    const payload = [params, metrics, this.startTime, this.endTime, 'xhr']
-    this.targets.forEach(target => reportToAgg(payload, this, target))
-    if (!this.targets?.length) reportToAgg(payload, this)
-  }
-
-  function reportToAgg (payload, context, target) {
-    handler('xhr', [...payload, target], context, FEATURE_NAMES.ajax)
+    handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'], this, FEATURE_NAMES.ajax)
   }
 
   function captureXhrData (ctx, xhr) {

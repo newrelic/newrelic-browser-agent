@@ -12,7 +12,8 @@ import { chrome, chromeEval, gecko } from './browser-stack-matchers'
  * @typedef {import('./register-api-types').RegisterAPITimings} RegisterAPITimings
  */
 
-let thisFile
+/** export for testing purposes */
+export let thisFile
 try {
   thisFile = extractUrlsFromStack(getDeepStackTrace()).at(0)
 } catch (err) {
@@ -66,7 +67,7 @@ function extractUrlsFromStack (stack) {
       urls.add(cleanURL(parts[2]))
     } else {
       // Fallback: match URLs using a generic .js pattern (non-greedy to handle ports and query params)
-      const fallbackMatch = line.match(/\(?((?:(?:https?|file):\/\/)?.*?\.js):\d+:\d+\)?/)
+      const fallbackMatch = line.match(/\(([^)]+\.js):\d+:\d+\)/) || line.match(/^\s+at\s+([^\s(]+\.js):\d+:\d+/)
       if (fallbackMatch && fallbackMatch[1]) {
         urls.add(cleanURL(fallbackMatch[1]))
       }

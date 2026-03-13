@@ -139,8 +139,8 @@ describe('script-tracker', () => {
 
       // Stack trace references the external script
       mockStack = `Error
-    at findScriptTimings (internal:1:1)
-    at Object.register (internal:5:10)
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at Object.register (${scriptTrackerModule.thisFile}:5:10)
     at main (https://cdn.example.com/mfe-app.js:15:20)`
 
       const result = scriptTrackerModule.findScriptTimings()
@@ -175,8 +175,8 @@ describe('script-tracker', () => {
 
       // Stack references script tracked by observer
       mockStack = `Error
-    at findScriptTimings (internal:1:1)
-    at register (internal:10:5)
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at register (${scriptTrackerModule.thisFile}:10:5)
     at init (https://cdn.example.com/tracked-app.js:25:10)`
 
       // Import module to activate PerformanceObserver
@@ -217,8 +217,8 @@ describe('script-tracker', () => {
       })
 
       mockStack = `Error
-    at findScriptTimings (internal:1:1)
-    at register (internal:2:2)
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at register (${scriptTrackerModule.thisFile}:2:2)
     at setup (https://cdn.example.com/preload.js:10:5)`
 
       scriptTrackerModule = await import('../../../../src/common/util/script-tracker')
@@ -262,8 +262,8 @@ describe('script-tracker', () => {
       })
 
       mockStack = `Error
-    at findScriptTimings (internal:1:1)
-    at register (internal:2:2)
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at register (${scriptTrackerModule.thisFile}:2:2)
     at init (https://cdn.example.com/preloaded.js:30:5)`
 
       scriptTrackerModule = await import('../../../../src/common/util/script-tracker')
@@ -302,8 +302,8 @@ describe('script-tracker', () => {
       })
 
       mockStack = `Error
-    at findScriptTimings (internal:1:1)
-    at register (internal:2:2)
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at register (${scriptTrackerModule.thisFile}:2:2)
     at main (https://cdn.example.com/late-preload.js:50:10)`
 
       scriptTrackerModule = await import('../../../../src/common/util/script-tracker')
@@ -438,8 +438,8 @@ describe('script-tracker', () => {
 
       // Stack contains full URL matching the resource entry
       mockStack = `Error
-    at findScriptTimings (internal:1:1)
-    at register (internal:2:2)
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at register (${scriptTrackerModule.thisFile}:2:2)
     at func (https://cdn.example.com/path/app.js:5:10)`
 
       const result = scriptTrackerModule.findScriptTimings()
@@ -499,8 +499,8 @@ describe('script-tracker', () => {
 
       // Gecko/Firefox format: function@url:line:column (no "at" prefix)
       mockStack = `Error
-findScriptTimings@internal:1:1
-register@internal:2:2
+findScriptTimings@${scriptTrackerModule.thisFile}:1:1
+register@${scriptTrackerModule.thisFile}:2:2
 init@https://cdn.example.com/gecko-app.js:20:10`
 
       const result = scriptTrackerModule.findScriptTimings()
@@ -531,8 +531,8 @@ init@https://cdn.example.com/gecko-app.js:20:10`
 
       // Chrome/V8 format: "at function (url:line:column)"
       mockStack = `Error
-    at findScriptTimings (internal:1:1)
-    at Object.register (internal:2:2)
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at Object.register (${scriptTrackerModule.thisFile}:2:2)
     at init (https://cdn.example.com/chrome-app.js:30:5)`
 
       const result = scriptTrackerModule.findScriptTimings()
@@ -775,8 +775,8 @@ init@https://cdn.example.com/gecko-app.js:20:10`
       // - MFE chunk in middle (the actual nerdpack code calling register)
       // - Generator runtime at bottom (one-vbp driving execution)
       mockStack = `Error
-    at Object.register (internal:18:84024)
-    at register (internal:18:84952)
+    at Object.register (${scriptTrackerModule.thisFile}:18:84024)
+    at register (${scriptTrackerModule.thisFile}:18:84952)
     at mfe5-module (https://staging-one.nr-assets.net/nerdpacks/browser-entity-preview~b21d8a93.js:1:3275)
     at Generator.<anonymous> (https://staging-one.nr-assets.net/platform/one-vbp-543fd763.js:1:32670)
     at Generator.next (https://staging-one.nr-assets.net/platform/one-vbp-543fd763.js:1:33653)`

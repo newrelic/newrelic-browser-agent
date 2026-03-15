@@ -10,7 +10,7 @@ beforeEach(async () => {
 const createAgentRef = (agentIdentifier) => ({
   agentIdentifier,
   ee: ee.get(agentIdentifier),
-  utils: {
+  runtime: {
     drainRegistry: new Map()
   }
 })

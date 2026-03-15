@@ -12,9 +12,9 @@ import { dispatchGlobalEvent } from '../dispatch/global-event'
  * @returns {void}
  */
 export function activateFeatures (flags, agentRef) {
-  if (!flags || typeof flags !== 'object' || !!agentRef.utils.activatedFeatures) return
+  if (!flags || typeof flags !== 'object' || !!agentRef.runtime.activatedFeatures) return
   agentRef.ee.emit('rumresp', [flags])
-  agentRef.utils.activatedFeatures = flags
+  agentRef.runtime.activatedFeatures = flags
 
   // let any window level subscribers know that the agent is running, per install docs
   dispatchGlobalEvent({

@@ -21,7 +21,7 @@ export function registerDrain (agentRef, group) {
   // to be drained (`staged`) and the `priority` order in which it should be drained relative to other feature groups.
   const item = { staged: false, priority: featurePriority[group] || 0 }
   ensureDrainRegistry(agentRef)
-  if (!agentRef.utils.drainRegistry.get(group)) agentRef.utils.drainRegistry.set(group, item)
+  if (!agentRef.runtime.drainRegistry.get(group)) agentRef.runtime.drainRegistry.set(group, item)
 }
 
 /**
@@ -30,10 +30,10 @@ export function registerDrain (agentRef, group) {
  * @param {*} group - The named "bucket" to be removed from the registry
  */
 export function deregisterDrain (agentRef, group) {
-  if (!agentRef?.utils?.drainRegistry) return
-  if (agentRef.utils.drainRegistry.get(group)) agentRef.utils.drainRegistry.delete(group)
+  if (!agentRef?.runtime?.drainRegistry) return
+  if (agentRef.runtime.drainRegistry.get(group)) agentRef.runtime.drainRegistry.delete(group)
   drainGroup(agentRef, group, false)
-  if (agentRef.utils.drainRegistry.size) checkCanDrainAll(agentRef)
+  if (agentRef.runtime.drainRegistry.size) checkCanDrainAll(agentRef)
 }
 
 /**
@@ -42,8 +42,7 @@ export function deregisterDrain (agentRef, group) {
  */
 function ensureDrainRegistry (agentRef) {
   if (!agentRef) throw new Error('agentRef required')
-  if (!agentRef.utils) agentRef.utils = {}
-  if (!agentRef.utils.drainRegistry) agentRef.utils.drainRegistry = new Map()
+  if (!agentRef.runtime.drainRegistry) agentRef.runtime.drainRegistry = new Map()
 }
 
 /**
@@ -58,10 +57,10 @@ export function drain (agentRef, featureName = 'feature', force = false) {
   // If the feature for the specified agent is not in the registry, that means the instrument file was bypassed.
   // This could happen in tests, or loaders that directly import the aggregator. In these cases it is safe to
   // drain the feature group immediately rather than waiting to drain all at once.
-  if (!agentRef || !agentRef.utils.drainRegistry.get(featureName) || force) return drainGroup(agentRef, featureName)
+  if (!agentRef || !agentRef.runtime.drainRegistry.get(featureName) || force) return drainGroup(agentRef, featureName)
 
   // When `drain` is called, this feature is ready to drain (staged).
-  agentRef.utils.drainRegistry.get(featureName).staged = true
+  agentRef.runtime.drainRegistry.get(featureName).staged = true
 
   checkCanDrainAll(agentRef)
 }
@@ -70,11 +69,11 @@ export function drain (agentRef, featureName = 'feature', force = false) {
 function checkCanDrainAll (agentRef) {
   // Only when the event-groups for all features are ready to drain (staged) do we execute the drain. This has the effect
   // that the last feature to call drain triggers drain for all features.
-  const items = Array.from(agentRef.utils.drainRegistry)
+  const items = Array.from(agentRef.runtime.drainRegistry)
   if (items.every(([key, values]) => values.staged)) {
     items.sort((a, b) => a[1].priority - b[1].priority)
     items.forEach(([group]) => {
-      agentRef.utils.drainRegistry.delete(group)
+      agentRef.runtime.drainRegistry.delete(group)
       drainGroup(agentRef, group)
     })
   }

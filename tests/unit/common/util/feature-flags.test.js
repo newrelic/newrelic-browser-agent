@@ -19,7 +19,7 @@ beforeEach(() => {
   agentRef = {
     agentIdentifier,
     ee: eventEmitterModule.ee.get(agentIdentifier),
-    utils: {}
+    runtime: {}
   }
 })
 
@@ -31,7 +31,7 @@ test.each([
 
   expect(handleModule.handle).not.toHaveBeenCalled()
   expect(drainModule.drain).not.toHaveBeenCalled()
-  expect(agentRef.utils.activatedFeatures).toBeUndefined()
+  expect(agentRef.runtime.activatedFeatures).toBeUndefined()
 })
 
 test('emits the right events when feature flag = 1', () => {
@@ -49,7 +49,7 @@ test('emits the right events when feature flag = 1', () => {
   expect(sharedEE).toHaveBeenCalledTimes(1)
   expect(sharedEE).toHaveBeenLastCalledWith('rumresp', [flags])
 
-  expect(agentRef.utils.activatedFeatures).toEqual(flags)
+  expect(agentRef.runtime.activatedFeatures).toEqual(flags)
 })
 
 test('emits the right events when feature flag = 0', () => {
@@ -67,7 +67,7 @@ test('emits the right events when feature flag = 0', () => {
   expect(sharedEE).toHaveBeenCalledTimes(1)
   expect(sharedEE).toHaveBeenLastCalledWith('rumresp', [flags])
 
-  expect(agentRef.utils.activatedFeatures).toEqual(flags)
+  expect(agentRef.runtime.activatedFeatures).toEqual(flags)
 })
 
 test('only the first activate of the same feature is respected', () => {
@@ -79,5 +79,5 @@ test('only the first activate of the same feature is respected', () => {
 
   sharedEE.mockClear()
   activateFeatures({ st: 0 }, agentRef)
-  expect(agentRef.utils.activatedFeatures.st).toBeTruthy()
+  expect(agentRef.runtime.activatedFeatures.st).toBeTruthy()
 })

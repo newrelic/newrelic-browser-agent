@@ -110,8 +110,8 @@ export class AggregateBase extends FeatureBase {
    */
   waitForFlags (flagNames = []) {
     const flagsPromise = new Promise((resolve, reject) => {
-      if (this.agentRef.utils?.activatedFeatures) {
-        resolve(buildOutput(this.agentRef.utils.activatedFeatures))
+      if (this.agentRef.runtime?.activatedFeatures) {
+        resolve(buildOutput(this.agentRef.runtime.activatedFeatures))
       } else {
         this.ee.on('rumresp', (resp = {}) => {
           resolve(buildOutput(resp))

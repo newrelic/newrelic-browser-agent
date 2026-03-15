@@ -61,8 +61,7 @@ beforeEach(() => {
     ee: ee.get(agentIdentifier),
     runtime: { [faker.string.uuid()]: faker.lorem.sentence(), appMetadata: { agents: [{ entityGuid: '12345' }] } },
     // TODO CHECK THAT THIS STILL WORKS WITH NEW SYSTEM
-    info: { licenseKey: faker.string.uuid(), applicationID: faker.string.uuid(), entityGuid: faker.string.uuid() },
-    utils: {}
+    info: { licenseKey: faker.string.uuid(), applicationID: faker.string.uuid(), entityGuid: faker.string.uuid() }
   }
 })
 
@@ -147,7 +146,7 @@ test('should return empty array when flagNames is empty', async () => {
 test('should return activatedFeatures values when available', async () => {
   mainAgent.agentIdentifier = 'abcd' // 'abcd' matches the af mock at the top of this file
   mainAgent.ee = ee.get('abcd') // Update ee to match the new agentIdentifier
-  mainAgent.utils.activatedFeatures = {
+  mainAgent.runtime.activatedFeatures = {
     abc: 0,
     def: 1,
     ghi: 2,

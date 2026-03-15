@@ -17,7 +17,7 @@ export default class CustomCommands {
     browser.addCommand('waitForAgentLoad', async function () {
       await browser.waitUntil(
         () => browser.execute(function () {
-          return Object.values(window.NREUM?.initializedAgents)[0]?.utils?.activatedFeatures
+          return Object.values(window.NREUM?.initializedAgents)[0]?.runtime?.activatedFeatures
         }),
         {
           timeout: 30000,

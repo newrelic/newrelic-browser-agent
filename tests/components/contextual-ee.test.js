@@ -172,7 +172,7 @@ describe('event-emitter buffer', () => {
     expect(mockListener).toHaveReturnedTimes(0) // wont return until drain is called
 
     registerHandler(eventType, mockListener, undefined, ee)
-    drain({ ee, utils: { drainRegistry: new Map() } })
+    drain({ ee, runtime: { drainRegistry: new Map() } })
 
     handle(eventType, eventArgs, undefined, undefined, ee)
     handle(eventType, eventArgs, undefined, undefined, ee)

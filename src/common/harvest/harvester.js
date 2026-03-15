@@ -197,7 +197,7 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
   }
 
   dispatchGlobalEvent({
-    drained: !!agentRef.utils?.activatedFeatures,
+    drained: !!agentRef.runtime?.activatedFeatures,
     type: 'data',
     name: 'harvest',
     feature: featureName,

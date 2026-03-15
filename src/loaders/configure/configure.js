@@ -41,9 +41,9 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   const updatedInit = agent.init
   const internalTrafficList = [info.beacon, info.errorBeacon]
 
-  agent.utils ??= {}
+  runtime.configured ??= false
 
-  if (!agent.utils.configured) {
+  if (!agent.runtime?.configured) {
     if (updatedInit.proxy.assets) {
       redefinePublicPath(updatedInit.proxy.assets)
       internalTrafficList.push(updatedInit.proxy.assets)
@@ -62,20 +62,19 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   runtime.loaderType = loaderType
   agent.runtime = mergeRuntime(runtime)
 
-  if (!agent.utils.configured) {
+  if (!agent.runtime.configured) {
     agent.ee = ee.get(agent.agentIdentifier)
-    agent.utils.drainRegistry = new Map()
 
     agent.exposed = exposed
 
     dispatchGlobalEvent({
-      drained: !!agent.utils.activatedFeatures,
+      drained: !!agent.runtime.activatedFeatures,
       type: 'lifecycle',
       name: 'initialize',
       feature: undefined,
       data: agent.config
     })
 
-    agent.utils.configured = true
+    agent.runtime.configured = true
   }
 }

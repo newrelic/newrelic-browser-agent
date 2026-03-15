@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { getModeledObject } from './configurable'
@@ -24,8 +24,12 @@ const hiddenState = {
 }
 
 const RuntimeModel = {
+  /** @type {{[key: string]: number} | undefined} */
+  activatedFeatures: undefined,
   /** Agent-specific metadata found in the RUM call response. ex. entityGuid */
   appMetadata: {},
+  /** @type {boolean} */
+  configured: false,
   get consented () {
     return this.session?.state?.consent || hiddenState.consented
   },
@@ -35,6 +39,8 @@ const RuntimeModel = {
   customTransaction: undefined,
   denyList: undefined,
   disabled: false,
+  /** @type {Map<string, {staged: boolean, priority: number}>} */
+  drainRegistry: new Map(),
   harvester: undefined,
   isolatedBacklog: false,
   isRecording: false, // true when actively recording, false when paused or stopped

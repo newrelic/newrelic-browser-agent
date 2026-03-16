@@ -108,6 +108,9 @@ describe('script-tracker', () => {
       mockNavigationEntry = { name: 'https://example.com/page.html' }
 
       global.performance.getEntriesByType = jest.fn((type) => {
+        if (type === 'navigation') {
+          return [mockNavigationEntry]
+        }
         if (type === 'resource') {
           return []
         }

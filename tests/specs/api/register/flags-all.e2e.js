@@ -6,10 +6,10 @@ describe('All Features', () => {
   })
 
   it('with register', async () => {
-    await runRegisteredEntityTest(['register', 'register.jserrors', 'register.generic_events'])
+    await runRegisteredEntityTest(['register', 'register.jserrors', 'register.generic_events', 'register.ajax'])
   })
 
   it('without register', async () => {
-    await runRegisteredEntityTest(['register.jserrors', 'register.generic_events'])
+    await runRegisteredEntityTest(['register.jserrors', 'register.generic_events', 'register.ajax'])
   })
 })

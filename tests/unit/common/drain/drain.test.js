@@ -97,10 +97,6 @@ describe('drain', () => {
     drain(agentRef)
     expect(emitSpy).toHaveBeenCalledWith('drain-feature', expect.anything())
   })
-
-  test('requires an agentRef to be provided', () => {
-    expect(() => drain(null)).toThrow('agentRef required')
-  })
 })
 
 test('non-feat groups can register and drain too alongside features', () => {

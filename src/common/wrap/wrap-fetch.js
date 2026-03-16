@@ -49,12 +49,12 @@ export function wrapFetch (sharedEE, agentRef) {
 
   ee.on(prefix + 'end', function (err, res, targets) {
     var ctx = this
+    ctx.targets = targets || []
     if (res) {
       var size = res.headers.get('content-length')
       if (size !== null) {
         ctx.rxSize = size
       }
-      ctx.targets = targets || []
 
       ee.emit(prefix + 'done', [null, res], ctx)
     } else {

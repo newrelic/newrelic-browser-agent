@@ -6,7 +6,12 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {init} {config} {loader}
+    {init} {config}
+    <script>
+      NREUM.init.feature_flags = ['register']
+      NREUM.init.api.duplicate_registered_data = true
+    </script>
+    {loader}
   </head>
   <body>Instrumented</body>
 </html>

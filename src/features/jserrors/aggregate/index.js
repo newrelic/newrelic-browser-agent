@@ -297,12 +297,12 @@ export class Aggregate extends AggregateBase {
       if (softNavInUse) { // pass the error to soft nav for evaluation - it will return it via 'returnJserror' when interaction is resolved
         handle('jserror', [jsErrorEvent], undefined, FEATURE_NAMES.softNav, this.ee)
       } else {
-        this.#storeJserrorForHarvest(jsErrorEvent, false)
+        this.#storeJserrorForHarvest(jsErrorEvent)
       }
     }
 
     // always add directly if scoped to a sub-entity, the other pathways above will be deterministic if the main agent should procede
-    if (target) this.#storeJserrorForHarvest([...jsErrorEvent, target], false, params._softNavAttributes)
+    if (target) this.#storeJserrorForHarvest(jsErrorEvent, {}, target)
   }
 
   /**
@@ -360,8 +360,8 @@ export class Aggregate extends AggregateBase {
    * @param {object} [attrs={}] - Additional attributes to merge (e.g., from soft nav interactions)
    * @returns {void}
    */
-  #storeJserrorForHarvest (errorInfoArr, attrs = {}) {
-    let [type, bucketHash, params, newMetrics, localAttrs, target] = errorInfoArr
+  #storeJserrorForHarvest (errorInfoArr, attrs = {}, target) {
+    let [type, bucketHash, params, newMetrics, localAttrs] = errorInfoArr
     const allCustomAttrs = {
       /** MFE specific attributes if in "multiple" mode (ie consumer version 2) */
       ...getVersion2Attributes(target, this)
@@ -377,7 +377,7 @@ export class Aggregate extends AggregateBase {
 
     this.events.add([type, aggregateHash, params, newMetrics, allCustomAttrs])
 
-    if (shouldDuplicate(target, this.agentRef)) this.#storeJserrorForHarvest(errorInfoArr.slice(0, 5), { ...attrs, ...getVersion2DuplicationAttributes(target, this) }, true)
+    if (shouldDuplicate(target, this.agentRef)) this.#storeJserrorForHarvest(errorInfoArr, getVersion2DuplicationAttributes(target, this))
 
     function setCustom (key, val) {
       allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)

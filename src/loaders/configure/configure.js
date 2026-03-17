@@ -41,9 +41,9 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   const updatedInit = agent.init
   const internalTrafficList = [info.beacon, info.errorBeacon]
 
-  runtime.configured ??= false
+  agent.runtime = mergeRuntime(runtime)
 
-  if (!agent.runtime?.configured) {
+  if (!agent.runtime.configured) {
     if (updatedInit.proxy.assets) {
       redefinePublicPath(updatedInit.proxy.assets)
       internalTrafficList.push(updatedInit.proxy.assets)
@@ -51,18 +51,15 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
     if (updatedInit.proxy.beacon) internalTrafficList.push(updatedInit.proxy.beacon)
     agent.beacons = [...internalTrafficList]
 
+    agent.runtime.denyList = [
+      ...(updatedInit.ajax.deny_list || []),
+      ...(updatedInit.ajax.block_internal ? internalTrafficList : [])
+    ]
+    agent.runtime.ptid = agent.agentIdentifier
+    agent.runtime.loaderType = loaderType
+
     setTopLevelCallers(agent) // no need to set global APIs on newrelic obj more than once
-  }
 
-  runtime.denyList = [
-    ...(updatedInit.ajax.deny_list || []),
-    ...(updatedInit.ajax.block_internal ? internalTrafficList : [])
-  ]
-  runtime.ptid = agent.agentIdentifier
-  runtime.loaderType = loaderType
-  agent.runtime = mergeRuntime(runtime)
-
-  if (!agent.runtime.configured) {
     agent.ee = ee.get(agent.agentIdentifier)
 
     agent.exposed = exposed

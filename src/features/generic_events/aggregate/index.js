@@ -244,19 +244,21 @@ export class Aggregate extends AggregateBase {
 
       if (agentRef.init.feature_flags.includes('websockets')) {
         registerHandler('ws-complete', (nrData) => {
-          const event = {
-            ...nrData,
-            eventType: 'WebSocket',
-            timestamp: this.#toEpoch(nrData.timestamp),
-            openedAt: this.#toEpoch(nrData.openedAt),
-            closedAt: this.#toEpoch(nrData.closedAt)
-          }
+          nrData.targets.forEach(target => {
+            const event = {
+              ...nrData,
+              eventType: 'WebSocket',
+              timestamp: this.#toEpoch(nrData.timestamp),
+              openedAt: this.#toEpoch(nrData.openedAt),
+              closedAt: this.#toEpoch(nrData.closedAt)
+            }
 
-          // Report supportability metrics for WebSocket completion
-          this.reportSupportabilityMetric('WebSocket/Completed/Seen')
-          this.reportSupportabilityMetric('WebSocket/Completed/Bytes', stringify(event).length)
+            // Report supportability metrics for WebSocket completion
+            this.reportSupportabilityMetric('WebSocket/Completed/Seen')
+            this.reportSupportabilityMetric('WebSocket/Completed/Bytes', stringify(event).length)
 
-          this.addEvent(event)
+            this.addEvent(event, target)
+          })
         }, this.featureName, this.ee)
       }
 

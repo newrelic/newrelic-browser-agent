@@ -36,6 +36,14 @@ export function LoremIpsum() {
             console.error('Error fetching /json:', error);
         });
         setShowLazy(true);
+        const bamServer = window.NREUM.info.beacon
+        const socket = new WebSocket(`ws://${bamServer}/websocket/pre?param=shouldbedropped`)
+        socket.addEventListener('open', (event) => {
+          socket.send('loremipsum!')
+        })
+        socket.addEventListener('message', (event) => {
+          socket.close() // clean by flag
+        })
         throw new Error('test');
       }}>Click Me To Throw an Error and Lazy Load more content</button>
     </div>

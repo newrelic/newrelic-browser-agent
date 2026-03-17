@@ -22,4 +22,21 @@ while (iterations3-- > 0) {
 // Store on window so test can access if needed
 window.api3 = api3
 
+// MFE socket
+const bamServer = NREUM.info.beacon
+window.socket = new WebSocket(`ws://${bamServer}/websocket/pre?param=shouldbedropped`)
+
+// Connection opened
+window.socket.addEventListener('open', (event) => {
+  window.socket.send('MFE 3!')
+})
+
+// Listen for messages
+window.socket.addEventListener('message', (event) => {
+  console.log('Message from server ', event.data)
+  window.socket.close() // clean by flag
+})
+
+console.log(newrelic.initializedAgents)
+
 export { api3 }

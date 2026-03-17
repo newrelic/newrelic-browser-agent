@@ -70,13 +70,19 @@ export function getVersion2Attributes (target, aggregateInstance) {
  */
 export function getVersion2DuplicationAttributes (target, aggregateInstance) {
   if (aggregateInstance?.harvestEndpointVersion !== 2 || !shouldDuplicate(target, aggregateInstance?.agentRef)) return {}
-  return { 'child.id': target.id, 'child.type': target.type }
+  return { 'child.id': target.id, 'child.type': target.type, ...getVersion2Attributes(undefined, aggregateInstance) }
 }
 
 export function shouldDuplicate (target, agentRef) {
   return !!target && agentRef.init.api.duplicate_registered_data
 }
 
+/**
+ * Finds registered targets based on the stack trace of the initiator function. Returns the first set of targets found, which may be multiple if there are multiple registered entities associated with the same filename in the resource timing API.
+ * @note This is not guaranteed to find the correct target, but is a best effort approach to associating events with registered entities without requiring explicit passing of target information during event creation.
+ * @param {*} agentRef
+ * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget[]}
+ */
 export function findTargetsFromStackTrace (agentRef) {
   if (!agentRef?.init.api.allow_registered_children) return []
 
@@ -84,7 +90,7 @@ export function findTargetsFromStackTrace (agentRef) {
   const targets = []
   try {
     var urls = extractUrlsFromStack(getDeepStackTrace()).reverse()
-    while (urls[iterator]) {
+    while (urls[iterator] && !targets.length) {
       targets.push(...getRegisteredTargetsFromFilename(urls[iterator++], agentRef))
     }
   } catch (err) {

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -46,7 +46,7 @@ export class Instrument extends InstrumentBase {
     setupMeasureAPI(agentRef)
 
     let historyEE, websocketsEE
-    if (websocketsEnabled) websocketsEE = wrapWebSocket(this.ee)
+    if (websocketsEnabled) websocketsEE = wrapWebSocket(this.ee, agentRef)
     if (isBrowserScope) {
       wrapFetch(this.ee)
       wrapXhr(this.ee)

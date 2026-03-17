@@ -13,4 +13,13 @@ document.body.appendChild(div)
 
 console.log('2nd mfe log')
 
+const bamServer = window.NREUM.info.beacon
+const socket = new WebSocket(`ws://${bamServer}/websocket/pre?param=shouldbedropped`)
+socket.addEventListener('open', (event) => {
+  socket.send('2nd-mfe!')
+})
+socket.addEventListener('message', (event) => {
+  socket.close() // clean by flag
+})
+
 throw new Error('2nd mfe error')

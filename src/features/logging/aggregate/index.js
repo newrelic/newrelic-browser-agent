@@ -110,7 +110,7 @@ export class Aggregate extends AggregateBase {
     }
 
     addEvent({ ...attributes, ...getVersion2Attributes(target, this) })
-    if (shouldDuplicate(target, this.agentRef)) addEvent({ ...attributes, ...getVersion2Attributes(undefined, this), ...getVersion2DuplicationAttributes(target, this) })
+    if (shouldDuplicate(target, this.agentRef)) addEvent({ ...attributes, ...getVersion2DuplicationAttributes(target, this) })
   }
 
   serializer (eventBuffer) {

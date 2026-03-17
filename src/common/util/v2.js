@@ -70,7 +70,7 @@ export function getVersion2Attributes (target, aggregateInstance) {
  */
 export function getVersion2DuplicationAttributes (target, aggregateInstance) {
   if (aggregateInstance?.harvestEndpointVersion !== 2 || !shouldDuplicate(target, aggregateInstance?.agentRef)) return {}
-  return { 'child.id': target.id, 'child.type': target.type }
+  return { 'child.id': target.id, 'child.type': target.type, ...getVersion2Attributes(undefined, aggregateInstance) }
 }
 
 export function shouldDuplicate (target, agentRef) {

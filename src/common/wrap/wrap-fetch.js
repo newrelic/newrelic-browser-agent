@@ -9,9 +9,7 @@
  */
 import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { globalScope } from '../constants/runtime'
-import { findTargetsFromStackTrace, getRegisteredTargetsFromId } from '../util/v2'
-import { NEW_RELIC_MFE_ID_HEADER } from '../constants/agent-constants'
-import { stringify } from '../util/stringify'
+import { findTargetsFromStackTrace } from '../util/v2'
 
 var prefix = 'fetch-'
 var bodyPrefix = prefix + 'body-'
@@ -77,33 +75,9 @@ export function wrapFetch (sharedEE, agentRef) {
       target[name] = function () {
         var args = [...arguments]
 
-        let mfeId
-        try {
-          const headers = args?.[0]?.headers || args?.[1]?.headers
-          if (headers) {
-            const isHeaderInstance = headers instanceof Headers
-            const entries = isHeaderInstance ? Array.from(headers.entries()) : Object.entries(headers)
-            for (const [key, val] of entries) {
-              if (String(key).toLowerCase() === NEW_RELIC_MFE_ID_HEADER) {
-                const stringVal = stringify(val)
-                if (stringVal) mfeId = stringVal
-                try {
-                  if (isHeaderInstance) headers.delete(key)
-                  else delete headers[key]
-                } catch {}
-                if (mfeId) break // Stop processing once we have a valid MFE ID
-              }
-            }
-          }
-        } catch {}
+        const ctx = {}
+        const targets = findTargetsFromStackTrace(agentRef)
 
-        var ctx = {}
-        let targets = []
-
-        if (mfeId) targets = getRegisteredTargetsFromId(mfeId, agentRef)
-        else {
-          targets = findTargetsFromStackTrace(agentRef)
-        }
         // we are wrapping args in an array so we can preserve the reference
         ee.emit(prefix + 'before-start', [args], ctx)
         var dtPayload

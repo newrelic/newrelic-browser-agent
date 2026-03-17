@@ -97,7 +97,7 @@ export class Aggregate extends AggregateBase {
     if (!targets.length) targets.push(undefined)
     targets.forEach(target => {
       this.events.add({ ...timing, attrs: { ...attrs, ...getVersion2Attributes(target, this) } })
-      if (shouldDuplicate(target, this.agentRef)) this.events.add({ ...timing, attrs: { ...attrs, ...getVersion2Attributes(undefined, this), ...getVersion2DuplicationAttributes(target, this) } })
+      if (shouldDuplicate(target, this.agentRef)) this.events.add({ ...timing, attrs: { ...attrs, ...getVersion2DuplicationAttributes(target, this) } })
     })
 
     handle('pvtAdded', [name, value, attrs], undefined, FEATURE_NAMES.sessionTrace, this.ee)

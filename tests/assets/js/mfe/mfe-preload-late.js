@@ -4,7 +4,7 @@
 const stackAtRegister = new Error().stack
 
 const api5 = newrelic.register({
-  id: 5,
+  id: '5',
   name: 'test 5'
 })
 

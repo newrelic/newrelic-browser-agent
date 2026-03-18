@@ -299,15 +299,15 @@ describe('registered-entity', () => {
 
     await browser.execute(function () {
       window.agent1 = new RegisteredEntity({
-        id: 1,
+        id: '1',
         name: 'agent1'
       })
       window.agent2 = window.agent1.register({
-        id: 2,
+        id: '2',
         name: 'agent2'
       })
       window.agent3 = window.agent2.register({
-        id: 3,
+        id: '3',
         name: 'agent3'
       })
       // should get data as "agent2"

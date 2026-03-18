@@ -150,7 +150,7 @@ describe('Register API - General Behaviors', () => {
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
-        id: 1,
+        id: '1',
         name: 'agent1'
       })
       window.agent1.noticeError('1')
@@ -181,12 +181,12 @@ describe('Register API - General Behaviors', () => {
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
-        id: 1,
+        id: '1',
         name: 'my agent',
         isolated: false
       })
       window.agent2 = newrelic.register({
-        id: 1,
+        id: '1',
         isolated: false
       })
       // should get data as "agent2"
@@ -216,15 +216,15 @@ describe('Register API - General Behaviors', () => {
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
-        id: 1,
+        id: '1',
         name: 'agent1'
       })
       window.agent2 = window.agent1.register({
-        id: 2,
+        id: '2',
         name: 'agent2'
       })
       window.agent3 = window.agent2.register({
-        id: 3,
+        id: '3',
         name: 'agent3'
       })
       // should get data as "agent2"
@@ -268,13 +268,13 @@ describe('Register API - General Behaviors', () => {
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
-        id: 1,
+        id: '1',
         name: 'frontend-agent',
         tags: { module: 'checkout', feature: 'payment' }
       })
 
       window.agent2 = newrelic.register({
-        id: 2,
+        id: '2',
         name: 'backend-agent',
         tags: { module: 'api', type: 'graphql' }
       })
@@ -310,7 +310,7 @@ describe('Register API - General Behaviors', () => {
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
-        id: 1,
+        id: '1',
         name: 'test-agent',
         tags: {}
       })
@@ -342,7 +342,7 @@ describe('Register API - General Behaviors', () => {
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
-        id: 1,
+        id: '1',
         name: 'test-agent',
         tags: { module: 'module1', layer: 'frontend' }
       })
@@ -375,7 +375,7 @@ describe('Register API - General Behaviors', () => {
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
-        id: 1234,
+        id: '1234',
         name: 'test-agent',
         tags: { name: 'should-not-appear', id: 'also-not', type: 'ignored-too', validTag: 'yes' }
       })
@@ -415,7 +415,7 @@ describe('Register API - General Behaviors', () => {
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
-        id: 1234,
+        id: '1234',
         name: 'test-agent',
         tags: { name: 'ignored', id: 'also-ignored', type: 'ignored-too' }
       })

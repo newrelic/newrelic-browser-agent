@@ -32,11 +32,11 @@ describe('registered-entity', () => {
 
       await browser.execute(function () {
         window.agent1 = new RegisteredEntity({
-          id: 1,
+          id: '1',
           name: 'agent1'
         })
         window.agent2 = new RegisteredEntity({
-          id: 2,
+          id: '2',
           name: 'agent2'
         })
 
@@ -211,7 +211,7 @@ describe('registered-entity', () => {
 
     await browser.execute(function () {
       window.agent1 = new RegisteredEntity({
-        id: 1,
+        id: '1',
         name: 'agent1'
       })
       window.agent1.noticeError('1')
@@ -239,11 +239,11 @@ describe('registered-entity', () => {
 
     await browser.execute(function () {
       window.agent1 = new RegisteredEntity({
-        id: 1,
+        id: '1',
         name: 'agent1'
       })
       window.agent2 = new RegisteredEntity({
-        id: 1,
+        id: '1',
         name: 'agent2'
       })
       // should get data as "agent2"
@@ -267,12 +267,12 @@ describe('registered-entity', () => {
 
     await browser.execute(function () {
       window.agent1 = new RegisteredEntity({
-        id: 1,
+        id: '1',
         name: 'my agent',
         isolated: false
       })
       window.agent2 = new RegisteredEntity({
-        id: 1,
+        id: '1',
         isolated: false
       })
       // should get data as "agent2"
@@ -287,7 +287,7 @@ describe('registered-entity', () => {
       const data = body.err
       data.forEach((err, idx) => {
         expect(Number(err.params.message)).toEqual(idx + 1)
-        expect(err.custom['source.id']).toEqual(1)
+        expect(err.custom['source.id']).toEqual('1')
         expect(err.custom['source.name']).toEqual('my agent')
         expect(err.custom.sharedAttr).toEqual('shared for both instances')
       })
@@ -332,11 +332,11 @@ describe('registered-entity', () => {
           expect(err.custom['parent.type']).toEqual('BA') // parent is container (Browser Agent)
         }
         if (idx === 1) {
-          expect(err.custom['parent.id']).toEqual(1) // second app should have first app as its parent
+          expect(err.custom['parent.id']).toEqual('1') // second app should have first app as its parent
           expect(err.custom['parent.type']).toEqual('MFE') // parent is a registered MFE
         }
         if (idx === 2) {
-          expect(err.custom['parent.id']).toEqual(2) // third app should have second app as its parent
+          expect(err.custom['parent.id']).toEqual('2') // third app should have second app as its parent
           expect(err.custom['parent.type']).toEqual('MFE') // parent is a registered MFE
         }
       })
@@ -348,13 +348,13 @@ describe('registered-entity', () => {
 
     await browser.execute(function () {
       window.agent1 = new RegisteredEntity({
-        id: 1,
+        id: '1',
         name: 'frontend-agent',
         tags: { module: 'checkout', feature: 'payment' }
       })
 
       window.agent2 = new RegisteredEntity({
-        id: 2,
+        id: '2',
         name: 'backend-agent',
         tags: { module: 'api', apiType: 'graphql' }
       })
@@ -389,7 +389,7 @@ describe('registered-entity', () => {
 
     await browser.execute(function () {
       window.agent1 = new RegisteredEntity({
-        id: 1234,
+        id: '1234',
         name: 'test-agent',
         tags: {}
       })
@@ -418,7 +418,7 @@ describe('registered-entity', () => {
 
     await browser.execute(function () {
       window.agent1 = new RegisteredEntity({
-        id: 1234,
+        id: '1234',
         name: 'test-agent',
         tags: { module: 'module1', layer: 'frontend' }
       })
@@ -447,7 +447,7 @@ describe('registered-entity', () => {
 
     await browser.execute(function () {
       window.agent1 = new RegisteredEntity({
-        id: 1234,
+        id: '1234',
         name: 'test-agent',
         tags: { name: 'should-not-appear', id: 'also-not', type: 'ignored-too', validTag: 'yes' }
       })
@@ -466,7 +466,7 @@ describe('registered-entity', () => {
       // Should only have source.validTag, not source.name or source.id or source.type from tags
       expect(error1.custom['source.validTag']).toEqual('yes')
       expect(error1.custom['source.name']).toEqual('test-agent') // This comes from the name property
-      expect(error1.custom['source.id']).toEqual(1234) // This comes from the id property
+      expect(error1.custom['source.id']).toEqual('1234') // This comes from the id property
       expect(error1.custom['source.type']).toEqual('MFE') // This comes from the type property
 
       // Verify there are no duplicate or conflicting attributes
@@ -484,7 +484,7 @@ describe('registered-entity', () => {
 
     await browser.execute(function () {
       window.agent1 = new RegisteredEntity({
-        id: 1234,
+        id: '1234',
         name: 'test-agent',
         tags: { name: 'ignored', id: 'also-ignored', type: 'ignored-too' }
       })
@@ -502,7 +502,7 @@ describe('registered-entity', () => {
 
       // Should have source.name and source.id from properties, not from tags
       expect(error1.custom['source.name']).toEqual('test-agent')
-      expect(error1.custom['source.id']).toEqual(1234)
+      expect(error1.custom['source.id']).toEqual('1234')
 
       // Should not have any other source.* attributes from tags
       const sourceKeys = Object.keys(error1.custom).filter(k => k.startsWith('source.'))
@@ -581,7 +581,7 @@ describe('registered-entity', () => {
 
       await browser.execute(function () {
         window.agent1 = new RegisteredEntity({
-          id: 1234,
+          id: '1234',
           name: 'test-agent',
           tags: { environment: 'production', version: '2.1.0', region: 'us-west-2', critical: true }
         })
@@ -608,7 +608,7 @@ describe('registered-entity', () => {
 
       await browser.execute(function () {
         window.agent1 = new RegisteredEntity({
-          id: 1234,
+          id: '1234',
           name: 'test-agent',
           tags: {
             team: 'payments',
@@ -811,7 +811,7 @@ describe('registered-entity', () => {
 
           // Create multiple MFEs rapidly
           for (let i = 1; i <= 5; i++) {
-            mfes.push(new RegisteredEntity({ id: i, name: `mfe-${i}` }))
+            mfes.push(new RegisteredEntity({ id: String(i), name: `mfe-${i}` }))
           }
 
           // Deregister all after a short delay

@@ -280,7 +280,8 @@ export async function runRegisteredEntityTest (testSet) {
 
   logsHarvest.forEach(({ request: { query, body } }) => {
     const data = JSON.parse(body)[0]
-    data.logs.forEach(log => {
+    // auto-logs are validated in the auto-detection tests.  Just focus on the API ones here (which have numeric messages)
+    data.logs.filter(log => !isNaN(log.message)).forEach(log => {
       // MFEs use source.id attribute; container agent uses appId. Default to 42 if source.id is not present.
       const id = log.attributes['source.id'] || 42
       if (Number(id) !== 42 && testSet.includes('register')) {

@@ -39,26 +39,39 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   agent.info = mergeInfo(info)
 
   const updatedInit = agent.init
-  const internalTrafficList = [info.beacon, info.errorBeacon]
 
-  agent.runtime = mergeRuntime(runtime)
+  agent.runtime ??= mergeRuntime(runtime)
+
+  // Apply proxy settings whenever configure is called (supports late {init} setting)
+  if (updatedInit.proxy.assets) {
+    redefinePublicPath(updatedInit.proxy.assets)
+  }
 
   if (!agent.runtime.configured) {
-    if (updatedInit.proxy.assets) {
-      redefinePublicPath(updatedInit.proxy.assets)
-      internalTrafficList.push(updatedInit.proxy.assets)
-    }
-    if (updatedInit.proxy.beacon) internalTrafficList.push(updatedInit.proxy.beacon)
-    agent.beacons = [...internalTrafficList]
+    Object.defineProperty(agent, 'beacons', {
+      get () {
+        const beacons = [agent.info.beacon, agent.info.errorBeacon]
+        if (agent.init.proxy.assets) beacons.push(agent.init.proxy.assets)
+        if (agent.init.proxy.beacon) beacons.push(agent.init.proxy.beacon)
+        return beacons
+      }
+    })
 
-    agent.runtime.denyList = [
-      ...(updatedInit.ajax.deny_list || []),
-      ...(updatedInit.ajax.block_internal ? internalTrafficList : [])
-    ]
+    Object.defineProperty(agent.runtime, 'denyList', {
+      get () {
+        // Compute the internal traffic list fresh each time to ensure beacons array is current
+        const currentInternalList = [...agent.beacons]
+        return [
+          ...(agent.init.ajax.deny_list || []),
+          ...(agent.init.ajax.block_internal ? currentInternalList : [])
+        ]
+      }
+    })
     agent.runtime.ptid = agent.agentIdentifier
-    agent.runtime.loaderType = loaderType
 
     setTopLevelCallers(agent) // no need to set global APIs on newrelic obj more than once
+
+    agent.runtime.loaderType = loaderType
 
     agent.ee = ee.get(agent.agentIdentifier)
 

@@ -13,7 +13,9 @@ const agentInst = {
   ee: ee.get(agentIdentifier),
   info: {},
   init: { page_view_timing: {} },
-  runtime: {}
+  runtime: {
+    jsAttributesMetadata: { bytes: 0 }
+  }
 }
 const pvtAgg = new Aggregate(agentInst)
 

@@ -150,7 +150,7 @@ describe('Register API - General Behaviors', () => {
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
-        id: 1,
+        id: '1',
         name: 'agent1'
       })
       window.agent1.noticeError('1')
@@ -181,12 +181,12 @@ describe('Register API - General Behaviors', () => {
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
-        id: 1,
+        id: '1',
         name: 'my agent',
         isolated: false
       })
       window.agent2 = newrelic.register({
-        id: 1,
+        id: '1',
         isolated: false
       })
       // should get data as "agent2"
@@ -201,7 +201,7 @@ describe('Register API - General Behaviors', () => {
       const data = body.err
       data.forEach((err, idx) => {
         expect(Number(err.params.message)).toEqual(idx + 1)
-        expect(err.custom['source.id']).toEqual(1)
+        expect(err.custom['source.id']).toEqual('1')
         expect(err.custom['source.name']).toEqual('my agent')
         expect(err.custom.sharedAttr).toEqual('shared for both instances')
       })
@@ -216,15 +216,15 @@ describe('Register API - General Behaviors', () => {
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
-        id: 1,
+        id: '1',
         name: 'agent1'
       })
       window.agent2 = window.agent1.register({
-        id: 2,
+        id: '2',
         name: 'agent2'
       })
       window.agent3 = window.agent2.register({
-        id: 3,
+        id: '3',
         name: 'agent3'
       })
       // should get data as "agent2"
@@ -249,11 +249,11 @@ describe('Register API - General Behaviors', () => {
           expect(err.custom['parent.type']).toEqual('BA') // parent is container (Browser Agent)
         }
         if (idx === 1) {
-          expect(err.custom['parent.id']).toEqual(1) // second app should have first app as its parent
+          expect(err.custom['parent.id']).toEqual('1') // second app should have first app as its parent
           expect(err.custom['parent.type']).toEqual('MFE') // parent is a registered MFE
         }
         if (idx === 2) {
-          expect(err.custom['parent.id']).toEqual(2) // third app should have second app as its parent
+          expect(err.custom['parent.id']).toEqual('2') // third app should have second app as its parent
           expect(err.custom['parent.type']).toEqual('MFE') // parent is a registered MFE
         }
       })
@@ -268,13 +268,13 @@ describe('Register API - General Behaviors', () => {
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
-        id: 1,
+        id: '1',
         name: 'frontend-agent',
         tags: { module: 'checkout', feature: 'payment' }
       })
 
       window.agent2 = newrelic.register({
-        id: 2,
+        id: '2',
         name: 'backend-agent',
         tags: { module: 'api', type: 'graphql' }
       })
@@ -310,7 +310,7 @@ describe('Register API - General Behaviors', () => {
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
-        id: 1,
+        id: '1',
         name: 'test-agent',
         tags: {}
       })
@@ -342,7 +342,7 @@ describe('Register API - General Behaviors', () => {
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
-        id: 1,
+        id: '1',
         name: 'test-agent',
         tags: { module: 'module1', layer: 'frontend' }
       })
@@ -375,7 +375,7 @@ describe('Register API - General Behaviors', () => {
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
-        id: 1234,
+        id: '1234',
         name: 'test-agent',
         tags: { name: 'should-not-appear', id: 'also-not', type: 'ignored-too', validTag: 'yes' }
       })
@@ -394,7 +394,7 @@ describe('Register API - General Behaviors', () => {
       // Should only have source.validTag, not source.name or source.id or source.type from tags
       expect(error1.custom['source.validTag']).toEqual('yes')
       expect(error1.custom['source.name']).toEqual('test-agent') // This comes from the name property
-      expect(error1.custom['source.id']).toEqual(1234) // This comes from the id property
+      expect(error1.custom['source.id']).toEqual('1234') // This comes from the id property
       expect(error1.custom['source.type']).toEqual('MFE') // This comes from the type property
 
       // Verify there are no duplicate or conflicting attributes
@@ -415,7 +415,7 @@ describe('Register API - General Behaviors', () => {
 
     await browser.execute(function () {
       window.agent1 = newrelic.register({
-        id: 1234,
+        id: '1234',
         name: 'test-agent',
         tags: { name: 'ignored', id: 'also-ignored', type: 'ignored-too' }
       })
@@ -433,7 +433,7 @@ describe('Register API - General Behaviors', () => {
 
       // Should only have the standard source attributes, nothing from tags
       expect(error1.custom['source.name']).toEqual('test-agent')
-      expect(error1.custom['source.id']).toEqual(1234)
+      expect(error1.custom['source.id']).toEqual('1234')
       expect(error1.custom['source.type']).toEqual('MFE')
 
       // Should not have any extra source.* attributes beyond the standard ones

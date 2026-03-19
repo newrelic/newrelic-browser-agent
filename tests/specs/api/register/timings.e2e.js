@@ -21,7 +21,7 @@ describe('Register API - Timings', () => {
     }))
 
     await browser.execute(function () {
-      const mfe = newrelic.register({ id: 1, name: 'test-mfe' })
+      const mfe = newrelic.register({ id: '1', name: 'test-mfe' })
 
       // Simulate some work
       const start = Date.now()
@@ -71,7 +71,7 @@ describe('Register API - Timings', () => {
     }))
 
     await browser.execute(function () {
-      window.mfe = newrelic.register({ id: 1, name: 'test-mfe' })
+      window.mfe = newrelic.register({ id: '1', name: 'test-mfe' })
 
       // Simulate some work
       const start = Date.now()
@@ -99,7 +99,7 @@ describe('Register API - Timings', () => {
     }))
 
     await browser.execute(function () {
-      const mfe = newrelic.register({ id: 1, name: 'test-mfe' })
+      const mfe = newrelic.register({ id: '1', name: 'test-mfe' })
       mfe.deregister()
       window.dispatchEvent(new Event('pagehide'))
     })
@@ -121,7 +121,7 @@ describe('Register API - Timings', () => {
 
     const waitTime = await browser.execute(function () {
       const waitMs = 100
-      const mfe = newrelic.register({ id: 1, name: 'timed-mfe' })
+      const mfe = newrelic.register({ id: '1', name: 'timed-mfe' })
 
       setTimeout(() => {
         mfe.deregister()
@@ -150,7 +150,7 @@ describe('Register API - Timings', () => {
     }))
 
     await browser.execute(function () {
-      const parent = newrelic.register({ id: 1, name: 'parent-mfe' })
+      const parent = newrelic.register({ id: '1', name: 'parent-mfe' })
 
       // Wait a bit before creating child
       const start = Date.now()
@@ -158,7 +158,7 @@ describe('Register API - Timings', () => {
         // busy wait
       }
 
-      const child = newrelic.register({ id: 2, name: 'child-mfe' }, parent)
+      const child = newrelic.register({ id: '2', name: 'child-mfe' }, parent)
 
       // Deregister child first, then parent
       setTimeout(() => {
@@ -192,7 +192,7 @@ describe('Register API - Timings', () => {
 
       // Create multiple MFEs rapidly
       for (let i = 1; i <= 5; i++) {
-        mfes.push(newrelic.register({ id: i, name: `mfe-${i}` }))
+        mfes.push(newrelic.register({ id: String(i), name: `mfe-${i}` }))
       }
 
       // Deregister all after a short delay
@@ -223,7 +223,7 @@ describe('Register API - Timings', () => {
     }))
 
     await browser.execute(function () {
-      const mfe = newrelic.register({ id: 1, name: 'test-mfe' })
+      const mfe = newrelic.register({ id: '1', name: 'test-mfe' })
 
       // Do some work
       const start = Date.now()
@@ -263,7 +263,7 @@ describe('Register API - Timings', () => {
 
     await browser.execute(function () {
       // This is an inline script registration
-      const mfe = newrelic.register({ id: 1, name: 'inline-mfe' })
+      const mfe = newrelic.register({ id: '1', name: 'inline-mfe' })
       mfe.deregister()
     })
 
@@ -390,7 +390,7 @@ describe('Register API - Timings', () => {
     await browser.execute(function () {
       // Register from eval'd code which won't match any resource
       const code = `
-        const api = newrelic.register({ id: 999, name: 'eval-mfe' });
+        const api = newrelic.register({ id: '999', name: 'eval-mfe' });
         api.deregister();
       `
       // eslint-disable-next-line

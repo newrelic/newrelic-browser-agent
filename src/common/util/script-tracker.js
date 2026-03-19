@@ -121,7 +121,7 @@ export function findScriptTimings () {
   const timings = { registeredAt: now(), reportedAt: undefined, fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown' }
   const stack = getDeepStackTrace()
   if (!stack) return timings
-  const navUrl = globalScope.performance?.getEntriesByType('navigation')?.find(entry => entry.initiatorType === 'navigation')?.name || ''
+  const navUrl = globalScope.performance?.getEntriesByType('navigation')?.[0]?.name || ''
 
   try {
     const urls = extractUrlsFromStack(stack)

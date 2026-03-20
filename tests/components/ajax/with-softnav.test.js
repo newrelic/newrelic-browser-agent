@@ -45,7 +45,7 @@ beforeEach(async () => {
   softNavAggregate.events.clear()
 })
 afterEach(() => {
-  resetAgent(mainAgent.agentIdentifier)
+  resetAgent(mainAgent)
 })
 
 test('on interaction finish, ajax within time span are associated, others standalone', () => {

@@ -4,81 +4,71 @@
  */
 
 import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
-import { ee } from '../event-emitter/contextual-ee'
 import { registerHandler as defaultRegister } from '../event-emitter/register-handler'
 import { featurePriority } from '../../loaders/features/features'
 import { EventContext } from '../event-emitter/event-context'
-
-const registry = {}
 
 /**
  * Adds an entry to the centralized drain registry specifying that a particular agent has events of a particular named
  * event-group "bucket" that should be drained at the time the agent drains all its buffered events. Buffered events
  * accumulate because instrumentation begins as soon as possible, before the agent has finished lazy-loading the code
  * responsible for aggregating and reporting captured data.
- * @param {string} agentIdentifier - A 16 character string uniquely identifying the agent.
+ * @param {Object} agentRef - The agent reference object.
  * @param {string} group - The named "bucket" for the events this feature will be bucketing for later collection.
  */
-export function registerDrain (agentIdentifier, group) {
+export function registerDrain (agentRef, group) {
+  if (!agentRef) return
   // Here `item` captures the registered properties of a feature-group: whether it is ready for its buffered events
   // to be drained (`staged`) and the `priority` order in which it should be drained relative to other feature groups.
   const item = { staged: false, priority: featurePriority[group] || 0 }
-  curateRegistry(agentIdentifier)
-  if (!registry[agentIdentifier].get(group)) registry[agentIdentifier].set(group, item)
+  if (!agentRef.runtime.drainRegistry.get(group)) agentRef.runtime.drainRegistry.set(group, item)
 }
 
 /**
  * Removes an item from the registry and immediately re-checks if the registry is ready to "drain all"
- * @param {*} agentIdentifier - A 16 character string uniquely identifying the agent.
+ * @param {Object} agentRef - The agent reference object.
  * @param {*} group - The named "bucket" to be removed from the registry
  */
-export function deregisterDrain (agentIdentifier, group) {
-  if (!agentIdentifier || !registry[agentIdentifier]) return
-  if (registry[agentIdentifier].get(group)) registry[agentIdentifier].delete(group)
-  drainGroup(agentIdentifier, group, false)
-  if (registry[agentIdentifier].size) checkCanDrainAll(agentIdentifier)
-}
-
-/**
- * Registers the specified agent with the centralized event buffer registry if it is not already registered.
- * Agents without an identifier (as in the case of some tests) will be excluded from the registry.
- * @param {string} agentIdentifier - A 16 character string uniquely identifying an agent.
- */
-function curateRegistry (agentIdentifier) {
-  if (!agentIdentifier) throw new Error('agentIdentifier required')
-  if (!registry[agentIdentifier]) registry[agentIdentifier] = new Map()
+export function deregisterDrain (agentRef, group) {
+  if (!agentRef) return
+  const drainRegistry = agentRef.runtime.drainRegistry
+  if (!drainRegistry) return
+  if (drainRegistry.get(group)) drainRegistry.delete(group)
+  drainGroup(agentRef, group, false)
+  if (drainRegistry.size) checkCanDrainAll(agentRef)
 }
 
 /**
  * Drain buffered events out of the event emitter. Each feature should have its events bucketed by "group" and drain
  * its own named group explicitly, when ready.
- * @param {string} agentIdentifier - A unique 16 character ID corresponding to an instantiated agent.
+ * @param {Object} agentRef - The agent reference object.
  * @param {string} featureName - A named group into which the feature's buffered events are bucketed.
  * @param {boolean} force - Whether to force the drain to occur immediately, bypassing the registry and staging logic.
  */
-export function drain (agentIdentifier = '', featureName = 'feature', force = false) {
-  curateRegistry(agentIdentifier)
+export function drain (agentRef, featureName = 'feature', force = false) {
+  if (!agentRef) return
   // If the feature for the specified agent is not in the registry, that means the instrument file was bypassed.
   // This could happen in tests, or loaders that directly import the aggregator. In these cases it is safe to
   // drain the feature group immediately rather than waiting to drain all at once.
-  if (!agentIdentifier || !registry[agentIdentifier].get(featureName) || force) return drainGroup(agentIdentifier, featureName)
+  if (!agentRef.runtime.drainRegistry.get(featureName) || force) return drainGroup(agentRef, featureName)
 
   // When `drain` is called, this feature is ready to drain (staged).
-  registry[agentIdentifier].get(featureName).staged = true
+  agentRef.runtime.drainRegistry.get(featureName).staged = true
 
-  checkCanDrainAll(agentIdentifier)
+  checkCanDrainAll(agentRef)
 }
 
 /** Checks all items in the registry to see if they have been "staged".  If ALL items are staged, it will drain all registry items (drainGroup).  It not, nothing will happen */
-function checkCanDrainAll (agentIdentifier) {
+function checkCanDrainAll (agentRef) {
+  if (!agentRef) return
   // Only when the event-groups for all features are ready to drain (staged) do we execute the drain. This has the effect
   // that the last feature to call drain triggers drain for all features.
-  const items = Array.from(registry[agentIdentifier])
+  const items = Array.from(agentRef.runtime.drainRegistry)
   if (items.every(([key, values]) => values.staged)) {
     items.sort((a, b) => a[1].priority - b[1].priority)
     items.forEach(([group]) => {
-      registry[agentIdentifier].delete(group)
-      drainGroup(agentIdentifier, group)
+      agentRef.runtime.drainRegistry.delete(group)
+      drainGroup(agentRef, group)
     })
   }
 }
@@ -88,13 +78,13 @@ function checkCanDrainAll (agentIdentifier) {
    * the subscribed handlers for the group.
    * @param {*} group - The name of a particular feature's event "bucket".
    */
-function drainGroup (agentIdentifier, group, activateGroup = true) {
-  const baseEE = agentIdentifier ? ee.get(agentIdentifier) : ee
+function drainGroup (agentRef, group, activateGroup = true) {
+  if (!agentRef) return
+  const baseEE = agentRef.ee
   const handlers = defaultRegister.handlers // other storage in registerHandler
-  if (baseEE.aborted || !baseEE.backlog || !handlers) return
+  if (!baseEE || baseEE.aborted || !baseEE.backlog || !handlers) return
 
   dispatchGlobalEvent({
-    agentIdentifier,
     type: 'lifecycle',
     name: 'drain',
     feature: group

@@ -3,20 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { gosNREUM } from '../../../common/window/nreum'
 
 /**
  * Get an array of flags required by downstream (NR UI) based on the features initialized in this agent
  * (aka what is running on the page).
- * @param {String} agentId - the ID of the initialized agent on the page, mapping to the one under the global 'newrelic' object
+ * @param {Object} agentRef - the agent reference object
  * @returns {String[]} Up to 5 short strings corresponding to ingest mapping of features.
  */
-export function getActivatedFeaturesFlags (agentId) {
+export function getActivatedFeaturesFlags (agentRef) {
   const flagArr = []
-  const newrelic = gosNREUM()
 
   try {
-    Object.keys(newrelic.initializedAgents[agentId].features).forEach(featName => {
+    Object.keys(agentRef.features || {}).forEach(featName => {
       switch (featName) {
         case FEATURE_NAMES.ajax:
           flagArr.push('xhr'); break

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { FEATURE_NAMES } from '../../loaders/features/features'
@@ -11,8 +11,7 @@ export const SESSION_ERROR = 'SESSION_ERROR'
 
 export const SUPPORTS_REGISTERED_ENTITIES = {
   [FEATURE_NAMES.logging]: true,
-  // flip other features here when they are supported by DEM consumers
-  [FEATURE_NAMES.genericEvents]: false,
-  [FEATURE_NAMES.jserrors]: false,
+  [FEATURE_NAMES.genericEvents]: true,
+  [FEATURE_NAMES.jserrors]: true,
   [FEATURE_NAMES.ajax]: false
 }

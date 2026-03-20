@@ -263,6 +263,11 @@ module.exports = fp(async function (fastify, testServer) {
   }, async (request, reply) => {
     reply.code(404).send('')
   })
+  fastify.get('/mock/*', {
+    compress: false
+  }, (request, reply) => {
+    reply.code(200).send('')
+  })
   fastify.get('/dt/*', {
     compress: false
   }, (request, reply) => {

@@ -13,7 +13,7 @@ jest.retryTimes(0)
 let mainAgent
 
 beforeAll(async () => {
-  mainAgent = setupAgent()
+  mainAgent = setupAgent({ init: { api: { allow_registered_children: true } } })
 })
 
 let loggingAggregate
@@ -277,7 +277,16 @@ describe('payloads', () => {
         id: 1,
         name: 'test',
         type: 'MFE',
-        containerId: mainAgent.runtime.appMetadata.agents[0].entityGuid
+        containerId: mainAgent.runtime.appMetadata.agents[0].entityGuid,
+        get attributes () {
+          return {
+            'source.id': this.id,
+            'source.name': this.name,
+            'source.type': this.type,
+            'parent.id': this.parent?.id || this.containerId,
+            'parent.type': this.parent?.type || 'BA'
+          }
+        }
       }
       mainAgent.runtime.registeredEntities.push({ metadata: { target: registeredTarget } }) // mock that an entity is registered
       loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error', false, registeredTarget]) // supply an api "target" to mock a registered entity API call

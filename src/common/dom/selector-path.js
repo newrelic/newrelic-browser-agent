@@ -1,7 +1,9 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+
+import { getRegisteredTargetsFromId } from '../util/v2'
 
 /**
  * Generates a CSS selector path for the given element, if possible.
@@ -12,10 +14,11 @@
  *
  * @param {HTMLElement} elem
  * @param {Array<string>} [targetFields=[]] specifies which fields to gather from the nearest element in the path
- * @returns {{path: (undefined|string), nearestFields: {}, hasButton: boolean, hasLink: boolean}}
+ * @returns {{path: (undefined|string), nearestFields: {}, targets: Array, hasButton: boolean, hasLink: boolean}}
  */
-export const analyzeElemPath = (elem, targetFields = []) => {
-  const result = { path: undefined, nearestFields: {}, hasButton: false, hasLink: false }
+export const analyzeElemPath = (elem, targetFields = [], agentRef) => {
+  const targets = []
+  const result = { path: undefined, nearestFields: {}, get targets () { return targets.length ? targets : [undefined] }, hasButton: false, hasLink: false }
   if (!elem) return result
   if (elem === window) { result.path = 'window'; return result }
   if (elem === document) { result.path = 'document'; return result }
@@ -30,6 +33,12 @@ export const analyzeElemPath = (elem, targetFields = []) => {
       result.hasButton ||= tagName === 'button' || (tagName === 'input' && elem.type.toLowerCase() === 'button')
 
       targetFields.forEach(field => { result.nearestFields[nearestAttrName(field)] ||= (elem[field]?.baseVal || elem[field]) })
+
+      const dataAttrs = elem?.dataset
+      if (dataAttrs.nrMfeId) {
+        targets.push(...getRegisteredTargetsFromId(dataAttrs.nrMfeId, agentRef))
+      }
+
       pathSelector = buildPathSelector(elem, pathSelector)
       elem = elem.parentNode
     }

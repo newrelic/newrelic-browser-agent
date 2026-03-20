@@ -27,6 +27,9 @@ describe('Logging aggregate', () => {
       init: {
         privacy: {
           cookies_enabled: true
+        },
+        api: {
+          allow_registered_children: false
         }
       },
       runtime: {

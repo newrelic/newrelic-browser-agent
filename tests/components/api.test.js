@@ -33,7 +33,7 @@ jest.mock('../../src/common/util/script-tracker', () => {
 
 jest.retryTimes(0)
 
-let entityGuid, agent
+let agent
 describe('API tests', () => {
   describe('APIs', () => {
     beforeAll(() => {
@@ -42,7 +42,6 @@ describe('API tests', () => {
 
     beforeEach(async () => {
       console.debug = jest.fn()
-      entityGuid = faker.string.uuid()
       jest.spyOn(handleModule, 'handle')
       jest.spyOn(agent.ee, 'emit')
     })
@@ -691,160 +690,6 @@ describe('API tests', () => {
         expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar2', 'application.version': 'appversion', 'enduser.id': 'userid' })
       })
 
-      test('should duplicate data with config - true', () => {
-        agent.init.api.duplicate_registered_data = true
-        const target = { id, name }
-        const myApi = agent.register(target)
-
-        const customAttrs = { foo: 'bar' }
-
-        myApi.log('test', { customAttributes: customAttrs })
-
-        expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
-        expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
-        expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
-        expectHandle('log', 'test', 2)
-
-        agent.init.api.duplicate_registered_data = false
-      })
-
-      test('should add child.id and child.type to duplicated data - log', () => {
-        agent.init.api.duplicate_registered_data = true
-        const target = { id, name }
-        const myApi = agent.register(target)
-
-        const customAttrs = { foo: 'bar' }
-
-        myApi.log('test', { customAttributes: customAttrs })
-
-        // Find the handle calls for 'log'
-        const logCalls = handleModule.handle.mock.calls.filter(call => call[0] === 'log')
-        expect(logCalls.length).toBe(2)
-
-        // First call is the duplicate to container - should have child.id and child.type
-        const containerCall = logCalls[0]
-        expect(containerCall[1][2]).toEqual({ foo: 'bar', 'child.id': id, 'child.type': 'MFE' })
-
-        // Second call is to the registered entity target - should not have child.id or child.type
-        const targetCall = logCalls[1]
-        expect(targetCall[1][2]).toEqual({ foo: 'bar' })
-        expect(targetCall[1][2]).not.toHaveProperty('child.id')
-        expect(targetCall[1][2]).not.toHaveProperty('child.type')
-
-        agent.init.api.duplicate_registered_data = false
-      })
-
-      test('should add child.id and child.type to duplicated data - addPageAction', () => {
-        agent.init.api.duplicate_registered_data = true
-        const target = { id, name }
-        const myApi = agent.register(target)
-
-        const customAttrs = { foo: 'bar' }
-
-        myApi.addPageAction('test', customAttrs)
-
-        // Find the handle calls for 'api-addPageAction'
-        const pageActionCalls = handleModule.handle.mock.calls.filter(call => call[0] === 'api-addPageAction')
-        expect(pageActionCalls.length).toBe(2)
-
-        // First call is the duplicate to container - should have child.id and child.type
-        const containerCall = pageActionCalls[0]
-        expect(containerCall[1][2]).toEqual({ foo: 'bar', 'child.id': id, 'child.type': 'MFE' })
-
-        // Second call is to the registered entity target - should not have child.id or child.type
-        const targetCall = pageActionCalls[1]
-        expect(targetCall[1][2]).toEqual({ foo: 'bar' })
-        agent.init.api.duplicate_registered_data = false
-      })
-
-      test('should add child.id and child.type to duplicated data - noticeError', () => {
-        agent.init.api.duplicate_registered_data = true
-        const target = { id, name }
-        const myApi = agent.register(target)
-
-        const err = new Error('test')
-        const customAttrs = { foo: 'bar' }
-
-        myApi.noticeError(err, customAttrs)
-
-        // Find the handle calls for 'err'
-        const errorCalls = handleModule.handle.mock.calls.filter(call => call[0] === 'err')
-        expect(errorCalls.length).toBe(2)
-
-        // First call is the duplicate to container - should have child.id and child.type
-        const containerCall = errorCalls[0]
-        expect(containerCall[1][3]).toEqual({ foo: 'bar', 'child.id': id, 'child.type': 'MFE' })
-
-        // Second call is to the registered entity target - should not have child.id or child.type
-        const targetCall = errorCalls[1]
-        expect(targetCall[1][3]).toEqual({ foo: 'bar' })
-
-        agent.init.api.duplicate_registered_data = false
-      })
-
-      test('should add child.id and child.type to duplicated data - measure', () => {
-        agent.init.api.duplicate_registered_data = true
-        const target = { id, name }
-        const myApi = agent.register(target)
-
-        myApi.measure('test', { customAttributes: { foo: 'bar' } })
-
-        // Find the handle calls for 'api-measure'
-        const measureCalls = handleModule.handle.mock.calls.filter(call => call[0] === 'api-measure')
-        expect(measureCalls.length).toBe(2)
-
-        // First call is the duplicate to container - should have child.id and child.type in customAttributes
-        const containerCall = measureCalls[0]
-        expect(containerCall[1][0].customAttributes).toEqual({ foo: 'bar', 'child.id': id, 'child.type': 'MFE' })
-
-        // Second call is to the registered entity target - should not have child.id or child.type
-        const targetCall = measureCalls[1]
-        expect(targetCall[1][0].customAttributes).toEqual({ foo: 'bar' })
-
-        agent.init.api.duplicate_registered_data = false
-      })
-
-      test('should add child.id and child.type to duplicated data - recordCustomEvent', () => {
-        agent.init.api.duplicate_registered_data = true
-        const target = { id, name }
-        const myApi = agent.register(target)
-
-        const customAttrs = { foo: 'bar' }
-
-        myApi.recordCustomEvent('testEvent', customAttrs)
-
-        // Find the handle calls for 'api-recordCustomEvent'
-        const customEventCalls = handleModule.handle.mock.calls.filter(call => call[0] === 'api-recordCustomEvent')
-        expect(customEventCalls.length).toBe(2)
-
-        // First call is the duplicate to container - should have child.id and child.type
-        const containerCall = customEventCalls[0]
-        expect(containerCall[1][2]).toEqual({ foo: 'bar', 'child.id': id, 'child.type': 'MFE' })
-
-        // Second call is to the registered entity target - should not have child.id or child.type
-        const targetCall = customEventCalls[1]
-        expect(targetCall[1][2]).toEqual({ foo: 'bar' })
-
-        agent.init.api.duplicate_registered_data = false
-      })
-
-      test('should duplicate data with config - matching entity guid', async () => {
-        agent.init.api.duplicate_registered_data = [entityGuid]
-        const target = { id, name }
-        const myApi = agent.register(target)
-
-        const customAttrs = { foo: 'bar' }
-
-        myApi.log('test', { customAttributes: customAttrs })
-
-        expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
-        expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
-        expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
-        expectHandle('log', 'test', 2)
-
-        agent.init.api.duplicate_registered_data = false
-      })
-
       describe('noticeError', () => {
         test('should call base apis', async () => {
           const target = { id, name }
@@ -1195,6 +1040,10 @@ describe('API tests', () => {
     })
 
     describe('logging', () => {
+      beforeAll(async () => {
+        await initializeFeature(Logging, agent)
+      })
+
       describe('wrapLogger', () => {
         test('should emit events for calls by wrapped function - defaults', () => {
           const myLoggerPackage = {

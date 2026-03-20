@@ -51,12 +51,12 @@ afterEach(() => {
 test('on interaction finish, ajax within time span are associated, others standalone', () => {
   softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
   softNavAggregate.ee.emit('newURL', [150, 'new_location'])
-  ajaxAggregate.storeXhr(params, metrics, 175, 225, 'XMLHttpRequest', context) // ensure xhr happening during default heuristics are associated
+  ajaxAggregate.storeXhr(params, metrics, 175, 225, 'XMLHttpRequest', undefined, undefined, context) // ensure xhr happening during default heuristics are associated
   softNavAggregate.ee.emit('newDom', [200])
   expect(softNavAggregate.interactionInProgress).toBeTruthy()
 
-  ajaxAggregate.storeXhr(params, metrics, 250, 350, 'fetch', context) // ensure xhr happening during wait window for actualized long tasks are associated
-  ajaxAggregate.storeXhr(params, metrics, 325, 400, 'XMLHttpRequest', context) // this one should fall outside the final interaction span and be standalone
+  ajaxAggregate.storeXhr(params, metrics, 250, 350, 'fetch', undefined, undefined, context) // ensure xhr happening during wait window for actualized long tasks are associated
+  ajaxAggregate.storeXhr(params, metrics, 325, 400, 'XMLHttpRequest', undefined, undefined, context) // this one should fall outside the final interaction span and be standalone
   expect(ajaxAggregate.events.get().length).toEqual(0)
 
   softNavAggregate.interactionInProgress.customEnd = 300 // simulate a long task extending the interaction end time (pretend there's some delay (waiting window) before ixn gets finalized)
@@ -77,9 +77,10 @@ test('on spa API .end(), ajax prior to call is associated and post-call is stand
   softNavAggregate.ee.emit('newURL', [150, 'new_location'])
   softNavAggregate.ee.emit('newDom', [200])
 
-  ajaxAggregate.storeXhr(params, metrics, 250, 299, 'fetch', context)
+  // params, metrics, startTime, endTime, type, target, customAttributes, ctx
+  ajaxAggregate.storeXhr(params, metrics, 250, 299, 'fetch', undefined, undefined, context)
   softNavAggregate.interactionInProgress.done(300, true) // simulate API call to .end() at 300, this would occur in order
-  ajaxAggregate.storeXhr(params, metrics, 301, 350, 'fetch', context)
+  ajaxAggregate.storeXhr(params, metrics, 301, 350, 'fetch', undefined, undefined, context)
 
   expect(ajaxAggregate.events.get().length).toEqual(1)
   const ixn = softNavAggregate.events.get()[0]

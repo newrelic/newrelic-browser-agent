@@ -14,6 +14,7 @@ import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { globalScope } from '../constants/runtime'
 import { warn } from '../util/console'
+import { findTargetsFromStackTrace } from '../util/v2'
 
 const wrapped = {}
 const XHR_PROPS = ['open', 'send'] // these are the specific funcs being wrapped on all XMLHttpRequests(.prototype)
@@ -25,7 +26,7 @@ const XHR_PROPS = ['open', 'send'] // these are the specific funcs being wrapped
  * @returns {Object} Scoped event emitter with a debug ID of `xhr`.
  */
 // eslint-disable-next-line
-export function wrapXhr (sharedEE) {
+export function wrapXhr (sharedEE, agentRef) {
   var baseEE = sharedEE || contextualEE
   const ee = scopedEE(baseEE)
 
@@ -36,8 +37,8 @@ export function wrapXhr (sharedEE) {
   if (wrapped[ee.debugId]++) return ee
   wrapped[ee.debugId] = 1 // otherwise, first feature to wrap XHR
 
-  wrapEvents(baseEE) // wrap-events patches XMLHttpRequest.prototype.addEventListener for us
-  var wrapFn = wfn(ee)
+  wrapEvents(baseEE, agentRef) // wrap-events patches XMLHttpRequest.prototype.addEventListener for us
+  var wrapFn = wfn(ee, undefined, agentRef)
 
   var OrigXHR = globalScope.XMLHttpRequest
   var MutationObserver = globalScope.MutationObserver
@@ -54,6 +55,7 @@ export function wrapXhr (sharedEE) {
   function newXHR (opts) {
     const xhr = new OrigXHR(opts)
     const context = ee.context(xhr)
+    context.targets = findTargetsFromStackTrace(agentRef)
 
     try {
       ee.emit('new-xhr', [xhr], context)

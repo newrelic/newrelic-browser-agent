@@ -37,4 +37,4 @@ window.sendGQL = function (operationName = 'standalone') {
     })
 }
 
-window.addEventListener('load', function () { window.sendGQL('initialPageLoad') })
+window.sendGQL('initialPageLoad') // ensure this consistently gets triggered during the page load since the tests always expect it in the IPL ixn

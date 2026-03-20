@@ -13,22 +13,23 @@ jest.mock('../../../../src/common/event-emitter/contextual-ee', () => ({
 
 let agentIdentifier
 let featureName
+let agentRef
+let mockEE
 
 beforeEach(() => {
   agentIdentifier = faker.string.uuid()
   featureName = faker.string.uuid()
+  mockEE = { [faker.string.uuid()]: faker.lorem.sentence() }
+  agentRef = { agentIdentifier, ee: mockEE }
 })
 
 test('should set instance defaults', () => {
-  const mockEE = { [faker.string.uuid()]: faker.lorem.sentence() }
-  jest.mocked(ee.get).mockReturnValue(mockEE)
+  const feature = new FeatureBase(agentRef, featureName)
 
-  const feature = new FeatureBase(agentIdentifier, featureName)
-
-  expect(feature.agentIdentifier).toEqual(agentIdentifier)
+  expect(feature.agentRef).toEqual(agentRef)
   expect(feature.featureName).toEqual(featureName)
   expect(feature.blocked).toEqual(false)
   expect(feature.ee).toEqual(mockEE)
 
-  expect(ee.get).toHaveBeenCalledWith(agentIdentifier)
+  expect(ee.get).not.toHaveBeenCalled() // Should use agentRef.ee directly
 })

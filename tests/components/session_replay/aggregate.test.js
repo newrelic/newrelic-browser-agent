@@ -35,7 +35,7 @@ beforeEach(async () => {
 })
 
 afterEach(() => {
-  resetAgent(mainAgent.agentIdentifier)
+  resetAgent(mainAgent)
   mainAgent.runtime.harvester.triggerHarvestFor.mockRestore()
   jest.clearAllMocks()
 })

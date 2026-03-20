@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    {init}
+    {config}
+    <script>
+      localStorage.clear()
+      NREUM.init.feature_flags = ['register', 'websockets']
+    </script>
+    {loader}
+    <title>Vite MFE Test - Register API</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="src/main.tsx"></script>
+    <script src="/assets/js/2nd-mfe.js" async></script>
+  </body>
+</html>

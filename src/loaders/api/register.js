@@ -18,6 +18,7 @@ import { measure } from './measure'
 import { recordCustomEvent } from './recordCustomEvent'
 import { subscribeToPageUnload } from '../../common/window/page-visibility'
 import { findScriptTimings } from '../../common/util/script-tracker'
+import { generateRandomHexString } from '../../common/ids/unique-id'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPI} RegisterAPI
@@ -48,15 +49,32 @@ function register (agentRef, target, parent) {
   warn(54, 'newrelic.register')
 
   target ||= {}
+  target.instance = generateRandomHexString(8)
   target.type = V2_TYPES.MFE
   target.licenseKey ||= agentRef.info.licenseKey // will inherit the license key from the container agent if not provided for brevity. A future state may dictate that we need different license keys to do different things.
   target.blocked = false
   target.parent = parent || {}
   if (typeof target.tags !== 'object' || target.tags === null || Array.isArray(target.tags)) target.tags = {}
+  target.parent = parent || {
+    get id () { return agentRef.runtime.appMetadata.agents[0].entityGuid }, // getter because this is asyncronously set
+    type: V2_TYPES.BA
+  }
 
   const timings = findScriptTimings()
 
   const attrs = {}
+  Object.defineProperty(target, 'attributes', {
+    get () {
+      return {
+        'source.id': target.id,
+        'source.name': target.name,
+        'source.type': target.type,
+        'parent.type': target.parent?.type || V2_TYPES.BA,
+        'parent.id': target.parent?.id,
+        ...attrs // this is abstracted out to a getter so that the other attributes cant be overridden
+      }
+    }
+  })
 
   // Process tags object and add to attrs, excluding protected keys
   Object.entries(target.tags).forEach(([key, value]) => {
@@ -113,7 +131,7 @@ function register (agentRef, target, parent) {
     setUserId: (value) => setLocalValue('enduser.id', value),
     /** metadata */
     metadata: {
-      customAttributes: attrs,
+      get customAttributes () { return attrs },
       target,
       timings
     }
@@ -180,16 +198,6 @@ function register (agentRef, target, parent) {
     const timestamp = now()
     handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodToCall.name}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)
     try {
-      const shouldDuplicate = agentRef.init.api.duplicate_registered_data && methodToCall !== register
-      if (shouldDuplicate) {
-        let duplicatedArgs = args
-        if (args[1] instanceof Object) {
-          const childAttrs = { 'child.id': target.id, 'child.type': target.type }
-          if ('customAttributes' in args[1]) duplicatedArgs = [args[0], { ...args[1], customAttributes: { ...args[1].customAttributes, ...childAttrs } }, ...args.slice(2)]
-          else duplicatedArgs = [args[0], { ...args[1], ...childAttrs }, ...args.slice(2)]
-        }
-        methodToCall(...duplicatedArgs, undefined, timestamp)
-      }
       return methodToCall(...args, target, timestamp) // always report to target
     } catch (err) {
       warn(50, err)

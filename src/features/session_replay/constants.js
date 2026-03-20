@@ -54,6 +54,5 @@ export const TRIGGERS = {
   RESUME: 'resume',
   SWITCH_TO_FULL: 'switchToFull',
   INITIALIZE: 'initialize',
-  PRELOAD: 'preload',
-  RETRY_SUCCESS: 'retrySuccess'
+  PRELOAD: 'preload'
 }

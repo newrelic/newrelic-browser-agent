@@ -342,6 +342,7 @@ export class Aggregate extends AggregateBase {
   postHarvestCleanup (result) {
     if (result.sent) {
       if (result.retry) {
+        warn(70)
         this.retrying = true
         this.forceStop()
       } else {

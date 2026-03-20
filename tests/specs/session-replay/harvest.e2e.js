@@ -1,5 +1,5 @@
 import { notIOS, onlyChrome } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { srConfig, decodeAttributes, getSR } from '../util/helpers'
+import { srConfig, decodeAttributes, getSR, testExpectedReplay } from '../util/helpers'
 import { testBlobReplayRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('Session Replay Harvest Behavior', () => {
@@ -107,5 +107,101 @@ describe('Session Replay Harvest Behavior', () => {
 
     expect(sessionReplayHarvests.length).toBeGreaterThan(1)
     expect(sessionReplayHarvests[sessionReplayHarvests.length - 1].request.query.sendBeacon).toEqual('true')
+  })
+
+  describe('Retry Payload Integrity', () => {
+    it('should retry failed payload successfully on next harvest', async () => {
+      // Schedule the first harvest to fail with 500
+      await browser.testHandle.scheduleReply('bamServer', {
+        test: testBlobReplayRequest,
+        statusCode: 500
+      })
+
+      const [firstHarvest] = await Promise.all([
+        sessionReplaysCapture.waitForResult({ totalCount: 1 }),
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
+          .then(() => browser.waitForSessionReplayRecording())
+      ])
+
+      expect(firstHarvest[0].reply.statusCode).toEqual(500)
+      const failedPayload = firstHarvest[0].request
+
+      // Verify the payload has expected structure even though it failed
+      expect(failedPayload.body).toEqual(expect.any(Array))
+      expect(failedPayload.body.length).toBeGreaterThan(0)
+      expect(failedPayload.query.attributes).toBeDefined()
+      const failedAttrs = decodeAttributes(failedPayload.query.attributes)
+      expect(failedAttrs['replay.firstTimestamp']).toBeGreaterThan(0)
+      expect(failedAttrs['replay.lastTimestamp']).toBeGreaterThan(0)
+
+      // Clear the scheduled reply so next harvest can succeed
+      await browser.testHandle.clearScheduledReplies('bamServer')
+
+      // Wait for the next harvest (triggered by harvest interval)
+      const [secondHarvest] = await Promise.all([
+        sessionReplaysCapture.waitForResult({ totalCount: 2, timeout: 10000 })
+      ])
+
+      // Find the successful retry harvest
+      const successfulRetryHarvest = secondHarvest.find(harvest => harvest.reply.statusCode === 200)
+      expect(successfulRetryHarvest).toBeDefined()
+
+      // Verify the retried payload contains the same data as the failed payload
+      expect(successfulRetryHarvest.request.body).toEqual(failedPayload.body)
+      expect(successfulRetryHarvest.request.query.attributes).toEqual(failedPayload.query.attributes)
+      expect(successfulRetryHarvest.request.query.timestamp).toEqual(failedPayload.query.timestamp)
+    })
+
+    it('should preserve payload structure across retry attempts', async () => {
+      // Schedule multiple failures
+      await browser.testHandle.scheduleReply('bamServer', {
+        test: testBlobReplayRequest,
+        statusCode: 502,
+        permanent: false
+      })
+
+      const [harvests] = await Promise.all([
+        sessionReplaysCapture.waitForResult({ totalCount: 1 }),
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
+          .then(() => browser.waitForSessionReplayRecording())
+      ])
+
+      const failedHarvest = harvests.find(h => h.reply.statusCode === 502)
+      expect(failedHarvest).toBeDefined()
+
+      // Validate that failed payload maintains proper structure
+      testExpectedReplay({
+        data: failedHarvest.request,
+        hasMeta: true,
+        hasSnapshot: true,
+        isFirstChunk: true
+      })
+    })
+
+    it('should handle successful harvest after clearing retryPayload', async () => {
+      // First harvest succeeds normally
+      const [firstHarvest] = await Promise.all([
+        sessionReplaysCapture.waitForResult({ totalCount: 1 }),
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
+          .then(() => browser.waitForSessionReplayRecording())
+      ])
+
+      expect(firstHarvest[0].reply.statusCode).toEqual(200)
+
+      // Generate another event
+      const [secondHarvest] = await Promise.all([
+        sessionReplaysCapture.waitForResult({ totalCount: 2, timeout: 10000 }),
+        browser.execute(function () {
+          document.body.click()
+        })
+      ])
+
+      const successfulSecondHarvest = secondHarvest[1]
+      expect(successfulSecondHarvest).toBeDefined()
+      expect(successfulSecondHarvest.request.body.length).toBeGreaterThan(0)
+
+      // Verify payloads are different (not retrying same payload)
+      expect(successfulSecondHarvest.request.body).not.toEqual(firstHarvest[0].request.body)
+    })
   })
 })

@@ -26,7 +26,7 @@ describe('load-time', () => {
           }])
         }
       },
-      supportsNavTimingL2: () => true
+      getNavigationEntry: () => ({ loadEventEnd: 1500 })
     }))
 
     getFreshLoadTimeImport(metric => {
@@ -50,7 +50,7 @@ describe('load-time', () => {
         }
       },
       originTime: 500,
-      supportsNavTimingL2: () => false
+      getNavigationEntry: () => undefined
     }))
 
     getFreshLoadTimeImport(metric => {
@@ -66,7 +66,7 @@ describe('load-time', () => {
     jest.doMock('../../../../src/common/constants/runtime', () => ({
       __esModule: true,
       isBrowserScope: false,
-      supportsNavTimingL2: () => true
+      getNavigationEntry: () => undefined
     }))
 
     getFreshLoadTimeImport(metric => {
@@ -83,7 +83,7 @@ describe('load-time', () => {
       __esModule: true,
       isBrowserScope: true,
       globalScope: {},
-      supportsNavTimingL2: () => true
+      getNavigationEntry: () => undefined
     }))
 
     getFreshLoadTimeImport(metric => {
@@ -107,7 +107,7 @@ describe('load-time', () => {
           }])
         }
       },
-      supportsNavTimingL2: () => true
+      getNavigationEntry: () => ({ loadEventEnd: 1200 })
     }))
 
     let callCount = 0
@@ -137,7 +137,7 @@ describe('load-time', () => {
         }
       },
       originTime: 1000,
-      supportsNavTimingL2: () => false
+      getNavigationEntry: () => undefined
     }))
 
     let callCount = 0
@@ -167,7 +167,7 @@ describe('load-time', () => {
           }])
         }
       },
-      supportsNavTimingL2: () => true
+      getNavigationEntry: () => ({ loadEventEnd: 800 })
     }))
 
     let witness = 0
@@ -196,7 +196,7 @@ describe('load-time', () => {
           }])
         }
       },
-      supportsNavTimingL2: () => true
+      getNavigationEntry: () => ({ loadEventEnd: 1000 })
     }))
 
     let triggered = 0
@@ -222,7 +222,7 @@ describe('load-time', () => {
           getEntriesByType: jest.fn(() => []) // Empty array
         }
       },
-      supportsNavTimingL2: () => true
+      getNavigationEntry: () => undefined
     }))
 
     getFreshLoadTimeImport(metric => {
@@ -244,7 +244,7 @@ describe('load-time', () => {
           getEntriesByType: jest.fn(() => null)
         }
       },
-      supportsNavTimingL2: () => true
+      getNavigationEntry: () => undefined
     }))
 
     getFreshLoadTimeImport(metric => {

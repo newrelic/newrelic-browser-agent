@@ -46,10 +46,10 @@ beforeEach(() => {
 test('should construct a new instrument', () => {
   const instrument = new InstrumentBase(agentBase, featureName)
 
-  expect(FeatureBase).toHaveBeenCalledWith(agentIdentifier, featureName)
+  expect(FeatureBase).toHaveBeenCalledWith(agentBase, featureName)
   expect(instrument.featAggregate).toBeUndefined()
   expect(instrument.abortHandler).toBeUndefined()
-  expect(registerDrain).toHaveBeenCalledWith(agentIdentifier, featureName)
+  expect(registerDrain).toHaveBeenCalledWith(agentBase, featureName)
 })
 
 test('should wait for feature opt-in to import the aggregate', async () => {
@@ -62,7 +62,7 @@ test('should wait for feature opt-in to import the aggregate', async () => {
   const optInCallback = jest.mocked(instrument.ee.on).mock.calls[0][1]
   optInCallback()
 
-  expect(registerDrain).toHaveBeenCalledWith(agentIdentifier, featureName)
+  expect(registerDrain).toHaveBeenCalledWith(agentBase, featureName)
   expect(instrument.deferred).resolves.toBe(undefined)
 })
 
@@ -134,7 +134,7 @@ test('no uncaught async exception is thrown when an import fails', async () => {
 
   expect(warn).toHaveBeenCalledWith(34, expect.any(Error))
   expect(instrument.abortHandler).toHaveBeenCalled()
-  expect(drain).toHaveBeenCalledWith(agentIdentifier, featureName, true)
+  expect(drain).toHaveBeenCalledWith(agentBase, featureName, true)
   expect(instrument.featAggregate).toBeUndefined()
   expect(mockOnError).not.toHaveBeenCalled()
 })
@@ -166,6 +166,6 @@ test('should drain and not import agg when shouldImportAgg is false for session_
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
   await windowLoadCallback()
 
-  expect(drain).toHaveBeenCalledWith(agentIdentifier, FEATURE_NAMES.sessionReplay)
+  expect(drain).toHaveBeenCalledWith(agentBase, FEATURE_NAMES.sessionReplay)
   expect(mockAggregate).not.toHaveBeenCalled()
 })

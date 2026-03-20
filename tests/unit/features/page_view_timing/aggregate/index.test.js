@@ -1,16 +1,26 @@
 import * as qp from '@newrelic/nr-querypack'
 import { Aggregate } from '../../../../../src/features/page_view_timing/aggregate'
+import { ee } from '../../../../../src/common/event-emitter/contextual-ee'
 
 jest.mock('../../../../../src/common/harvest/harvester')
 jest.mock('../../../../../src/common/util/webdriver-detection', () => ({
   webdriverDetected: false
 }))
+jest.mock('../../../../../src/common/constants/runtime', () => ({
+  ...jest.requireActual('../../../../../src/common/constants/runtime'),
+  getNavigationEntry: () => ({ name: 'https://example.com/test-page?query=value#hash' })
+}))
 
+const agentIdentifier = 'abcd'
 const agentInst = {
-  agentIdentifier: 'abcd',
+  agentIdentifier,
+  ee: ee.get(agentIdentifier),
   info: {},
   init: { page_view_timing: {} },
-  runtime: {}
+  runtime: {
+    jsAttributesMetadata: { bytes: 0 },
+    registeredEntities: []
+  }
 }
 const pvtAgg = new Aggregate(agentInst)
 
@@ -112,6 +122,32 @@ describe('PVT aggregate', () => {
       'net-dlink': 'downlink'
     }))
     global.navigator.connection = {}
+  })
+
+  test('all timings have pageUrl attribute set to initial navigation URL, even after soft navigation', () => {
+    const timing1 = pvtAgg.addTiming('fp', 100)
+    const timing2 = pvtAgg.addTiming('fcp', 200)
+
+    // Verify initial timings have the cleaned initial page URL
+    expect(timing1.attrs.pageUrl).toBe('https://example.com/test-page')
+    expect(timing2.attrs.pageUrl).toBe('https://example.com/test-page')
+
+    // Simulate a soft navigation (SPA route change) by changing window.location
+    // Note: getNavigationEntry() returns the FIRST navigation entry, which never changes even when location changes in SPA
+    Object.defineProperty(window, 'location', {
+      value: { href: 'https://example.com/new-spa-route' },
+      writable: true,
+      configurable: true
+    })
+
+    const timing3 = pvtAgg.addTiming('lcp', 300, { size: 1000, eid: 'hero-image' })
+    const timing4 = pvtAgg.addTiming('cls', 0.05)
+    const timing5 = pvtAgg.addTiming('pageHide', 5000)
+
+    // All timings should still have the INITIAL page URL, not the new SPA route
+    expect(timing3.attrs.pageUrl).toBe('https://example.com/test-page')
+    expect(timing4.attrs.pageUrl).toBe('https://example.com/test-page')
+    expect(timing5.attrs.pageUrl).toBe('https://example.com/test-page')
   })
 })
 

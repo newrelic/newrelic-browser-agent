@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { drain } from '../../common/drain/drain'
-import { ee } from '../../common/event-emitter/contextual-ee'
 import { registerHandler } from '../../common/event-emitter/register-handler'
 import { SessionEntity } from '../../common/session/session-entity'
 import { LocalStorage } from '../../common/storage/local-storage.js'
@@ -22,7 +21,7 @@ export function setupAgentSession (agentRef) {
   const sessionInit = agentRef.init.session
 
   agentRef.runtime.session = new SessionEntity({
-    agentIdentifier: agentRef.agentIdentifier,
+    agentRef,
     key: DEFAULT_KEY,
     storage: new LocalStorage(),
     expiresMs: sessionInit?.expiresMs,
@@ -45,7 +44,7 @@ export function setupAgentSession (agentRef) {
   /** track changes to the jsAttributes field over time for aiding with harvest mechanics */
   agentRef.runtime.jsAttributesMetadata = trackObjectAttributeSize(agentRef.info, 'jsAttributes')
 
-  const sharedEE = ee.get(agentRef.agentIdentifier)
+  const sharedEE = agentRef.ee
 
   // any calls to newrelic.setCustomAttribute(<persisted>) will need to be added to:
   // local info.jsAttributes {}
@@ -71,7 +70,7 @@ export function setupAgentSession (agentRef) {
     agentRef.runtime.session.write({ consent: accept === undefined ? true : accept })
   }, 'session', sharedEE)
 
-  drain(agentRef.agentIdentifier, 'session')
+  drain(agentRef, 'session')
 
   return agentRef.runtime.session
 }

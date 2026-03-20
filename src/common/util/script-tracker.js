@@ -6,14 +6,22 @@
 import { globalScope } from '../constants/runtime'
 import { now } from '../timing/now'
 import { cleanURL } from '../url/clean-url'
-import { chrome, gecko } from './browser-stack-matchers'
+import { chrome, chromeEval, gecko } from './browser-stack-matchers'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPITimings} RegisterAPITimings
  */
 
+/** export for testing purposes */
+export let thisFile
+try {
+  thisFile = extractUrlsFromStack(getDeepStackTrace()).at(0)
+} catch (err) {
+  thisFile = extractUrlsFromStack(err).at(0)
+}
+
 /** @type {(entry: PerformanceEntry) => boolean} - A shared function to determine if a performance entry is a valid script or link resource for evaluation */
-const validEntryCriteria = entry => entry.initiatorType === 'script' || (entry.initiatorType === 'link' && entry.name.endsWith('.js'))
+const validEntryCriteria = entry => entry.initiatorType === 'script' || (['link', 'fetch'].includes(entry.initiatorType) && entry.name.endsWith('.js'))
 
 /** @type {Set<PerformanceResourceTiming>} - A set of resource timing objects that are "valid" -- see "validEntryCriteria" */
 const scripts = new Set()
@@ -54,9 +62,15 @@ export function extractUrlsFromStack (stack) {
 
   for (const line of lines) {
     // Try gecko format first, then chrome
-    const parts = line.match(gecko) || line.match(chrome)
+    const parts = line.match(gecko) || line.match(chrome) || line.match(chromeEval)
     if (parts && parts[2]) {
       urls.add(cleanURL(parts[2]))
+    } else {
+      // Fallback: match URLs using a generic .js pattern (non-greedy to handle ports and query params)
+      const fallbackMatch = line.match(/\(([^)]+\.js):\d+:\d+\)/) || line.match(/^\s+at\s+([^\s(]+\.js):\d+:\d+/)
+      if (fallbackMatch && fallbackMatch[1]) {
+        urls.add(cleanURL(fallbackMatch[1]))
+      }
     }
   }
   return [...urls]
@@ -107,11 +121,14 @@ export function findScriptTimings () {
   const timings = { registeredAt: now(), reportedAt: undefined, fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown' }
   const stack = getDeepStackTrace()
   if (!stack) return timings
-  const navUrl = globalScope.performance?.getEntriesByType('navigation')?.find(entry => entry.initiatorType === 'navigation')?.name || ''
+  const navUrl = globalScope.performance?.getEntriesByType('navigation')?.[0]?.name || ''
 
   try {
-    const mfeScriptUrl = extractUrlsFromStack(stack).at(-1) // array of URLs from the stack of the register API caller, the MFE script should be at the bottom
+    const urls = extractUrlsFromStack(stack)
+    /** if there is exactly one url, this means the MFE script is running in the same file as the agent.  Otherwise, lets strip away the known agent file from any other file lines */
+    const mfeScriptUrl = (urls.length > 1 ? urls.filter(line => (!thisFile.endsWith(line) && !line.endsWith(thisFile))) : urls).at(0)
     if (!mfeScriptUrl) return timings
+
     if (navUrl.includes(mfeScriptUrl)) {
       // this means the stack is indicating that the registration came from an inline script or eval, so we won't find a matching script resource - return early with just the URL
       timings.asset = cleanURL(navUrl)
@@ -129,6 +146,7 @@ export function findScriptTimings () {
       if (wasPreloaded(mfeScriptUrl)) {
         timings.asset = mfeScriptUrl
         timings.type = 'preload'
+
         // wait for a late PO callback...  The timings object can be mutated after the fact since we return a pointer and not a cloned object
         poSubscribers.push({
           addedAt: now(),

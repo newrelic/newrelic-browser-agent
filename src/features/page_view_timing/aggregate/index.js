@@ -16,12 +16,13 @@ import { interactionToNextPaint } from '../../../common/vitals/interaction-to-ne
 import { largestContentfulPaint } from '../../../common/vitals/largest-contentful-paint'
 import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
 import { VITAL_NAMES } from '../../../common/vitals/constants'
-import { initiallyHidden } from '../../../common/constants/runtime'
+import { initiallyHidden, getNavigationEntry, initialLocation } from '../../../common/constants/runtime'
 import { eventOrigin } from '../../../common/util/event-origin'
 import { loadTime } from '../../../common/vitals/load-time'
 import { webdriverDetected } from '../../../common/util/webdriver-detection'
 import { analyzeElemPath } from '../../../common/dom/selector-path'
 import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/util/v2'
+import { cleanURL } from '../../../common/url/clean-url'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -73,6 +74,8 @@ export class Aggregate extends AggregateBase {
 
   addTiming (name, value, attrs, element) {
     attrs = attrs || {}
+    attrs.pageUrl = cleanURL(getNavigationEntry()?.name || initialLocation)
+
     addConnectionAttributes(attrs) // network conditions may differ from the actual for VitalMetrics when they were captured
 
     // If cls was set to another value by `onCLS`, then it's supported and is attached onto any timing but is omitted until such time.

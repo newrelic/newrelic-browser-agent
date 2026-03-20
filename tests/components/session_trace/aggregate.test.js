@@ -26,7 +26,7 @@ beforeEach(async () => {
 })
 
 afterEach(() => {
-  resetAgent(mainAgent.agentIdentifier)
+  resetAgent(mainAgent)
   jest.clearAllMocks()
 })
 

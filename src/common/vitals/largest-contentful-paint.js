@@ -29,7 +29,6 @@ if (isBrowserScope) {
       if (lcpEntry.element?.tagName) attrs.elTag = lcpEntry.element.tagName
     }
     if (attribution.element) attrs.element = attribution.element
-    if (attribution.navigationEntry) attrs.pageUrl = cleanURL(attribution.navigationEntry.name) // used to ensure the LCP gets the correct URL at harvest time if a soft nav has occurred before page load
     if (attribution.url) attrs.elUrl = cleanURL(attribution.url)
 
     largestContentfulPaint.update({ value, attrs, element: attribution.element })

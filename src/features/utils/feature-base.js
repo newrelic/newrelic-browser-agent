@@ -1,16 +1,15 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { ee } from '../../common/event-emitter/contextual-ee'
 import { deregisterDrain } from '../../common/drain/drain'
 
 export class FeatureBase {
-  constructor (agentIdentifier, featureName) {
-    /** @type {string} */
-    this.agentIdentifier = agentIdentifier
+  constructor (agentRef, featureName) {
+    /** @type {Object} */
+    this.agentRef = agentRef
     /** @type {import('../../common/event-emitter/contextual-ee').ee} */
-    this.ee = ee.get(agentIdentifier)
+    this.ee = agentRef?.ee
     /** @type {string} */
     this.featureName = featureName
     /**
@@ -22,6 +21,6 @@ export class FeatureBase {
   }
 
   deregisterDrain () {
-    deregisterDrain(this.agentIdentifier, this.featureName)
+    deregisterDrain(this.agentRef, this.featureName)
   }
 }

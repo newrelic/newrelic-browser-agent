@@ -28,7 +28,7 @@ afterEach(() => {
     jest.mocked(nreumModule.gosNREUMOriginals).mockRestore()
   }
 
-  resetAgent(mainAgent.agentIdentifier)
+  resetAgent(mainAgent)
   jest.clearAllMocks()
 })
 

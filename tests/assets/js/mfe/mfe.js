@@ -6,7 +6,7 @@ window.test = () => {
 }
 
 const api = newrelic.register({
-  id: 1,
+  id: '1',
   name: 'test'
 })
 

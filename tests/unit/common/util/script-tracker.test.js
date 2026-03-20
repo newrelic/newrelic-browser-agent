@@ -13,6 +13,8 @@ let performanceObserverCallback
 let scriptTrackerModule
 // Allows tests to control Error.stack content
 let mockStack = null
+// Control what getNavigationEntry returns
+let mockNavigationEntry = null
 
 // Helper to construct error with custom stack
 const OriginalError = global.Error
@@ -26,12 +28,18 @@ class MockError extends OriginalError {
   }
 }
 
+jest.mock('../../../../src/common/constants/runtime', () => ({
+  globalScope: global.window,
+  getNavigationEntry: () => mockNavigationEntry
+}))
+
 beforeEach(() => {
   // Reset module state to ensure clean test isolation
   jest.resetModules()
   jest.clearAllMocks()
   performanceObserverCallback = null
   mockStack = null
+  mockNavigationEntry = null
 
   // Setup custom Error class to control stack traces
   global.Error = MockError
@@ -97,9 +105,14 @@ describe('script-tracker', () => {
 
     test('identifies inline script when URL matches navigation', () => {
       // Setup: Mock navigation entry with page URL
+      mockNavigationEntry = { name: 'https://example.com/page.html' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
         if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/page.html' }]
+          return [mockNavigationEntry]
+        }
+        if (type === 'resource') {
+          return []
         }
         return []
       })
@@ -127,10 +140,9 @@ describe('script-tracker', () => {
         responseEnd: 250.8
       }
 
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
         if (type === 'resource') {
           return [mockResourceEntry]
         }
@@ -139,8 +151,8 @@ describe('script-tracker', () => {
 
       // Stack trace references the external script
       mockStack = `Error
-    at findScriptTimings (internal:1:1)
-    at Object.register (internal:5:10)
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at Object.register (${scriptTrackerModule.thisFile}:5:10)
     at main (https://cdn.example.com/mfe-app.js:15:20)`
 
       const result = scriptTrackerModule.findScriptTimings()
@@ -163,20 +175,16 @@ describe('script-tracker', () => {
       }
 
       // Setup: Script not in static buffer, only in observer
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
-        if (type === 'resource') {
-          return [] // Not in static buffer
-        }
         return []
       })
 
       // Stack references script tracked by observer
       mockStack = `Error
-    at findScriptTimings (internal:1:1)
-    at register (internal:10:5)
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at register (${scriptTrackerModule.thisFile}:10:5)
     at init (https://cdn.example.com/tracked-app.js:25:10)`
 
       // Import module to activate PerformanceObserver
@@ -209,16 +217,15 @@ describe('script-tracker', () => {
         responseEnd: 120.5
       }
 
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
         return []
       })
 
       mockStack = `Error
-    at findScriptTimings (internal:1:1)
-    at register (internal:2:2)
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at register (${scriptTrackerModule.thisFile}:2:2)
     at setup (https://cdn.example.com/preload.js:10:5)`
 
       scriptTrackerModule = await import('../../../../src/common/util/script-tracker')
@@ -254,16 +261,15 @@ describe('script-tracker', () => {
         return []
       })
 
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
         return []
       })
 
       mockStack = `Error
-    at findScriptTimings (internal:1:1)
-    at register (internal:2:2)
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at register (${scriptTrackerModule.thisFile}:2:2)
     at init (https://cdn.example.com/preloaded.js:30:5)`
 
       scriptTrackerModule = await import('../../../../src/common/util/script-tracker')
@@ -294,16 +300,15 @@ describe('script-tracker', () => {
         return []
       })
 
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
         return []
       })
 
       mockStack = `Error
-    at findScriptTimings (internal:1:1)
-    at register (internal:2:2)
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at register (${scriptTrackerModule.thisFile}:2:2)
     at main (https://cdn.example.com/late-preload.js:50:10)`
 
       scriptTrackerModule = await import('../../../../src/common/util/script-tracker')
@@ -426,10 +431,9 @@ describe('script-tracker', () => {
         responseEnd: 200
       }
 
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
         if (type === 'resource') {
           return [mockResourceEntry]
         }
@@ -438,8 +442,8 @@ describe('script-tracker', () => {
 
       // Stack contains full URL matching the resource entry
       mockStack = `Error
-    at findScriptTimings (internal:1:1)
-    at register (internal:2:2)
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at register (${scriptTrackerModule.thisFile}:2:2)
     at func (https://cdn.example.com/path/app.js:5:10)`
 
       const result = scriptTrackerModule.findScriptTimings()
@@ -458,10 +462,9 @@ describe('script-tracker', () => {
         responseEnd: 200
       }
 
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
         if (type === 'resource') {
           return [mockResourceEntry]
         }
@@ -487,10 +490,9 @@ describe('script-tracker', () => {
         responseEnd: 180.6
       }
 
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
         if (type === 'resource') {
           return [mockResourceEntry]
         }
@@ -499,8 +501,8 @@ describe('script-tracker', () => {
 
       // Gecko/Firefox format: function@url:line:column (no "at" prefix)
       mockStack = `Error
-findScriptTimings@internal:1:1
-register@internal:2:2
+findScriptTimings@${scriptTrackerModule.thisFile}:1:1
+register@${scriptTrackerModule.thisFile}:2:2
 init@https://cdn.example.com/gecko-app.js:20:10`
 
       const result = scriptTrackerModule.findScriptTimings()
@@ -519,10 +521,9 @@ init@https://cdn.example.com/gecko-app.js:20:10`
         responseEnd: 210.4
       }
 
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
         if (type === 'resource') {
           return [mockResourceEntry]
         }
@@ -531,8 +532,8 @@ init@https://cdn.example.com/gecko-app.js:20:10`
 
       // Chrome/V8 format: "at function (url:line:column)"
       mockStack = `Error
-    at findScriptTimings (internal:1:1)
-    at Object.register (internal:2:2)
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at Object.register (${scriptTrackerModule.thisFile}:2:2)
     at init (https://cdn.example.com/chrome-app.js:30:5)`
 
       const result = scriptTrackerModule.findScriptTimings()
@@ -552,10 +553,9 @@ init@https://cdn.example.com/gecko-app.js:20:10`
         responseEnd: 150
       }
 
+      mockNavigationEntry = { name: 'https://example.com/' }
+
       global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'navigation') {
-          return [{ initiatorType: 'navigation', name: 'https://example.com/' }]
-        }
         if (type === 'resource') {
           return [mockResourceEntry]
         }
@@ -741,6 +741,54 @@ init@https://cdn.example.com/gecko-app.js:20:10`
       if (originalDescriptor) {
         Object.defineProperty(Error, 'stackTraceLimit', originalDescriptor)
       }
+    })
+
+    test('selects MFE script from generator pattern stack trace (not root runtime)', () => {
+      // Setup: Simulate generator/runner pattern like NR1's one-vbp
+      // Stack shows: agent (top) → MFE chunk (middle) → generator runtime (bottom)
+      const mfeChunkEntry = {
+        name: 'https://staging-one.nr-assets.net/nerdpacks/browser-entity-preview~b21d8a93.js',
+        initiatorType: 'script',
+        startTime: 150.5,
+        responseEnd: 280.3
+      }
+
+      const runtimeEntry = {
+        name: 'https://staging-one.nr-assets.net/platform/one-vbp-543fd763.js',
+        initiatorType: 'script',
+        startTime: 50.2,
+        responseEnd: 100.8
+      }
+
+      global.performance.getEntriesByType = jest.fn((type) => {
+        if (type === 'navigation') {
+          return [{ initiatorType: 'navigation', name: 'https://one.newrelic.com/launcher' }]
+        }
+        if (type === 'resource') {
+          return [mfeChunkEntry, runtimeEntry]
+        }
+        return []
+      })
+
+      // Generator pattern stack trace (matching production pattern from PR description):
+      // - Agent at top (internal)
+      // - MFE chunk in middle (the actual nerdpack code calling register)
+      // - Generator runtime at bottom (one-vbp driving execution)
+      mockStack = `Error
+    at Object.register (${scriptTrackerModule.thisFile}:18:84024)
+    at register (${scriptTrackerModule.thisFile}:18:84952)
+    at mfe5-module (https://staging-one.nr-assets.net/nerdpacks/browser-entity-preview~b21d8a93.js:1:3275)
+    at Generator.<anonymous> (https://staging-one.nr-assets.net/platform/one-vbp-543fd763.js:1:32670)
+    at Generator.next (https://staging-one.nr-assets.net/platform/one-vbp-543fd763.js:1:33653)`
+
+      const result = scriptTrackerModule.findScriptTimings()
+
+      // Should select MFE chunk (middle), not generator runtime (bottom)
+      // This is the file closest to the agent after filtering
+      expect(result.asset).toBe('https://staging-one.nr-assets.net/nerdpacks/browser-entity-preview~b21d8a93.js')
+      expect(result.fetchStart).toBe(150)
+      expect(result.fetchEnd).toBe(280)
+      expect(result.type).toBe('script')
     })
   })
 

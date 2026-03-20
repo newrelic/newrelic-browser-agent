@@ -20,7 +20,7 @@
 
 /**
  * @typedef {Object} RegisterAPIConstructor
- * @property {string|number} id - The unique id for the registered entity. This will be assigned to any synthesized entities.
+ * @property {string} id - The unique id for the registered entity. This will be assigned to any synthesized entities.
  * @property {string} name - The readable name for the registered entity. This will be assigned to any synthesized entities.
  * @property {{[key: string]: any}} [tags] - The tags for the registered entity as key-value pairs. This will be assigned to any synthesized entities. Tags are converted to source.* attributes (e.g., {environment: 'production'} becomes source.environment: 'production').
  * @property {boolean} [isolated] - When true, each registration creates an isolated instance. When false, multiple registrations with the same id and isolated: false will share a single instance, including all custom attributes, ids, names, and metadata. Calling deregister on a shared instance will deregister it for all entities using the instance. Defaults to true.

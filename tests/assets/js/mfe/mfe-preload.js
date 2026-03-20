@@ -6,7 +6,7 @@
 
 (function () {
   const api4 = newrelic.register({
-    id: 4,
+    id: '4',
     name: 'test 4'
   })
 

@@ -1,6 +1,6 @@
 // ES module for mfe3
 const api3 = newrelic.register({
-  id: 3,
+  id: '3',
   name: 'test 3'
 })
 

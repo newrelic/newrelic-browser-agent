@@ -7,6 +7,7 @@ import { FEATURE_NAMES } from '../../../../src/loaders/features/features'
 import { EventBuffer } from '../../../../src/features/utils/event-buffer'
 import { EventAggregator } from '../../../../src/common/aggregate/event-aggregator'
 import { Aggregate as PVEAggregate } from '../../../../src/features/page_view_event/aggregate/index'
+import { ee } from '../../../../src/common/event-emitter/contextual-ee'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/aggregate-base')
@@ -35,23 +36,9 @@ jest.mock('../../../../src/common/util/console', () => ({
   __esModule: true,
   warn: jest.fn()
 }))
-jest.mock('../../../../src/common/util/feature-flags', () => ({
-  __esModule: true,
-  activatedFeatures: {
-    abcd: {
-      abc: 0,
-      def: 1,
-      ghi: 2,
-      'not-expected0': 0,
-      'not-expected1': 1,
-      'not-expected2': 2
-    }
-  }
-}))
 
 jest.mock('../../../../src/common/constants/runtime', () => ({
   ...jest.requireActual('../../../../src/common/constants/runtime'),
-  supportsNavTimingL2: () => true,
   isiOS: false,
   isBrowserScope: true,
   globalScope: {
@@ -70,6 +57,7 @@ beforeEach(() => {
   featureName = faker.string.uuid()
   mainAgent = {
     agentIdentifier,
+    ee: ee.get(agentIdentifier),
     runtime: { [faker.string.uuid()]: faker.lorem.sentence(), appMetadata: { agents: [{ entityGuid: '12345' }] } },
     // TODO CHECK THAT THIS STILL WORKS WITH NEW SYSTEM
     info: { licenseKey: faker.string.uuid(), applicationID: faker.string.uuid(), entityGuid: faker.string.uuid() }
@@ -156,6 +144,15 @@ test('should return empty array when flagNames is empty', async () => {
 
 test('should return activatedFeatures values when available', async () => {
   mainAgent.agentIdentifier = 'abcd' // 'abcd' matches the af mock at the top of this file
+  mainAgent.ee = ee.get('abcd') // Update ee to match the new agentIdentifier
+  mainAgent.runtime.activatedFeatures = {
+    abc: 0,
+    def: 1,
+    ghi: 2,
+    'not-expected0': 0,
+    'not-expected1': 1,
+    'not-expected2': 2
+  }
   const aggregateBase = new AggregateBase(mainAgent, featureName)
   const flagWait = aggregateBase.waitForFlags()
   await expect(flagWait).resolves.toEqual([])
@@ -201,9 +198,11 @@ test('handles events storage correctly across multiple features', async () => {
 })
 
 test('handles events storage correctly across multiple features - multiple agents', async () => {
+  const agentIdentifier2 = faker.string.uuid()
   const mainAgent2 = {
     ...mainAgent,
-    agentIdentifier: faker.string.uuid(),
+    agentIdentifier: agentIdentifier2,
+    ee: ee.get(agentIdentifier2),
     init: {
       [FEATURE_NAMES.pageViewEvent]: { autoStart: true }
     },

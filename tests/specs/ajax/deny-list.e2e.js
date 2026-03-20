@@ -30,6 +30,33 @@ describe('xhr events deny list', () => {
     ]))
   })
 
+  ;[['before', 'preload'], ['after', 'postload']].forEach(([timing, file]) => {
+    it(`honors deny_list when set ${timing} agent initialization`, async () => {
+      const ajaxCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testAjaxEventsRequest })
+
+      const [ajaxEvents] = await Promise.all([
+        ajaxCapture.waitForResult({ totalCount: 1 }),
+        browser.url(await browser.testHandle.assetURL(`deny_list_${file}.html`, { loader: 'full', init: { ajax: { deny_list: ['bam-test-1.nr-local.net:*/json'], block_internal: false } } }))
+      ])
+
+      expect(ajaxEvents[0].request.body.length).toBeGreaterThan(0) // events should be captured and sent, just not the ones matching the deny list
+      expect(extractAjaxEvents(ajaxEvents[0].request.body)).not.toEqual(expect.arrayContaining([
+        expect.objectContaining({
+          domain: expect.stringContaining('bam-test-1.nr-local.net'),
+          path: '/json',
+          type: 'ajax',
+          requestedWith: 'XMLHttpRequest'
+        }),
+        expect.objectContaining({
+          domain: expect.stringContaining('bam-test-1.nr-local.net'),
+          path: '/json',
+          type: 'ajax',
+          requestedWith: 'fetch'
+        })
+      ]))
+    })
+  })
+
   it('captures events when not blocked', async () => {
     const interactionCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
 

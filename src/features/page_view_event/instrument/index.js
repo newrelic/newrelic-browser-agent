@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { setupSetPageViewNameAPI } from '../../../loaders/api/setPageViewName'
@@ -15,7 +15,7 @@ export class Instrument extends InstrumentBase {
     super(agentRef, CONSTANTS.FEATURE_NAME)
 
     /** setup inspection events for window lifecycle */
-    this.setupInspectionEvents(agentRef.agentIdentifier)
+    this.setupInspectionEvents()
 
     /** feature specific APIs */
     setupSetPageViewNameAPI(agentRef)
@@ -23,11 +23,10 @@ export class Instrument extends InstrumentBase {
     this.importAggregator(agentRef, () => import(/* webpackChunkName: "page_view_event-aggregate" */ '../aggregate'))
   }
 
-  setupInspectionEvents (agentIdentifier) {
+  setupInspectionEvents () {
     const dispatch = (evt, name) => {
       if (!evt) return
       dispatchGlobalEvent({
-        agentIdentifier,
         timeStamp: evt.timeStamp,
         loaded: evt.target.readyState === 'complete',
         type: 'window',
@@ -50,7 +49,6 @@ export class Instrument extends InstrumentBase {
 
     this.ee.on(SESSION_EVENTS.UPDATE, (_, data) => {
       dispatchGlobalEvent({
-        agentIdentifier,
         type: 'lifecycle',
         name: 'session',
         data

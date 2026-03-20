@@ -38,7 +38,7 @@ describe('lcp', () => {
   test('reports lcp from web-vitals', (done) => {
     getFreshLCPImport(metric => metric.subscribe(({ value, element, attrs }) => {
       expect(value).toEqual(1)
-      expect(element).toEqual(lcpAttribution.element)
+      expect(element).toEqual(lcpAttribution.lcpEntry.element)
       expect(attrs).toStrictEqual({
         size: lcpAttribution.lcpEntry.size,
         eid: lcpAttribution.lcpEntry.id,

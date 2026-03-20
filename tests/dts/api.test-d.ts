@@ -61,7 +61,7 @@ expectType<MicroAgent>(microAgent)
 
   // register APIs
   expectType<(target: RegisterAPIConstructor) => RegisterAPI>(agent.register)
-  const registeredEntity = agent.register({ id: 123, name: 'hello' })
+  const registeredEntity = agent.register({ id: '123', name: 'hello' })
   expectType<(name: string, attributes?: object) => void>(registeredEntity.addPageAction)
   expectType<(message: string, options?: { customAttributes?: object, level?: 'ERROR' | 'TRACE' | 'DEBUG' | 'INFO' | 'WARN'}) => void>(registeredEntity.log)
   expectType<(error: Error | string, customAttributes?: object) => void>(registeredEntity.noticeError)

@@ -37,7 +37,7 @@ const RuntimeModel = {
     hiddenState.consented = value
   },
   customTransaction: undefined,
-  denyList: undefined,
+  denyList: [],
   disabled: false,
   /** @type {Map<string, {staged: boolean, priority: number}>} */
   drainRegistry: new Map(),

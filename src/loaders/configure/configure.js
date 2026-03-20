@@ -50,20 +50,16 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   if (!agent.runtime.configured) {
     Object.defineProperty(agent, 'beacons', {
       get () {
-        const beacons = [agent.info.beacon, agent.info.errorBeacon]
-        if (agent.init.proxy.assets) beacons.push(agent.init.proxy.assets)
-        if (agent.init.proxy.beacon) beacons.push(agent.init.proxy.beacon)
-        return beacons
+        return [agent.info.beacon, agent.info.errorBeacon, agent.init.proxy.assets, agent.init.proxy.beacon].filter(Boolean)
       }
     })
 
     Object.defineProperty(agent.runtime, 'denyList', {
       get () {
         // Compute the internal traffic list fresh each time to ensure beacons array is current
-        const currentInternalList = [...agent.beacons]
         return [
           ...(agent.init.ajax.deny_list || []),
-          ...(agent.init.ajax.block_internal ? currentInternalList : [])
+          ...(agent.init.ajax.block_internal ? agent.beacons : [])
         ]
       }
     })

@@ -2,7 +2,7 @@
  * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { globalScope, isBrowserScope, originTime, supportsNavTimingL2 } from '../../../common/constants/runtime'
+import { globalScope, isBrowserScope, originTime, getNavigationEntry } from '../../../common/constants/runtime'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
 import { isValid } from '../../../common/config/info'
@@ -91,8 +91,8 @@ export class Aggregate extends AggregateBase {
     let body = applyFnToProps({ ja: { ...customAttributes, webdriverDetected } }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
 
     if (globalScope.performance) {
-      if (supportsNavTimingL2()) { // Navigation Timing level 2 API that replaced PerformanceTiming & PerformanceNavigation
-        const navTimingEntry = globalScope?.performance?.getEntriesByType('navigation')?.[0]
+      const navTimingEntry = getNavigationEntry()
+      if (navTimingEntry) { // Navigation Timing level 2 API that replaced PerformanceTiming & PerformanceNavigation
         const perf = ({
           timing: addPT(originTime, navTimingEntry, {}),
           navigation: addPN(navTimingEntry, {})

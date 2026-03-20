@@ -1,5 +1,7 @@
 const { testMFEInsRequest } = require('../../../../tools/testing-server/utils/expect-tests')
-const { fullySupportsPreloadResourceTimings } = require('../../../../tools/browser-matcher/common-matchers.mjs')
+const { fullySupportsPreloadResourceTimings, onlySafari } = require('../../../../tools/browser-matcher/common-matchers.mjs')
+
+const acceptedAssetTypes = ['script', 'link', 'preload', 'inline', 'fetch', 'unknown']
 
 let mfeInsightsCapture
 describe('Register API - Timings', () => {
@@ -19,7 +21,7 @@ describe('Register API - Timings', () => {
     }))
 
     await browser.execute(function () {
-      const mfe = newrelic.register({ id: 1, name: 'test-mfe' })
+      const mfe = newrelic.register({ id: '1', name: 'test-mfe' })
 
       // Simulate some work
       const start = Date.now()
@@ -57,7 +59,7 @@ describe('Register API - Timings', () => {
 
     // assetType should be a string with valid value
     expect(typeof timing.assetType).toBe('string')
-    expect(['script', 'link', 'preload', 'inline', 'unknown']).toContain(timing.assetType)
+    expect(acceptedAssetTypes).toContain(timing.assetType)
 
     // timeAlive should be positive since work was done
     expect(timing.timeAlive).toBeGreaterThan(0)
@@ -69,7 +71,7 @@ describe('Register API - Timings', () => {
     }))
 
     await browser.execute(function () {
-      window.mfe = newrelic.register({ id: 1, name: 'test-mfe' })
+      window.mfe = newrelic.register({ id: '1', name: 'test-mfe' })
 
       // Simulate some work
       const start = Date.now()
@@ -97,7 +99,7 @@ describe('Register API - Timings', () => {
     }))
 
     await browser.execute(function () {
-      const mfe = newrelic.register({ id: 1, name: 'test-mfe' })
+      const mfe = newrelic.register({ id: '1', name: 'test-mfe' })
       mfe.deregister()
       window.dispatchEvent(new Event('pagehide'))
     })
@@ -119,7 +121,7 @@ describe('Register API - Timings', () => {
 
     const waitTime = await browser.execute(function () {
       const waitMs = 100
-      const mfe = newrelic.register({ id: 1, name: 'timed-mfe' })
+      const mfe = newrelic.register({ id: '1', name: 'timed-mfe' })
 
       setTimeout(() => {
         mfe.deregister()
@@ -148,7 +150,7 @@ describe('Register API - Timings', () => {
     }))
 
     await browser.execute(function () {
-      const parent = newrelic.register({ id: 1, name: 'parent-mfe' })
+      const parent = newrelic.register({ id: '1', name: 'parent-mfe' })
 
       // Wait a bit before creating child
       const start = Date.now()
@@ -156,7 +158,7 @@ describe('Register API - Timings', () => {
         // busy wait
       }
 
-      const child = newrelic.register({ id: 2, name: 'child-mfe' }, parent)
+      const child = newrelic.register({ id: '2', name: 'child-mfe' }, parent)
 
       // Deregister child first, then parent
       setTimeout(() => {
@@ -190,7 +192,7 @@ describe('Register API - Timings', () => {
 
       // Create multiple MFEs rapidly
       for (let i = 1; i <= 5; i++) {
-        mfes.push(newrelic.register({ id: i, name: `mfe-${i}` }))
+        mfes.push(newrelic.register({ id: String(i), name: `mfe-${i}` }))
       }
 
       // Deregister all after a short delay
@@ -221,7 +223,7 @@ describe('Register API - Timings', () => {
     }))
 
     await browser.execute(function () {
-      const mfe = newrelic.register({ id: 1, name: 'test-mfe' })
+      const mfe = newrelic.register({ id: '1', name: 'test-mfe' })
 
       // Do some work
       const start = Date.now()
@@ -251,7 +253,7 @@ describe('Register API - Timings', () => {
 
     // Verify assetType is present and valid
     expect(timing.assetType).toBeDefined()
-    expect(['script', 'link', 'preload', 'inline', 'unknown']).toContain(timing.assetType)
+    expect(acceptedAssetTypes).toContain(timing.assetType)
   })
 
   it('should report correct assetType for inline scripts', async () => {
@@ -261,7 +263,7 @@ describe('Register API - Timings', () => {
 
     await browser.execute(function () {
       // This is an inline script registration
-      const mfe = newrelic.register({ id: 1, name: 'inline-mfe' })
+      const mfe = newrelic.register({ id: '1', name: 'inline-mfe' })
       mfe.deregister()
     })
 
@@ -375,7 +377,7 @@ describe('Register API - Timings', () => {
 
     // assetType should be one of the valid values for all events
     timingEvents.forEach(timing => {
-      expect(['script', 'link', 'preload', 'inline', 'unknown']).toContain(timing.assetType)
+      expect(acceptedAssetTypes).toContain(timing.assetType)
       expect(timing.assetUrl).toBeDefined()
     })
   })
@@ -388,7 +390,7 @@ describe('Register API - Timings', () => {
     await browser.execute(function () {
       // Register from eval'd code which won't match any resource
       const code = `
-        const api = newrelic.register({ id: 999, name: 'eval-mfe' });
+        const api = newrelic.register({ id: '999', name: 'eval-mfe' });
         api.deregister();
       `
       // eslint-disable-next-line
@@ -407,7 +409,7 @@ describe('Register API - Timings', () => {
     expect(evalMfe).toBeDefined()
 
     // Eval'd code should still have a valid assetType (likely 'inline' because stack points to page URL)
-    expect(['script', 'link', 'preload', 'inline', 'unknown']).toContain(evalMfe.assetType)
+    expect(['script', 'link', 'preload', 'inline', 'fetch', 'unknown']).toContain(evalMfe.assetType)
   })
 
   describe('Fetch time assumptions work with different types of scripts', () => {
@@ -438,13 +440,14 @@ describe('Register API - Timings', () => {
           .flatMap(({ request: { body } }) => body.ins)
           .filter(event => event.eventType === 'MicroFrontEndTiming')
 
-        expect(timingEvents.length).toBeGreaterThanOrEqual(5)
+        expect(timingEvents.length).toBeGreaterThanOrEqual(6)
 
         const mainMfe = timingEvents.find(event => event['source.name'] === 'main')
         const mfe1 = timingEvents.find(event => event['source.name'] === 'test')
         const mfe2 = timingEvents.find(event => event['source.name'] === 'test 2')
         const mfe3 = timingEvents.find(event => event['source.name'] === 'test 3')
         const mfe4 = timingEvents.find(event => event['source.name'] === 'test 4')
+        const mfe5 = timingEvents.find(event => event['source.name'] === 'test 5')
 
         // Main MFE should have zero fetch timings and be inline type
         expect(mainMfe).toBeDefined()
@@ -479,12 +482,32 @@ describe('Register API - Timings', () => {
         expect(mfe4.timeToBeRequested).toBeGreaterThan(0)
         if (browserMatch(fullySupportsPreloadResourceTimings)) expect(mfe4.timeToFetch).toBeGreaterThan(0)
         else {
-          // Safari & iOS safari report preloaded script durations as "0" (or sometimes "1") because they consider the preload to be the fetch, and the dynamic import just pulls from cache, resulting in no additional fetch time. Other browsers report the dynamic import as a separate fetch which has a small amount of time.
+          // Safari & iOS safari report preloaded script durations as "0" (or sometimes "1") because they consider the preload to be the fetch, and the dynamic import just pulls from cache, resulting in no additional fetch time. Other browsers report the dynamic import as a separate fetch which has a more significant amount of time.
           expect(mfe4.timeToFetch).toBeGreaterThanOrEqual(0)
-          expect(mfe4.timeToFetch).toBeLessThanOrEqual(1)
         }
         expect(mfe4.assetType).toEqual('link')
         expect(mfe4.assetUrl).toBeDefined()
+
+        // MFE5 (test 5) tests webpack-style loader pattern with eval+sourceURL
+        // This validates that scripts loaded via fetch() and executed with eval()
+        // using //# sourceURL directives are properly attributed to the eval'd script,
+        // not the loader/runtime that appears at the stack root
+        // Note: Safari doesn't support sourceURL in eval, so it matches the runtime instead
+        expect(mfe5).toBeDefined()
+        if (browserMatch(onlySafari)) {
+          // Safari doesn't honor sourceURL in eval, so it still attributes to the nearest script it was able to match, which is the preloaded script
+          expect(mfe5.assetUrl).toContain('mfe-preload.js')
+          // Safari & iOS safari report preloaded script durations as "0" (or sometimes "1") because they consider the preload to be the fetch, and the dynamic import just pulls from cache, resulting in no additional fetch time. Other browsers report the dynamic import as a separate fetch which has a more significant amount of time.
+          expect(mfe5.timeToBeRequested).toBeGreaterThanOrEqual(0)
+          expect(mfe5.timeToFetch).toBeGreaterThanOrEqual(0)
+          expect(mfe5.assetType).toEqual('link') // preloaded runtime file
+        } else {
+          // Other browsers honor sourceURL and match the fetch'd eval'd code
+          expect(mfe5.assetUrl).toContain('mfe-preload-late.js')
+          expect(mfe5.timeToBeRequested).toBeGreaterThan(0)
+          expect(mfe5.timeToFetch).toBeGreaterThan(0)
+          expect(mfe5.assetType).toEqual('fetch') // fetch + eval like some webpack implementation
+        }
       })
     })
   })

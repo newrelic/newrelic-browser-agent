@@ -80,12 +80,12 @@ export function shouldDuplicate (target, agentRef) {
 export function findTargetsFromStackTrace (agentRef) {
   if (!agentRef?.init.api.allow_registered_children) return []
 
-  let iterator = 0
   const targets = []
   try {
-    var urls = extractUrlsFromStack(getDeepStackTrace()).reverse()
+    var urls = extractUrlsFromStack(getDeepStackTrace())
+    let iterator = urls.length - 1
     while (urls[iterator]) {
-      targets.push(...getRegisteredTargetsFromFilename(urls[iterator++], agentRef))
+      targets.push(...getRegisteredTargetsFromFilename(urls[iterator--], agentRef))
     }
   } catch (err) {
     // Silent catch to prevent errors from propagating

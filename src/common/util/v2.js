@@ -36,7 +36,7 @@ export function getRegisteredTargetsFromId (id, agentRef) {
  */
 export function getRegisteredTargetsFromFilename (filename, agentRef) {
   if (!filename || !agentRef?.init.api.allow_registered_children) return []
-  const registeredEntities = agentRef?.runtime.registeredEntities
+  const registeredEntities = agentRef.runtime.registeredEntities
   return registeredEntities?.filter(entity => entity.metadata.timings?.asset?.endsWith(filename)).map(entity => entity.metadata.target) || []
 }
 

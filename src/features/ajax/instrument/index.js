@@ -349,7 +349,6 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
 
     const payload = [this.params, metrics, this.startTime, this.endTime, 'fetch']
     this.targets.forEach(target => reportToAgg(payload, this, target))
-    if (!this.targets?.length) reportToAgg(payload, this)
   }
 
   // Create report for XHR request that has finished
@@ -378,7 +377,6 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
 
     const payload = [params, metrics, this.startTime, this.endTime, 'xhr']
     this.targets.forEach(target => reportToAgg(payload, this, target))
-    if (!this.targets?.length) reportToAgg(payload, this)
   }
 
   function reportToAgg (payload, context, target) {

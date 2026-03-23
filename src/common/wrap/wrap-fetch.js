@@ -47,7 +47,8 @@ export function wrapFetch (sharedEE, agentRef) {
 
   ee.on(prefix + 'end', function (err, res, targets) {
     var ctx = this
-    ctx.targets = targets || []
+    // undefined target reports to container
+    ctx.targets = targets || [undefined]
     if (res) {
       var size = res.headers.get('content-length')
       if (size !== null) {
@@ -56,7 +57,7 @@ export function wrapFetch (sharedEE, agentRef) {
 
       ee.emit(prefix + 'done', [null, res], ctx)
     } else {
-      ee.emit(prefix + 'done', [err, undefined], ctx)
+      ee.emit(prefix + 'done', [err], ctx)
     }
   })
 
@@ -77,6 +78,8 @@ export function wrapFetch (sharedEE, agentRef) {
 
         const ctx = {}
         const targets = findTargetsFromStackTrace(agentRef)
+        // undefined target reports to container
+        if (!targets.length) targets.push(undefined)
 
         // we are wrapping args in an array so we can preserve the reference
         ee.emit(prefix + 'before-start', [args], ctx)

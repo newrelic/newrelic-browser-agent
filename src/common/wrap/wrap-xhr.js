@@ -37,8 +37,8 @@ export function wrapXhr (sharedEE, agentRef) {
   if (wrapped[ee.debugId]++) return ee
   wrapped[ee.debugId] = 1 // otherwise, first feature to wrap XHR
 
-  wrapEvents(baseEE, agentRef) // wrap-events patches XMLHttpRequest.prototype.addEventListener for us
-  var wrapFn = wfn(ee, undefined, agentRef)
+  wrapEvents(baseEE) // wrap-events patches XMLHttpRequest.prototype.addEventListener for us
+  var wrapFn = wfn(ee)
 
   var OrigXHR = globalScope.XMLHttpRequest
   var MutationObserver = globalScope.MutationObserver
@@ -56,6 +56,8 @@ export function wrapXhr (sharedEE, agentRef) {
     const xhr = new OrigXHR(opts)
     const context = ee.context(xhr)
     context.targets = findTargetsFromStackTrace(agentRef)
+    // undefined target reports to container
+    if (!context.targets.length) context.targets.push(undefined)
 
     try {
       ee.emit('new-xhr', [xhr], context)

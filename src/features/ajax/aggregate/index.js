@@ -31,8 +31,8 @@ export class Aggregate extends AggregateBase {
 
     registerHandler('returnAjax', event => this.events.add(event), this.featureName, this.ee)
 
-    registerHandler('xhr', function (params, metrics, startTime, endTime, type, target, customAttrs) { // the EE-drain system not only switches "this" but also passes a new EventContext with info. Should consider platform refactor to another system which passes a mutable context around separately and predictably to avoid problems like this.
-      classThis.storeXhr(params, metrics, startTime, endTime, type, target, customAttrs, this) // this switches the context back to the class instance while passing the NR context as an argument -- see "ctx" in storeXhr
+    registerHandler('xhr', function (params, metrics, startTime, endTime, type, target) { // the EE-drain system not only switches "this" but also passes a new EventContext with info. Should consider platform refactor to another system which passes a mutable context around separately and predictably to avoid problems like this.
+      classThis.storeXhr(params, metrics, startTime, endTime, type, target, this) // this switches the context back to the class instance while passing the NR context as an argument -- see "ctx" in storeXhr
     }, this.featureName, this.ee)
 
     this.ee.on('long-task', (task, originator) => {
@@ -45,7 +45,7 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(([])).then(() => this.drain())
   }
 
-  storeXhr (params, metrics, startTime, endTime, type, target, customAttributes, ctx) {
+  storeXhr (params, metrics, startTime, endTime, type, target, ctx) {
     metrics.time = startTime
 
     // send to session traces
@@ -91,8 +91,7 @@ export class Aggregate extends AggregateBase {
       type,
       startTime,
       endTime,
-      callbackDuration: metrics.cbTime,
-      custom: customAttributes
+      callbackDuration: metrics.cbTime
     }
 
     if (ctx.dt) {
@@ -112,8 +111,8 @@ export class Aggregate extends AggregateBase {
 
     /** make a copy of the event for the MFE target if it exists */
     if (target) {
-      this.events.add({ ...event, target })
-      if (shouldDuplicate(target, this.agentRef)) this.reportContainerEvent({ ...event, custom: { ...event.custom, ...getVersion2DuplicationAttributes(target, this) } }, ctx)
+      this.events.add({ ...event, targetAttributes: getVersion2Attributes(target, this) })
+      if (shouldDuplicate(target, this.agentRef)) this.reportContainerEvent({ ...event, targetAttributes: getVersion2DuplicationAttributes(target, this) }, ctx)
     } else {
       this.reportContainerEvent(event, ctx)
     }
@@ -169,8 +168,7 @@ export class Aggregate extends AggregateBase {
       const attrParts = addCustomAttributes({
         ...(jsAttributes || {}),
         ...(event.gql || {}),
-        ...(event.custom || {}),
-        ...(getVersion2Attributes(event.target, this)) // event.target only exists if we saw the right headers on the request.  The helper will know what to do with that
+        ...(event.targetAttributes || {}) // used to supply the version 2 attributes, either MFE target or duplication attributes for the main agent app
       }, addString)
 
       fields.unshift(numeric(attrParts.length))

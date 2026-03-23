@@ -314,10 +314,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     this.startTime = now()
     this.dt = dtPayload
 
-    let target
-    let opts = {}
-    if (fetchArguments.length >= 1) target = fetchArguments[0]
-    if (fetchArguments.length >= 2) opts = fetchArguments[1]
+    let [target, opts = {}] = fetchArguments
 
     addUrl(this, extractUrl(target))
 

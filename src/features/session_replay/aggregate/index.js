@@ -343,12 +343,12 @@ export class Aggregate extends AggregateBase {
     if (result.sent) {
       if (result.retry) {
         warn(70)
-        this.retrying = true
+        this.isRetrying = true
         this.forceStop()
       } else {
         this.recorder.retryPayload = undefined
-        if (this.retrying) {
-          this.retrying = false
+        if (this.isRetrying) {
+          this.isRetrying = false
           this.switchToFull()
         }
       }

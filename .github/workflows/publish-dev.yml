@@ -219,6 +219,7 @@ jobs:
 
   # Rebuild and publish the dev environment A/B script
   publish-dev-ab:
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     needs: [publish-dev-to-s3]
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -248,6 +249,7 @@ jobs:
 
   # Rebuild and publish the staging environment A/B script
   publish-staging-ab:
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     needs: [publish-dev-to-s3]
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -277,6 +279,7 @@ jobs:
 
   # Create change tracking events for staging environment
   create-staging-change-tracking:
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     needs: [publish-dev-to-s3]
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5

@@ -245,8 +245,3 @@ try {
 } catch (e) {
   newrelic.noticeError(new Error("NRBA: swallowed preamble error", { cause: e }));
 }
-<<<<<<< HEAD
-
-
-=======
->>>>>>> main

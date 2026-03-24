@@ -41,8 +41,10 @@ export function wrapLogger(sharedEE, parent, loggerFn, context, autoCaptured = t
   const contextLookupKey = parent[loggerFn]?.[flag] || parent[loggerFn]
   contextMap.set(contextLookupKey, ctx)
 
-  /** observe calls to <loggerFn> and emit events prefixed with `wrap-logger-` */
-  wrapFn.inPlace(parent, [loggerFn], 'wrap-logger-', () => contextMap.get(contextLookupKey))
+  /** observe calls to <loggerFn> and emit events prefixed with `wrap-logger-`
+   * inform the inplace wrapper to evaluate the stack for targets of the log execution,
+   * so that logs can be attributed to a matching MFE source if being used. */
+  wrapFn.inPlace(parent, [loggerFn], 'wrap-logger-', () => contextMap.get(contextLookupKey), undefined, true)
 
   return ee
 }

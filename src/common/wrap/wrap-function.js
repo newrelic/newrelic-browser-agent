@@ -56,9 +56,10 @@ export function createWrapperWithEmitter (emitter, always, agentRef) {
    * @param {function|object} getContext - The function or object that will serve as the 'this' context for handlers of events emitted by this wrapper.
    * @param {string} methodName - The name of the method being wrapped.
    * @param {boolean} bubble - If true, emitted events should also bubble up to the old emitter upon which the `emitter` in the current scope was based (if it defines one).
+   * @param {boolean} [evaluateStack] - If true, the wrapper will attempt to evaluate the stack of the executed wrapped function to find targets of the execution (ex. the MFE source of a console.log).
    * @returns {function} The wrapped function.
    */
-  function wrapFn (fn, prefix, getContext, methodName, bubble) {
+  function wrapFn (fn, prefix, getContext, methodName, bubble, evaluateStack) {
     // Unless fn is both wrappable and unwrapped, return it unchanged.
     if (notWrappable(fn)) return fn
 
@@ -85,7 +86,10 @@ export function createWrapperWithEmitter (emitter, always, agentRef) {
         originalThis = this
         args = [...arguments]
 
-        targets = findTargetsFromStackTrace(agentRef)
+        // certain wrappers can inform the function wrapper to evaluate the stack of the executed wrapped function to find targets of the execution
+        // (e.g. wrap-logger can inform this method to find try to find the MFE source of a console.log)
+        targets = !!evaluateStack && !!agentRef?.init.api.allow_registered_children ? findTargetsFromStackTrace(agentRef) : [undefined] // undefined target always maps to the container agent
+        if (!targets.length) targets = [undefined]
 
         if (typeof getContext === 'function') {
           ctx = getContext(args, originalThis)
@@ -143,7 +147,7 @@ export function createWrapperWithEmitter (emitter, always, agentRef) {
    * @param {boolean} [bubble=false] If `true`, emitted events should also bubble up to the old emitter upon which
    * the `emitter` in the current scope was based (if it defines one).
    */
-  function inPlace (obj, methods, prefix, getContext, bubble) {
+  function inPlace (obj, methods, prefix, getContext, bubble, evaluateStack) {
     if (!prefix) prefix = ''
 
     // If prefix starts with '-' set this boolean to add the method name to the prefix before passing each one to wrap.
@@ -156,7 +160,7 @@ export function createWrapperWithEmitter (emitter, always, agentRef) {
       // Unless fn is both wrappable and unwrapped, bail so we don't add extra properties with undefined values.
       if (notWrappable(fn)) continue
 
-      obj[method] = wrapFn(fn, (prependMethodPrefix ? method + prefix : prefix), getContext, method, bubble)
+      obj[method] = wrapFn(fn, (prependMethodPrefix ? method + prefix : prefix), getContext, method, bubble, evaluateStack)
     }
   }
 

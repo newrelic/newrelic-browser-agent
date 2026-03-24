@@ -36,7 +36,6 @@ export class Instrument extends InstrumentBase {
       targets.forEach(target => {
         bufferLog(instanceEE, message, customAttributes, level, autoCaptured, target)
       })
-      if (!targets.length) bufferLog(instanceEE, message, customAttributes, level, autoCaptured)
     })
     this.importAggregator(agentRef, () => import(/* webpackChunkName: "logging-aggregate" */ '../aggregate'))
   }

@@ -245,3 +245,5 @@ try {
 } catch (e) {
   newrelic.noticeError(new Error("NRBA: swallowed preamble error", { cause: e }));
 }
+
+throw new Error('NRBA: IGNORE! This is a test error from the postamble script');

@@ -59,7 +59,7 @@ jobs:
           window.NREUM.init.proxy = {} // Proxy won't work for experiments
           window.NREUM.init.session_replay.enabled = true
           window.NREUM.init.session_trace.enabled = true
-          window.NREUM.init.feature_flags = ['ajax_metrics_deny_list']
+          window.NREUM.init.feature_flags = ['ajax_metrics_deny_list', 'register']
           window.NREUM.init.user_actions = {elementAttributes: ['id', 'className', 'tagName', 'type', 'ariaLabel', 'alt', 'title']}
           EOF
       - name: Upload experiment

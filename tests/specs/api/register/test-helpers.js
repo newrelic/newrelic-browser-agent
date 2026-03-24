@@ -51,33 +51,11 @@ export async function runRegisteredEntityTest (testSet) {
     window.agent2.log('2', { level: 'error' })
 
     // post load ajax calls (standalone)
-    const CONTAINER_XHR_POST = new XMLHttpRequest()
-    CONTAINER_XHR_POST.open('GET', '/mock/post/42')
-    CONTAINER_XHR_POST.send()
+    const XHR_POST = new XMLHttpRequest()
+    XHR_POST.open('GET', '/mock/post/xhr')
+    XHR_POST.send()
 
-    const MFE_XHR_1_POST = new XMLHttpRequest()
-    MFE_XHR_1_POST.open('GET', '/mock/post/1')
-    MFE_XHR_1_POST.setRequestHeader('newrelic-mfe-id', 1)
-    MFE_XHR_1_POST.send()
-
-    const MFE_XHR_2_POST = new XMLHttpRequest()
-    MFE_XHR_2_POST.open('GET', '/mock/post/2')
-    MFE_XHR_2_POST.setRequestHeader('newrelic-mfe-id', 2)
-    MFE_XHR_2_POST.send()
-
-    fetch('/mock/post/42')
-
-    fetch('/mock/post/1', {
-      headers: {
-        'newrelic-mfe-id': 1
-      }
-    })
-
-    fetch('/mock/post/2', {
-      headers: {
-        'newrelic-mfe-id': 2
-      }
-    })
+    fetch('/mock/post/fetch')
     // each payload in this test is decorated with data that matches its appId for ease of testing
     window.newrelic.recordCustomEvent('CustomEvent', { val: 42 })
     window.agent1.recordCustomEvent('CustomEvent', { val: 1 })
@@ -125,86 +103,71 @@ export async function runRegisteredEntityTest (testSet) {
     expect(ranOnce(query.a, 'rum')).toEqual(true)
   })
 
-  /**
-   * Finds AJAX requests in the payload that match specific path OR/AND/ANY criteria,
-   * handling nested 'interaction' nodes recursively.
-   * @param {Array<Object>} payload - The root payload array (containing objects with 'request.body').
-   * @param {string} targetPathEnd - The path segment to match (e.g., "/42").
-   * @param {string} targetKey - The attribute key to look for (e.g., "appId", "source.id").
-   * @param {number|string} targetValue - The value to match (e.g., 42, 1, 2).
-   * @param {string} matchType - 'or', 'and', or 'any'.
-   * @returns {Array<Object>} An array of matching AJAX request objects.
-   */
-  function findAjaxRequests (payload, targetPathEnd, targetKey, targetValue, matchType) {
+  // Helper to find all ajax requests with /mock paths
+  const getAllMockRequests = (payload) => {
     const results = []
-
     const collectRequests = (items) => {
       if (!Array.isArray(items)) return
-
       for (const req of items) {
         if (req.type === 'interaction' && Array.isArray(req.children)) {
           collectRequests(req.children)
           continue
         }
-
         if (req.type === 'ajax' && req.path?.startsWith('/mock')) {
-          const pathMatches = req.path.endsWith(targetPathEnd)
-          const childrenMatch = req.children?.some(child =>
-            child.key === targetKey && child.value === targetValue
-          )
-
-          const isMatch = matchType === 'any' ||
-            (matchType === 'or' && (pathMatches || childrenMatch)) ||
-            (matchType === 'and' && pathMatches && childrenMatch)
-
-          if (isMatch) results.push(req)
+          results.push(req)
         }
       }
     }
-
     payload.forEach(item => collectRequests(item.request?.body))
     return results
   }
 
-  const containerAjax = findAjaxRequests(ajaxHarvest, '/42', 'appId', 42, 'any')
-  const mfe1Ajax = findAjaxRequests(ajaxHarvest, '/1', 'source.id', 1, 'and')
-  const mfe2Ajax = findAjaxRequests(ajaxHarvest, '/2', 'source.id', 2, 'and')
+  const containerAjax = getAllMockRequests(ajaxHarvest).filter(r => !r.children?.some(c => c.key === 'source.id'))
+  const mfe1Ajax = getAllMockRequests(ajaxHarvest).filter(r => r.children?.some(c => c.key === 'source.id' && c.value === 1))
+  const mfe2Ajax = getAllMockRequests(ajaxHarvest).filter(r => r.children?.some(c => c.key === 'source.id' && c.value === 2))
 
-  const containerSpa = findAjaxRequests(spaHarvest, '/42', 'appId', 42, 'any')
-  const mfe1Spa = findAjaxRequests(spaHarvest, '/1', 'source.id', 1, 'and')
-  const mfe2Spa = findAjaxRequests(spaHarvest, '/2', 'source.id', 2, 'and')
+  const containerSpa = getAllMockRequests(spaHarvest).filter(r => !r.children?.some(c => c.key === 'source.id'))
+  const mfe1Spa = getAllMockRequests(spaHarvest).filter(r => r.children?.some(c => c.key === 'source.id' && c.value === 1))
+  const mfe2Spa = getAllMockRequests(spaHarvest).filter(r => r.children?.some(c => c.key === 'source.id' && c.value === 2))
 
-  // 3 pre, 3 post for each of fetch and xhr = 12 total requests made
+  // 1 pre xhr, 1 pre fetch, 1 post xhr, 1 post fetch = 4 total requests made
   const expectAjaxMFEdata = testSet.includes('register') && SUPPORTS_REGISTERED_ENTITIES[FEATURE_NAMES.ajax]
-  // container should capture all the request data, all the time
-  expect(containerSpa.map(r => r.path)).toEqual(expect.arrayContaining([
-    '/mock/pre/42',
-    '/mock/pre/42',
-    '/mock/pre/1',
-    '/mock/pre/2',
-    '/mock/pre/1',
-    '/mock/pre/2'
-  ]))
-  expect(containerAjax.map(r => r.path)).toEqual(expect.arrayContaining([
-    '/mock/post/42',
-    '/mock/post/42',
-    '/mock/post/1',
-    '/mock/post/2',
-    '/mock/post/1',
-    '/mock/post/2'
-  ]))
+
+  // When MFE is disabled: container captures all requests
+  // When MFE is enabled: MFE1 and MFE2 each capture all requests (auto-detected via stack trace)
+  if (!expectAjaxMFEdata) {
+    expect(containerSpa.map(r => r.path)).toEqual(expect.arrayContaining([
+      '/mock/pre/xhr',
+      '/mock/pre/fetch'
+    ]))
+    expect(containerAjax.map(r => r.path)).toEqual(expect.arrayContaining([
+      '/mock/post/xhr',
+      '/mock/post/fetch'
+    ]))
+    expect(mfe1Ajax.length).toEqual(0)
+    expect(mfe2Ajax.length).toEqual(0)
+  } else {
+    // With MFE enabled, both MFE1 and MFE2 auto-detect all requests
+    expect(containerSpa.length).toEqual(0)
+    expect(containerAjax.length).toEqual(0)
+
+    expect(mfe1Ajax.map(r => r.path).sort()).toEqual([
+      '/mock/post/fetch',
+      '/mock/post/xhr',
+      '/mock/pre/fetch',
+      '/mock/pre/xhr'
+    ].sort())
+
+    expect(mfe2Ajax.map(r => r.path).sort()).toEqual([
+      '/mock/post/fetch',
+      '/mock/post/xhr',
+      '/mock/pre/fetch',
+      '/mock/pre/xhr'
+    ])
+  }
+
   expect(mfe1Spa.length).toEqual(0) // MFE ajax calls are not scoped and harvested in SPA
   expect(mfe2Spa.length).toEqual(0) // MFE ajax calls are not scoped and harvested in SPA
-  expect(mfe1Ajax.length).toEqual(expectAjaxMFEdata ? 4 : 0) // should have detected the 4 targeted at mfe 1
-  expect(mfe2Ajax.length).toEqual(expectAjaxMFEdata ? 4 : 0) // should have detected the 4 targeted at mfe 2
-  mfe1Ajax.forEach(event => {
-    expect(event.path.includes('/mock/pre/1') || event.path.includes('/mock/post/1')).toBeTrue()
-    expect(event.children.find(child => child.key === 'source.id' && child.value === 1)).toBeDefined()
-  })
-  mfe2Ajax.forEach(event => {
-    expect(event.path.includes('/mock/pre/2') || event.path.includes('/mock/post/2')).toBeTrue()
-    expect(event.children.find(child => child.key === 'source.id' && child.value === 2)).toBeDefined()
-  })
 
   errorsHarvests.forEach(({ request: { query, body } }) => {
     const data = body.err

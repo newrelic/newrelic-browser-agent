@@ -1,10 +1,13 @@
 import { Aggregate } from '../../../../src/features/logging/aggregate'
 import { LOGGING_MODE } from '../../../../src/features/logging/constants'
+import { ee } from '../../../../src/common/event-emitter/contextual-ee'
 
 describe('Logging aggregate', () => {
   test('serializer should not overwrite agent reserved attributes with user-provided attributes', () => {
+    const agentIdentifier = 'abcd'
     const agentInst = {
-      agentIdentifier: 'abcd',
+      agentIdentifier,
+      ee: ee.get(agentIdentifier),
       info: {
         licenseKey: 'licenseKey',
         applicationID: '123',
@@ -27,6 +30,9 @@ describe('Logging aggregate', () => {
       init: {
         privacy: {
           cookies_enabled: true
+        },
+        api: {
+          allow_registered_children: false
         }
       },
       runtime: {

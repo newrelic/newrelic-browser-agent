@@ -1040,6 +1040,10 @@ describe('API tests', () => {
     })
 
     describe('logging', () => {
+      beforeAll(async () => {
+        await initializeFeature(Logging, agent)
+      })
+
       describe('wrapLogger', () => {
         test('should emit events for calls by wrapped function - defaults', () => {
           const myLoggerPackage = {

@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.311.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.310.1...v1.311.0) (2026-03-20)
+
+
+### Features
+
+* agentIdentifier removal ([#1712](https://github.com/newrelic/newrelic-browser-agent/issues/1712)) ([d9f6711](https://github.com/newrelic/newrelic-browser-agent/commit/d9f6711e4f1073b1e7713fe7966721fd6b31b864))
+* Attribute original page URL to all PageViewTiming nodes ([#1716](https://github.com/newrelic/newrelic-browser-agent/issues/1716)) ([847b6a7](https://github.com/newrelic/newrelic-browser-agent/commit/847b6a72650a113fdf2f074a6a057ac601aafb02))
+* improve MFE timing logic ([#1714](https://github.com/newrelic/newrelic-browser-agent/issues/1714)) ([9a3ef06](https://github.com/newrelic/newrelic-browser-agent/commit/9a3ef06652a36a05b950f9154969a767fa3b731e))
+
+
+### Bug Fixes
+
+* Circular replacer removed reused objects from harvests ([#1718](https://github.com/newrelic/newrelic-browser-agent/issues/1718)) ([76024d0](https://github.com/newrelic/newrelic-browser-agent/commit/76024d0f3465db42ddaa297d0f87a9e21f2f9b03))
+* Enforce string IDs for new MFE registrations ([#1725](https://github.com/newrelic/newrelic-browser-agent/issues/1725)) ([38fae07](https://github.com/newrelic/newrelic-browser-agent/commit/38fae0758645c5f0cd26f7067be973f7ee807819))
+* Update RegExp to prevent un-minimized webpack build issue ([#1711](https://github.com/newrelic/newrelic-browser-agent/issues/1711)) ([1a2408f](https://github.com/newrelic/newrelic-browser-agent/commit/1a2408f15c8ae96396cf3597058a5d18fa5cb4fd))
+
 ## [1.310.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.310.0...v1.310.1) (2026-02-19)
 
 

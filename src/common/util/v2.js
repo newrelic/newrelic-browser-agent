@@ -20,11 +20,11 @@ export const V2_TYPES = {
  * Returns the registered target associated with a given ID. Returns undefined if not found.
  * @param {string|number} id
  * @param {*} agentRef the agent reference
- * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget | undefined}
+ * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget[]}
  */
 export function getRegisteredTargetsFromId (id, agentRef) {
-  if (!id || !agentRef?.init.api.allow_registered_children) return
-  const registeredEntities = agentRef?.runtime.registeredEntities
+  if (!id || !agentRef?.init.api.allow_registered_children) return []
+  const registeredEntities = agentRef.runtime.registeredEntities
   return registeredEntities?.filter(entity => String(entity.metadata.target.id) === String(id)).map(entity => entity.metadata.target) || []
 }
 
@@ -32,11 +32,11 @@ export function getRegisteredTargetsFromId (id, agentRef) {
  * Returns the registered target(s) associated with a given filename if found in the resource timing API during registration. Returns an empty array if not found.
  * @param {string} filename
  * @param {*} agentRef
- * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget[] | []}
+ * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget[]}
  */
 export function getRegisteredTargetsFromFilename (filename, agentRef) {
   if (!filename || !agentRef?.init.api.allow_registered_children) return []
-  const registeredEntities = agentRef?.runtime.registeredEntities
+  const registeredEntities = agentRef.runtime.registeredEntities
   return registeredEntities?.filter(entity => entity.metadata.timings?.asset?.endsWith(filename)).map(entity => entity.metadata.target) || []
 }
 
@@ -80,12 +80,12 @@ export function shouldDuplicate (target, agentRef) {
 export function findTargetsFromStackTrace (agentRef) {
   if (!agentRef?.init.api.allow_registered_children) return []
 
-  let iterator = 0
   const targets = []
   try {
-    var urls = extractUrlsFromStack(getDeepStackTrace()).reverse()
+    var urls = extractUrlsFromStack(getDeepStackTrace())
+    let iterator = urls.length - 1
     while (urls[iterator]) {
-      targets.push(...getRegisteredTargetsFromFilename(urls[iterator++], agentRef))
+      targets.push(...getRegisteredTargetsFromFilename(urls[iterator--], agentRef))
     }
   } catch (err) {
     // Silent catch to prevent errors from propagating

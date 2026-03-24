@@ -13,7 +13,7 @@ jest.retryTimes(0)
 let mainAgent
 
 beforeAll(async () => {
-  mainAgent = setupAgent()
+  mainAgent = setupAgent({ init: { api: { allow_registered_children: true } } })
 })
 
 let loggingAggregate
@@ -28,7 +28,7 @@ beforeEach(async () => {
 })
 
 afterEach(() => {
-  resetAgent(mainAgent.agentIdentifier)
+  resetAgent(mainAgent)
   jest.clearAllMocks()
 })
 
@@ -43,7 +43,6 @@ const mockLoggingRumResponse = async (mode, apiMode) => {
 describe('class setup', () => {
   test('should have expected public properties', () => {
     expect(Object.keys(loggingAggregate)).toEqual(expect.arrayContaining([
-      'agentIdentifier',
       'ee',
       'featureName',
       'blocked',

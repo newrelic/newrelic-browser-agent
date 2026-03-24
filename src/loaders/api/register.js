@@ -53,7 +53,6 @@ function register (agentRef, target, parent) {
   target.type = V2_TYPES.MFE
   target.licenseKey ||= agentRef.info.licenseKey // will inherit the license key from the container agent if not provided for brevity. A future state may dictate that we need different license keys to do different things.
   target.blocked = false
-  target.parent = parent || {}
   if (typeof target.tags !== 'object' || target.tags === null || Array.isArray(target.tags)) target.tags = {}
   target.parent = parent || {
     get id () { return agentRef.runtime.appMetadata.agents[0].entityGuid }, // getter because this is asyncronously set
@@ -66,12 +65,12 @@ function register (agentRef, target, parent) {
   Object.defineProperty(target, 'attributes', {
     get () {
       return {
+        ...attrs,
         'source.id': target.id,
         'source.name': target.name,
         'source.type': target.type,
         'parent.type': target.parent?.type || V2_TYPES.BA,
-        'parent.id': target.parent?.id,
-        ...attrs // this is abstracted out to a getter so that the other attributes cant be overridden
+        'parent.id': target.parent?.id
       }
     }
   })

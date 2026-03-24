@@ -18,11 +18,13 @@ process.argv.slice(2).forEach((arg, index, array) => {
   }
 })
 
-const releasedLicenseKey = args['released-license-key']
-const latestLicenseKey = args['latest-license-key']
+const latestStagingLicenseKey = args['latest-staging-license-key']
+const latestUsProdLicenseKey = args['latest-us-prod-license-key']
+const releasedStagingLicenseKey = args['released-staging-license-key']
+const releasedUsProdLicenseKey = args['released-us-prod-license-key']
 
-if (!releasedLicenseKey || !latestLicenseKey) {
-  throw new Error('Both --released-license-key and --latest-license-key are required')
+if (!latestStagingLicenseKey || !latestUsProdLicenseKey || !releasedStagingLicenseKey || !releasedUsProdLicenseKey) {
+  throw new Error('All license keys are required: --latest-staging-license-key, --latest-us-prod-license-key, --released-staging-license-key, --released-us-prod-license-key')
 }
 
 // Ensure the output directory exists
@@ -42,8 +44,10 @@ for (const file of templateFiles) {
   const template = Handlebars.compile(templateContent)
   
   const result = template({
-    releasedLicenseKey,
-    latestLicenseKey
+    latestStagingLicenseKey,
+    latestUsProdLicenseKey,
+    releasedStagingLicenseKey,
+    releasedUsProdLicenseKey
   })
   
   await fs.promises.writeFile(outputPath, result, { encoding: 'utf-8' })

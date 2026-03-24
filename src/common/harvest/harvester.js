@@ -15,7 +15,6 @@ import { obj, param } from '../url/encode'
 import { warn } from '../util/console'
 import { stringify } from '../util/stringify'
 import { getSubmitMethod, xhr as xhrMethod, xhrFetch as fetchMethod } from '../util/submit-data'
-import { activatedFeatures } from '../util/feature-flags'
 import { dispatchGlobalEvent } from '../dispatch/global-event'
 
 const RETRY = 'Harvester/Retry/'
@@ -198,8 +197,7 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
   }
 
   dispatchGlobalEvent({
-    agentIdentifier: agentRef.agentIdentifier,
-    drained: !!activatedFeatures?.[agentRef.agentIdentifier],
+    drained: !!agentRef.runtime?.activatedFeatures,
     type: 'data',
     name: 'harvest',
     feature: featureName,

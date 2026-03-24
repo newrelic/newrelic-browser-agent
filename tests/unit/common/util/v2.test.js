@@ -179,9 +179,9 @@ describe('v2 utilities', () => {
         }
       }
 
-      expect(getRegisteredTargetsFromId(null, agentRef)).toBeUndefined()
-      expect(getRegisteredTargetsFromId('', agentRef)).toBeUndefined()
-      expect(getRegisteredTargetsFromId(undefined, agentRef)).toBeUndefined()
+      expect(getRegisteredTargetsFromId(null, agentRef)).toEqual([])
+      expect(getRegisteredTargetsFromId('', agentRef)).toEqual([])
+      expect(getRegisteredTargetsFromId(undefined, agentRef)).toEqual([])
     })
 
     test('returns matching targets by id', () => {

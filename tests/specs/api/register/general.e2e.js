@@ -13,7 +13,7 @@ describe('Register API - General Behaviors', () => {
     await browser.destroyAgentSession()
   })
 
-  // TODO: Uncomment this when all the features have been updated in the auto PRs
+  // TODO: Uncomment this block once all the various auto PRs have been merged
   // it('should add child.* attributes to duplicated data', async () => {
   //   const [mfeErrorsCapture, mfeInsightsCapture, logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
   //     { test: testMFEErrorsRequest },

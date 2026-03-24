@@ -31,8 +31,33 @@ beforeEach(async () => {
 })
 
 afterEach(() => {
-  resetAgent(mainAgent.agentIdentifier)
+  jest.useRealTimers() // Ensure timers are reset even if a test fails
+
+  // Clear any pending timers and observers in the soft nav aggregate
+  if (softNavAggregate) {
+    // Disconnect DOM observer
+    if (softNavAggregate.domObserver && softNavAggregate.domObserver.disconnect) {
+      softNavAggregate.domObserver.disconnect()
+    }
+
+    // Clear timers in active interactions
+    if (softNavAggregate.interactionInProgress) {
+      clearTimeout(softNavAggregate.interactionInProgress.cancellationTimer)
+      clearTimeout(softNavAggregate.interactionInProgress.watchLongtaskTimer)
+    }
+    if (softNavAggregate.initialPageLoadInteraction) {
+      clearTimeout(softNavAggregate.initialPageLoadInteraction.watchLongtaskTimer)
+    }
+    // Clear any timers in harvested interactions
+    softNavAggregate.interactionsToHarvest.get().forEach(ixn => {
+      clearTimeout(ixn.cancellationTimer)
+      clearTimeout(ixn.watchLongtaskTimer)
+    })
+  }
+
+  resetAgent(mainAgent)
   jest.clearAllMocks()
+  softNavAggregate = null
 })
 
 test('processes interaction heuristics', async () => {

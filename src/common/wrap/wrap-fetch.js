@@ -78,8 +78,6 @@ export function wrapFetch (sharedEE, agentRef) {
 
         const ctx = {}
         const targets = findTargetsFromStackTrace(agentRef)
-        // undefined target reports to container
-        if (!targets.length) targets.push(undefined)
 
         // we are wrapping args in an array so we can preserve the reference
         ee.emit(prefix + 'before-start', [args], ctx)

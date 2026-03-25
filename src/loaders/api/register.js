@@ -130,7 +130,7 @@ function register (agentRef, target, parent) {
     setUserId: (value) => setLocalValue('enduser.id', value),
     /** metadata */
     metadata: {
-      customAttributes: attrs,
+      get customAttributes () { return attrs },
       target,
       timings
     }

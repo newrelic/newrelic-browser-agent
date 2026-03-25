@@ -112,7 +112,7 @@ export class Aggregate extends AggregateBase {
     /** make a copy of the event for the MFE target if it exists */
     if (target) {
       this.events.add({ ...event, targetAttributes: getVersion2Attributes(target, this) })
-      if (shouldDuplicate(target, this.agentRef)) this.reportContainerEvent({ ...event, targetAttributes: getVersion2DuplicationAttributes(target, this) }, ctx)
+      if (shouldDuplicate(target, this)) this.reportContainerEvent({ ...event, targetAttributes: getVersion2DuplicationAttributes(target, this) }, ctx)
     } else {
       this.reportContainerEvent(event, ctx)
     }

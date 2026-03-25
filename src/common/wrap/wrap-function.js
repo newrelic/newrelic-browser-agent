@@ -9,6 +9,7 @@
 
 import { ee } from '../event-emitter/contextual-ee'
 import { bundleId } from '../ids/bundle-id'
+import { findTargetsFromStackTrace } from '../util/v2'
 
 export const flag = `nr@original:${bundleId}`
 const LONG_TASK_THRESHOLD = 50
@@ -34,7 +35,7 @@ export default createWrapperWithEmitter
  * @param {boolean} always - If `true`, emit events even if already emitting an event.
  * @returns {function} The wrapped function.
  */
-export function createWrapperWithEmitter (emitter, always) {
+export function createWrapperWithEmitter (emitter, always, agentRef) {
   emitter || (emitter = ee)
 
   wrapFn.inPlace = inPlace
@@ -55,9 +56,10 @@ export function createWrapperWithEmitter (emitter, always) {
    * @param {function|object} getContext - The function or object that will serve as the 'this' context for handlers of events emitted by this wrapper.
    * @param {string} methodName - The name of the method being wrapped.
    * @param {boolean} bubble - If true, emitted events should also bubble up to the old emitter upon which the `emitter` in the current scope was based (if it defines one).
+   * @param {boolean} [evaluateStack] - If true, the wrapper will attempt to evaluate the stack of the executed wrapped function to find targets of the execution (ex. the MFE source of a console.log).
    * @returns {function} The wrapped function.
    */
-  function wrapFn (fn, prefix, getContext, methodName, bubble) {
+  function wrapFn (fn, prefix, getContext, methodName, bubble, evaluateStack) {
     // Unless fn is both wrappable and unwrapped, return it unchanged.
     if (notWrappable(fn)) return fn
 
@@ -78,10 +80,15 @@ export function createWrapperWithEmitter (emitter, always) {
       var ctx
       var result
       let thrownError
+      let targets
 
       try {
         originalThis = this
         args = [...arguments]
+
+        // certain wrappers can inform the function wrapper to evaluate the stack of the executed wrapped function to find targets of the execution
+        // (e.g. wrap-logger can inform this method to find try to find the MFE source of a console.log)
+        targets = evaluateStack ? findTargetsFromStackTrace(agentRef) : [undefined] // undefined target always maps to the container agent
 
         if (typeof getContext === 'function') {
           ctx = getContext(args, originalThis)
@@ -93,7 +100,7 @@ export function createWrapperWithEmitter (emitter, always) {
       }
 
       // Warning: start events may mutate args!
-      safeEmit(prefix + 'start', [args, originalThis, methodName], ctx, bubble)
+      safeEmit(prefix + 'start', [args, originalThis, methodName, targets], ctx, bubble)
 
       const fnStartTime = performance.now()
       let fnEndTime
@@ -103,7 +110,7 @@ export function createWrapperWithEmitter (emitter, always) {
         return result
       } catch (err) {
         fnEndTime = performance.now()
-        safeEmit(prefix + 'err', [args, originalThis, err], ctx, bubble)
+        safeEmit(prefix + 'err', [args, originalThis, err, targets], ctx, bubble)
         // rethrow error so we don't effect execution by observing.
         thrownError = err
         throw thrownError
@@ -120,10 +127,10 @@ export function createWrapperWithEmitter (emitter, always) {
         }
         // standalone long task message
         if (task.isLongTask) {
-          safeEmit('long-task', [task, originalThis], ctx, bubble)
+          safeEmit('long-task', [task, originalThis, targets], ctx, bubble)
         }
         // -end message also includes the task execution info
-        safeEmit(prefix + 'end', [args, originalThis, result], ctx, bubble)
+        safeEmit(prefix + 'end', [args, originalThis, result, targets], ctx, bubble)
       }
     }
   }
@@ -139,7 +146,7 @@ export function createWrapperWithEmitter (emitter, always) {
    * @param {boolean} [bubble=false] If `true`, emitted events should also bubble up to the old emitter upon which
    * the `emitter` in the current scope was based (if it defines one).
    */
-  function inPlace (obj, methods, prefix, getContext, bubble) {
+  function inPlace (obj, methods, prefix, getContext, bubble, evaluateStack) {
     if (!prefix) prefix = ''
 
     // If prefix starts with '-' set this boolean to add the method name to the prefix before passing each one to wrap.
@@ -152,7 +159,7 @@ export function createWrapperWithEmitter (emitter, always) {
       // Unless fn is both wrappable and unwrapped, bail so we don't add extra properties with undefined values.
       if (notWrappable(fn)) continue
 
-      obj[method] = wrapFn(fn, (prependMethodPrefix ? method + prefix : prefix), getContext, method, bubble)
+      obj[method] = wrapFn(fn, (prependMethodPrefix ? method + prefix : prefix), getContext, method, bubble, evaluateStack)
     }
   }
 

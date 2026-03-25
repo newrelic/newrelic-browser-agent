@@ -122,13 +122,22 @@ export async function runRegisteredEntityTest (testSet) {
     return results
   }
 
-  const containerAjax = getAllMockRequests(ajaxHarvest).filter(r => !r.children?.some(c => c.key === 'source.id'))
-  const mfe1Ajax = getAllMockRequests(ajaxHarvest).filter(r => r.children?.some(c => c.key === 'source.id' && c.value === 1))
-  const mfe2Ajax = getAllMockRequests(ajaxHarvest).filter(r => r.children?.some(c => c.key === 'source.id' && c.value === 2))
+  // Helper to get attribute value from children array (same as auto-detection test)
+  const getAttr = (event, key) => {
+    const child = event.children?.find(c => c.key === key)
+    return child?.value
+  }
 
-  const containerSpa = getAllMockRequests(spaHarvest).filter(r => !r.children?.some(c => c.key === 'source.id'))
-  const mfe1Spa = getAllMockRequests(spaHarvest).filter(r => r.children?.some(c => c.key === 'source.id' && c.value === 1))
-  const mfe2Spa = getAllMockRequests(spaHarvest).filter(r => r.children?.some(c => c.key === 'source.id' && c.value === 2))
+  const allMockAjax = getAllMockRequests(ajaxHarvest)
+  const allMockSpa = getAllMockRequests(spaHarvest)
+
+  const containerAjax = allMockAjax.filter(r => !getAttr(r, 'source.id'))
+  const mfe1Ajax = allMockAjax.filter(r => getAttr(r, 'source.id') === '1')
+  const mfe2Ajax = allMockAjax.filter(r => getAttr(r, 'source.id') === '2')
+
+  const containerSpa = allMockSpa.filter(r => !getAttr(r, 'source.id'))
+  const mfe1Spa = allMockSpa.filter(r => getAttr(r, 'source.id') === '1')
+  const mfe2Spa = allMockSpa.filter(r => getAttr(r, 'source.id') === '2')
 
   // 1 pre xhr, 1 pre fetch, 1 post xhr, 1 post fetch = 4 total requests made
   const expectAjaxMFEdata = testSet.includes('register') && SUPPORTS_REGISTERED_ENTITIES[FEATURE_NAMES.ajax]
@@ -243,7 +252,8 @@ export async function runRegisteredEntityTest (testSet) {
 
   logsHarvest.forEach(({ request: { query, body } }) => {
     const data = JSON.parse(body)[0]
-    data.logs.forEach(log => {
+    // auto-logs are validated in the auto-detection tests.  Just focus on the API ones here (which have numeric messages)
+    data.logs.filter(log => !isNaN(log.message)).forEach(log => {
       // MFEs use source.id attribute; container agent uses appId. Default to 42 if source.id is not present.
       const id = log.attributes['source.id'] || 42
       if (Number(id) !== 42 && testSet.includes('register')) {

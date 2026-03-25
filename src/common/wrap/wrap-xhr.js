@@ -56,8 +56,6 @@ export function wrapXhr (sharedEE, agentRef) {
     const xhr = new OrigXHR(opts)
     const context = ee.context(xhr)
     context.targets = findTargetsFromStackTrace(agentRef)
-    // undefined target reports to container
-    if (!context.targets.length) context.targets.push(undefined)
 
     try {
       ee.emit('new-xhr', [xhr], context)

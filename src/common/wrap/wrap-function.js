@@ -88,8 +88,7 @@ export function createWrapperWithEmitter (emitter, always, agentRef) {
 
         // certain wrappers can inform the function wrapper to evaluate the stack of the executed wrapped function to find targets of the execution
         // (e.g. wrap-logger can inform this method to find try to find the MFE source of a console.log)
-        targets = !!evaluateStack && !!agentRef?.init.api.allow_registered_children ? findTargetsFromStackTrace(agentRef) : [undefined] // undefined target always maps to the container agent
-        if (!targets.length) targets = [undefined]
+        targets = evaluateStack ? findTargetsFromStackTrace(agentRef) : [undefined] // undefined target always maps to the container agent
 
         if (typeof getContext === 'function') {
           ctx = getContext(args, originalThis)

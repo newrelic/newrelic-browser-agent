@@ -4,6 +4,39 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "a82d9761e64d4b8b014c9c686756be052b5461b1",
+          "message": "Revert circular replacer",
+          "issues": [
+            "1732"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "c7558a04cd984640c5bbb9451d83b9eddc24cc78",
+          "message": "Automatically Detect MFE Logs",
+          "issues": [
+            "1721"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "ed8e90cb4e0c6a0749d615a91bec27b799475543",
+          "message": "Automatically Detect MFE AJAX",
+          "issues": [
+            "1722"
+          ]
+        }
+      ],
+      "version": "1.312.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "b91f3c4d-56a8-43ce-b747-6162d74d9be4",
+      "createTime": "2026-03-26T19:20:16.338Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "d9f6711e4f1073b1e7713fe7966721fd6b31b864",
           "message": "agentIdentifier removal",
@@ -3789,5 +3822,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-03-20T18:31:05.662Z"
+  "updateTime": "2026-03-26T19:20:16.338Z"
 }

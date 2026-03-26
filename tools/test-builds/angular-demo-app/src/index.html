@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  {init}
+  {config}
+  <script>
+    localStorage.clear()
+    NREUM.init.session_replay = { ...NREUM.init.session_replay, enabled: true, collect_fonts: true}
+    NREUM.init.privacy.cookies_enabled = true
+  </script>
+<!--  <script src="assets/NewRelic.js"></script> -->
+  <title>DemoApp</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  {loader}
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>

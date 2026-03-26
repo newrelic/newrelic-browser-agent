@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.312.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.311.0...v1.312.0) (2026-03-26)
+
+
+### Features
+
+* Automatically Detect MFE AJAX ([#1722](https://github.com/newrelic/newrelic-browser-agent/issues/1722)) ([ed8e90c](https://github.com/newrelic/newrelic-browser-agent/commit/ed8e90cb4e0c6a0749d615a91bec27b799475543))
+* Automatically Detect MFE Logs ([#1721](https://github.com/newrelic/newrelic-browser-agent/issues/1721)) ([c7558a0](https://github.com/newrelic/newrelic-browser-agent/commit/c7558a04cd984640c5bbb9451d83b9eddc24cc78))
+
+
+### Bug Fixes
+
+* Revert circular replacer ([#1732](https://github.com/newrelic/newrelic-browser-agent/issues/1732)) ([a82d976](https://github.com/newrelic/newrelic-browser-agent/commit/a82d9761e64d4b8b014c9c686756be052b5461b1))
+
 ## [1.311.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.310.1...v1.311.0) (2026-03-20)
 
 

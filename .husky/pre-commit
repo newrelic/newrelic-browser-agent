@@ -27,14 +27,14 @@ if [ -n "$STAGED_SRC_FILES" ]; then
   done
 fi
 
-# Lint only changed files ending in .js, .cjs, or .mjs
-STAGED_LINT_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|cjs|mjs)$' || true)
+# Lint only changed files
+STAGED_LINT_FILES=$(git diff --cached --name-only --diff-filter=ACM || true)
 
 if [ -n "$STAGED_LINT_FILES" ]; then
   echo "Linting changed files..."
   npx eslint -c .eslintrc.js $STAGED_LINT_FILES
 else
-  echo "No JavaScript files to lint."
+  echo "No files to lint."
 fi
 
 npm run test -- --onlyChanged

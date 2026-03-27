@@ -47,10 +47,12 @@
  * @typedef {Object} RegisterAPITimings
  * @property {number} registeredAt - The timestamp when the registered entity was created.
  * @property {number} [reportedAt] - The timestamp when the registered entity was deregistered.
- * @property {number} fetchStart - The timestamp when the registered entity began fetching.
- * @property {number} fetchEnd - The timestamp when the registered entity finished fetching.
+ * @property {number} fetchStart - The timestamp when the registered entity began fetching (performance.start).
+ * @property {number} fetchEnd - The timestamp when the registered entity finished fetching (performance.end).
+ * @property {number} scriptStart - The timestamp when script initialization began (max of dom.start or performance.end, or performance.end if no dom.start).
+ * @property {number} scriptEnd - The timestamp when script loading completed (dom.end or registeredAt if no dom.end).
  * @property {Object} [asset] - The asset path (if found) for the registered entity.
- * @property {string} type - The type of timing associated with the registered entity, 'script' or 'link' if found with the performance resource API, 'inline' if found to be associated with the root document URL, or 'unknown' if no associated resource could be found.
+ * @property {string} type - The type of timing associated with the registered entity, 'script' or 'link' if found with the performance resource API, 'fetch' for dynamic imports, 'inline' if found to be associated with the root document URL, or 'unknown' if no associated resource could be found.
  */
 
 export default {}

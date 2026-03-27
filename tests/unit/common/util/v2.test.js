@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getVersion2Attributes, getRegisteredTargetsFromFilename, findTargetsFromStackTrace, getRegisteredTargetsFromId } from '../../../../src/common/util/v2'
+import { getVersion2Attributes, getRegisteredTargetsFromFilename, findTargetsFromStackTrace, getRegisteredTargetsFromId } from '../../../../src/common/v2/utils'
 
 describe('v2 utilities', () => {
   describe('getRegisteredTargetsFromFilename', () => {

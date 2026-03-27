@@ -9,7 +9,7 @@
 
 import { ee } from '../event-emitter/contextual-ee'
 import { bundleId } from '../ids/bundle-id'
-import { findTargetsFromStackTrace } from '../util/v2'
+import { findTargetsFromStackTrace } from '../v2/utils'
 
 export const flag = `nr@original:${bundleId}`
 const LONG_TASK_THRESHOLD = 50

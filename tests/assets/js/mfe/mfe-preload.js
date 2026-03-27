@@ -5,6 +5,11 @@
 // when register() is called from the loaded module
 
 (function () {
+  // ensure there is a small delay to ensure timeToRegister/timeToLoad are larger than 0 for testing purposes, as well as to simulate a more realistic async loading scenario
+  let i = 0
+  while (i++ < 1e6) {
+    // do nothing
+  } // simulate delay
   const api4 = newrelic.register({
     id: '4',
     name: 'test 4'

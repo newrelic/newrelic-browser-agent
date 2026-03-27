@@ -84,7 +84,7 @@ afterEach(() => {
 describe('script-tracker', () => {
   describe('findScriptTimings', () => {
     beforeEach(async () => {
-      scriptTrackerModule = await import('../../../../src/common/util/script-tracker')
+      scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
     })
 
     test('returns default timings when no stack available', () => {
@@ -188,7 +188,7 @@ describe('script-tracker', () => {
     at init (https://cdn.example.com/tracked-app.js:25:10)`
 
       // Import module to activate PerformanceObserver
-      scriptTrackerModule = await import('../../../../src/common/util/script-tracker')
+      scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
 
       // Simulate PerformanceObserver detecting the script load
       if (performanceObserverCallback) {
@@ -228,7 +228,7 @@ describe('script-tracker', () => {
     at register (${scriptTrackerModule.thisFile}:2:2)
     at setup (https://cdn.example.com/preload.js:10:5)`
 
-      scriptTrackerModule = await import('../../../../src/common/util/script-tracker')
+      scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
 
       // Trigger observer with link entry (.js files from link tags are tracked)
       if (performanceObserverCallback) {
@@ -272,7 +272,7 @@ describe('script-tracker', () => {
     at register (${scriptTrackerModule.thisFile}:2:2)
     at init (https://cdn.example.com/preloaded.js:30:5)`
 
-      scriptTrackerModule = await import('../../../../src/common/util/script-tracker')
+      scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
 
       const result = scriptTrackerModule.findScriptTimings()
 
@@ -311,7 +311,7 @@ describe('script-tracker', () => {
     at register (${scriptTrackerModule.thisFile}:2:2)
     at main (https://cdn.example.com/late-preload.js:50:10)`
 
-      scriptTrackerModule = await import('../../../../src/common/util/script-tracker')
+      scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
 
       const result = scriptTrackerModule.findScriptTimings()
 
@@ -362,7 +362,7 @@ describe('script-tracker', () => {
       mockStack = `Error
     at register (https://cdn.example.com/timeout-test.js:1:1)`
 
-      scriptTrackerModule = await import('../../../../src/common/util/script-tracker')
+      scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
 
       // Create a late observer subscription
       scriptTrackerModule.findScriptTimings()
@@ -385,14 +385,14 @@ describe('script-tracker', () => {
       jest.useRealTimers()
     })
 
-    test('limits scripts Set to 250 entries', async () => {
+    test('limits scripts Set to 1000 entries', async () => {
       jest.resetModules()
 
-      scriptTrackerModule = await import('../../../../src/common/util/script-tracker')
+      scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
 
       // Generate 300 entries to exceed the limit
       const entries = []
-      for (let i = 0; i < 300; i++) {
+      for (let i = 0; i < 1100; i++) {
         entries.push({
           name: `https://cdn.example.com/script-${i}.js`,
           initiatorType: 'script',
@@ -408,7 +408,7 @@ describe('script-tracker', () => {
         })
       }
 
-      // The Set enforces 250 limit, oldest entries dropped
+      // The Set enforces 1000 limit, oldest entries dropped
       global.performance.getEntriesByType = jest.fn(() => [])
 
       // Try to find script-0.js (should be evicted)
@@ -417,7 +417,6 @@ describe('script-tracker', () => {
 
       const result = scriptTrackerModule.findScriptTimings()
 
-      // Script 0 evicted from Set, no timing info available
       expect(result.fetchStart).toBe(0)
       expect(result.fetchEnd).toBe(0)
     })
@@ -649,7 +648,7 @@ init@https://cdn.example.com/gecko-app.js:20:10`
         { name: 'https://example.com/data.json', initiatorType: 'fetch', startTime: 30, responseEnd: 90 }
       ]
 
-      scriptTrackerModule = await import('../../../../src/common/util/script-tracker')
+      scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
 
       // Feed non-script resources to observer
       if (performanceObserverCallback) {
@@ -680,7 +679,7 @@ init@https://cdn.example.com/gecko-app.js:20:10`
         responseEnd: 100
       }
 
-      scriptTrackerModule = await import('../../../../src/common/util/script-tracker')
+      scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
 
       if (performanceObserverCallback) {
         performanceObserverCallback({
@@ -807,7 +806,7 @@ init@https://cdn.example.com/gecko-app.js:20:10`
       mockStack = `Error
     at test (https://cdn.example.com/test.js:1:1)`
 
-      scriptTrackerModule = await import('../../../../src/common/util/script-tracker')
+      scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
 
       const result = scriptTrackerModule.findScriptTimings()
 
@@ -824,7 +823,7 @@ init@https://cdn.example.com/gecko-app.js:20:10`
       }))
       global.PerformanceObserver.supportedEntryTypes = ['paint', 'navigation']
 
-      scriptTrackerModule = await import('../../../../src/common/util/script-tracker')
+      scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
 
       global.performance = {
         now: jest.fn(() => Date.now()),

@@ -5,15 +5,15 @@ import { Component } from '@angular/core';
   template: `
     <div class="about-container">
       <h1>About Us</h1>
-      <p>これはデモアプリケーションのAboutページです。</p>
-      <h2>アプリケーション情報</h2>
+      <p>This is the demo application's About page.</p>
+      <h2>App info</h2>
       <ul>
-        <li>名前: Demo App</li>
-        <li>バージョン: 1.0.0</li>
-        <li>フレームワーク: Angular</li>
+        <li>Name: Demo App</li>
+        <li>Version: 1.0.0</li>
+        <li>Framework: Angular</li>
       </ul>
-      <h2>説明</h2>
-      <p>このアプリケーションは、Angularを使用したモダンなWebアプリケーションです。</p>
+      <h2>Lorem Ipsum</h2>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis nec suscipit sem. Duis non aliquet mi, et pretium nulla.</p>
     </div>
   `,
   styles: [`
@@ -23,28 +23,28 @@ import { Component } from '@angular/core';
       padding: 20px;
       font-family: Arial, sans-serif;
     }
-    
+
     h1 {
       color: #dd0031;
       border-bottom: 2px solid #dd0031;
       padding-bottom: 10px;
     }
-    
+
     h2 {
       color: #333;
       margin-top: 30px;
     }
-    
+
     p {
       line-height: 1.6;
       color: #666;
     }
-    
+
     ul {
       list-style-type: none;
       padding: 0;
     }
-    
+
     li {
       padding: 10px;
       margin: 5px 0;

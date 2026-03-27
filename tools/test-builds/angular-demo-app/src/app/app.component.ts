@@ -7,7 +7,7 @@ import { Component } from '@angular/core';
       <div class="nav-container">
         <h1 class="logo">Demo App</h1>
         <ul class="nav-menu">
-          <li><a routerLink="/home" routerLinkActive="active">ホーム</a></li>
+          <li><a routerLink="/home" routerLinkActive="active">Home</a></li>
           <li><a routerLink="/about" routerLinkActive="active">About</a></li>
         </ul>
       </div>
@@ -20,7 +20,7 @@ import { Component } from '@angular/core';
       padding: 0;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    
+
     .nav-container {
       max-width: 1200px;
       margin: 0 auto;
@@ -29,13 +29,13 @@ import { Component } from '@angular/core';
       align-items: center;
       padding: 1rem 2rem;
     }
-    
+
     .logo {
       color: white;
       margin: 0;
       font-size: 1.5rem;
     }
-    
+
     .nav-menu {
       list-style: none;
       display: flex;
@@ -43,7 +43,7 @@ import { Component } from '@angular/core';
       margin: 0;
       padding: 0;
     }
-    
+
     .nav-menu a {
       color: white;
       text-decoration: none;
@@ -51,11 +51,11 @@ import { Component } from '@angular/core';
       border-radius: 4px;
       transition: background-color 0.3s;
     }
-    
+
     .nav-menu a:hover {
       background-color: rgba(255,255,255,0.1);
     }
-    
+
     .nav-menu a.active {
       background-color: rgba(255,255,255,0.2);
       font-weight: bold;

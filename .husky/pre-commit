@@ -27,6 +27,15 @@ if [ -n "$STAGED_SRC_FILES" ]; then
   done
 fi
 
-npm run lint
+# Lint only changed files
+STAGED_LINT_FILES=$(git diff --cached --name-only --diff-filter=ACM || true)
+
+if [ -n "$STAGED_LINT_FILES" ]; then
+  echo "Linting changed files..."
+  npx eslint -c .eslintrc.js --quiet "$STAGED_LINT_FILES"
+else
+  echo "No files to lint."
+fi
+
 npm run test -- --onlyChanged
 npm run test:types

@@ -27,7 +27,7 @@ if [ -n "$STAGED_SRC_FILES" ]; then
   done
 fi
 
-# Lint only changed files (excluding tools/test-builds)
+# Lint only changed files ending in .js, .cjs, or .mjs
 STAGED_LINT_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|cjs|mjs)$' || true)
 
 if [ -n "$STAGED_LINT_FILES" ]; then

@@ -1,5 +1,3 @@
-window.__nrWarnings = []
-window.__nrWarningCallback = null
 localStorage.clear()
 window.NREUM || (NREUM = {})
 NREUM.init = {
@@ -17,18 +15,13 @@ NREUM.init = {
     preload: true,
     mask_input_options: {}
   },
-  distributed_tracing: { enabled: true },
-  performance: { capture_measures: true },
-  browser_consent_mode: { enabled: false },
   privacy: { cookies_enabled: true },
-  ajax: { deny_list: ['bam.nr-data.net'] }
 }
 
 // add your own test app info
 /*
 NREUM.loader_config = {
 }
-
 NREUM.info = {
 }
  */

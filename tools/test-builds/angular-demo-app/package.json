@@ -18,7 +18,6 @@
     "@angular/platform-browser": "^16.2.0",
     "@angular/platform-browser-dynamic": "^16.2.0",
     "@angular/router": "^16.2.0",
-    "@newrelic/browser-agent": "file:../../../temp/newrelic-browser-agent-1.311.0.tgz",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.13.0"

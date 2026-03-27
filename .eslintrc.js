@@ -12,7 +12,6 @@ module.exports = {
     'tests/assets/test-builds/**/*',
     'tests/assets/modular/js-errors/js/vendor/**/*',
     'tests/dts/**/*',
-    'tools/test-builds/angular-demo-app/**/*',
 
     // Ignore old JIL test code since they are being migrated to WDIO
     'tests/browser/**/*',

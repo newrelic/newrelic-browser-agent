@@ -15,7 +15,7 @@ NREUM.init = {
     preload: true,
     mask_input_options: {}
   },
-  privacy: { cookies_enabled: true },
+  privacy: { cookies_enabled: true }
 }
 
 // add your own test app info

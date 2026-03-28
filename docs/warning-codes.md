@@ -139,3 +139,5 @@
 `API has been deregistered and can no longer be used. Call "register" API again with credentials to start over.`
 ### 69
 `More than one Browser agent is running on the page`
+### 70
+`A session replay payload failed to send and is being retried. Recording is paused during the retry period, and will resume when a successful harvest is made. Some replay activity may be missed during retry phases.`

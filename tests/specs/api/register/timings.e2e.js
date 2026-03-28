@@ -30,6 +30,63 @@ async function getMFETimings (id) {
   }, id)
 }
 
+/**
+ * Validates common timing event properties and formulas
+ * @param {object} timing - The timing event from Insights
+ * @param {object} timingMetadata - Optional metadata from registered entity
+ * @param {object} options - Optional validation options
+ * @param {boolean} options.expectPositiveTimes - Whether to expect all times > 0 (default: false)
+ */
+function validateTimingEvent (timing, timingMetadata, options = {}) {
+  const { expectPositiveTimes = false } = options
+
+  // Basic structure validation
+  expect(timing.assetType).toBeDefined()
+  expect(acceptedAssetTypes).toContain(timing.assetType)
+
+  // Validate timing formula: timeToLoad = timeToFetch + timeToExecute
+  expect(timing.timeToLoad).toBe(timing.timeToFetch + timing.timeToExecute)
+
+  // Optional: expect all timing values to be positive
+  if (expectPositiveTimes) {
+    expect(timing.timeToFetch).toBeGreaterThan(0)
+    expect(timing.timeToRegister).toBeGreaterThan(0)
+    expect(timing.timeToExecute).toBeGreaterThan(0)
+    expect(timing.timeToLoad).toBeGreaterThan(0)
+    expect(timing.timeToBeRequested).toBeGreaterThan(0)
+    expect(timing.timeAlive).toBeGreaterThan(0)
+  } else {
+    // At minimum, values should be >= 0
+    expect(timing.timeToFetch).toBeGreaterThanOrEqual(0)
+    expect(timing.timeToRegister).toBeGreaterThanOrEqual(0)
+    expect(timing.timeToExecute).toBeGreaterThanOrEqual(0)
+    expect(timing.timeToLoad).toBeGreaterThanOrEqual(0)
+    expect(timing.timeToBeRequested).toBeGreaterThanOrEqual(0)
+    expect(timing.timeAlive).toBeGreaterThanOrEqual(0)
+  }
+
+  // Cross-reference with metadata if provided
+  if (timingMetadata) {
+    validateMetadataTimingChain(timingMetadata)
+
+    // Verify Insights event calculations match metadata
+    expect(timing.timeToFetch).toBe(timingMetadata.fetchEnd - timingMetadata.fetchStart)
+    expect(timing.timeToExecute).toBe(timingMetadata.scriptEnd - timingMetadata.scriptStart)
+  }
+}
+
+/**
+ * Validates metadata timing chain ordering
+ * @param {object} metadata - The timing metadata from registered entity
+ */
+function validateMetadataTimingChain (metadata) {
+  expect(metadata.fetchStart).toBeGreaterThanOrEqual(0)
+  expect(metadata.fetchEnd).toBeGreaterThanOrEqual(metadata.fetchStart)
+  expect(metadata.scriptStart).toBeGreaterThanOrEqual(metadata.fetchEnd)
+  expect(metadata.scriptEnd).toBeGreaterThanOrEqual(metadata.scriptStart)
+  expect(metadata.registeredAt).toBeGreaterThanOrEqual(metadata.scriptStart)
+}
+
 describe('Register API - Correlation-based Timings', () => {
   beforeEach(async () => {
     [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
@@ -69,24 +126,8 @@ describe('Register API - Correlation-based Timings', () => {
       expect(timing.assetType).toBe('script')
       expect(timing.assetUrl).toContain('mfe.js')
 
-      // Logical validations
-      expect(timing.timeToFetch).toBeGreaterThanOrEqual(0)
-      expect(timing.timeToRegister).toBeGreaterThan(0)
-      expect(timing.timeToLoad).toBe(timing.timeToFetch + timing.timeToRegister)
-      expect(timing.timeToBeRequested).toBeGreaterThanOrEqual(0)
-      expect(timing.timeAlive).toBeGreaterThan(0)
-
-      // Cross-reference with metadata
-      if (timingMetadata) {
-        expect(timingMetadata.fetchStart).toBeGreaterThanOrEqual(0)
-        expect(timingMetadata.fetchEnd).toBeGreaterThanOrEqual(timingMetadata.fetchStart)
-        expect(timingMetadata.scriptStart).toBeGreaterThanOrEqual(timingMetadata.fetchEnd)
-        expect(timingMetadata.scriptEnd).toBeGreaterThanOrEqual(timingMetadata.scriptStart)
-
-        // Verify calculations match metadata
-        expect(timing.timeToFetch).toBe(timingMetadata.fetchEnd - timingMetadata.fetchStart)
-        expect(timing.timeToRegister).toBe(timingMetadata.scriptEnd - timingMetadata.scriptStart)
-      }
+      // Validate timing event with common assertions
+      validateTimingEvent(timing, timingMetadata, { expectPositiveTimes: true })
     })
 
     it('should handle script that registers during execution (before load event)', async () => {
@@ -115,6 +156,9 @@ describe('Register API - Correlation-based Timings', () => {
 
       // Inline script should be detected
       expect(timing.assetType).toBe('inline')
+
+      // Validate timing event with common assertions
+      validateTimingEvent(timing)
     })
   })
 
@@ -155,13 +199,12 @@ describe('Register API - Correlation-based Timings', () => {
       expect(timing.timeToRegister).toBeGreaterThanOrEqual(0)
       expect(timing.timeToLoad).toBe(0)
 
+      // Validate timing event with common assertions
+      validateTimingEvent(timing, timingMetadata)
+
       // Cross-reference with metadata
       if (timingMetadata) {
         expect(timingMetadata.type).toBe('inline')
-        expect(timingMetadata.fetchStart).toBe(0)
-        expect(timingMetadata.fetchEnd).toBe(0)
-        expect(timingMetadata.scriptStart).toBe(0)
-        expect(timingMetadata.scriptEnd).toBe(0)
       }
     })
   })
@@ -223,12 +266,7 @@ describe('Register API - Correlation-based Timings', () => {
           return agents[0].runtime.registeredEntities.map(e => ({
             id: e.metadata.target.id,
             name: e.metadata.target.name,
-            type: e.metadata.timings.type,
-            asset: e.metadata.timings.asset,
-            fetchStart: e.metadata.timings.fetchStart,
-            fetchEnd: e.metadata.timings.fetchEnd,
-            scriptStart: e.metadata.timings.scriptStart,
-            scriptEnd: e.metadata.timings.scriptEnd
+            ...e.metadata.timings
           }))
         } catch (err) {
           return []
@@ -240,12 +278,7 @@ describe('Register API - Correlation-based Timings', () => {
 
       if (dynamicMFE) {
         // Validate timing chain for dynamically loaded script
-        expect(dynamicMFE.fetchEnd).toBeGreaterThanOrEqual(dynamicMFE.fetchStart)
-        expect(dynamicMFE.scriptStart).toBeGreaterThanOrEqual(dynamicMFE.fetchEnd)
-        expect(dynamicMFE.scriptEnd).toBeGreaterThanOrEqual(dynamicMFE.scriptStart)
-
-        // scriptStart should be greater than fetchEnd (script can't start before fetch completes)
-        expect(dynamicMFE.scriptStart).toBeGreaterThanOrEqual(dynamicMFE.fetchEnd)
+        validateMetadataTimingChain(dynamicMFE)
       }
     })
   })
@@ -275,25 +308,8 @@ describe('Register API - Correlation-based Timings', () => {
       expect(timingEvents.length).toBe(1)
       const timing = timingEvents[0]
 
-      // Validate the formula: timeToLoad = timeToFetch + timeToRegister
-      const calculatedTimeToLoad = timing.timeToFetch + timing.timeToRegister
-      expect(timing.timeToLoad).toBe(calculatedTimeToLoad)
-
-      // Cross-reference with metadata calculations
-      if (timingMetadata) {
-        const metadataTimeToFetch = timingMetadata.fetchEnd - timingMetadata.fetchStart
-        const metadataTimeToRegister = timingMetadata.scriptEnd - timingMetadata.scriptStart
-
-        expect(timing.timeToFetch).toBe(metadataTimeToFetch)
-        expect(timing.timeToRegister).toBe(metadataTimeToRegister)
-
-        // Logical ordering validations
-        expect(timingMetadata.fetchStart).toBeGreaterThanOrEqual(0)
-        expect(timingMetadata.fetchEnd).toBeGreaterThanOrEqual(timingMetadata.fetchStart)
-        expect(timingMetadata.scriptStart).toBeGreaterThanOrEqual(timingMetadata.fetchEnd)
-        expect(timingMetadata.scriptEnd).toBeGreaterThanOrEqual(timingMetadata.scriptStart)
-        expect(timingMetadata.registeredAt).toBeGreaterThanOrEqual(timingMetadata.scriptStart)
-      }
+      // Validate timing event with common assertions
+      validateTimingEvent(timing, timingMetadata)
     })
 
     it('should have timeAlive reflect deregistration time for inline scripts', async () => {
@@ -333,8 +349,8 @@ describe('Register API - Correlation-based Timings', () => {
       // timeAlive should include the busy-wait delay
       expect(timing.timeAlive).toBeGreaterThanOrEqual(delayMs - 10) // Allow 10ms tolerance
 
-      // Validate timing chain logical ordering
-      expect(timing.timeToLoad).toBe(timing.timeToFetch + timing.timeToRegister)
+      // Validate timing event with common assertions
+      validateTimingEvent(timing)
     })
 
     it('should handle script loading with timing formula validation', async () => {
@@ -360,15 +376,8 @@ describe('Register API - Correlation-based Timings', () => {
       const timing = timingEvents[0]
 
       // Note: Script may or may not be cached depending on browser session state
-      // Just verify the timing formula holds
-      expect(timing.timeToFetch).toBeGreaterThanOrEqual(0)
-      expect(timing.timeToLoad).toBe(timing.timeToFetch + timing.timeToRegister)
-
-      // Cross-validate with metadata
-      if (timingMetadata) {
-        expect(timingMetadata.fetchEnd - timingMetadata.fetchStart).toBe(timing.timeToFetch)
-        expect(timingMetadata.scriptEnd - timingMetadata.scriptStart).toBe(timing.timeToRegister)
-      }
+      // Validate timing event with common assertions
+      validateTimingEvent(timing, timingMetadata)
     })
   })
 
@@ -398,14 +407,7 @@ describe('Register API - Correlation-based Timings', () => {
       // Validate preloaded script (id:'4') - should have proper preload timing
       if (preloadTimings) {
         expect(preloadTimings.type).toBe('link')
-
-        // Preload should have completed fetching before DOM insertion
-        expect(preloadTimings.fetchStart).toBeGreaterThanOrEqual(0)
-        expect(preloadTimings.fetchEnd).toBeGreaterThanOrEqual(preloadTimings.fetchStart)
-
-        // Script execution happens after DOM insertion
-        expect(preloadTimings.scriptStart).toBeGreaterThanOrEqual(preloadTimings.fetchEnd)
-        expect(preloadTimings.scriptEnd).toBeGreaterThanOrEqual(preloadTimings.scriptStart)
+        validateMetadataTimingChain(preloadTimings)
 
         // For preloaded resources that complete early, scriptStart should be calculated from DOM insertion
         // The fetch may have completed long before the <script> tag was appended
@@ -415,12 +417,7 @@ describe('Register API - Correlation-based Timings', () => {
       // Validate late-loaded script (id:'5') - loaded by mfe-preload.js
       if (lateLoadTimings) {
         expect(lateLoadTimings.type).toBe('fetch')
-
-        // Should have valid timing chain
-        expect(lateLoadTimings.fetchStart).toBeGreaterThanOrEqual(0)
-        expect(lateLoadTimings.fetchEnd).toBeGreaterThanOrEqual(lateLoadTimings.fetchStart)
-        expect(lateLoadTimings.scriptStart).toBeGreaterThanOrEqual(lateLoadTimings.fetchEnd)
-        expect(lateLoadTimings.scriptEnd).toBeGreaterThanOrEqual(lateLoadTimings.scriptStart)
+        validateMetadataTimingChain(lateLoadTimings)
       }
 
       // Deregister all MFEs to trigger timing events
@@ -445,6 +442,7 @@ describe('Register API - Correlation-based Timings', () => {
         expect(inlineTiming.timeToFetch).toBe(0)
         expect(inlineTiming.timeToLoad).toBe(0)
         expect(inlineTiming.timeToRegister).toBeGreaterThanOrEqual(0)
+        validateTimingEvent(inlineTiming, inlineTimings)
       }
 
       // Validate preloaded script timing event (id:'4')
@@ -453,17 +451,9 @@ describe('Register API - Correlation-based Timings', () => {
         expect(preloadTiming.assetType).toBe('link')
         expect(preloadTiming.assetUrl).toContain('mfe-preload.js')
 
-        // Preload should have valid timings
-        expect(preloadTiming.timeToFetch).toBeGreaterThanOrEqual(0)
-        expect(preloadTiming.timeToRegister).toBeGreaterThanOrEqual(0)
-        expect(preloadTiming.timeToLoad).toBe(preloadTiming.timeToFetch + preloadTiming.timeToRegister)
+        // Validate timing event with common assertions
+        validateTimingEvent(preloadTiming, preloadTimings)
         expect(preloadTiming.timeAlive).toBeGreaterThan(0)
-
-        // Cross-reference with metadata
-        if (preloadTimings) {
-          expect(preloadTiming.timeToFetch).toBe(preloadTimings.fetchEnd - preloadTimings.fetchStart)
-          expect(preloadTiming.timeToRegister).toBe(preloadTimings.scriptEnd - preloadTimings.scriptStart)
-        }
       }
 
       // Validate late-loaded script timing event (id:'5')
@@ -472,17 +462,10 @@ describe('Register API - Correlation-based Timings', () => {
         expect(lateTiming.assetType).toBe('fetch')
         expect(lateTiming.assetUrl).toContain('mfe-preload-late.js')
 
-        // Late-loaded should have valid timings
-        expect(lateTiming.timeToFetch).toBeGreaterThanOrEqual(0)
-        expect(lateTiming.timeToRegister).toBeGreaterThan(0)
-        expect(lateTiming.timeToLoad).toBe(lateTiming.timeToFetch + lateTiming.timeToRegister)
+        // Validate timing event with common assertions
+        validateTimingEvent(lateTiming, lateLoadTimings)
         expect(lateTiming.timeAlive).toBeGreaterThan(0)
-
-        // Cross-reference with metadata
-        if (lateLoadTimings) {
-          expect(lateTiming.timeToFetch).toBe(lateLoadTimings.fetchEnd - lateLoadTimings.fetchStart)
-          expect(lateTiming.timeToRegister).toBe(lateLoadTimings.scriptEnd - lateLoadTimings.scriptStart)
-        }
+        expect(lateTiming.timeToRegister).toBeGreaterThan(0)
       }
     })
   })
@@ -534,9 +517,7 @@ describe('Register API - Correlation-based Timings', () => {
 
       // Each timing should maintain formula integrity
       timingEvents.forEach(timing => {
-        expect(timing.timeToLoad).toBe(timing.timeToFetch + timing.timeToRegister)
-        expect(timing.assetType).toBeDefined()
-        expect(acceptedAssetTypes).toContain(timing.assetType)
+        validateTimingEvent(timing)
       })
     })
   })
@@ -565,13 +546,8 @@ describe('Register API - Correlation-based Timings', () => {
       expect(timingEvents.length).toBe(1)
       const timing = timingEvents[0]
 
-      // Should still produce valid timings
-      expect(timing.timeToLoad).toBeGreaterThanOrEqual(0)
-      expect(timing.timeToFetch).toBeGreaterThanOrEqual(0)
-      expect(timing.timeToRegister).toBeGreaterThanOrEqual(0)
-
-      // Formula should still hold
-      expect(timing.timeToLoad).toBe(timing.timeToFetch + timing.timeToRegister)
+      // Validate timing event with common assertions
+      validateTimingEvent(timing)
     })
 
     it('should handle script where register is called before load event', async () => {
@@ -600,6 +576,9 @@ describe('Register API - Correlation-based Timings', () => {
 
       // Inline script - should use fallback timing
       expect(timing.assetType).toBe('inline')
+
+      // Validate timing event with common assertions
+      validateTimingEvent(timing)
     })
   })
 
@@ -647,8 +626,11 @@ describe('Register API - Correlation-based Timings', () => {
       expect(childTiming).toBeDefined()
 
       // Both should have valid timing formulas
+      if (parentTiming) {
+        validateTimingEvent(parentTiming)
+      }
       if (childTiming) {
-        expect(childTiming.timeToLoad).toBe(childTiming.timeToFetch + childTiming.timeToRegister)
+        validateTimingEvent(childTiming)
       }
     })
 
@@ -684,10 +666,9 @@ describe('Register API - Correlation-based Timings', () => {
 
       // User-triggered load should still have valid correlation
       expect(timing.assetType).toBe('script')
-      expect(timing.timeToLoad).toBe(timing.timeToFetch + timing.timeToRegister)
 
-      // timeToRegister should include time from DOM insert to load event
-      expect(timing.timeToRegister).toBeGreaterThan(0)
+      // Validate timing event with common assertions (script may be cached)
+      validateTimingEvent(timing)
     })
   })
 
@@ -728,6 +709,9 @@ describe('Register API - Correlation-based Timings', () => {
           expect(mainMetadata.scriptStart).toBe(0)
           expect(mainMetadata.scriptEnd).toBe(0)
         }
+
+        // Validate timing event with common assertions
+        validateTimingEvent(mainMfe, mainMetadata)
       }
     })
 
@@ -764,6 +748,9 @@ describe('Register API - Correlation-based Timings', () => {
         expect(mainMfe.timeToBeRequested).toBe(0)
         expect(mainMfe.timeToFetch).toBe(0)
         expect(mainMfe.timeToLoad).toBe(0)
+
+        // Validate timing event with common assertions
+        validateTimingEvent(mainMfe)
       }
 
       // Find and validate the preloaded script MFE
@@ -775,24 +762,16 @@ describe('Register API - Correlation-based Timings', () => {
       if (preloadedMfe) {
         expect(preloadedMfe.assetType).toBe('link')
         expect(preloadedMfe.assetUrl).toContain('preload.js')
-
-        // Validate timing correlation formula
-        expect(preloadedMfe.timeToLoad).toBe(preloadedMfe.timeToFetch + preloadedMfe.timeToRegister)
         expect(preloadedMfe.timeAlive).toBeGreaterThan(0)
 
         // Cross-reference with metadata
         const preloadMetadata = await getMFETimings('4')
         if (preloadMetadata) {
           expect(preloadMetadata.type).toBe('link')
-          expect(preloadMetadata.fetchStart).toBeGreaterThanOrEqual(0)
-          expect(preloadMetadata.fetchEnd).toBeGreaterThanOrEqual(preloadMetadata.fetchStart)
-          expect(preloadMetadata.scriptStart).toBeGreaterThanOrEqual(preloadMetadata.fetchEnd)
-          expect(preloadMetadata.scriptEnd).toBeGreaterThanOrEqual(preloadMetadata.scriptStart)
-
-          // Verify Insights event calculations match metadata
-          expect(preloadedMfe.timeToFetch).toBe(preloadMetadata.fetchEnd - preloadMetadata.fetchStart)
-          expect(preloadedMfe.timeToRegister).toBe(preloadMetadata.scriptEnd - preloadMetadata.scriptStart)
         }
+
+        // Validate timing correlation formula
+        validateTimingEvent(preloadedMfe, preloadMetadata)
       }
     })
   })

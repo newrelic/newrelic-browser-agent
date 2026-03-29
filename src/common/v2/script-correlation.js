@@ -25,9 +25,11 @@ export class ScriptCorrelation {
    * @returns {{start: number, end: number}
    */
   get script () {
+    const start = Math.max(this.dom.start, this.performance.end)
+    const end = Math.max(this.dom.end, this.performance.end, start)
     return {
-      start: Math.max(this.dom.start, this.performance.end),
-      end: Math.max(this.dom.end, this.performance.end)
+      start,
+      end
     }
   }
 }

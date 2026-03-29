@@ -72,25 +72,33 @@ try {
       })
       timingsTestMfe.deregister()
 
-      await wait(5000)
-      const fiveThousandMfe = newrelic.initializedAgents[agentIdentifier].register({
-        id: '5000-mfe',
-        name: 'FIVE_THOUSAND_MFE',
-        tags: { isParent: false, isChild: false, dataTypes: 'micro frontend timings' }
-      })
-      await wait(5000)
-      fiveThousandMfe.deregister()
-      const tenThousandMfe = newrelic.initializedAgents[agentIdentifier].register({
-        id: '10000-mfe',
-        name: 'TEN_THOUSAND_MFE',
-        tags: { isParent: false, isChild: false, dataTypes: 'micro frontend timings' }
-       })
-      await wait(10000)
-      tenThousandMfe.deregister()
+      // 5000ms timing test - runs independently
+      ;(async () => {
+        await wait(5000)
+        const fiveThousandMfe = newrelic.initializedAgents[agentIdentifier].register({
+          id: '5000-mfe',
+          name: 'FIVE_THOUSAND_MFE',
+          tags: { isParent: false, isChild: false, dataTypes: 'micro frontend timings' }
+        })
+        await wait(5000)
+        fiveThousandMfe.deregister()
+      })()
+
+      // 10000ms timing test - runs independently
+      ;(async () => {
+        await wait(10000)
+        const tenThousandMfe = newrelic.initializedAgents[agentIdentifier].register({
+          id: '10000-mfe',
+          name: 'TEN_THOUSAND_MFE',
+          tags: { isParent: false, isChild: false, dataTypes: 'micro frontend timings' }
+         })
+        await wait(10000)
+        tenThousandMfe.deregister()
+      })()
 
       // Register the MFE API
       const mfeApi = newrelic.initializedAgents[agentIdentifier].register({ id: randomId, name: mfeName, tags: { isParent: false, isChild: false, dataTypes: 'all' } });
-      
+
       // Generate a random sentence for logging
       const randomSentences = [
         'This is a test log message from the registered MFE',
@@ -105,7 +113,7 @@ try {
         'Random MFE log event for validation'
       ];
       const randomSentence = randomSentences[Math.floor(Math.random() * randomSentences.length)];
-      
+
       // Call log with error level
       mfeApi.log(randomSentence, { level: 'error' });
       mfeApi.noticeError(new Error(`NRBA: This is a test error from ${mfeName}`));

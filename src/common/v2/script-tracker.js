@@ -298,6 +298,8 @@ export function findScriptTimings () {
     Object.defineProperty(timings, 'scriptStart', { get: () => correlation?.script.start || timings.fetchEnd })
     Object.defineProperty(timings, 'scriptEnd', { get: () => correlation?.script.end || timings.registeredAt })
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.log('ERROR SETTING UP SCRIPT TIMINGS:', error)
     // Don't let stack parsing errors break anything
   }
 

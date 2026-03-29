@@ -134,7 +134,7 @@ describe('script-tracker correlations', () => {
       currentTime = 200
       scriptElement.dispatchEvent(new Event('load'))
 
-      const correlations = scriptTrackerModule.getScriptCorrelations()
+      const correlations = [...scriptTrackerModule.scriptCorrelations.values()]
       expect(correlations.length).toBe(1)
 
       const correlation = correlations[0]
@@ -186,7 +186,7 @@ describe('script-tracker correlations', () => {
       currentTime = 250
       scriptElement.dispatchEvent(new Event('load'))
 
-      const correlations = scriptTrackerModule.getScriptCorrelations()
+      const correlations = [...scriptTrackerModule.scriptCorrelations.values()]
       const correlation = correlations[0]
 
       // Should have both dom and performance data
@@ -214,7 +214,7 @@ describe('script-tracker correlations', () => {
         })
       }
 
-      const correlations = scriptTrackerModule.getScriptCorrelations()
+      const correlations = [...scriptTrackerModule.scriptCorrelations.values()]
       const correlation = correlations[0]
 
       // Both dom and performance objects always exist (initialized in constructor)
@@ -243,7 +243,7 @@ describe('script-tracker correlations', () => {
         }])
       }
 
-      const correlations = scriptTrackerModule.getScriptCorrelations()
+      const correlations = [...scriptTrackerModule.scriptCorrelations.values()]
       const correlation = correlations[0]
 
       // Both dom and performance objects always exist (initialized in constructor)
@@ -270,7 +270,7 @@ describe('script-tracker correlations', () => {
         }])
       }
 
-      const correlations = scriptTrackerModule.getScriptCorrelations()
+      const correlations = [...scriptTrackerModule.scriptCorrelations.values()]
       const correlation = correlations[0]
 
       // Initially has default value of 0
@@ -302,7 +302,7 @@ describe('script-tracker correlations', () => {
       currentTime = 150
       scriptElement.dispatchEvent(new Event('error'))
 
-      const correlations = scriptTrackerModule.getScriptCorrelations()
+      const correlations = [...scriptTrackerModule.scriptCorrelations.values()]
       const correlation = correlations[0]
 
       // Error event should still set dom.end
@@ -360,7 +360,7 @@ describe('script-tracker correlations', () => {
       expect(timings.fetchEnd).toBe(150)
 
       // Verify correlation also has script getters
-      const correlation = scriptTrackerModule.getScriptCorrelations()[0]
+      const correlation = [...scriptTrackerModule.scriptCorrelations.values()][0]
       expect(correlation.script.start).toBe(150)
       expect(correlation.script.end).toBe(200)
     })
@@ -408,7 +408,7 @@ describe('script-tracker correlations', () => {
       expect(timings.scriptEnd).toBe(300)
 
       // Verify correlation script getters
-      const correlation = scriptTrackerModule.getScriptCorrelations().find(c => c.url.includes('mfe2.js'))
+      const correlation = [...scriptTrackerModule.scriptCorrelations.values()].find(c => c.url.includes('mfe2.js'))
       expect(correlation.script.start).toBe(200)
       expect(correlation.script.end).toBe(300)
     })
@@ -442,7 +442,7 @@ describe('script-tracker correlations', () => {
       expect(timings.scriptEnd).toBe(90)
     })
 
-    test('scriptEnd returns max of dom.end and performance.end', () => {
+    test('script timings should not be negative when load event has not fired', () => {
       const scriptUrl = 'https://cdn.example.com/not-loaded.js'
       mockNavigationEntry = { name: 'https://example.com/' }
       mockStack = `Error
@@ -479,8 +479,8 @@ describe('script-tracker correlations', () => {
 
       // scriptStart should be max(100, 40) = 100
       expect(timings.scriptStart).toBe(100)
-      // scriptEnd getter should return max(0, 40) = 40 (dom.end is 0)
-      expect(timings.scriptEnd).toBe(40)
+      // scriptEnd getter should return max(0, 40, 100) = 100 (includes start to prevent negative duration)
+      expect(timings.scriptEnd).toBe(100)
     })
 
     test('fallback to fetchEnd when no correlation exists', () => {
@@ -882,7 +882,7 @@ describe('script-tracker correlations', () => {
         })
       }
 
-      const correlations = scriptTrackerModule.getScriptCorrelations()
+      const correlations = [...scriptTrackerModule.scriptCorrelations.values()]
       expect(correlations.length).toBe(2)
 
       // Both should have complete data
@@ -909,7 +909,7 @@ describe('script-tracker correlations', () => {
         }
       }
 
-      const correlations = scriptTrackerModule.getScriptCorrelations()
+      const correlations = [...scriptTrackerModule.scriptCorrelations.values()]
       // Should only keep last 1000 (deletes first entry when size > 1000)
       expect(correlations.length).toBeLessThanOrEqual(1000)
     })
@@ -928,7 +928,7 @@ describe('script-tracker correlations', () => {
         }])
       }
 
-      const correlations = scriptTrackerModule.getScriptCorrelations()
+      const correlations = [...scriptTrackerModule.scriptCorrelations.values()]
       // Should not create correlation for inline scripts
       expect(correlations.length).toBe(0)
     })
@@ -949,7 +949,7 @@ describe('script-tracker correlations', () => {
         }])
       }
 
-      const correlations = scriptTrackerModule.getScriptCorrelations()
+      const correlations = [...scriptTrackerModule.scriptCorrelations.values()]
       expect(correlations.length).toBe(2)
     })
 
@@ -1048,7 +1048,7 @@ describe('script-tracker correlations', () => {
     })
   })
 
-  describe('getScriptCorrelations export', () => {
+  describe('scriptCorrelations export', () => {
     test('returns array of all correlations for holistic viewing', () => {
       const urls = [
         'https://cdn.example.com/a.js',
@@ -1069,7 +1069,7 @@ describe('script-tracker correlations', () => {
         }
       })
 
-      const correlations = scriptTrackerModule.getScriptCorrelations()
+      const correlations = [...scriptTrackerModule.scriptCorrelations.values()]
 
       expect(correlations).toBeInstanceOf(Array)
       expect(correlations.length).toBe(3)
@@ -1115,7 +1115,7 @@ describe('script-tracker correlations', () => {
         })
       }
 
-      const correlations = scriptTrackerModule.getScriptCorrelations()
+      const correlations = [...scriptTrackerModule.scriptCorrelations.values()]
       expect(correlations.length).toBe(2)
 
       const complete = correlations.find(c => c.url.includes('complete.js'))

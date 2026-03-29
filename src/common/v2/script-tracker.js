@@ -16,16 +16,16 @@ import { ScriptCorrelation } from './script-correlation'
 /** export for testing purposes */
 export let thisFile
 try {
-  thisFile = extractUrlsFromStack(getDeepStackTrace()).at(0)
+  thisFile = extractUrlsFromStack(getDeepStackTrace())[0]
 } catch (err) {
-  thisFile = extractUrlsFromStack(err).at(0)
+  thisFile = extractUrlsFromStack(err)[0]
 }
 
 /** @type {(entry: PerformanceEntry) => boolean} - A shared function to determine if a performance entry is a valid script or link resource for evaluation */
 const validEntryCriteria = entry => entry.initiatorType === 'script' || (['link', 'fetch'].includes(entry.initiatorType) && entry.name.endsWith('.js'))
 
 /** @type {Map<string, ScriptCorrelation>} - Central registry for script correlations containing both DOM and Performance data */
-const scriptCorrelations = new Map()
+export const scriptCorrelations = new Map()
 /** @type {Array<{ test: (entry: PerformanceEntry) => boolean, addedAt: number }>} an array of PerformanceObserver subscribers to check for late emissions */
 let poSubscribers = []
 
@@ -40,12 +40,15 @@ function urlsMatch (url1, url2) {
 }
 
 /**
- * Retrieves a script correlation by URL, using flexible matching (suffix matching in both directions)
+ * Retrieves a script correlation by URL, falling back to use flexible matching (suffix matching in both directions) if no exact match is found
  * @param {string} targetUrl - The URL to find
- * @returns {[string, ScriptCorrelation] | undefined} - The [key, value] tuple if found
+ * @returns {ScriptCorrelation | undefined} - The correlation object if found
  */
 function findCorrelation (targetUrl) {
-  return [...scriptCorrelations.entries()].find(([url]) => urlsMatch(url, targetUrl))
+  if (scriptCorrelations.has(targetUrl)) return scriptCorrelations.get(targetUrl)
+  for (const [url, correlation] of scriptCorrelations) {
+    if (urlsMatch(url, targetUrl)) return correlation
+  }
 }
 
 /**
@@ -55,7 +58,7 @@ function findCorrelation (targetUrl) {
  */
 function getOrCreateCorrelation (url) {
   const existing = findCorrelation(url)
-  if (existing) return existing[1]
+  if (existing) return existing
 
   const correlation = new ScriptCorrelation(url)
   scriptCorrelations.set(url, correlation)
@@ -69,71 +72,51 @@ function getOrCreateCorrelation (url) {
   return correlation
 }
 
-/**
- * Returns all script correlations as an array for holistic viewing
- * @returns {ScriptCorrelation[]} Array of all tracked script correlations
- */
-export function getScriptCorrelations () {
-  return [...scriptCorrelations.values()]
+/** Set up a MutationObserver to detect script elements being added to the DOM */
+if (globalScope.MutationObserver && globalScope.document) {
+  const scriptMutationObserver = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeName === 'SCRIPT' && node.src) {
+          const cleanedSrc = cleanURL(node.src)
+          const correlation = getOrCreateCorrelation(cleanedSrc)
+
+          correlation.dom.start = now()
+          correlation.dom.value = node
+
+          const setEnd = () => { correlation.dom.end = now() }
+          ;['load', 'error'].forEach(event => node.addEventListener(event, setEnd, { once: true }))
+        }
+      })
+    })
+  })
+
+  scriptMutationObserver.observe(globalScope.document, {
+    childList: true,
+    subtree: true
+  })
 }
 
 if (globalScope.PerformanceObserver?.supportedEntryTypes.includes('resource')) {
-  /** Set up a MutationObserver to detect script elements being added to the DOM */
-  if (globalScope.MutationObserver && globalScope.document) {
-    const scriptMutationObserver = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
-          if (node.nodeName === 'SCRIPT') {
-            const scriptSrc = node.src
-            if (scriptSrc) {
-              const cleanedSrc = cleanURL(scriptSrc)
-              const correlation = getOrCreateCorrelation(cleanedSrc)
-
-              correlation.dom.start = now()
-              correlation.dom.value = node
-
-              // Add load event listener to capture when script finishes loading
-              node.addEventListener('load', () => {
-                correlation.dom.end = now()
-              }, { once: true })
-
-              // Also capture error events
-              node.addEventListener('error', () => {
-                correlation.dom.end = now()
-              }, { once: true })
-            }
-          }
-        })
-      })
-    })
-
-    scriptMutationObserver.observe(globalScope.document, {
-      childList: true,
-      subtree: true
-    })
-  }
-
   /** We must track the script assets this way, because the performance buffer can fill up and when it does that
    * it stops accepting new entries (instead of dropping old entries), which means if the register API is called
    * after the buffer fills up we won't be able to get the script timing information from the resource timing API
   */
   const scriptObserver = new PerformanceObserver((list) => {
-    list.getEntries().forEach((entry) => {
-      if (validEntryCriteria(entry)) {
-        // Update correlation with performance data (creates entry if needed)
-        const entryUrl = cleanURL(entry.name)
-        const correlation = getOrCreateCorrelation(entryUrl)
-        correlation.performance.start = Math.floor(entry.startTime)
-        correlation.performance.end = Math.floor(entry.responseEnd)
-        correlation.performance.value = entry
+    list.getEntries().filter(validEntryCriteria).forEach((entry) => {
+      // Update correlation with performance data (creates entry if needed)
+      const entryUrl = cleanURL(entry.name)
+      const correlation = getOrCreateCorrelation(entryUrl)
+      correlation.performance.start = Math.floor(entry.startTime)
+      correlation.performance.end = Math.floor(entry.responseEnd)
+      correlation.performance.value = entry
 
-        // Clear resolved or expired subscribers
-        const canClear = []
-        poSubscribers.forEach(({ test, addedAt }, idx) => {
-          if (test(entry) || now() - addedAt > 10000) canClear.push(idx)
-        })
-        poSubscribers = poSubscribers.filter((_, idx) => !canClear.includes(idx))
-      }
+      // Clear resolved or expired subscribers
+      const canClear = []
+      poSubscribers.forEach(({ test, addedAt }, idx) => {
+        if (test(entry) || now() - addedAt > 10000) canClear.push(idx)
+      })
+      poSubscribers = poSubscribers.filter((_, idx) => !canClear.includes(idx))
     })
   })
   scriptObserver.observe({ type: 'resource', buffered: true })
@@ -227,25 +210,6 @@ function applyPerformanceEntry (timings, entry) {
 }
 
 /**
- * Finds a matching performance entry for the MFE script URL
- * @param {string} mfeScriptUrl - The MFE script URL to find
- * @returns {PerformanceResourceTiming | undefined} The matching entry if found
- */
-function findMatchingPerformanceEntry (mfeScriptUrl) {
-  // Try performance API first (fastest), then check correlations as fallback
-  // Correlations contain buffered entries that may have been dropped from performance API
-  const match = performance.getEntriesByType('resource').find(e => entryMatchesUrl(e, mfeScriptUrl))
-  if (match) return match
-
-  // Fallback: search through correlations for performance entries
-  for (const correlation of scriptCorrelations.values()) {
-    if (correlation.performance.value && entryMatchesUrl(correlation.performance.value, mfeScriptUrl)) {
-      return correlation.performance.value
-    }
-  }
-}
-
-/**
  * Uses the stack of the initiator function, returns script timing information if a script can be found with the resource timing API matching the URL found in the stack.
  * @returns {RegisterAPITimings} Object containing script fetch start and end times, and the asset URL if found
  */
@@ -270,15 +234,13 @@ export function findScriptTimings () {
     }
 
     // Get correlation data
-    const correlation = findCorrelation(mfeScriptUrl)?.[1]
+    timings.correlation = findCorrelation(mfeScriptUrl)
 
-    // Try to find matching performance entry
-    const match = findMatchingPerformanceEntry(mfeScriptUrl)
+    // Use correlation's performance entry if available, otherwise check live performance API
+    const performanceEntry = timings.correlation?.performance.value || performance.getEntriesByType('resource').find(e => entryMatchesUrl(e, mfeScriptUrl))
 
-    timings.correlation = correlation
-
-    if (match) {
-      applyPerformanceEntry(timings, match)
+    if (performanceEntry) {
+      applyPerformanceEntry(timings, performanceEntry)
     } else if (wasPreloaded(mfeScriptUrl)) {
       // Handle preloaded scripts that may report late
       timings.asset = mfeScriptUrl
@@ -297,11 +259,13 @@ export function findScriptTimings () {
       })
     }
 
-    Object.defineProperty(timings, 'scriptStart', { get: () => correlation?.script.start || timings.fetchEnd })
-    Object.defineProperty(timings, 'scriptEnd', { get: () => correlation?.script.end || timings.fetchEnd })
+    /*
+     * Use getters here because the correlation data may arrive after this function returns the timing object, and we want to provide the most up-to-date timing information possible when the getters are accessed at harvest time.
+     * The getters will fall back to fetchEnd if correlation data isn't available yet, which is our best approximation for script execution start when actual script timings can not be determined.
+    */
+    Object.defineProperty(timings, 'scriptStart', { get: () => timings.correlation?.script.start || timings.fetchEnd })
+    Object.defineProperty(timings, 'scriptEnd', { get: () => timings.correlation?.script.end || timings.registeredAt })
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.log('ERROR SETTING UP SCRIPT TIMINGS:', error)
     // Don't let stack parsing errors break anything
   }
 

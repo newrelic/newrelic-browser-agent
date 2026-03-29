@@ -80,30 +80,53 @@ export function getScriptCorrelations () {
 if (globalScope.PerformanceObserver?.supportedEntryTypes.includes('resource')) {
   /** Set up a MutationObserver to detect script elements being added to the DOM */
   if (globalScope.MutationObserver && globalScope.document) {
+    /**
+     * Processes a script or link element and adds it to correlation tracking
+     * @param {HTMLElement} node - The script or link element
+     */
+    function processScriptNode (node) {
+      const isScript = node.nodeName === 'SCRIPT'
+      const isScriptLink = node.nodeName === 'LINK' && (node.rel === 'modulepreload' || (node.rel === 'preload' && node.as === 'script'))
+
+      if (isScript || isScriptLink) {
+        const scriptSrc = isScript ? node.src : node.href
+        if (scriptSrc) {
+          const cleanedSrc = cleanURL(scriptSrc)
+          const correlation = getOrCreateCorrelation(cleanedSrc)
+
+          // Only set DOM start if not already set (preserve earliest timing)
+          if (!correlation.dom.start) {
+            correlation.dom.start = now()
+          }
+          correlation.dom.value = node
+
+          // Add load event listener to capture when script finishes loading
+          node.addEventListener('load', () => {
+            correlation.dom.end = now()
+          }, { once: true })
+
+          // Also capture error events
+          node.addEventListener('error', () => {
+            correlation.dom.end = now()
+          }, { once: true })
+        }
+      }
+    }
+
+    // Scan existing script and link elements already in the DOM
+    if (globalScope.document.readyState !== 'loading') {
+      // DOM already parsed, scan immediately
+      globalScope.document.querySelectorAll('script[src], link[rel="preload"][as="script"], link[rel="modulepreload"]').forEach(processScriptNode)
+    } else {
+      // Wait for DOM to be ready before scanning
+      globalScope.document.addEventListener('DOMContentLoaded', () => {
+        globalScope.document.querySelectorAll('script[src], link[rel="preload"][as="script"], link[rel="modulepreload"]').forEach(processScriptNode)
+      }, { once: true })
+    }
+
     const scriptMutationObserver = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
-          if (node.nodeName === 'SCRIPT') {
-            const scriptSrc = node.src
-            if (scriptSrc) {
-              const cleanedSrc = cleanURL(scriptSrc)
-              const correlation = getOrCreateCorrelation(cleanedSrc)
-
-              correlation.dom.start = now()
-              correlation.dom.value = node
-
-              // Add load event listener to capture when script finishes loading
-              node.addEventListener('load', () => {
-                correlation.dom.end = now()
-              }, { once: true })
-
-              // Also capture error events
-              node.addEventListener('error', () => {
-                correlation.dom.end = now()
-              }, { once: true })
-            }
-          }
-        })
+        mutation.addedNodes.forEach(processScriptNode)
       })
     })
 
@@ -298,7 +321,7 @@ export function findScriptTimings () {
     }
 
     Object.defineProperty(timings, 'scriptStart', { get: () => correlation?.script.start || timings.fetchEnd })
-    Object.defineProperty(timings, 'scriptEnd', { get: () => correlation?.script.end || timings.registeredAt })
+    Object.defineProperty(timings, 'scriptEnd', { get: () => correlation?.script.end || timings.fetchEnd })
   } catch (error) {
     // eslint-disable-next-line no-console
     console.log('ERROR SETTING UP SCRIPT TIMINGS:', error)

@@ -275,6 +275,8 @@ export function findScriptTimings () {
     // Try to find matching performance entry
     const match = findMatchingPerformanceEntry(mfeScriptUrl)
 
+    timings.correlation = correlation
+
     if (match) {
       applyPerformanceEntry(timings, match)
     } else if (wasPreloaded(mfeScriptUrl)) {

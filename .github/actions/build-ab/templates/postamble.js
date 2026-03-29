@@ -70,7 +70,7 @@ try {
         name: 'TIMINGS_TEST_MFE',
         tags: { isParent: false, isChild: false, dataTypes: 'micro frontend timings' }
       })
-      timingsTestMfe.deregister()
+      setTimeout(() => timingsTestMfe.deregister(), 100)
 
       // 5000ms timing test - runs independently
       ;(async () => {

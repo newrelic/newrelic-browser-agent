@@ -81,6 +81,137 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
       data: agent.config
     })
 
+    // Set up iframe postMessage listener for registered entities
+    setupIframeMessageListener(agent)
+
     agent.runtime.configured = true
   }
+}
+
+/**
+ * Sets up a postMessage listener to handle API calls from iframes
+ * @param {Object} agent The agent instance
+ */
+function setupIframeMessageListener (agent) {
+  if (typeof window === 'undefined' || !window.addEventListener) return
+
+  window.addEventListener('message', async (event) => {
+    // Validate message structure
+    if (event.data?.type !== 'newrelic-iframe-api') return
+
+    const { messageId, target, method, args } = event.data
+    const source = event.source
+
+    if (!source || !messageId || !method) return
+
+    try {
+      let result
+      let registeredEntity
+
+      // Special handling for 'register' - creates a new registered entity
+      if (method === 'register') {
+        // Call the agent's register API directly to create the entity
+        if (!agent.register) {
+          throw new Error('Register API is not available on the agent. Ensure required features are initialized.')
+        }
+
+        // Create a fresh target object from the data (don't use the cloned object directly)
+        const targetData = args?.[0] || target || {}
+        const freshTarget = {
+          id: targetData.id,
+          name: targetData.name,
+          type: targetData.type,
+          version: targetData.version,
+          tags: targetData.tags
+        }
+
+        registeredEntity = agent.register(freshTarget)
+      } else {
+        // For all other methods, find the existing registered entity by matching the target
+        registeredEntity = agent.runtime.registeredEntities?.find(
+          entity => entity.metadata.target === target ||
+                    (target.id && entity.metadata.target.id === target.id) ||
+                    (target.name && entity.metadata.target.name === target.name)
+        )
+
+        if (!registeredEntity) {
+          throw new Error(`No registered entity found for target: ${JSON.stringify(target)}`)
+        }
+
+        // Execute the method on the registered entity API
+        const methodFn = registeredEntity[method]
+        if (typeof methodFn !== 'function') {
+          throw new Error(`Method ${method} is not available on registered entity`)
+        }
+
+        // Call the method and await if it's a promise
+        result = await methodFn.apply(registeredEntity, args || [])
+      }
+
+      // Serialize metadata for all responses to keep iframe entity in sync
+      let metadataResponse
+      if (registeredEntity) {
+        const meta = registeredEntity.metadata
+        const targetObj = meta.target
+
+        // Safely extract parent info (may have getters that throw if data not ready)
+        let parentData
+        try {
+          parentData = targetObj.parent
+            ? {
+                id: targetObj.parent.id,
+                type: targetObj.parent.type
+              }
+            : undefined
+        } catch (e) {
+          // Parent getter may fail if appMetadata not ready
+          try {
+            parentData = targetObj.parent ? { type: targetObj.parent.type } : undefined
+          } catch (e2) {
+            // If even type fails, skip parent entirely
+            parentData = undefined
+          }
+        }
+
+        metadataResponse = {
+          customAttributes: { ...meta.customAttributes },
+          target: {
+            id: targetObj.id,
+            name: targetObj.name,
+            type: targetObj.type,
+            version: targetObj.version,
+            instance: targetObj.instance,
+            licenseKey: targetObj.licenseKey,
+            isolated: targetObj.isolated,
+            tags: { ...targetObj.tags },
+            parent: parentData
+          },
+          timings: { ...meta.timings }
+        }
+      }
+
+      // Send success response back to iframe with updated metadata
+      source.postMessage({
+        type: 'newrelic-iframe-api-response',
+        messageId,
+        result: result || null,
+        metadata: metadataResponse
+      }, event.origin)
+    } catch (error) {
+      // Send error response back to iframe
+      // Ensure error message is serializable
+      let errorMessage
+      try {
+        errorMessage = error.message || String(error)
+      } catch (stringifyError) {
+        errorMessage = 'Unknown error occurred'
+      }
+
+      source.postMessage({
+        type: 'newrelic-iframe-api-response',
+        messageId,
+        error: errorMessage
+      }, event.origin)
+    }
+  })
 }

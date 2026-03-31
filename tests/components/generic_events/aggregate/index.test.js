@@ -1,5 +1,6 @@
 import { Instrument as GenericEvents } from '../../../../src/features/generic_events/instrument'
 import { FEATURE_NAMES } from '../../../../src/loaders/features/features'
+import { globalScope } from '../../../../src/common/constants/runtime'
 import { expectHarvests } from '../../../util/basic-checks'
 import { resetAgent, setupAgent } from '../../setup-agent'
 
@@ -325,6 +326,48 @@ describe('sub-features', () => {
 
     triggerHarvestSpy.mockRestore()
     global.PerformanceObserver = origGlobalPO
+  })
+
+  test('should record security policy violations when enabled', () => {
+    const event = new Event('securitypolicyviolation')
+    Object.defineProperties(event, {
+      blockedURI: { value: 'https://malicious.example' },
+      documentURI: { value: 'https://test.com' },
+      effectiveDirective: { value: 'script-src' },
+      violatedDirective: { value: 'script-src' },
+      originalPolicy: { value: "default-src 'self'" },
+      sourceFile: { value: 'https://test.com/index.js' },
+      statusCode: { value: 200 },
+      lineNumber: { value: 10 },
+      columnNumber: { value: 4 },
+      disposition: { value: 'enforce' },
+      sample: { value: 'inline-script' },
+      referrer: { value: 'https://referrer.test' }
+    })
+
+    globalScope.dispatchEvent(event)
+
+    const expectedTimestamp = Math.floor(mainAgent.runtime.timeKeeper.correctRelativeTimestamp(event.timeStamp))
+    const capturedEvent = genericEventsAggregate.events.get()[0]
+
+    expect(capturedEvent).toMatchObject({
+      eventType: 'SecurityPolicyViolation',
+      timestamp: expectedTimestamp,
+      blockedUri: 'https://malicious.example',
+      documentUri: 'https://test.com',
+      effectiveDirective: 'script-src',
+      originalPolicy: "default-src 'self'",
+      sourceFile: 'https://test.com/index.js',
+      statusCode: 200,
+      lineNumber: 10,
+      columnNumber: 4,
+      disposition: 'enforce',
+      sample: 'inline-script',
+      referrer: 'https://referrer.test'
+    })
+    expect(capturedEvent).not.toHaveProperty('violatedDirective')
+    expect(capturedEvent).not.toHaveProperty('blockedURI')
+    expect(capturedEvent).not.toHaveProperty('documentURI')
   })
 })
 

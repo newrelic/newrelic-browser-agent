@@ -160,3 +160,25 @@ jobs:
           commit: ${{ github.sha }}
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
+
+  # Notify about new experiment in Slack
+  send-slack-notifications:
+    needs: [publish-experiment-to-s3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+            ref: ${{ github.ref }}
+      - name: Clean branch name
+        id: clean-branch-name
+        run: echo "results=$(echo '${{ github.ref }}' | sed 's/refs\/heads\///g' | sed 's/[^[:alnum:].-]/-/g')" >> $GITHUB_OUTPUT
+      - name: Send Slack notifications
+        uses: ./.github/actions/slack-notification
+        with:
+          dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
+          dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
+          message: ":test_tube: New experiment published in environment `${{ inputs.nr_environment }}` for branch `${{ steps.clean-branch-name.outputs.results }}`."

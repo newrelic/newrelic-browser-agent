@@ -15,9 +15,9 @@ import { chrome, chromeEval, gecko } from './browser-stack-matchers'
 /** export for testing purposes */
 export let thisFile
 try {
-  thisFile = extractUrlsFromStack(getDeepStackTrace()).at(0)
+  thisFile = extractUrlsFromStack(getDeepStackTrace())[0]
 } catch (err) {
-  thisFile = extractUrlsFromStack(err).at(0)
+  thisFile = extractUrlsFromStack(err)[0]
 }
 
 /** @type {(entry: PerformanceEntry) => boolean} - A shared function to determine if a performance entry is a valid script or link resource for evaluation */
@@ -126,7 +126,7 @@ export function findScriptTimings () {
   try {
     const urls = extractUrlsFromStack(stack)
     /** if there is exactly one url, this means the MFE script is running in the same file as the agent.  Otherwise, lets strip away the known agent file from any other file lines */
-    const mfeScriptUrl = (urls.length > 1 ? urls.filter(line => (!thisFile.endsWith(line) && !line.endsWith(thisFile))) : urls).at(0)
+    const mfeScriptUrl = (urls.length > 1 ? urls.filter(line => (!thisFile.endsWith(line) && !line.endsWith(thisFile))) : urls)[0]
     if (!mfeScriptUrl) return timings
 
     if (navUrl.includes(mfeScriptUrl)) {

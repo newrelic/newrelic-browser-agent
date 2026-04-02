@@ -5,8 +5,17 @@ module.exports = {
     'build/**/*',
     'coverage/**/*',
     '**/node_modules/**/*',
+    'tests/assets/frameworks/**/*',
+    'tests/assets/js/internal/**/*',
+    'tests/assets/js/vendor/**/*',
+    'tests/assets/scripts/**/*',
     'tests/assets/test-builds/**/*',
-    'tests/dts/**/*'
+    'tests/assets/modular/js-errors/js/vendor/**/*',
+    'tests/dts/**/*',
+
+    // Ignore old JIL test code since they are being migrated to WDIO
+    'tests/browser/**/*',
+    'tests/functional/**/*'
   ],
   parser: '@babel/eslint-parser',
   parserOptions: {

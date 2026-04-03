@@ -24,6 +24,10 @@ on:
         required: false
         default: https://js-agent.newrelic.com/dev/nr-loader-spa.min.js
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   publish-internal:
     runs-on: ubuntu-latest

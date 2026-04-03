@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  SPDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Clock Drift Simulation</title>
+    <script>
+      // Save original performance.now
+      var origPerformanceNow = performance.now.bind(performance);
+      var origDateNow = Date.now.bind(Date);
+      
+      // Capture the initial values at page load
+      var frozenPerformanceValue = null;
+      var freezeStartTime = null;
+      
+      // Function to simulate clock drift by freezing performance.now()
+      window.simulateClockFreeze = function(durationMs) {
+        if (!frozenPerformanceValue) {
+          frozenPerformanceValue = origPerformanceNow();
+          freezeStartTime = origDateNow();
+          
+          // Override performance.now to return frozen value
+          performance.now = function() {
+            return frozenPerformanceValue;
+          };
+          
+          console.log('Clock frozen at performance.now() =', frozenPerformanceValue);
+          console.log('Date will continue advancing, creating drift');
+        }
+        
+        return new Promise(resolve => {
+          setTimeout(() => {
+            const actualElapsed = origDateNow() - freezeStartTime;
+            const drift = actualElapsed; // performance stayed frozen
+            console.log('Drift created:', drift, 'ms');
+            resolve(drift);
+          }, durationMs);
+        });
+      };
+      
+      // Function to unfreeze (for cleanup between tests)
+      window.unfreezeClocks = function() {
+        if (frozenPerformanceValue !== null) {
+          performance.now = origPerformanceNow;
+          frozenPerformanceValue = null;
+          freezeStartTime = null;
+          console.log('Clocks unfrozen');
+        }
+      };
+    </script>
+    {init} {config} {loader}
+  </head>
+  <body>
+    <h1>Clock Drift Simulation Test</h1>
+    <p>Use window.simulateClockFreeze(milliseconds) to create drift</p>
+  </body>
+</html>

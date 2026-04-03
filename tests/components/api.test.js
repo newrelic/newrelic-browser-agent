@@ -630,7 +630,7 @@ describe('API tests', () => {
       })
 
       beforeEach(async () => {
-        agent.init.api.allow_registered_children = true
+        agent.init.api.register.enabled = true
         id = faker.string.uuid()
         name = faker.string.uuid()
       })
@@ -665,7 +665,7 @@ describe('API tests', () => {
       })
 
       test('should warn and not work if disabled', () => {
-        agent.init.api.allow_registered_children = false
+        agent.init.api.register.enabled = false
         let myApi = agent.register({ id, name })
         expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#54'))).toEqual(true)
         myApi.addPageAction()

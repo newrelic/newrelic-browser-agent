@@ -132,6 +132,7 @@ jobs:
 
   # Create change tracking events for staging experiment
   create-experiment-change-tracking:
+    environment: staging
     if: ${{ inputs.nr_environment != 'standalone' && inputs.nr_environment != 'dev' }}
     needs: [publish-experiment-to-s3]
     runs-on: Browser-Agent-Assigned-IP-Linux

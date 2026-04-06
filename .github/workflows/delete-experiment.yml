@@ -70,4 +70,4 @@ jobs:
         with:
           notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          message: ":test_tube: Removed experiment in environment \\`'${{ inputs.nr_environment }}'\\` for branch \\`'${{ steps.clean-branch-name.outputs.results }}'\\`."
+          message: ":test_tube: Removed Browser Agent experiment in \\`${{ inputs.nr_environment }}\\` for branch \\`${{ steps.clean-branch-name.outputs.results }}\\`. See Delete Experiment workflow at https://github.com/newrelic/newrelic-browser-agent/actions/workflows/delete-experiment.yml."

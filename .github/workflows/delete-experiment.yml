@@ -4,6 +4,9 @@
 
 name: Delete Experiment
 
+permissions:
+  contents: read
+
 on:
   workflow_dispatch:
     inputs:

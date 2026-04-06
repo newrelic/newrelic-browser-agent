@@ -163,7 +163,7 @@ jobs:
 
   # Notify about new experiment in Slack
   send-slack-notifications:
-    if: ${{ inputs.nr_environment == 'dev' && inputs.publish_ab_script == true }}
+    if: ${{ inputs.nr_environment == 'staging' && inputs.publish_ab_script == true }}
     needs: [publish-experiment-to-s3, publish-ab]
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -182,4 +182,4 @@ jobs:
         with:
           notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          message: ":test_tube: Browser Agent experiment published in \\`${{ inputs.nr_environment }}\\` for branch \\`${{ steps.clean-branch-name.outputs.results }}\\` See Publish Experiment workflow at https://github.com/newrelic/newrelic-browser-agent/actions/workflows/publish-experiment.yml."
+          message: ":test_tube: Published browser agent experiment in \\`${{ inputs.nr_environment }}\\` for branch \\`${{ steps.clean-branch-name.outputs.results }}\\`. See <https://github.com/newrelic/newrelic-browser-agent/actions/workflows/publish-experiment.yml|Publish Experiment> workflow."

@@ -51,7 +51,7 @@ jobs:
 
   # Notify about experiments in Slack
   send-slack-notifications:
-    if: ${{ inputs.nr_environment == 'staging' }}
+    if: ${{ inputs.nr_environment == 'dev' }}
     needs: [ delete-experiment-on-s3 ]
     runs-on: ubuntu-latest
     timeout-minutes: 5

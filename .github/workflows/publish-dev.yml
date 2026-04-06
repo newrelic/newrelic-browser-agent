@@ -283,6 +283,7 @@ jobs:
   create-staging-change-tracking:
     if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     needs: [publish-dev-to-s3]
+    continue-on-error: true
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     defaults:

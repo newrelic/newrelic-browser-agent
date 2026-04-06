@@ -163,8 +163,8 @@ jobs:
 
   # Notify about new experiment in Slack
   send-slack-notifications:
-    if: ${{ inputs.nr_environment == 'dev' }}
-    needs: [publish-experiment-to-s3]
+    if: ${{ inputs.nr_environment == 'dev' && inputs.publish_ab_script == true }}
+    needs: [publish-experiment-to-s3, publish-ab]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     defaults:

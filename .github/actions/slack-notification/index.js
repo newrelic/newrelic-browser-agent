@@ -3,7 +3,7 @@ import chalk from 'chalk'
 
 async function postToSlack (text) {
   const channels = [
-    args.devChannelUrl,
+    args.notificationsChannelUrl,
     args.demPlatformOpsChannelUrl,
   ].filter(url => !!url)
 
@@ -18,12 +18,12 @@ async function postToSlack (text) {
       })
 
       if (!notificationRequest.ok) {
-        throw new Error('Notification failed')
+        throw new Error('Notification failed for channel ' + channel)
       }
 
-      console.log(chalk.green('Notified Slack Channel'))
+      console.log(chalk.green('Successfully notified channel ' + channel))
     } catch (error) {
-      console.log(chalk.red(`Failed to post ${text} to Slack`))
+      console.log(chalk.red(`Failed to post ${text} to ` + channel))
     }
   }
 }

@@ -3,8 +3,8 @@
 name: 'Slack Notification'
 
 inputs:
-  dev_channel_url:
-    description: 'Slack API URL for the dev channel'
+  notifications_channel_url:
+    description: 'Slack API URL for the notifications channel'
     required: false
   dem_platform_ops_channel_url:
     description: 'Slack API URL for the dem platform ops release channel'
@@ -22,7 +22,7 @@ runs:
     - name: Send Slack notification
       run: |
         node $GITHUB_ACTION_PATH/index.js \
-          --dev-channel-url "${{ inputs.dev_channel_url }}" \
+          --notifications-channel-url "${{ inputs.notifications_channel_url }}" \
           --dem-platform-ops-channel-url "${{ inputs.dem_platform_ops_channel_url }}" \
           --message "${{ inputs.message }}"
       shell: bash

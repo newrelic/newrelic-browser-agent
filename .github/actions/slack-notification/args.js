@@ -5,9 +5,9 @@ import { hideBin } from 'yargs/helpers'
 export const args = yargs(hideBin(process.argv))
   .usage('$0 [options]')
 
-  .string('dev-channel-url')
-  .describe('dev-channel-url', 'Webhook URL to slack #browser-agent-dev')
-  .default('dev-channel-url', '')
+  .string('notifications-channel-url')
+  .describe('notifications-channel-url', 'Webhook URL to slack #browser-agent-notifications')
+  .default('notifications-channel-url', '')
 
   .string('dem-platform-ops-channel-url')
   .describe('dem-platform-ops-channel-url', 'Webhook URL to slack #dem-platform-ops')

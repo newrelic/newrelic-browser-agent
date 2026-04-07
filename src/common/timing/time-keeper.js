@@ -58,7 +58,7 @@ export class TimeKeeper {
       // In either case, the performance timestamps would be inaccurate at that point so we want to detect and report a count of it.
       // We only detect positive drift (performance clock falling behind Date clock)
       // Note: localTimeDiff (server time offset) is NOT part of drift - that's a legitimate offset
-      const drift = (Date.now() - performance.timeOrigin) - performance.now()
+      const drift = (Date.now() - originTime) - performance.now()
       if (drift > 1000) {
         this.#reportedDrift = true
         handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/TimeKeeper/ClockDrift/Detected', drift], undefined, FEATURE_NAMES.metrics, this.#session.agentRef.ee)

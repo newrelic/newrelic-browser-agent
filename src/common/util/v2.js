@@ -23,7 +23,7 @@ export const V2_TYPES = {
  * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget[]}
  */
 export function getRegisteredTargetsFromId (id, agentRef) {
-  if (!id || !agentRef?.init.api.allow_registered_children) return []
+  if (!id || !agentRef?.init.api.register.enabled) return []
   const registeredEntities = agentRef.runtime.registeredEntities
   return registeredEntities?.filter(entity => String(entity.metadata.target.id) === String(id)).map(entity => entity.metadata.target) || []
 }
@@ -35,7 +35,7 @@ export function getRegisteredTargetsFromId (id, agentRef) {
  * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget[]}
  */
 export function getRegisteredTargetsFromFilename (filename, agentRef) {
-  if (!filename || !agentRef?.init.api.allow_registered_children) return []
+  if (!filename || !agentRef?.init.api.register.enabled) return []
   const registeredEntities = agentRef.runtime.registeredEntities
   return registeredEntities?.filter(entity => entity.metadata.timings?.asset?.endsWith(filename)).map(entity => entity.metadata.target) || []
 }
@@ -83,7 +83,7 @@ export function getVersion2DuplicationAttributes (target, aggregateInstance) {
  * @returns {boolean} returns true if the event should be duplicated for the target, false otherwise
  */
 export function shouldDuplicate (target, aggregateInstance) {
-  return !!target && !!supportsV2(aggregateInstance) && aggregateInstance.agentRef.init.api.duplicate_registered_data
+  return !!target && !!supportsV2(aggregateInstance) && aggregateInstance.agentRef.init.api.register.duplicate_data_to_container
 }
 
 /**
@@ -92,7 +92,7 @@ export function shouldDuplicate (target, aggregateInstance) {
  * @returns {Array} An array of targets found from the stack trace. If no targets are found or allowed, returns an array with undefined.
  */
 export function findTargetsFromStackTrace (agentRef) {
-  if (!agentRef?.init.api.allow_registered_children) return [undefined]
+  if (!agentRef?.init.api.register.enabled) return [undefined]
 
   const targets = []
   try {

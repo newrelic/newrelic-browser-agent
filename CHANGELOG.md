@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.312.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.312.0...v1.312.1) (2026-04-02)
+
+
+### Bug Fixes
+
+* .at causes issues in older browsers ([#1737](https://github.com/newrelic/newrelic-browser-agent/issues/1737)) ([a208566](https://github.com/newrelic/newrelic-browser-agent/commit/a20856668b26fc3b2763112a8c78a8eb2cd3a25c))
+
 ## [1.312.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.311.0...v1.312.0) (2026-03-30)
 
 

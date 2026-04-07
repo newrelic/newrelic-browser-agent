@@ -19,6 +19,10 @@ on:
           - staging
           - standalone
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   delete-experiment-on-s3:
     runs-on: ubuntu-latest

@@ -27,7 +27,6 @@ describe('RegisteredEntity NPM Interface Parity', () => {
         'setCustomAttribute',
         'setUserId',
         'setApplicationVersion',
-        'register',
         'deregister',
         'log',
         'measure',
@@ -79,7 +78,6 @@ describe('RegisteredEntity NPM Interface Parity', () => {
         'setCustomAttribute',
         'setUserId',
         'setApplicationVersion',
-        'register',
         'deregister',
         'log',
         'measure',
@@ -108,37 +106,28 @@ describe('RegisteredEntity NPM Interface Parity', () => {
     })
   })
 
-  it('should both support nested registration via .register()', async () => {
+  it('should not have nested .register() method', async () => {
     await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html'))
 
     const comparison = await browser.execute(function () {
-      // Test that both interfaces support creating child registrations
-      // This validates the hierarchical MFE structure works identically
+      // Test that the register method is not present on registered entities
       const viaRegister = newrelic.register({ id: 1, name: 'parent-via-register' })
-      const childOfRegister = viaRegister.register({ id: 2, name: 'child-of-register' })
-
       const viaConstructor = new RegisteredEntity({ id: 3, name: 'parent-via-constructor' })
-      const childOfConstructor = viaConstructor.register({ id: 4, name: 'child-of-constructor' })
 
       return {
-        childOfRegisterType: typeof childOfRegister,
-        childOfConstructorType: typeof childOfConstructor,
-        childOfRegisterHasRegister: typeof childOfRegister.register === 'function',
-        childOfConstructorHasRegister: typeof childOfConstructor.register === 'function',
-        childOfRegisterHasNoticeError: typeof childOfRegister.noticeError === 'function',
-        childOfConstructorHasNoticeError: typeof childOfConstructor.noticeError === 'function'
+        viaRegisterHasRegister: typeof viaRegister.register === 'function',
+        viaConstructorHasRegister: typeof viaConstructor.register === 'function',
+        viaRegisterHasNoticeError: typeof viaRegister.noticeError === 'function',
+        viaConstructorHasNoticeError: typeof viaConstructor.noticeError === 'function'
       }
     })
 
-    // Child registrations should be objects with the full API
-    expect(comparison.childOfRegisterType).toEqual('object')
-    expect(comparison.childOfConstructorType).toEqual('object')
-    // Both child entities should support further nesting (register method exists)
-    expect(comparison.childOfRegisterHasRegister).toBe(true)
-    expect(comparison.childOfConstructorHasRegister).toBe(true)
-    // Both child entities should have full API capabilities
-    expect(comparison.childOfRegisterHasNoticeError).toBe(true)
-    expect(comparison.childOfConstructorHasNoticeError).toBe(true)
+    // Registered entities should NOT have the register method
+    expect(comparison.viaRegisterHasRegister).toBe(false)
+    expect(comparison.viaConstructorHasRegister).toBe(false)
+    // But they should still have full API capabilities
+    expect(comparison.viaRegisterHasNoticeError).toBe(true)
+    expect(comparison.viaConstructorHasNoticeError).toBe(true)
   })
 
   it('should both support deregister() and behave identically', async () => {
@@ -288,7 +277,7 @@ describe('RegisteredEntity NPM Interface Parity', () => {
       const results = {}
 
       // Methods that can be called without args
-      const noArgMethods = ['deregister', 'register']
+      const noArgMethods = ['deregister']
       noArgMethods.forEach(method => {
         try {
           const registerReturn = viaRegister[method]()
@@ -371,7 +360,6 @@ describe('RegisteredEntity NPM Interface Parity', () => {
         'setCustomAttribute',
         'setUserId',
         'setApplicationVersion',
-        'register',
         'deregister',
         'log',
         'measure',

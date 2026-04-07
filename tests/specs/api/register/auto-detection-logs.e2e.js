@@ -43,7 +43,9 @@ describe('Register API - Auto-Detection - Logs', () => {
     await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html', {
       init: {
         api: {
-          allow_registered_children: true
+          register: {
+            enabled: true
+          }
         },
         logging: {
           enabled: true
@@ -83,7 +85,7 @@ describe('Register API - Auto-Detection - Logs', () => {
     expect(lazyLog.attributes['source.name']).toEqual('Main MFE')
   })
 
-  it('should support duplicate_registered_data with auto-detection for log events', async () => {
+  it('should support duplicate_data_to_container with auto-detection for log events', async () => {
     const { testLogsRequest } = require('../../../../tools/testing-server/utils/expect-tests')
     const [mfeLogsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testLogsRequest }
@@ -92,8 +94,10 @@ describe('Register API - Auto-Detection - Logs', () => {
     await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html', {
       init: {
         api: {
-          allow_registered_children: true,
-          duplicate_registered_data: true
+          register: {
+            enabled: true,
+            duplicate_data_to_container: true
+          }
         }
       },
       loader: 'spa'

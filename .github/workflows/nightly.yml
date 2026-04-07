@@ -5,6 +5,9 @@ on:
     # Runs every day at 4AM
     - cron: '0 4 * * *'
   workflow_dispatch:
+
+permissions:
+  contents: read
   
 jobs:
   wdio-smoke:

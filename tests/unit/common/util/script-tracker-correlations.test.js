@@ -953,9 +953,8 @@ describe('script-tracker correlations', () => {
       expect(correlations.length).toBe(2)
     })
 
-    test('URL matching handles partial URLs correctly', () => {
+    test('URL matching requires exact match', () => {
       const fullUrl = 'https://cdn.example.com/path/to/mfe.js'
-      const partialUrl = '/path/to/mfe.js'
 
       const perfEntry = {
         name: fullUrl,
@@ -973,9 +972,10 @@ describe('script-tracker correlations', () => {
       }
 
       mockNavigationEntry = { name: 'https://example.com/' }
+      // Stack trace also has absolute URL (per spec)
       mockStack = `Error
     at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
-    at init (${partialUrl}:10:5)`
+    at init (${fullUrl}:10:5)`
 
       // Make performance entry available for findScriptTimings lookup
       globalThis.performance.getEntriesByType = jest.fn((type) => {
@@ -987,7 +987,7 @@ describe('script-tracker correlations', () => {
       currentTime = 100
       const timings = scriptTrackerModule.findScriptTimings()
 
-      // Should match even with partial URL
+      // Should match with exact URL
       expect(timings.asset).toBe(fullUrl)
       expect(timings.fetchStart).toBe(10)
       expect(timings.fetchEnd).toBe(40)

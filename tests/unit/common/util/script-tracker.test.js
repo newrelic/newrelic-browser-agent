@@ -421,8 +421,8 @@ describe('script-tracker', () => {
       expect(result.fetchEnd).toBe(0)
     })
 
-    test('handles URL matching when entry URL ends with stack URL', () => {
-      // Resource entry has full path
+    test('handles URL matching with exact match', () => {
+      // Resource entry has absolute URL
       const mockResourceEntry = {
         name: 'https://cdn.example.com/path/app.js',
         initiatorType: 'script',
@@ -439,7 +439,7 @@ describe('script-tracker', () => {
         return []
       })
 
-      // Stack contains full URL matching the resource entry
+      // Stack contains full URL matching the resource entry exactly
       mockStack = `Error
     at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
     at register (${scriptTrackerModule.thisFile}:2:2)
@@ -447,15 +447,15 @@ describe('script-tracker', () => {
 
       const result = scriptTrackerModule.findScriptTimings()
 
-      // URL matching succeeds, timing info retrieved
+      // Exact URL matching succeeds, timing info retrieved
       expect(result.fetchStart).toBe(100)
       expect(result.type).toBe('script')
     })
 
-    test('handles URL matching when stack URL ends with entry URL', () => {
-      // Resource entry has short relative name
+    test('handles URL matching with absolute URLs', () => {
+      // Resource entry has absolute URL (per spec)
       const mockResourceEntry = {
-        name: 'app.js',
+        name: 'https://cdn.example.com/path/app.js',
         initiatorType: 'script',
         startTime: 100,
         responseEnd: 200
@@ -470,13 +470,13 @@ describe('script-tracker', () => {
         return []
       })
 
-      // Stack has full URL that ends with entry name
+      // Stack has same absolute URL
       mockStack = `Error
     at func (https://cdn.example.com/path/app.js:5:10)`
 
       const result = scriptTrackerModule.findScriptTimings()
 
-      // Reverse matching: stack URL ends with entry URL
+      // Exact URL matching
       expect(result.fetchStart).toBe(100)
       expect(result.type).toBe('script')
     })

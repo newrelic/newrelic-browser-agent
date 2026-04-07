@@ -30,25 +30,12 @@ export const scriptCorrelations = new Map()
 let poSubscribers = []
 
 /**
- * Checks if two URLs match using flexible suffix matching
- * @param {string} url1 - First URL
- * @param {string} url2 - Second URL
- * @returns {boolean} True if URLs match
- */
-function urlsMatch (url1, url2) {
-  return url1.endsWith(url2) || url2.endsWith(url1)
-}
-
-/**
- * Retrieves a script correlation by URL, falling back to use flexible matching (suffix matching in both directions) if no exact match is found
+ * Retrieves a script correlation by URL using exact matching
  * @param {string} targetUrl - The URL to find
  * @returns {ScriptCorrelation | undefined} - The correlation object if found
  */
 function findCorrelation (targetUrl) {
-  if (scriptCorrelations.has(targetUrl)) return scriptCorrelations.get(targetUrl)
-  for (const [url, correlation] of scriptCorrelations) {
-    if (urlsMatch(url, targetUrl)) return correlation
-  }
+  return scriptCorrelations.get(targetUrl)
 }
 
 /**
@@ -187,14 +174,14 @@ function wasPreloaded (targetUrl) {
 }
 
 /**
- * Checks if a performance entry matches the target MFE script URL
+ * Checks if a performance entry matches the target MFE script URL using exact matching
  * @param {PerformanceResourceTiming} entry - The resource timing entry
  * @param {string} targetUrl - The MFE script URL to match
  * @returns {boolean} True if the entry matches
  */
 function entryMatchesUrl (entry, targetUrl) {
   const entryUrl = cleanURL(entry.name)
-  return urlsMatch(entryUrl, targetUrl)
+  return entryUrl === targetUrl
 }
 
 /**

@@ -39,7 +39,7 @@ describe('Clock Drift Detection', () => {
 
     // Look for the drift detection metric
     const driftMetric = supportabilityMetrics.find(sm =>
-      sm.params.name === 'TimeKeeper/ClockDrift/Detected'
+      sm.params.name === 'Generic/TimeKeeper/ClockDrift/Detected'
     )
 
     expect(driftMetric).toBeDefined()

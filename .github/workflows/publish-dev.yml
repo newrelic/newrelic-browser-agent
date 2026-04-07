@@ -281,6 +281,7 @@ jobs:
 
   # Create change tracking events for staging environment
   create-staging-change-tracking:
+    environment: staging
     if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     needs: [publish-dev-to-s3]
     runs-on: Browser-Agent-Assigned-IP-Linux

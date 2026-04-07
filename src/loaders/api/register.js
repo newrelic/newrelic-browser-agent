@@ -42,10 +42,9 @@ export function setupRegisterAPI (agent) {
  * Also conducts certain side-effects, such as harvesting a PageView event when triggered and gathering metadata for the registered entity.
  * @param {Object} agentRef the reference to the base agent instance
  * @param {import('./register-api-types').RegisterAPIConstructor} target
- * @param {import('./register-api-types').RegisterAPIConstructor} [parent]
  * @returns {RegisterAPI} the api object to be returned from the register api method
  */
-function register (agentRef, target, parent) {
+function register (agentRef, target) {
   warn(54, 'newrelic.register')
 
   target ||= {}
@@ -54,7 +53,7 @@ function register (agentRef, target, parent) {
   target.licenseKey ||= agentRef.info.licenseKey // will inherit the license key from the container agent if not provided for brevity. A future state may dictate that we need different license keys to do different things.
   target.blocked = false
   if (typeof target.tags !== 'object' || target.tags === null || Array.isArray(target.tags)) target.tags = {}
-  target.parent = parent || {
+  target.parent ??= {
     get id () { return agentRef.runtime.appMetadata.agents[0].entityGuid }, // getter because this is asyncronously set
     type: V2_TYPES.BA
   }
@@ -82,18 +81,10 @@ function register (agentRef, target, parent) {
     }
   })
 
-  target.isolated ??= true
-
   /** @type {Function} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
   let invalidApiResponse = () => {}
   /** @type {Array} the array of registered target APIs */
   const registeredEntities = agentRef.runtime.registeredEntities
-
-  if (!target.isolated) {
-  /** if we have already registered this non-isolated target, go ahead and re-use it */
-    const sharedEntity = registeredEntities.find(({ metadata: { target: { id } } }) => id === target.id && !target.isolated)
-    if (sharedEntity) return sharedEntity
-  }
 
   /**
    * Block the API, and supply a warning function to display a message to end users
@@ -109,7 +100,7 @@ function register (agentRef, target, parent) {
   }
 
   /** primary cases that can block the register API from working at init time */
-  if (!agentRef.init.api.allow_registered_children) block(single(() => warn(55)))
+  if (!agentRef.init.api.register.enabled) block(single(() => warn(55)))
   if (!hasValidValue(target.id) || !hasValidValue(target.name)) block(single(() => warn(48, target)))
 
   /** @type {RegisterAPI} */
@@ -123,7 +114,6 @@ function register (agentRef, target, parent) {
     log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     measure: (name, options = {}) => report(measure, [name, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     noticeError: (error, attributes = {}) => report(noticeError, [error, { ...attrs, ...attributes }, agentRef], target),
-    register: (target = {}) => report(register, [agentRef, target], api.metadata.target),
     recordCustomEvent: (eventType, attributes = {}) => report(recordCustomEvent, [eventType, { ...attrs, ...attributes }, agentRef], target),
     setApplicationVersion: (value) => setLocalValue('application.version', value),
     setCustomAttribute: (key, value) => setLocalValue(key, value),
@@ -184,7 +174,7 @@ function register (agentRef, target, parent) {
 
   /**
      * The reporter method that will be used to report the data to the container agent's API method. If invalid, will log a warning and not execute.
-     * If the api.duplicate_registered_data configuration value is set to true, the data will be reported to BOTH the container and the external target
+     * If the api.register.duplicate_data_to_container configuration value is set to true, the data will be reported to BOTH the container and the external target
      * @param {*} methodToCall the container agent's API method to call
      * @param {*} args the arguments to supply to the container agent's API method
      * @param {string} target the target to report the data to. If undefined, will report to the container agent's target.

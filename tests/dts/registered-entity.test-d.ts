@@ -40,8 +40,8 @@ expectType<RegisteredEntity>(registeredEntityWithComplexTags)
 })
 
 // Test metadata.target.tags property exists and has correct type
-expectType<{ [x: string]: any; } | undefined>(registeredEntityWithObjectTags.metadata.target.tags)
-expectType<{ [x: string]: any; } | undefined>(registeredEntityWithComplexTags.metadata.target.tags)
+expectType<{ [x: string]: any; } | undefined>(registeredEntityWithObjectTags.metadata.target?.tags)
+expectType<{ [x: string]: any; } | undefined>(registeredEntityWithComplexTags.metadata.target?.tags)
 
 // Test error cases for constructor with wrong parameters
 expectError(new RegisteredEntity({})) // Missing required id and name

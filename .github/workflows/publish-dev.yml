@@ -29,10 +29,27 @@ jobs:
     with:
       coverage: true
 
-  # Build and publish the latest code from the main branch
-  publish-dev-to-s3:
+  # Gate job to check if tests passed before proceeding with deployment
+  build-gate:
     if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     needs: [jest-tests]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check tests status
+        run: |
+          if [ "${{ needs.jest-tests.result }}" == "success" ]; then
+            echo "✅ Tests passed, proceeding with deployment"
+          elif [ "${{ needs.jest-tests.result }}" == "skipped" ]; then
+            echo "⏭️ Tests were skipped, proceeding with deployment"
+          else
+            echo "❌ Unexpected test result: ${{ needs.jest-tests.result }}"
+            exit 1
+          fi
+
+  # Build and publish the latest code from the main branch
+  publish-dev-to-s3:
+    needs: [build-gate]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
@@ -221,7 +238,6 @@ jobs:
 
   # Rebuild and publish the dev environment A/B script
   publish-dev-ab:
-    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     needs: [publish-dev-to-s3]
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -251,7 +267,6 @@ jobs:
 
   # Rebuild and publish the staging environment A/B script
   publish-staging-ab:
-    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     needs: [publish-dev-to-s3]
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -282,7 +297,6 @@ jobs:
   # Create change tracking events for staging environment
   create-staging-change-tracking:
     environment: staging
-    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     needs: [publish-dev-to-s3]
     continue-on-error: true
     runs-on: Browser-Agent-Assigned-IP-Linux

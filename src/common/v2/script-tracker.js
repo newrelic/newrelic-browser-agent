@@ -223,7 +223,7 @@ export function findScriptTimings () {
   try {
     const urls = extractUrlsFromStack(stack)
     // Filter out agent file from URLs (unless it's the only one)
-    const mfeScriptUrl = (urls.length > 1 ? urls.filter(line => !urlsMatch(thisFile, line)) : urls).at(0)
+    const mfeScriptUrl = (urls.length > 1 ? urls.filter(line => !urlsMatch(thisFile, line)) : urls).[0]
     if (!mfeScriptUrl) return timings
 
     // Check for inline script

@@ -25,16 +25,18 @@ try {
         tags: { isParent: true, nested: true, dataTypes: 'all' }
       })
 
-      const MfeToMfeChild = MfeToMfeParent.register({
+      const MfeToMfeChild = newrelic.initializedAgents[agentIdentifier].register({
         id: 'mfe-to-mfe-child',
         name: 'MFE_TEST_CHILD',
-        tags: { isChild: true, isParent: true, nested: true, dataTypes: 'all' }
+        tags: { isChild: true, isParent: true, nested: true, dataTypes: 'all' },
+        parent: MfeToMfeParent.metadata.target
       })
 
-      const MfeToMfeGrandchild = MfeToMfeChild.register({
+      const MfeToMfeGrandchild = newrelic.initializedAgents[agentIdentifier].register({
         id: 'mfe-to-mfe-grandchild',
         name: 'MFE_TEST_GRANDCHILD',
-        tags: { isChild: true, isParent: false, nested: true, dataTypes: 'all' }
+        tags: { isChild: true, isParent: false, nested: true, dataTypes: 'all' },
+        parent: MfeToMfeChild.metadata.target
       })
 
       const jseOnlyMfe = newrelic.initializedAgents[agentIdentifier].register({

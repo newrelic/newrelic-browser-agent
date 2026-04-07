@@ -177,8 +177,10 @@ jobs:
       - name: Build Agent2Query assets
         uses: ./.github/actions/build-agent2query
         with:
-          released_license_key: ${{ secrets.A2Q_RELEASED_LICENSE_KEY }}
-          latest_license_key: ${{ secrets.A2Q_LATEST_LICENSE_KEY }}
+          latest_staging_license_key: ${{ secrets.A2Q_LATEST_STAGING_LICENSE_KEY }}
+          latest_us_prod_license_key: ${{ secrets.A2Q_LATEST_US_PROD_LICENSE_KEY }}
+          released_staging_license_key: ${{ secrets.A2Q_RELEASED_STAGING_LICENSE_KEY }}
+          released_us_prod_license_key: ${{ secrets.A2Q_RELEASED_US_PROD_LICENSE_KEY }}
       - name: Upload Agent2Query assets to S3
         id: s3-upload-agent2query
         uses: ./.github/actions/s3-upload
@@ -279,6 +281,7 @@ jobs:
 
   # Create change tracking events for staging environment
   create-staging-change-tracking:
+    environment: staging
     if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     needs: [publish-dev-to-s3]
     runs-on: Browser-Agent-Assigned-IP-Linux

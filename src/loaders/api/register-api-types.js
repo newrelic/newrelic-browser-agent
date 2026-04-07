@@ -8,7 +8,6 @@
  * @property {(name: string, attributes?: object) => void} addPageAction - Add a page action for the registered entity.
  * @property {(message: string, options?: { customAttributes?: object, level?: 'ERROR' | 'TRACE' | 'DEBUG' | 'INFO' | 'WARN'}) => void} log - Capture a log for the registered entity.
  * @property {(error: Error | string, customAttributes?: object) => void} noticeError - Notice an error for the registered entity.
- * @property {(target: RegisterAPIConstructor) => RegisterAPI} register - Record a custom event for the registered entity.
  * @property {() => void} deregister - Deregister the registered entity, which blocks its use and captures end of life timings.
  * @property {(eventType: string, attributes?: Object) => void} recordCustomEvent - Record a custom event for the registered entity.
  * @property {(eventType: string, options?: {start?: number|PerformanceMark, end?: number|PerformanceMark, customAttributes?: object}) => ({start: number, end: number, duration: number, customAttributes: object})} measure - Measures a task that is recorded as a BrowserPerformance event.
@@ -23,15 +22,15 @@
  * @property {string} id - The unique id for the registered entity. This will be assigned to any synthesized entities.
  * @property {string} name - The readable name for the registered entity. This will be assigned to any synthesized entities.
  * @property {{[key: string]: any}} [tags] - The tags for the registered entity as key-value pairs. This will be assigned to any synthesized entities. Tags are converted to source.* attributes (e.g., {environment: 'production'} becomes source.environment: 'production').
- * @property {boolean} [isolated] - When true, each registration creates an isolated instance. When false, multiple registrations with the same id and isolated: false will share a single instance, including all custom attributes, ids, names, and metadata. Calling deregister on a shared instance will deregister it for all entities using the instance. Defaults to true.
+ * @property {RegisterAPITarget} [parent] - The parent target for the registered entity. If none was supplied, it will assume the entity guid from the main agent.
  * @property {string} [parentId] - The parentId for the registered entity. If none was supplied, it will assume the entity guid from the main agent.
  */
 
 /**
  * @typedef {Object} RegisterAPIMetadata
  * @property {Object} customAttributes - The custom attributes for the registered entity.
- * @property {RegisterAPITimings} timings - The timing metrics for the registered entity.
- * @property {RegisterAPITarget} target - The options for the registered entity.
+ * @property {Partial<RegisterAPITimings>} timings - The timing metrics for the registered entity.
+ * @property {Partial<RegisterAPITarget>} target - The options for the registered entity.
  */
 
 /**
@@ -40,7 +39,6 @@
  * @property {string} name - The name returned for the registered entity.
  * @property {{[key: string]: any}} [tags] - The tags for the registered entity as key-value pairs.
  * @property {string} [parentId] - The parentId for the registered entity. If none was supplied, it will assume the entity guid from the main agent.
- * @property {boolean} [isolated] - When true, each registration creates an isolated instance. When false, multiple registrations with the same id and isolated: false will share a single instance, including all custom attributes, ids, names, and metadata. Calling deregister on a shared instance will deregister it for all entities using the instance. Defaults to true.
  */
 
 /**

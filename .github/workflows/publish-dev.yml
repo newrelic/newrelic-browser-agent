@@ -105,7 +105,7 @@ jobs:
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
         # This step creates a new Change Tracking Marker
       - name: New Relic Application Deployment Marker
-        continue-on-error: true    
+        continue-on-error: true
         uses: newrelic/deployment-marker-action@v2.3.0
         with:
           apiKey: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -114,7 +114,7 @@ jobs:
           version: "${{ github.ref_name }}"
           user: "${{ github.actor }}"
       - name: Get local stats
-        continue-on-error: true    
+        continue-on-error: true
         id: get-stats
         shell: bash
         run: |
@@ -122,7 +122,7 @@ jobs:
           full=$(cat ./build/nr-full-standard.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;
           spa=$(cat ./build/nr-spa-standard.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
       - name: Report lite size to NR
-        continue-on-error: true    
+        continue-on-error: true
         uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -144,7 +144,7 @@ jobs:
           trigger: 'publish-dev'
           traverse: true
       - name: Report spa size to NR
-        continue-on-error: true    
+        continue-on-error: true
         uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -379,4 +379,35 @@ jobs:
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
 
+  # Notify about new staging deploy in Slack
+  send-slack-notifications:
+    if: github.event_name != 'workflow_call' # skip for delete-experiment (avoids double notices + no PR)
+    needs: [publish-staging-ab]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - name: Get PR Description
+        id: get-pr-description
+        run: |
+          PR_NUMBER=$(git log -1 --pretty=%B | grep -oP '(?<=#)\d+' | head -1)
 
+          if [ -n "$PR_NUMBER" ]; then
+            PR_TITLE=$(gh pr view $PR_NUMBER --json title --jq '.title')
+            echo "text=PR #$PR_NUMBER: $PR_TITLE" >> $GITHUB_OUTPUT
+          else
+            echo "text=Manual deployment from main" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Send Slack notifications
+        uses: ./.github/actions/slack-notification
+        with:
+          notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
+          dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
+          message: ":tada: Published browser agent <https://github.com/newrelic/newrelic-browser-agent/commits/main/|main> latest in staging. ${{ steps.get-pr-description.outputs.text }}. Sent from this <https://github.com/newrelic/newrelic-browser-agent/actions/workflows/publish-dev.yml|workflow>."

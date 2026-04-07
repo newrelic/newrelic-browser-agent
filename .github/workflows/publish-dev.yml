@@ -29,8 +29,8 @@ jobs:
     with:
       coverage: true
 
-  # Gate job to check if tests passed before proceeding with deployment
-  build-gate:
+  # Check if the deployment should proceed (only if tests passing or skipped)
+  check-jest-tests:
     if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     needs: [jest-tests]
     runs-on: ubuntu-latest
@@ -49,7 +49,7 @@ jobs:
 
   # Build and publish the latest code from the main branch
   publish-dev-to-s3:
-    needs: [build-gate]
+    needs: [check-jest-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:

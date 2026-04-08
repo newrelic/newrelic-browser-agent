@@ -259,6 +259,25 @@ export class Aggregate extends AggregateBase {
           this.addEvent(event)
         }, this.featureName, this.ee)
       }
+      if (!agentRef.init.feature_flags.includes('no_spv')) {
+        registerHandler('spv', (evt) => {
+          this.addEvent({
+            eventType: 'SecurityPolicyViolation',
+            timestamp: this.#toEpoch(evt.timeStamp),
+            blockedUri: evt.blockedURI,
+            documentUri: evt.documentURI,
+            effectiveDirective: evt.effectiveDirective,
+            originalPolicy: evt.originalPolicy,
+            sourceFile: evt.sourceFile,
+            statusCode: evt.statusCode,
+            lineNumber: evt.lineNumber,
+            columnNumber: evt.columnNumber,
+            disposition: evt.disposition,
+            sample: evt.sample,
+            referrer: evt.referrer
+          })
+        }, this.featureName, this.ee)
+      }
 
       this.drain()
     })

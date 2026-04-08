@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -59,7 +59,7 @@ export function xhrFetch ({
     objHeaders[header.key] = header.value
   }
 
-  return fetch(url, { headers: objHeaders, method, body, credentials: 'include' })
+  return fetch(url, { headers: objHeaders, method, body })
 }
 
 /**
@@ -76,12 +76,6 @@ export function xhr ({ url, body = null, sync, method = 'POST', headers = [{ key
   const request = new XMLHttpRequest()
 
   request.open(method, url, !sync)
-  try {
-    // Set cookie
-    if ('withCredentials' in request) request.withCredentials = true
-  } catch (e) {
-    // do nothing
-  }
 
   headers.forEach(header => {
     request.setRequestHeader(header.key, header.value)

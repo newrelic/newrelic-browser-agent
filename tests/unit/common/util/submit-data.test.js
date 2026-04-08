@@ -51,12 +51,6 @@ describe('xhr', () => {
       this.open = jest.fn()
       this.send = jest.fn()
       this.setRequestHeader = jest.fn()
-
-      this._withCredentials = false
-      Object.defineProperty(this, 'withCredentials', {
-        get: jest.fn(() => this._withCredentials),
-        set: jest.fn((val) => { this._withCredentials = val })
-      })
     })
   })
 
@@ -65,7 +59,6 @@ describe('xhr', () => {
     const xhr = jest.mocked(global.XMLHttpRequest).mock.instances[0]
 
     expect(result).toBeInstanceOf(XMLHttpRequest)
-    expect(result.withCredentials).toBe(true)
     expect(xhr.open).toHaveBeenCalledWith('POST', url, true)
     expect(xhr.setRequestHeader).toHaveBeenCalledWith('content-type', 'text/plain')
     expect(xhr.send).toHaveBeenCalledWith(null)
@@ -100,33 +93,6 @@ describe('xhr', () => {
 
     expect(xhr.setRequestHeader).not.toHaveBeenCalledWith('content-type', 'text/plain')
     expect(xhr.setRequestHeader).toHaveBeenCalledWith(headers[0].key, headers[0].value)
-  })
-
-  test('should not throw an error if withCredentials is not supported', () => {
-    jest.spyOn(global, 'XMLHttpRequest').mockImplementation(function () {
-      this.prototype = XMLHttpRequest.prototype
-      this.open = jest.fn()
-      this.send = jest.fn()
-      this.setRequestHeader = jest.fn()
-    })
-
-    expect(() => submitData.xhr({ url })).not.toThrow()
-  })
-
-  test('should not throw an error if setRequestHeader throws an error', () => {
-    jest.spyOn(global, 'XMLHttpRequest').mockImplementation(function () {
-      this.prototype = XMLHttpRequest.prototype
-      this.open = jest.fn()
-      this.send = jest.fn()
-      this.setRequestHeader = jest.fn()
-
-      Object.defineProperty(this, 'withCredentials', {
-        get: jest.fn().mockImplementation(() => { throw new Error(faker.lorem.sentence()) }),
-        set: jest.fn().mockImplementation(() => { throw new Error(faker.lorem.sentence()) })
-      })
-    })
-
-    expect(() => submitData.xhr({ url })).not.toThrow()
   })
 })
 

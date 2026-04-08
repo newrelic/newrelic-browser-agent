@@ -63,6 +63,7 @@ export class Aggregate extends AggregateBase {
       })
 
       const navEntry = getNavigationEntry()
+      this.navEntryExists = !!navEntry
       if (navEntry) {
         this.traceStorage.storeTiming(navEntry)
       } else {
@@ -161,6 +162,7 @@ export class Aggregate extends AggregateBase {
         ...(hasReplay && { hasReplay }),
         ptid: `${this.ptid}`,
         session: `${this.sessionId}`,
+        navEntryExists: this.navEntryExists,
         // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
         ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) }),
         currentUrl: this.obfuscator.obfuscateString(cleanURL('' + location))

@@ -1,5 +1,4 @@
 import { gql, GraphQLClient } from 'graphql-request'
-import { args } from './args.js'
 
 /**
  * Convert category to GraphQL enum format (e.g., "Feature Flag" -> "FEATURE_FLAG")
@@ -13,6 +12,28 @@ function categoryToEnum(category) {
  */
 function typeToPascalCase(type) {
   return type.replace(/\b\w/g, char => char.toUpperCase()).replace(/ /g, '')
+}
+
+/**
+ * Get inputs from environment variables
+ */
+function getInputs() {
+  return {
+    entityGuid: process.env.ENTITY_GUID,
+    apiKey: process.env.API_KEY,
+    application: process.env.APPLICATION,
+    version: process.env.VERSION,
+    category: process.env.CATEGORY || 'Deployment',
+    type: process.env.TYPE || 'Basic',
+    featureFlagId: process.env.FEATURE_FLAG_ID,
+    description: process.env.DESCRIPTION,
+    changelog: process.env.CHANGELOG,
+    commit: process.env.COMMIT,
+    deepLink: process.env.DEEP_LINK,
+    user: process.env.USER,
+    groupId: process.env.GROUP_ID,
+    shortDescription: process.env.SHORT_DESCRIPTION,
+  }
 }
 
 /**
@@ -74,28 +95,30 @@ async function createChangeTrackingEvent() {
     // All NerdGraph API calls go to staging
     const apiEndpoint = 'https://staging-api.newrelic.com/graphql'
     
+    const inputs = getInputs()
+    
     console.log('Creating change tracking event via NerdGraph...')
-    console.log(`  Category: ${args.category}`)
-    console.log(`  Type: ${args.type}`)
-    console.log(`  Entity GUID: ${args.entityGuid}`)
-    console.log(`  Application: ${args.application}`)
+    console.log(`  Category: ${inputs.category}`)
+    console.log(`  Type: ${inputs.type}`)
+    console.log(`  Entity GUID: ${inputs.entityGuid}`)
+    console.log(`  Application: ${inputs.application}`)
     console.log(`  API Endpoint: ${apiEndpoint}`)
     
-    if (args.category === 'Deployment') {
-      console.log(`  Version: ${args.version}`)
-    } else if (args.category === 'Feature Flag') {
-      console.log(`  Feature Flag ID: ${args.featureFlagId}`)
+    if (inputs.category === 'Deployment') {
+      console.log(`  Version: ${inputs.version}`)
+    } else if (inputs.category === 'Feature Flag') {
+      console.log(`  Feature Flag ID: ${inputs.featureFlagId}`)
     }
     
     // Convert category and type to GraphQL format
-    const categoryGql = categoryToEnum(args.category)
-    const typeGql = typeToPascalCase(args.type)
+    const categoryGql = categoryToEnum(inputs.category)
+    const typeGql = typeToPascalCase(inputs.type)
     
     // Build category fields
-    const categoryFields = buildCategoryFields(args.category, args)
+    const categoryFields = buildCategoryFields(inputs.category, inputs)
     
     // Build optional fields
-    const optionalFields = buildOptionalFields(args)
+    const optionalFields = buildOptionalFields(inputs)
     
     // Build the change tracking event input
     const changeTrackingEvent = {
@@ -107,7 +130,7 @@ async function createChangeTrackingEvent() {
         },
       },
       entitySearch: {
-        query: `id = '${args.entityGuid}'`,
+        query: `id = '${inputs.entityGuid}'`,
       },
       ...optionalFields,
     }
@@ -133,7 +156,7 @@ async function createChangeTrackingEvent() {
     // Create GraphQL client
     const client = new GraphQLClient(apiEndpoint, {
       headers: {
-        'API-Key': args.apiKey,
+        'API-Key': inputs.apiKey,
       },
     })
     

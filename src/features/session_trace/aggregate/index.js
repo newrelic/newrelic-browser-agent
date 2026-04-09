@@ -62,11 +62,12 @@ export class Aggregate extends AggregateBase {
         if (this.sessionId !== sessionState.value || (eventType === 'cross-tab' && sessionState.sessionTraceMode === MODE.OFF)) this.abort(2)
       })
 
-      this.timeKeeperReady = !!this.agentRef.runtime.timeKeeper?.ready
       const navEntry = getNavigationEntry()
       if (navEntry) {
         this.traceStorage.storeTiming(navEntry)
       } else {
+        this.usedAbsoluteTimestamp = true
+        this.logResponseStart = globalScope?.performance?.getEntriesByType?.('navigation')?.[0]?.responseStart
         this.traceStorage.storeTiming(globalScope.performance?.timing, true)
       }
     }
@@ -162,7 +163,8 @@ export class Aggregate extends AggregateBase {
         ...(hasReplay && { hasReplay }),
         ptid: `${this.ptid}`,
         session: `${this.sessionId}`,
-        tkReady: this.timeKeeperReady,
+        usedAbsoluteTimestamp: this.usedAbsoluteTimestamp,
+        responseStart: this.logResponseStart,
         // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
         ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) }),
         currentUrl: this.obfuscator.obfuscateString(cleanURL('' + location))

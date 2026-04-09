@@ -25,7 +25,7 @@ on:
         type: boolean
         default: true
       experiment_description:
-        description: 'Description of what this experiment does (used in change tracking)'
+        description: 'Description of what this experiment does (used for change tracking)'
         required: false
         type: string
         default: 'Experimental browser agent deployment'

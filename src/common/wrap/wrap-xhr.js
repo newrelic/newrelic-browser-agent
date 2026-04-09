@@ -14,7 +14,7 @@ import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { globalScope } from '../constants/runtime'
 import { warn } from '../util/console'
-import { findTargetsFromStackTrace } from '../util/v2'
+import { findTargetsFromStackTrace } from '../v2/utils'
 
 const wrapped = {}
 const XHR_PROPS = ['open', 'send'] // these are the specific funcs being wrapped on all XMLHttpRequests(.prototype)

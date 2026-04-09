@@ -4,7 +4,7 @@
  */
 import { handle } from '../../common/event-emitter/handle'
 import { warn } from '../../common/util/console'
-import { V2_TYPES } from '../../common/util/v2'
+import { V2_TYPES } from '../../common/v2/utils'
 import { FEATURE_NAMES } from '../features/features'
 import { now } from '../../common/timing/now'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
@@ -17,7 +17,7 @@ import { single } from '../../common/util/invoke'
 import { measure } from './measure'
 import { recordCustomEvent } from './recordCustomEvent'
 import { subscribeToPageUnload } from '../../common/window/page-visibility'
-import { findScriptTimings } from '../../common/util/script-tracker'
+import { findScriptTimings } from '../../common/v2/script-tracker'
 import { generateRandomHexString } from '../../common/ids/unique-id'
 
 /**
@@ -61,18 +61,22 @@ function register (agentRef, target) {
   const timings = findScriptTimings()
 
   const attrs = {}
-  Object.defineProperty(target, 'attributes', {
-    get () {
-      return {
-        ...attrs,
-        'source.id': target.id,
-        'source.name': target.name,
-        'source.type': target.type,
-        'parent.type': target.parent?.type || V2_TYPES.BA,
-        'parent.id': target.parent?.id
+
+  // Only define attributes getter if it doesn't already exist
+  if (!Object.prototype.hasOwnProperty.call(target, 'attributes')) {
+    Object.defineProperty(target, 'attributes', {
+      get () {
+        return {
+          ...attrs,
+          'source.id': target.id,
+          'source.name': target.name,
+          'source.type': target.type,
+          'parent.type': target.parent?.type || V2_TYPES.BA,
+          'parent.id': target.parent?.id
+        }
       }
-    }
-  })
+    })
+  }
 
   // Process tags object and add to attrs, excluding protected keys
   Object.entries(target.tags).forEach(([key, value]) => {
@@ -150,14 +154,17 @@ function register (agentRef, target) {
     // only ever report the timings the first time this is called
     if (timings.reportedAt) return
     timings.reportedAt = now()
+    const timeToFetch = timings.fetchEnd - timings.fetchStart // fetchStart to fetchEnd
+    const timeToExecute = timings.scriptEnd - timings.scriptStart // scriptStart to scriptEnd
     api.recordCustomEvent('MicroFrontEndTiming', {
       assetUrl: timings.asset, // the url of the script that was registered, or undefined if it could not be determined (inline or no match)
       assetType: timings.type, // the type of asset that was associated with the timings, one of 'script', 'link' (if preloaded and found in the resource timing buffer), 'preload' (if preloaded but not found in the resource timing buffer), or "unknown" if it could not be determined
-      timeToLoad: timings.registeredAt - timings.fetchStart, // fetchStart to registeredAt
+      timeAlive: timings.reportedAt - timings.registeredAt, // registeredAt to reportedAt
       timeToBeRequested: timings.fetchStart, // origin to fetchStart
-      timeToFetch: timings.fetchEnd - timings.fetchStart, // fetchStart to fetchEnd
-      timeToRegister: timings.registeredAt - timings.fetchEnd, // fetchEnd to registeredAt
-      timeAlive: timings.reportedAt - timings.registeredAt // registeredAt to reportedAt
+      timeToExecute, // scriptStart to scriptEnd
+      timeToFetch, // fetchStart to fetchEnd
+      timeToLoad: timeToFetch + timeToExecute, // fetch time and script time together
+      timeToRegister: timings.registeredAt // timestamp when register() was called
     })
   }
 

@@ -14,7 +14,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
-import { getVersion2Attributes } from '../../../common/util/v2'
+import { getVersion2Attributes } from '../../../common/v2/utils'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME

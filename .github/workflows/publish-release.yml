@@ -197,6 +197,8 @@ jobs:
           type: 'Rolling'
           description: 'Production release v${{ steps.agent-loader-version.outputs.results }}'
           shortDescription: 'US Prod: v${{ steps.agent-loader-version.outputs.results }}'
+          changelog: ${{ github.event.release.body }}
+          deepLink: ${{ github.event.release.html_url }}
           commit: ${{ github.sha }}
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
@@ -226,6 +228,8 @@ jobs:
           type: 'Rolling'
           description: 'EU production release v${{ steps.agent-loader-version.outputs.results }}'
           shortDescription: 'EU Prod: v${{ steps.agent-loader-version.outputs.results }}'
+          changelog: ${{ github.event.release.body }}
+          deepLink: ${{ github.event.release.html_url }}
           commit: ${{ github.sha }}
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
@@ -255,6 +259,8 @@ jobs:
           type: 'Basic'
           description: 'Staging updated to production release v${{ steps.agent-loader-version.outputs.results }}'
           shortDescription: 'Staging: Prod release v${{ steps.agent-loader-version.outputs.results }}'
+          changelog: ${{ github.event.release.body }}
+          deepLink: ${{ github.event.release.html_url }}
           commit: ${{ github.sha }}
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'

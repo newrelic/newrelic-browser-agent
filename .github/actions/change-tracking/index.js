@@ -1,20 +1,6 @@
 import { gql, GraphQLClient } from 'graphql-request'
 
 /**
- * Convert category to GraphQL enum format (e.g., "Feature Flag" -> "FEATURE_FLAG")
- */
-function categoryToEnum(category) {
-  return category.toUpperCase().replace(/ /g, '_')
-}
-
-/**
- * Convert type to PascalCase (e.g., "Blue Green" -> "BlueGreen")
- */
-function typeToPascalCase(type) {
-  return type.replace(/\b\w/g, char => char.toUpperCase()).replace(/ /g, '')
-}
-
-/**
  * Get inputs from environment variables
  */
 function getInputs() {
@@ -37,54 +23,59 @@ function getInputs() {
 }
 
 /**
- * Build the category-specific fields based on category
+ * Safely escape and quote a string for GraphQL
  */
-function buildCategoryFields(category, inputs) {
-  if (category === 'Deployment') {
-    const deployment = { version: inputs.version }
-    
-    if (inputs.changelog) {
-      deployment.changelog = inputs.changelog
-    }
-    if (inputs.commit) {
-      deployment.commit = inputs.commit
-    }
-    if (inputs.deepLink) {
-      deployment.deepLink = inputs.deepLink
-    }
-    
-    return { deployment }
-  } else if (category === 'Feature Flag') {
-    return { 
-      featureFlag: { 
-        featureFlagId: inputs.featureFlagId 
-      } 
-    }
-  }
-  
-  return null
+function gqlString(str) {
+  if (!str) return null
+  // Let GraphQL handle the escaping by using JSON.stringify
+  return JSON.stringify(str)
 }
 
 /**
- * Build optional fields
+ * Build the categoryFields GraphQL string based on category
  */
-function buildOptionalFields(inputs) {
-  const optional = {}
+function buildCategoryFieldsGQL(category, inputs) {
+  if (category === 'Deployment') {
+    const fields = [`version: ${gqlString(inputs.version)}`]
+    
+    if (inputs.changelog) {
+      fields.push(`changelog: ${gqlString(inputs.changelog)}`)
+    }
+    if (inputs.commit) {
+      fields.push(`commit: ${gqlString(inputs.commit)}`)
+    }
+    if (inputs.deepLink) {
+      fields.push(`deepLink: ${gqlString(inputs.deepLink)}`)
+    }
+    
+    return `categoryFields: { deployment: { ${fields.join(', ')} } }`
+  } else if (category === 'Feature Flag') {
+    return `categoryFields: { featureFlag: { featureFlagId: ${gqlString(inputs.featureFlagId)} } }`
+  }
+  
+  return ''
+}
+
+/**
+ * Build optional fields GraphQL string
+ */
+function buildOptionalFieldsGQL(inputs) {
+  const fields = []
   
   if (inputs.user) {
-    optional.user = inputs.user
+    fields.push(`user: ${gqlString(inputs.user)}`)
   }
   if (inputs.description) {
-    optional.description = inputs.description
+    fields.push(`description: ${gqlString(inputs.description)}`)
   }
   if (inputs.shortDescription) {
-    optional.shortDescription = inputs.shortDescription
+    fields.push(`shortDescription: ${gqlString(inputs.shortDescription)}`)
   }
   if (inputs.groupId) {
-    optional.groupId = inputs.groupId
+    fields.push(`groupId: ${gqlString(inputs.groupId)}`)
   }
   
-  return optional
+  return fields.join('\n      ')
 }
 
 /**
@@ -110,35 +101,26 @@ async function createChangeTrackingEvent() {
       console.log(`  Feature Flag ID: ${inputs.featureFlagId}`)
     }
     
-    // Convert category and type to GraphQL format
-    const categoryGql = categoryToEnum(inputs.category)
-    const typeGql = typeToPascalCase(inputs.type)
-    
     // Build category fields
-    const categoryFields = buildCategoryFields(inputs.category, inputs)
+    const categoryFieldsGQL = buildCategoryFieldsGQL(inputs.category, inputs)
     
     // Build optional fields
-    const optionalFields = buildOptionalFields(inputs)
+    const optionalFieldsGQL = buildOptionalFieldsGQL(inputs)
     
-    // Build the change tracking event input
-    const changeTrackingEvent = {
-      categoryAndTypeData: {
-        ...(categoryFields && { categoryFields }),
-        kind: {
-          category: categoryGql,
-          type: typeGql,
-        },
-      },
-      entitySearch: {
-        query: `id = '${inputs.entityGuid}'`,
-      },
-      ...optionalFields,
-    }
-    
-    // Define the GraphQL mutation
+    // Build the GraphQL mutation inline (matching the documented examples)
+    // Note: We use inline values instead of variables to match New Relic's API expectations
     const mutation = gql`
-      mutation CreateChangeTrackingEvent($changeTrackingEvent: ChangeTrackingEventInput!) {
-        changeTrackingCreateEvent(changeTrackingEvent: $changeTrackingEvent) {
+      mutation {
+        changeTrackingCreateEvent(
+          changeTrackingEvent: {
+            categoryAndTypeData: {
+              ${categoryFieldsGQL}
+              kind: { category: ${gqlString(inputs.category)}, type: ${gqlString(inputs.type)} }
+            }
+            entitySearch: { query: "id = '${inputs.entityGuid}'" }
+            ${optionalFieldsGQL}
+          }
+        ) {
           changeTrackingEvent {
             changeTrackingId
             timestamp
@@ -149,6 +131,7 @@ async function createChangeTrackingEvent() {
             description
             groupId
           }
+          messages
         }
       }
     `
@@ -161,7 +144,7 @@ async function createChangeTrackingEvent() {
     })
     
     // Execute the mutation
-    const response = await client.request(mutation, { changeTrackingEvent })
+    const response = await client.request(mutation)
     
     console.log('')
     console.log('Response:')
@@ -173,6 +156,12 @@ async function createChangeTrackingEvent() {
       console.log('')
       console.log('✓ Change tracking event created successfully!')
       console.log(`  Tracking ID: ${trackingId}`)
+      
+      // Display any messages from the API
+      const messages = response.changeTrackingCreateEvent.messages
+      if (messages && messages.length > 0) {
+        console.log('  Messages:', messages)
+      }
     } else {
       throw new Error('Tracking ID not found in response')
     }
@@ -185,9 +174,14 @@ async function createChangeTrackingEvent() {
       console.error('GraphQL Errors:')
       console.error(JSON.stringify(error.response.errors, null, 2))
       console.error('')
-      console.error('Status:', error.response.status)
+      if (error.response.status) {
+        console.error('HTTP Status:', error.response.status)
+      }
     } else {
       console.error(error.message)
+      if (error.stack) {
+        console.error(error.stack)
+      }
     }
     
     process.exit(1)

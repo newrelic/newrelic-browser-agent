@@ -155,58 +155,63 @@ runs:
               kind: { category: \"$CATEGORY_GQL\", type: \"$TYPE_GQL\" }
             },
             entitySearch: { query: \"id = '$ENTITY_GUID'\" }
-              timestamp
-              category
-              type
-              user
-              shortDescription
-              description
-              groupId
-            }
+            $OPTIONAL_FIELDS
           }
-        }"
+        ) {
+          changeTrackingEvent {
+            changeTrackingId
+            timestamp
+            category
+            type
+            user
+            shortDescription
+            description
+            groupId
+          }
+        }
+      }"
 
-        # Create JSON payload
-        PAYLOAD=$(jq -n --arg query "$MUTATION_QUERY" '{"query": $query}')
+      # Create JSON payload
+      PAYLOAD=$(jq -n --arg query "$MUTATION_QUERY" '{"query": $query}')
 
-        # Execute the NerdGraph mutation
-        RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_ENDPOINT" \
-          -H "Content-Type: application/json" \
-          -H "API-Key: $API_KEY" \
-          -d "$PAYLOAD")
+      # Execute the NerdGraph mutation
+      RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_ENDPOINT" \
+        -H "Content-Type: application/json" \
+        -H "API-Key: $API_KEY" \
+        -d "$PAYLOAD")
 
-        # Split response body and status code
-        HTTP_BODY=$(echo "$RESPONSE" | sed '$d')
-        HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
+      # Split response body and status code
+      HTTP_BODY=$(echo "$RESPONSE" | sed '$d')
+      HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
 
+      echo ""
+      echo "HTTP Status: $HTTP_STATUS"
+      echo "Response:"
+      echo "$HTTP_BODY" | jq '.' 2>/dev/null || echo "$HTTP_BODY"
+
+      # Check HTTP status
+      if [ "$HTTP_STATUS" != "200" ]; then
         echo ""
-        echo "HTTP Status: $HTTP_STATUS"
-        echo "Response:"
-        echo "$HTTP_BODY" | jq '.' 2>/dev/null || echo "$HTTP_BODY"
+        echo "Error: HTTP request failed with status $HTTP_STATUS"
+        exit 1
+      fi
 
-        # Check HTTP status
-        if [ "$HTTP_STATUS" != "200" ]; then
-          echo ""
-          echo "Error: HTTP request failed with status $HTTP_STATUS"
-          exit 1
-        fi
+      # Check for GraphQL errors
+      if echo "$HTTP_BODY" | jq -e '.errors' > /dev/null 2>&1; then
+        echo ""
+        echo "Error: Change tracking event creation failed!"
+        echo "$HTTP_BODY" | jq '.errors'
+        exit 1
+      fi
 
-        # Check for GraphQL errors
-        if echo "$HTTP_BODY" | jq -e '.errors' > /dev/null 2>&1; then
-          echo ""
-          echo "Error: Change tracking event creation failed!"
-          echo "$HTTP_BODY" | jq '.errors'
-          exit 1
-        fi
-
-        # Extract and display tracking ID
-        TRACKING_ID=$(echo "$HTTP_BODY" | jq -r '.data.changeTrackingCreateEvent.changeTrackingEvent.changeTrackingId // empty')
-        if [ -n "$TRACKING_ID" ]; then
-          echo ""
-          echo "✓ Change tracking event created successfully!"
-          echo "  Tracking ID: $TRACKING_ID"
-        else
-          echo ""
-          echo "Error: Tracking ID not found in response"
-          exit 1
-        fi
+      # Extract and display tracking ID
+      TRACKING_ID=$(echo "$HTTP_BODY" | jq -r '.data.changeTrackingCreateEvent.changeTrackingEvent.changeTrackingId // empty')
+      if [ -n "$TRACKING_ID" ]; then
+        echo ""
+        echo "✓ Change tracking event created successfully!"
+        echo "  Tracking ID: $TRACKING_ID"
+      else
+        echo ""
+        echo "Error: Tracking ID not found in response"
+        exit 1
+      fi

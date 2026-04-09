@@ -64,32 +64,26 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-    
     - name: Install dependencies
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
       shell: bash
-      working-directory: ${{ github.action_path }}
-      run: npm ci --prefer-offline --no-audit
     
-    - name: Create change tracking event via NerdGraph
+    - name: Run action script
+      id: action-script
+      run: |
+        node $GITHUB_ACTION_PATH/index.js \
+          --entity-guid "${{ inputs.entityGuid }}" \
+          --api-key "${{ inputs.apiKey }}" \
+          --application "${{ inputs.application }}" \
+          --version "${{ inputs.version }}" \
+          --category "${{ inputs.category }}" \
+          --type "${{ inputs.type }}" \
+          ${{ inputs.featureFlagId && format('--feature-flag-id "{0}"', inputs.featureFlagId) || '' }} \
+          ${{ inputs.description && format('--description "{0}"', inputs.description) || '' }} \
+          ${{ inputs.changelog && format('--changelog "{0}"', inputs.changelog) || '' }} \
+          ${{ inputs.commit && format('--commit "{0}"', inputs.commit) || '' }} \
+          ${{ inputs.deepLink && format('--deep-link "{0}"', inputs.deepLink) || '' }} \
+          ${{ inputs.user && format('--user "{0}"', inputs.user) || '' }} \
+          ${{ inputs.groupId && format('--group-id "{0}"', inputs.groupId) || '' }} \
+          ${{ inputs.shortDescription && format('--short-description "{0}"', inputs.shortDescription) || '' }}
       shell: bash
-      working-directory: ${{ github.action_path }}
-      env:
-        ENTITY_GUID: ${{ inputs.entityGuid }}
-        API_KEY: ${{ inputs.apiKey }}
-        APPLICATION: ${{ inputs.application }}
-        VERSION: ${{ inputs.version }}
-        CATEGORY: ${{ inputs.category }}
-        TYPE: ${{ inputs.type }}
-        FEATURE_FLAG_ID: ${{ inputs.featureFlagId }}
-        DESCRIPTION: ${{ inputs.description }}
-        CHANGELOG: ${{ inputs.changelog }}
-        COMMIT: ${{ inputs.commit }}
-        DEEP_LINK: ${{ inputs.deepLink }}
-        USER: ${{ inputs.user }}
-        GROUP_ID: ${{ inputs.groupId }}
-        SHORT_DESCRIPTION: ${{ inputs.shortDescription }}
-      run: node index.js

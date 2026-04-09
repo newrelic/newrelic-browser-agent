@@ -24,6 +24,11 @@ on:
         required: true
         type: boolean
         default: true
+      experiment_description:
+        description: 'Description of what this experiment does (used for change tracking)'
+        required: false
+        type: string
+        default: 'Experimental browser agent deployment'
 
 jobs:
   # Build and publish the branch to S3 experiments folder
@@ -105,7 +110,7 @@ jobs:
     if: ${{ inputs.publish_ab_script == true }}
     needs: [publish-experiment-to-s3]
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 5
     defaults:
       run:
         shell: bash
@@ -156,8 +161,9 @@ jobs:
           application: 'New Relic One - Staging'
           version: ${{ inputs.nr_environment }}-${{ steps.clean-branch-name.outputs.results }}
           type: 'Shadow'
-          description: 'Experiment deployment for branch ${{ steps.clean-branch-name.outputs.results }}'
+          description: ${{ inputs.experiment_description }}
           shortDescription: 'Experiment: ${{ steps.clean-branch-name.outputs.results }}'
+          deepLink: 'https://github.com/${{ github.repository }}/tree/${{ github.ref_name }}'
           commit: ${{ github.sha }}
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'

@@ -9,7 +9,7 @@
  */
 import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { globalScope } from '../constants/runtime'
-import { findTargetsFromStackTrace } from '../util/v2'
+import { findTargetsFromStackTrace } from '../v2/utils'
 
 var prefix = 'fetch-'
 var bodyPrefix = prefix + 'body-'

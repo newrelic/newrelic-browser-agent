@@ -25,9 +25,9 @@ import { gosCDN } from '../../src/common/window/nreum'
 import { now } from '../../src/common/timing/now'
 
 // Mock script-tracker to avoid PerformanceObserver requirement
-jest.mock('../../src/common/util/script-tracker', () => {
+jest.mock('../../src/common/v2/script-tracker', () => {
   return {
-    findScriptTimings: jest.fn(() => ({ registeredAt: performance.now(), reportedAt: undefined, fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown' }))
+    findScriptTimings: jest.fn(() => ({ registeredAt: performance.now(), reportedAt: undefined, fetchStart: 0, fetchEnd: 0, scriptStart: 0, scriptEnd: 0, asset: undefined, type: 'unknown' }))
   }
 })
 

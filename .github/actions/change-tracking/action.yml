@@ -105,61 +105,56 @@ runs:
           
           # Escape quotes in values
           VERSION_ESC=$(echo "$VERSION" | sed 's/"/\\"/g')
-          CATEGORY_FIELDS="deployment: { version: \\\"$VERSION_ESC\\\""
-          
-          if [ -n "$CHANGELOG" ]; then
-            CHANGELOG_ESC=$(echo "$CHANGELOG" | sed 's/"/\\"/g')
-            CATEGORY_FIELDS="$CATEGORY_FIELDS, changelog: \\\"$CHANGELOG_ESC\\\""
-          fi
-          if [ -n "$COMMIT" ]; then
-            COMMIT_ESC=$(echo "$COMMIT" | sed 's/"/\\"/g')
-            CATEGORY_FIELDS="$CATEGORY_FIELDS, commit: \\\"$COMMIT_ESC\\\""
-          fi
-          if [ -n "$DEEP_LINK" ]; then
-            DEEP_LINK_ESC=$(echo "$DEEP_LINK" | sed 's/"/\\"/g')
-            CATEGORY_FIELDS="$CATEGORY_FIELDS, deepLink: \\\"$DEEP_LINK_ESC\\\""
-          fi
-          CATEGORY_FIELDS="$CATEGORY_FIELDS }"
-          
-        elif [ "$CATEGORY" = "Feature Flag" ]; then
-          echo "  Feature Flag ID: $FEATURE_FLAG_ID"
-          FEATURE_FLAG_ID_ESC=$(echo "$FEATURE_FLAG_ID" | sed 's/"/\\"/g')
-          CATEGORY_FIELDS="featureFlag: { featureFlagId: \\\"$FEATURE_FLAG_ID_ESC\\\" }"
+        CATEGORY_FIELDS="deployment: { version: \"$VERSION_ESC\""
+        
+        if [ -n "$CHANGELOG" ]; then
+          CHANGELOG_ESC=$(echo "$CHANGELOG" | sed 's/"/\\"/g')
+          CATEGORY_FIELDS="$CATEGORY_FIELDS, changelog: \"$CHANGELOG_ESC\""
         fi
+        if [ -n "$COMMIT" ]; then
+          COMMIT_ESC=$(echo "$COMMIT" | sed 's/"/\\"/g')
+          CATEGORY_FIELDS="$CATEGORY_FIELDS, commit: \"$COMMIT_ESC\""
+        fi
+        if [ -n "$DEEP_LINK" ]; then
+          DEEP_LINK_ESC=$(echo "$DEEP_LINK" | sed 's/"/\\"/g')
+          CATEGORY_FIELDS="$CATEGORY_FIELDS, deepLink: \"$DEEP_LINK_ESC\""
+        fi
+        CATEGORY_FIELDS="$CATEGORY_FIELDS }"
+        
+      elif [ "$CATEGORY" = "Feature Flag" ]; then
+        echo "  Feature Flag ID: $FEATURE_FLAG_ID"
+        FEATURE_FLAG_ID_ESC=$(echo "$FEATURE_FLAG_ID" | sed 's/"/\\"/g')
+        CATEGORY_FIELDS="featureFlag: { featureFlagId: \"$FEATURE_FLAG_ID_ESC\" }"
+      fi
 
-        # Build optional fields with proper escaping
-        OPTIONAL_FIELDS=""
-        if [ -n "$USER" ]; then
-          USER_ESC=$(echo "$USER" | sed 's/"/\\"/g')
-          OPTIONAL_FIELDS="$OPTIONAL_FIELDS, user: \\\"$USER_ESC\\\""
-        fi
-        if [ -n "$DESCRIPTION" ]; then
-          DESCRIPTION_ESC=$(echo "$DESCRIPTION" | sed 's/"/\\"/g' | sed 's/$//')
-          OPTIONAL_FIELDS="$OPTIONAL_FIELDS, description: \\\"$DESCRIPTION_ESC\\\""
-        fi
-        if [ -n "$SHORT_DESCRIPTION" ]; then
-          SHORT_DESCRIPTION_ESC=$(echo "$SHORT_DESCRIPTION" | sed 's/"/\\"/g')
-          OPTIONAL_FIELDS="$OPTIONAL_FIELDS, shortDescription: \\\"$SHORT_DESCRIPTION_ESC\\\""
-        fi
-        if [ -n "$GROUP_ID" ]; then
-          GROUP_ID_ESC=$(echo "$GROUP_ID" | sed 's/"/\\"/g')
-          OPTIONAL_FIELDS="$OPTIONAL_FIELDS, groupId: \\\"$GROUP_ID_ESC\\\""
-        fi
+      # Build optional fields with proper escaping
+      OPTIONAL_FIELDS=""
+      if [ -n "$USER" ]; then
+        USER_ESC=$(echo "$USER" | sed 's/"/\\"/g')
+        OPTIONAL_FIELDS="$OPTIONAL_FIELDS, user: \"$USER_ESC\""
+      fi
+      if [ -n "$DESCRIPTION" ]; then
+        DESCRIPTION_ESC=$(echo "$DESCRIPTION" | sed 's/"/\\"/g' | sed 's/$//')
+        OPTIONAL_FIELDS="$OPTIONAL_FIELDS, description: \"$DESCRIPTION_ESC\""
+      fi
+      if [ -n "$SHORT_DESCRIPTION" ]; then
+        SHORT_DESCRIPTION_ESC=$(echo "$SHORT_DESCRIPTION" | sed 's/"/\\"/g')
+        OPTIONAL_FIELDS="$OPTIONAL_FIELDS, shortDescription: \"$SHORT_DESCRIPTION_ESC\""
+      fi
+      if [ -n "$GROUP_ID" ]; then
+        GROUP_ID_ESC=$(echo "$GROUP_ID" | sed 's/"/\\"/g')
+        OPTIONAL_FIELDS="$OPTIONAL_FIELDS, groupId: \"$GROUP_ID_ESC\""
+      fi
 
-        # Build the complete GraphQL mutation
-        MUTATION_QUERY="mutation {
-          changeTrackingCreateEvent(
-            changeTrackingEvent: {
-              categoryAndTypeData: {
-                ${CATEGORY_FIELDS:+categoryFields: { $CATEGORY_FIELDS },}
-                kind: { category: \\\"$CATEGORY_GQL\\\", type: \\\"$TYPE_GQL\\\" }
-              },
-              entitySearch: { query: \\\"id = '$ENTITY_GUID'\\\" }
-              $OPTIONAL_FIELDS
-            }
-          ) {
-            changeTrackingEvent {
-              changeTrackingId
+      # Build the complete GraphQL mutation
+      MUTATION_QUERY="mutation {
+        changeTrackingCreateEvent(
+          changeTrackingEvent: {
+            categoryAndTypeData: {
+              ${CATEGORY_FIELDS:+categoryFields: { $CATEGORY_FIELDS },}
+              kind: { category: \"$CATEGORY_GQL\", type: \"$TYPE_GQL\" }
+            },
+            entitySearch: { query: \"id = '$ENTITY_GUID'\" }
               timestamp
               category
               type

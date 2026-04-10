@@ -7,7 +7,7 @@ import { FEATURE_NAME } from '../constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { TraceStorage } from './trace/storage'
 import { obj as encodeObj } from '../../../common/url/encode'
-import { globalScope, getNavigationEntry } from '../../../common/constants/runtime'
+import { globalScope } from '../../../common/constants/runtime'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { cleanURL } from '../../../common/url/clean-url'
@@ -62,12 +62,9 @@ export class Aggregate extends AggregateBase {
         if (this.sessionId !== sessionState.value || (eventType === 'cross-tab' && sessionState.sessionTraceMode === MODE.OFF)) this.abort(2)
       })
 
-      const navEntry = getNavigationEntry()
-      if (navEntry) {
-        this.traceStorage.storeTiming(navEntry)
+      if (typeof PerformanceNavigationTiming !== 'undefined' && globalScope.performance?.getEntriesByType('navigation')?.length > 0) {
+        this.traceStorage.storeTiming(globalScope.performance.getEntriesByType('navigation')[0])
       } else {
-        this.usedAbsoluteTimestamp = true
-        this.logResponseStart = globalScope?.performance?.getEntriesByType?.('navigation')?.[0]?.responseStart
         this.traceStorage.storeTiming(globalScope.performance?.timing, true)
       }
     }
@@ -163,8 +160,6 @@ export class Aggregate extends AggregateBase {
         ...(hasReplay && { hasReplay }),
         ptid: `${this.ptid}`,
         session: `${this.sessionId}`,
-        usedAbsoluteTimestamp: this.usedAbsoluteTimestamp,
-        responseStart: this.logResponseStart,
         // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
         ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) }),
         currentUrl: this.obfuscator.obfuscateString(cleanURL('' + location))

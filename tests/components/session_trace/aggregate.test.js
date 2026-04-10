@@ -90,6 +90,103 @@ test('initialize only ever stores timings once', () => {
   expect(storeTimingSpy).toHaveBeenCalledTimes(0)
 })
 
+/*
+  Note about responseStart = 0.
+  According to MDN docs, responseStart can be 0:
+   - if the resource was instantaneously retrieved from a cache (reproduced in Safari when navigating back to a page, as of Apr 2026, Safari 26.4)
+   - if the resource is a cross-origin request and no Timing-Allow-Origin HTTP response header is used.
+   - if the resource is a canceled request.
+ */
+test('initialization - should still use L2 timings when responseStart is 0', async () => {
+  // Simulate BFCache navigation where responseStart = 0 but other metrics are valid
+  const mockNavEntry = {
+    responseStart: 0,
+    domContentLoadedEventEnd: 250,
+    loadEventEnd: 300,
+    domComplete: 280,
+    domInteractive: 200
+  }
+
+  const testAgent = setupAgent()
+
+  // Save original values
+  const originalPerformanceNavigationTiming = global.PerformanceNavigationTiming
+  const originalGetEntriesByType = performance.getEntriesByType
+
+  // Mock PerformanceNavigationTiming constructor to pass the typeof check
+  global.PerformanceNavigationTiming = function () {}
+
+  // Mock performance.getEntriesByType to return our BFCache scenario
+  performance.getEntriesByType = jest.fn((type) => {
+    if (type === 'navigation') return [mockNavEntry]
+    return originalGetEntriesByType.call(performance, type)
+  })
+
+  const sessionTraceInstrument = new SessionTrace(testAgent)
+  await new Promise(process.nextTick)
+  const testAggregate = sessionTraceInstrument.featAggregate
+
+  // Mock drain to prevent it from clearing the buffer during initialization
+  const drainSpy = jest.spyOn(testAggregate, 'drain').mockImplementation(() => {})
+  const storeTimingSpy = jest.spyOn(testAggregate.traceStorage, 'storeTiming')
+
+  // Act - triggers initialization, should use mockNavEntry NOT fall back to performance.timing
+  testAggregate.ee.emit('rumresp', [{ st: 1, sts: MODE.FULL }])
+  await new Promise((resolve) => setTimeout(resolve, 100))
+
+  // Assertions
+  expect(performance.getEntriesByType).toHaveBeenCalledWith('navigation')
+  expect(drainSpy).toHaveBeenCalled()
+
+  // - Should be called with the navigation entry (isAbsoluteTimestamp = false, the default)
+  expect(storeTimingSpy).toHaveBeenCalledWith(mockNavEntry)
+
+  // - Should NOT be called with isAbsoluteTimestamp=true (legacy fallback path)
+  const callsWithAbsoluteTimestamp = storeTimingSpy.mock.calls.filter(call => call[1] === true)
+  expect(callsWithAbsoluteTimestamp.length).toBe(0)
+
+  // - Verify that valid timing nodes were stored with correct values
+  const bufferedEvents = testAggregate.events.get()
+
+  expect(bufferedEvents).toContainEqual(expect.objectContaining({
+    n: 'domContentLoadedEventEnd',
+    s: 250,
+    e: 250,
+    o: 'document',
+    t: 'timing'
+  }))
+
+  expect(bufferedEvents).toContainEqual(expect.objectContaining({
+    n: 'loadEventEnd',
+    s: 300,
+    e: 300,
+    o: 'document',
+    t: 'timing'
+  }))
+
+  expect(bufferedEvents).toContainEqual(expect.objectContaining({
+    n: 'domComplete',
+    s: 280,
+    e: 280,
+    o: 'document',
+    t: 'timing'
+  }))
+
+  expect(bufferedEvents).toContainEqual(expect.objectContaining({
+    n: 'responseStart',
+    s: 0,
+    e: 0,
+    o: 'document',
+    t: 'timing'
+  }))
+
+  // Cleanup
+  drainSpy.mockRestore()
+  performance.getEntriesByType = originalGetEntriesByType
+  global.PerformanceNavigationTiming = originalPerformanceNavigationTiming
+  resetAgent(testAgent)
+})
+
 test('tracks previously stored events and processes them once per occurrence', done => {
   document.addEventListener('visibilitychange', () => 1)
   document.addEventListener('visibilitychange', () => 2)

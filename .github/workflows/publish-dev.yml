@@ -7,6 +7,11 @@ name: Publish Dev
 
 on:
   workflow_call:
+    inputs:
+      skip_publish_notification:
+        description: 'Skip sending published agent Slack notification'
+        type: boolean
+        default: false
   workflow_dispatch:
   push:
     branches:
@@ -371,7 +376,7 @@ jobs:
 
   # Notify about new staging deploy in Slack
   send-slack-notifications:
-    if: always() && !cancelled() && !contains(needs.*.result, 'failure') && github.event_name != 'workflow_call' # skip for delete-experiment (avoids double notices + no PR)
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure') && !inputs.skip_publish_notification
     needs: [publish-staging-ab]
     runs-on: ubuntu-latest
     timeout-minutes: 5

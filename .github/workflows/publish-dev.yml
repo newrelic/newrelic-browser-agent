@@ -29,27 +29,9 @@ jobs:
     with:
       coverage: true
 
-  # Check if the deployment should proceed (only if tests passing or skipped)
-  check-jest-tests:
-    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
-    needs: [jest-tests]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Check tests status
-        run: |
-          if [ "${{ needs.jest-tests.result }}" == "success" ]; then
-            echo "✅ Tests passed, proceeding with deployment"
-          elif [ "${{ needs.jest-tests.result }}" == "skipped" ]; then
-            echo "⏭️ Tests were skipped, proceeding with deployment"
-          else
-            echo "❌ Unexpected test result: ${{ needs.jest-tests.result }}"
-            exit 1
-          fi
-
   # Build and publish the latest code from the main branch
   publish-dev-to-s3:
-    if: needs.check-jest-tests.result == 'success'
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     needs: [check-jest-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -239,7 +221,7 @@ jobs:
 
   # Rebuild and publish the dev environment A/B script
   publish-dev-ab:
-    if: needs.publish-dev-to-s3.result == 'success'
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     needs: [publish-dev-to-s3]
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -269,7 +251,7 @@ jobs:
 
   # Rebuild and publish the staging environment A/B script
   publish-staging-ab:
-    if: needs.publish-dev-to-s3.result == 'success'
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     needs: [publish-dev-to-s3]
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -299,7 +281,7 @@ jobs:
 
   # Create change tracking events for staging environment
   create-staging-change-tracking:
-    if: needs.publish-dev-to-s3.result == 'success'
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     environment: staging
     needs: [publish-dev-to-s3]
     continue-on-error: true
@@ -389,7 +371,7 @@ jobs:
 
   # Notify about new staging deploy in Slack
   send-slack-notifications:
-    if: github.event_name != 'workflow_call' # skip for delete-experiment (avoids double notices + no PR)
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure') && github.event_name != 'workflow_call' # skip for delete-experiment (avoids double notices + no PR)
     needs: [publish-staging-ab]
     runs-on: ubuntu-latest
     timeout-minutes: 5

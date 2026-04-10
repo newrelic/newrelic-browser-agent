@@ -19,6 +19,10 @@ on:
         type: boolean
   pull_request:
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   # Jobs for pull_request events
 

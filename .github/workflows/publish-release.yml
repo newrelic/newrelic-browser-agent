@@ -174,6 +174,7 @@ jobs:
 
   # Create change tracking event for US production
   create-us-prod-change-tracking:
+    environment: staging
     needs: [publish-current-to-s3]
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 30
@@ -196,12 +197,15 @@ jobs:
           type: 'Rolling'
           description: 'Production release v${{ steps.agent-loader-version.outputs.results }}'
           shortDescription: 'US Prod: v${{ steps.agent-loader-version.outputs.results }}'
+          changelog: ${{ github.event.release.body }}
+          deepLink: ${{ github.event.release.html_url }}
           commit: ${{ github.sha }}
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
 
   # Create change tracking event for EU production
   create-eu-prod-change-tracking:
+    environment: staging
     needs: [publish-current-to-s3]
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 30
@@ -224,12 +228,15 @@ jobs:
           type: 'Rolling'
           description: 'EU production release v${{ steps.agent-loader-version.outputs.results }}'
           shortDescription: 'EU Prod: v${{ steps.agent-loader-version.outputs.results }}'
+          changelog: ${{ github.event.release.body }}
+          deepLink: ${{ github.event.release.html_url }}
           commit: ${{ github.sha }}
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
 
   # Create change tracking event for staging environment (1067061 only)
   create-staging-release-change-tracking:
+    environment: staging
     needs: [publish-current-to-s3]
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 30
@@ -252,6 +259,8 @@ jobs:
           type: 'Basic'
           description: 'Staging updated to production release v${{ steps.agent-loader-version.outputs.results }}'
           shortDescription: 'Staging: Prod release v${{ steps.agent-loader-version.outputs.results }}'
+          changelog: ${{ github.event.release.body }}
+          deepLink: ${{ github.event.release.html_url }}
           commit: ${{ github.sha }}
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'

@@ -4,7 +4,7 @@
  */
 import { handle } from '../../common/event-emitter/handle'
 import { warn } from '../../common/util/console'
-import { V2_TYPES } from '../../common/util/v2'
+import { V2_TYPES } from '../../common/v2/utils'
 import { FEATURE_NAMES } from '../features/features'
 import { now } from '../../common/timing/now'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
@@ -17,7 +17,7 @@ import { single } from '../../common/util/invoke'
 import { measure } from './measure'
 import { recordCustomEvent } from './recordCustomEvent'
 import { subscribeToPageUnload } from '../../common/window/page-visibility'
-import { findScriptTimings } from '../../common/util/script-tracker'
+import { findScriptTimings } from '../../common/v2/script-tracker'
 import { generateRandomHexString } from '../../common/ids/unique-id'
 
 /**
@@ -42,10 +42,9 @@ export function setupRegisterAPI (agent) {
  * Also conducts certain side-effects, such as harvesting a PageView event when triggered and gathering metadata for the registered entity.
  * @param {Object} agentRef the reference to the base agent instance
  * @param {import('./register-api-types').RegisterAPIConstructor} target
- * @param {import('./register-api-types').RegisterAPIConstructor} [parent]
  * @returns {RegisterAPI} the api object to be returned from the register api method
  */
-function register (agentRef, target, parent) {
+function register (agentRef, target) {
   warn(54, 'newrelic.register')
 
   target ||= {}
@@ -54,7 +53,7 @@ function register (agentRef, target, parent) {
   target.licenseKey ||= agentRef.info.licenseKey // will inherit the license key from the container agent if not provided for brevity. A future state may dictate that we need different license keys to do different things.
   target.blocked = false
   if (typeof target.tags !== 'object' || target.tags === null || Array.isArray(target.tags)) target.tags = {}
-  target.parent = parent || {
+  target.parent ??= {
     get id () { return agentRef.runtime.appMetadata.agents[0].entityGuid }, // getter because this is asyncronously set
     type: V2_TYPES.BA
   }
@@ -62,18 +61,22 @@ function register (agentRef, target, parent) {
   const timings = findScriptTimings()
 
   const attrs = {}
-  Object.defineProperty(target, 'attributes', {
-    get () {
-      return {
-        ...attrs,
-        'source.id': target.id,
-        'source.name': target.name,
-        'source.type': target.type,
-        'parent.type': target.parent?.type || V2_TYPES.BA,
-        'parent.id': target.parent?.id
+
+  // Only define attributes getter if it doesn't already exist
+  if (!Object.prototype.hasOwnProperty.call(target, 'attributes')) {
+    Object.defineProperty(target, 'attributes', {
+      get () {
+        return {
+          ...attrs,
+          'source.id': target.id,
+          'source.name': target.name,
+          'source.type': target.type,
+          'parent.type': target.parent?.type || V2_TYPES.BA,
+          'parent.id': target.parent?.id
+        }
       }
-    }
-  })
+    })
+  }
 
   // Process tags object and add to attrs, excluding protected keys
   Object.entries(target.tags).forEach(([key, value]) => {
@@ -82,18 +85,10 @@ function register (agentRef, target, parent) {
     }
   })
 
-  target.isolated ??= true
-
   /** @type {Function} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
   let invalidApiResponse = () => {}
   /** @type {Array} the array of registered target APIs */
   const registeredEntities = agentRef.runtime.registeredEntities
-
-  if (!target.isolated) {
-  /** if we have already registered this non-isolated target, go ahead and re-use it */
-    const sharedEntity = registeredEntities.find(({ metadata: { target: { id } } }) => id === target.id && !target.isolated)
-    if (sharedEntity) return sharedEntity
-  }
 
   /**
    * Block the API, and supply a warning function to display a message to end users
@@ -109,7 +104,7 @@ function register (agentRef, target, parent) {
   }
 
   /** primary cases that can block the register API from working at init time */
-  if (!agentRef.init.api.allow_registered_children) block(single(() => warn(55)))
+  if (!agentRef.init.api.register.enabled) block(single(() => warn(55)))
   if (!hasValidValue(target.id) || !hasValidValue(target.name)) block(single(() => warn(48, target)))
 
   /** @type {RegisterAPI} */
@@ -123,7 +118,6 @@ function register (agentRef, target, parent) {
     log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     measure: (name, options = {}) => report(measure, [name, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     noticeError: (error, attributes = {}) => report(noticeError, [error, { ...attrs, ...attributes }, agentRef], target),
-    register: (target = {}) => report(register, [agentRef, target], api.metadata.target),
     recordCustomEvent: (eventType, attributes = {}) => report(recordCustomEvent, [eventType, { ...attrs, ...attributes }, agentRef], target),
     setApplicationVersion: (value) => setLocalValue('application.version', value),
     setCustomAttribute: (key, value) => setLocalValue(key, value),
@@ -160,14 +154,17 @@ function register (agentRef, target, parent) {
     // only ever report the timings the first time this is called
     if (timings.reportedAt) return
     timings.reportedAt = now()
+    const timeToFetch = timings.fetchEnd - timings.fetchStart // fetchStart to fetchEnd
+    const timeToExecute = timings.scriptEnd - timings.scriptStart // scriptStart to scriptEnd
     api.recordCustomEvent('MicroFrontEndTiming', {
       assetUrl: timings.asset, // the url of the script that was registered, or undefined if it could not be determined (inline or no match)
       assetType: timings.type, // the type of asset that was associated with the timings, one of 'script', 'link' (if preloaded and found in the resource timing buffer), 'preload' (if preloaded but not found in the resource timing buffer), or "unknown" if it could not be determined
-      timeToLoad: timings.registeredAt - timings.fetchStart, // fetchStart to registeredAt
+      timeAlive: timings.reportedAt - timings.registeredAt, // registeredAt to reportedAt
       timeToBeRequested: timings.fetchStart, // origin to fetchStart
-      timeToFetch: timings.fetchEnd - timings.fetchStart, // fetchStart to fetchEnd
-      timeToRegister: timings.registeredAt - timings.fetchEnd, // fetchEnd to registeredAt
-      timeAlive: timings.reportedAt - timings.registeredAt // registeredAt to reportedAt
+      timeToExecute, // scriptStart to scriptEnd
+      timeToFetch, // fetchStart to fetchEnd
+      timeToLoad: timeToFetch + timeToExecute, // fetch time and script time together
+      timeToRegister: timings.registeredAt // timestamp when register() was called
     })
   }
 
@@ -184,7 +181,7 @@ function register (agentRef, target, parent) {
 
   /**
      * The reporter method that will be used to report the data to the container agent's API method. If invalid, will log a warning and not execute.
-     * If the api.duplicate_registered_data configuration value is set to true, the data will be reported to BOTH the container and the external target
+     * If the api.register.duplicate_data_to_container configuration value is set to true, the data will be reported to BOTH the container and the external target
      * @param {*} methodToCall the container agent's API method to call
      * @param {*} args the arguments to supply to the container agent's API method
      * @param {string} target the target to report the data to. If undefined, will report to the container agent's target.

@@ -2,6 +2,7 @@
  * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+import { globalScope } from '../common/constants/runtime'
 import { isIFrameWindow } from '../common/dom/iframe'
 import { now } from '../common/timing/now'
 import { warn } from '../common/util/console'
@@ -38,15 +39,16 @@ export class RegisteredIframeEntity {
   #registrationPromise = null
   /** @private Original target descriptor (serializable) for postMessage */
   #targetDescriptor = null
+  /** @private Parent window origin for secure postMessage */
+  #parentOrigin = globalScope?.location?.ancestorOrigins?.[0] || new URL(globalScope?.document?.referrer).origin || '*'
 
   /**
    *
    * @param {RegisterAPIConstructor} opts The options for setting up the registered iframe entity.
    */
   constructor (opts) {
-    this.metadata.target = opts
     // Store original descriptor for postMessage (before any function merging)
-    this.#targetDescriptor = opts
+    this.metadata.target = this.#targetDescriptor = opts
 
     if (!isIFrameWindow(window)) {
       warn(70, 'Must be in iframe context to use this interface')
@@ -96,6 +98,18 @@ export class RegisteredIframeEntity {
       // Validate message structure
       if (event.data?.type !== 'newrelic-iframe-api-response') return
 
+      // Validate origin if we have specific allowed origins
+      if (!this.#isAllowedOrigin(event.origin)) {
+        warn(73, `Rejected message from unauthorized origin: ${event.origin}`)
+        return
+      }
+
+      // Validate iframeInterfaceId to prevent spoofing (message must be for this instance)
+      if (event.data.iframeInterfaceId !== this.#iframeInterfaceId) {
+        warn(74, 'Rejected message with mismatched iframeInterfaceId')
+        return
+      }
+
       // Always sync metadata if provided to keep instance up to date
       if (event.data.metadata) Object.assign(this.metadata, event.data.metadata)
       this.#closePending(event.data)
@@ -115,6 +129,16 @@ export class RegisteredIframeEntity {
   }
 
   /**
+   * Checks if an origin matches the parent origin
+   * @private
+   * @param {string} origin - The origin to check
+   * @returns {boolean}
+   */
+  #isAllowedOrigin (origin) {
+    return this.#parentOrigin === '*' || origin === this.#parentOrigin
+  }
+
+  /**
    * Low-level helper to send postMessage to parent window with error handling
    * @private
    * @param {object} message - The message object to send
@@ -128,7 +152,7 @@ export class RegisteredIframeEntity {
         timestamp: now(),
         iframeInterfaceId: this.#iframeInterfaceId,
         ...data
-      }, '*') // TODO: Consider restricting target origin for security
+      }, this.#parentOrigin)
     } catch (err) {
       warn(71, err)
     }

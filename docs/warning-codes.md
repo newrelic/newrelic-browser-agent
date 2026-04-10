@@ -145,3 +145,7 @@
 `RegisteredIframeEntity failed to transmit API data from iframe to window context`
 ### 72
 `RegisteredIframeEntity failed to register with window context`
+### 73
+`RegisteredIframeEntity rejected message from unauthorized origin`
+### 74
+`RegisteredIframeEntity rejected message with mismatched iframeInterfaceId`

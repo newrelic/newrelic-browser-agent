@@ -64,10 +64,9 @@ const registeredIframeEntityHtmlTemplate = () => `<html>
     {init}
     {config}
     <script>
-      NREUM.init.api.allow_registered_children = true; // allow this parent page to accept registered entities (iframes) to report through it. This is required for the registered iframe entity tests, but not a default setting for security reasons, so we set it on a per test basis here.
+      NREUM.init.api.register.enabled = true; // allow this parent page to accept registered entities (iframes) to report through it. This is required for the registered iframe entity tests, but not a default setting for security reasons, so we set it on a per test basis here.
     </script>
     {loader}
-    <script src="browser-agent.js"></script>
   </head>
   <body>
     <h1>Parent Page - Main Agent Running</h1>
@@ -81,16 +80,6 @@ const iframeContentTemplate = (script) => `<html>
   </head>
   <body>
     <h1>Iframe Content - RegisteredEntity Interface</h1>
-    <script>
-      // Example usage of RegisteredEntity in iframe
-      if (window.RegisteredIframeEntity) {
-        window.entity = new window.RegisteredIframeEntity({
-          id: 'iframe-test',
-          name: 'iframe test'
-        })
-        console.log('RegisteredEntity created in iframe:', entity)
-      }
-    </script>
   </body>
 </html>`
 
@@ -202,13 +191,13 @@ const config = [
       }),
       new HtmlWebpackPlugin({
         filename: 'registered-iframe-entity.html',
-        minify: false,
+        minify: true,
         inject: false,
         templateContent: registeredIframeEntityHtmlTemplate()
       }),
       new HtmlWebpackPlugin({
         filename: 'registered-iframe-entity-iframe.html',
-        minify: false,
+        minify: true,
         inject: false,
         templateContent: iframeContentTemplate('registered-iframe-entity')
       }),

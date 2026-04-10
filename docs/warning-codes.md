@@ -139,3 +139,9 @@
 `API has been deregistered and can no longer be used. Call "register" API again with credentials to start over.`
 ### 69
 `More than one Browser agent is running on the page`
+### 70
+`RegisteredIframeEntity interface failed to initialize`
+### 71
+`RegisteredIframeEntity failed to transmit API data from iframe to window context`
+### 72
+`RegisteredIframeEntity failed to register with window context`

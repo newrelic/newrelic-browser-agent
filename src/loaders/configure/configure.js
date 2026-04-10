@@ -12,6 +12,7 @@ import { redefinePublicPath } from './public-path'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 import { mergeLoaderConfig } from '../../common/config/loader-config'
+import { getRegisteredEntityByIframeInterfaceId } from '../../common/v2/utils'
 
 /**
  * Sets or re-sets the agent's configuration values from global settings. This also attach those as properties to the agent instance.
@@ -96,10 +97,23 @@ function setupIframeMessageListener (agent) {
   if (typeof window === 'undefined' || !window.addEventListener) return
 
   window.addEventListener('message', async (event) => {
-    // Validate message structure
+    // Handle async timing property updates from iframes
+    if (event.data?.type === 'newrelic-iframe-timing-update') {
+      const { iframeInterfaceId, property, value } = event.data
+      if (!iframeInterfaceId || !property) return
+
+      // Find the specific registered entity by iframe interface ID
+      const entity = getRegisteredEntityByIframeInterfaceId(iframeInterfaceId, agent)
+      if (entity?.metadata?.timings) {
+        entity.metadata.timings[property] = value
+      }
+      return
+    }
+
+    // Validate message structure for API calls
     if (event.data?.type !== 'newrelic-iframe-api') return
 
-    const { messageId, target, method, args } = event.data
+    const { messageId, target, method, args, iframeInterfaceId } = event.data
     const source = event.source
 
     if (!source || !messageId || !method) return
@@ -126,16 +140,13 @@ function setupIframeMessageListener (agent) {
         }
 
         registeredEntity = agent.register(freshTarget)
+        registeredEntity.metadata.target.iframeInterfaceId = iframeInterfaceId // track the iframe interface instance that created this entity for future reference (e.g. timing updates)
       } else {
-        // For all other methods, find the existing registered entity by matching the target
-        registeredEntity = agent.runtime.registeredEntities?.find(
-          entity => entity.metadata.target === target ||
-                    (target.id && entity.metadata.target.id === target.id) ||
-                    (target.name && entity.metadata.target.name === target.name)
-        )
+        // For all other methods, find the existing registered entity by iframe interface ID
+        registeredEntity = getRegisteredEntityByIframeInterfaceId(iframeInterfaceId, agent)
 
         if (!registeredEntity) {
-          throw new Error(`No registered entity found for target: ${JSON.stringify(target)}`)
+          throw new Error(`No registered entity found for iframeInterfaceId: ${iframeInterfaceId}`)
         }
 
         // Execute the method on the registered entity API

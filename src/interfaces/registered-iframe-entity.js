@@ -5,6 +5,7 @@
 import { isIFrameWindow } from '../common/dom/iframe'
 import { now } from '../common/timing/now'
 import { warn } from '../common/util/console'
+import { findScriptTimings } from '../common/v2/script-tracker'
 
 /**
  * @typedef {import('../loaders/api/register-api-types').RegisterAPI} RegisterAPI
@@ -29,6 +30,8 @@ export class RegisteredIframeEntity {
 
   /** @private Map to store pending promise resolvers keyed by message ID */
   #pendingMessages = new Map()
+  /** @private Unique ID for this iframe interface instance to correlate messages */
+  #iframeInterfaceId = Math.random()
   /** @private Counter for generating unique message IDs */
   #messageIdCounter = 0
   /** @private Promise that resolves when registration with parent completes */
@@ -51,42 +54,52 @@ export class RegisteredIframeEntity {
       return
     }
 
-    window.addEventListener('message', (event) => {
-      // Validate message structure
-      if (event.data?.type !== 'newrelic-iframe-api-response') return
-
-      const { messageId, result, error, metadata } = event.data
-
-      // Always sync metadata if provided to keep instance up to date
-      if (metadata) {
-        Object.assign(this.metadata, metadata)
-      }
-
-      const pending = this.#pendingMessages.get(messageId)
-      if (pending) {
-        if (error) {
-          pending.reject(new Error(error))
-        } else {
-          pending.resolve(result)
-        }
-        this.#pendingMessages.delete(messageId)
-      }
-    })
-
     // Store the registration promise so other methods can wait for it
-    this.#registrationPromise = this.register(opts)
+    this.#registrationPromise = this.#postMethodToAgent('register', [opts])
       .then(response => {
         // Merge updated metadata from parent (includes full target info with server-generated IDs)
         if (response?.metadata) {
           Object.assign(this.metadata, response.metadata)
         }
+
+        const timings = findScriptTimings()
+
+        // Send initial timing values
+        for (const [key, value] of Object.entries(timings)) {
+          if (key !== 'correlation') {
+            this.#postTimingToAgent(key, value)
+          }
+        }
+
+        // Proxy the timings object to watch for updates to fetchStart, fetchEnd, asset, type
+        this.metadata.timings = new Proxy(timings, {
+          set: (target, key, value) => {
+            const changed = target[key] !== value
+            target[key] = value
+
+            // Send updates for these 4 properties when they change
+            if (changed && this.metadata.target.id && key !== 'correlation') {
+              this.#postTimingToAgent(key, value)
+            }
+            return true
+          }
+        })
+
         return response
       })
       .catch(err => {
-        warn(72, `Failed to register with parent agent: ${err}`)
+        warn(72, err)
         this.blocked = true
-        throw err
       })
+
+    window.addEventListener('message', (event) => {
+      // Validate message structure
+      if (event.data?.type !== 'newrelic-iframe-api-response') return
+
+      // Always sync metadata if provided to keep instance up to date
+      if (event.data.metadata) Object.assign(this.metadata, event.data.metadata)
+      this.#closePending(event.data)
+    })
 
     // Explicitly bind API methods as own properties for better console visibility
     this.addPageAction = this.addPageAction.bind(this)
@@ -102,6 +115,41 @@ export class RegisteredIframeEntity {
   }
 
   /**
+   * Low-level helper to send postMessage to parent window with error handling
+   * @private
+   * @param {object} message - The message object to send
+   */
+  #postMessageToParent (type, data, resolvers) {
+    try {
+      this.#openPending(data.messageId, resolvers)
+      window.parent.postMessage({
+        type,
+        target: this.#targetDescriptor,
+        timestamp: now(),
+        iframeInterfaceId: this.#iframeInterfaceId,
+        ...data
+      }, '*') // TODO: Consider restricting target origin for security
+    } catch (err) {
+      warn(71, err)
+    }
+  }
+
+  /**
+   * Sends a timing property update message to the parent window
+   * @private
+   * @param {string} property - The property name that changed
+   * @param {*} value - The new value
+   */
+  #postTimingToAgent (property, value) {
+    if (this.blocked) return
+
+    this.#postMessageToParent('newrelic-iframe-timing-update', {
+      property,
+      value
+    })
+  }
+
+  /**
    * Sends a message to the parent window's agent using postMessage API
    * @private
    * @param {string} method The API method name to invoke
@@ -109,7 +157,7 @@ export class RegisteredIframeEntity {
    * @param {boolean} [skipRegistrationWait=false] Skip waiting for registration (only for register itself)
    * @returns {Promise<any>} Promise that resolves with the response from the agent
    */
-  #postToAgent (method, args) {
+  #postMethodToAgent (method, args) {
     if (this.blocked) {
       return Promise.reject(new Error('Iframe interface is blocked'))
     }
@@ -120,32 +168,34 @@ export class RegisteredIframeEntity {
     return waitPromise.then(() => new Promise((resolve, reject) => {
       try {
         const messageId = ++this.#messageIdCounter
-        this.#pendingMessages.set(messageId, { resolve, reject })
-
-        // Use original target descriptor (serializable) for postMessage
-        const target = this.#targetDescriptor
-
-        window.parent.postMessage({
-          type: 'newrelic-iframe-api',
+        this.#postMessageToParent('newrelic-iframe-api', {
           messageId,
-          target,
           method,
-          args,
-          timestamp: now()
-        }, '*') // TODO: Consider restricting target origin for security
-
-        // Timeout after 5 seconds
-        setTimeout(() => {
-          if (this.#pendingMessages.has(messageId)) {
-            this.#pendingMessages.delete(messageId)
-            reject(new Error(`Timeout waiting for response to ${method}`))
-          }
-        }, 5000)
+          args
+        }, {
+          resolve,
+          reject
+        })
       } catch (err) {
-        warn(71, `Failed to post message to parent: ${err}`)
         reject(err)
       }
     }))
+  }
+
+  #openPending (messageId, resolvers) {
+    if (!messageId || !resolvers) return
+    this.#pendingMessages.set(messageId, resolvers)
+    // Timeout after 5 seconds
+    setTimeout(() => this.#closePending({ messageId, error: 'Timed out' }), 5000)
+  }
+
+  #closePending ({ messageId, result, error } = {}) {
+    const pending = this.#pendingMessages.get(messageId)
+    if (pending) {
+      if (error) pending.reject(new Error(error))
+      else pending.resolve(result)
+      this.#pendingMessages.delete(messageId)
+    }
   }
 
   /**
@@ -155,7 +205,7 @@ export class RegisteredIframeEntity {
    * @param {object} [attributes] JSON object with one or more key/value pairs. For example: {key:"value"}. The key is reported as its own PageAction attribute with the specified values.
    */
   addPageAction (name, attributes) {
-    this.#postToAgent('addPageAction', [name, attributes])
+    this.#postMethodToAgent('addPageAction', [name, attributes])
   }
 
   /**
@@ -168,7 +218,7 @@ export class RegisteredIframeEntity {
     @returns {Promise<import('../loaders/api/register-api-types').RegisterAPI>} Returns a promise that resolves with an object that contains the available API methods and configurations to use with the external caller. See loaders/api/api.js for more information.
    */
   register (target) {
-    return this.#postToAgent('register', [target])
+    return this.#postMethodToAgent('register', [target])
   }
 
   /**
@@ -180,7 +230,7 @@ export class RegisteredIframeEntity {
    * @returns {Promise<void>}
    */
   deregister () {
-    return this.#postToAgent('deregister', [])
+    return this.#postMethodToAgent('deregister', [])
   }
 
   /**
@@ -190,7 +240,7 @@ export class RegisteredIframeEntity {
      * @param {Object} [attributes] JSON object with one or more key/value pairs. For example: {key:"value"}.
      */
   recordCustomEvent (eventType, attributes) {
-    this.#postToAgent('recordCustomEvent', [eventType, attributes])
+    this.#postMethodToAgent('recordCustomEvent', [eventType, attributes])
   }
 
   /**
@@ -201,7 +251,7 @@ export class RegisteredIframeEntity {
    * @returns {Promise<{start: number, end: number, duration: number, customAttributes: object}>} Measurement details
    */
   measure (name, options) {
-    return this.#postToAgent('measure', [name, options])
+    return this.#postMethodToAgent('measure', [name, options])
   }
 
   /**
@@ -212,7 +262,7 @@ export class RegisteredIframeEntity {
    * @param {boolean} [persist] Default false. If set to true, the name-value pair will also be set into the browser's storage API. Then on the following instrumented pages that load within the same session, the pair will be re-applied as a custom attribute.
    */
   setCustomAttribute (name, value, persist) {
-    this.#postToAgent('setCustomAttribute', [name, value, persist])
+    this.#postMethodToAgent('setCustomAttribute', [name, value, persist])
   }
 
   /**
@@ -222,7 +272,7 @@ export class RegisteredIframeEntity {
    * @param {object} [customAttributes] An object containing name/value pairs representing custom attributes.
    */
   noticeError (error, customAttributes) {
-    this.#postToAgent('noticeError', [error, customAttributes])
+    this.#postMethodToAgent('noticeError', [error, customAttributes])
   }
 
   /**
@@ -232,7 +282,7 @@ export class RegisteredIframeEntity {
    * @param {boolean} [resetSession=false] Optional param. Should not be used from a registered entity context. To reset a session when updating user id, must be initiated by the main agent.
    */
   setUserId (value, resetSession = false) {
-    this.#postToAgent('setUserId', [value, resetSession])
+    this.#postMethodToAgent('setUserId', [value, resetSession])
   }
 
   /**
@@ -244,7 +294,7 @@ export class RegisteredIframeEntity {
    * have to be unique. Passing a null value unsets any existing value.
    */
   setApplicationVersion (value) {
-    this.#postToAgent('setApplicationVersion', [value])
+    this.#postMethodToAgent('setApplicationVersion', [value])
   }
 
   /**
@@ -254,6 +304,6 @@ export class RegisteredIframeEntity {
    * @param {{customAttributes?: object, level?: 'ERROR'|'TRACE'|'DEBUG'|'INFO'|'WARN'}} [options] customAttributes defaults to `{}` if not assigned, level defaults to `info` if not assigned.
   */
   log (message, options) {
-    this.#postToAgent('log', [message, options])
+    this.#postMethodToAgent('log', [message, options])
   }
 }

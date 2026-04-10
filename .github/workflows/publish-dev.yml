@@ -32,7 +32,7 @@ jobs:
   # Build and publish the latest code from the main branch
   publish-dev-to-s3:
     if: always() && !cancelled() && !contains(needs.*.result, 'failure')
-    needs: [check-jest-tests]
+    needs: [jest-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:

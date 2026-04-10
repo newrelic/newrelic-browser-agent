@@ -187,6 +187,89 @@ test('initialization - should still use L2 timings when responseStart is 0', asy
   resetAgent(testAgent)
 })
 
+test('initialization - should still store in relative timestamps when called with L1/absolute timings', async () => {
+  const testAgent = setupAgent()
+
+  // Save original values
+  const originalPerformanceNavigationTiming = global.PerformanceNavigationTiming
+  const originalPerformanceTiming = performance.timing
+
+  // Simulate legacy browser without PerformanceNavigationTiming
+  delete global.PerformanceNavigationTiming
+
+  // Mock performance.timing with absolute timestamps (legacy API)
+  const mockAbsoluteTiming = {
+    navigationStart: 1234567890000,
+    domContentLoadedEventEnd: 1234567890250,
+    loadEventEnd: 1234567890300
+  }
+  Object.defineProperty(performance, 'timing', {
+    value: mockAbsoluteTiming,
+    writable: true,
+    configurable: true
+  })
+
+  const sessionTraceInstrument = new SessionTrace(testAgent)
+  await new Promise(process.nextTick)
+  const testAggregate = sessionTraceInstrument.featAggregate
+
+  // Mock timeKeeper to have deterministic timestamp conversion
+  testAggregate.agentRef.runtime.timeKeeper = {
+    ready: true,
+    correctAbsoluteTimestamp: (val) => val, // No correction
+    convertAbsoluteTimestamp: (val) => val - 1234567890000 // Convert to relative by subtracting navigationStart
+  }
+
+  // Mock drain to prevent buffer clearing
+  const drainSpy = jest.spyOn(testAggregate, 'drain').mockImplementation(() => {})
+  const storeTimingSpy = jest.spyOn(testAggregate.traceStorage, 'storeTiming')
+
+  // Act - triggers initialization, should use legacy path with absolute timestamps
+  testAggregate.ee.emit('rumresp', [{ st: 1, sts: MODE.FULL }])
+  await new Promise((resolve) => setTimeout(resolve, 100))
+
+  // Assertions
+  // - Should be called with performance.timing and isAbsoluteTimestamp=true
+  expect(storeTimingSpy).toHaveBeenCalledWith(mockAbsoluteTiming, true)
+
+  // - Verify that timing nodes were stored with timestamps converted from absolute to relative
+  const bufferedEvents = testAggregate.events.get()
+
+  expect(bufferedEvents).toContainEqual(expect.objectContaining({
+    n: 'navigationStart',
+    s: 0, // 1234567890000 - 1234567890000 = 0
+    e: 0,
+    o: 'document',
+    t: 'timing'
+  }))
+
+  expect(bufferedEvents).toContainEqual(expect.objectContaining({
+    n: 'domContentLoadedEventEnd',
+    s: 250, // 1234567890250 - 1234567890000 = 250
+    e: 250,
+    o: 'document',
+    t: 'timing'
+  }))
+
+  expect(bufferedEvents).toContainEqual(expect.objectContaining({
+    n: 'loadEventEnd',
+    s: 300, // 1234567890300 - 1234567890000 = 300
+    e: 300,
+    o: 'document',
+    t: 'timing'
+  }))
+
+  // Cleanup
+  drainSpy.mockRestore()
+  Object.defineProperty(performance, 'timing', {
+    value: originalPerformanceTiming,
+    writable: true,
+    configurable: true
+  })
+  global.PerformanceNavigationTiming = originalPerformanceNavigationTiming
+  resetAgent(testAgent)
+})
+
 test('tracks previously stored events and processes them once per occurrence', done => {
   document.addEventListener('visibilitychange', () => 1)
   document.addEventListener('visibilitychange', () => 2)

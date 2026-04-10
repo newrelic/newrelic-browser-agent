@@ -41,6 +41,7 @@ export class Aggregate extends AggregateBase {
     this.entitled ??= stEntitled
     if (!this.entitled) this.blocked = true
     if (this.blocked) return this.deregisterDrain()
+    this.timeKeeper ??= this.agentRef.runtime.timeKeeper
 
     if (!this.initialized) {
       this.initialized = true
@@ -77,8 +78,6 @@ export class Aggregate extends AggregateBase {
     /** If the mode is off, we do not want to hold up draining for other features, so we deregister the feature for now.
      * If it drains later (due to a mode change), data and handlers will instantly drain instead of waiting for the registry. */
     if (this.mode === MODE.OFF) return this.deregisterDrain()
-
-    this.timeKeeper ??= this.agentRef.runtime.timeKeeper
 
     /** The handlers set up by the Inst file */
     registerHandler('bst', (...args) => this.traceStorage.storeEvent(...args), this.featureName, this.ee)

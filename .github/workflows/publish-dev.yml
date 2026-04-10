@@ -49,6 +49,7 @@ jobs:
 
   # Build and publish the latest code from the main branch
   publish-dev-to-s3:
+    if: needs.check-jest-tests.result == 'success'
     needs: [check-jest-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -238,6 +239,7 @@ jobs:
 
   # Rebuild and publish the dev environment A/B script
   publish-dev-ab:
+    if: needs.publish-dev-to-s3.result == 'success'
     needs: [publish-dev-to-s3]
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -267,6 +269,7 @@ jobs:
 
   # Rebuild and publish the staging environment A/B script
   publish-staging-ab:
+    if: needs.publish-dev-to-s3.result == 'success'
     needs: [publish-dev-to-s3]
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -296,6 +299,7 @@ jobs:
 
   # Create change tracking events for staging environment
   create-staging-change-tracking:
+    if: needs.publish-dev-to-s3.result == 'success'
     environment: staging
     needs: [publish-dev-to-s3]
     continue-on-error: true

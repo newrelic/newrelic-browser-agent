@@ -191,13 +191,13 @@ const config = [
       }),
       new HtmlWebpackPlugin({
         filename: 'registered-iframe-entity.html',
-        minify: true,
+        minify: false,
         inject: false,
         templateContent: registeredIframeEntityHtmlTemplate()
       }),
       new HtmlWebpackPlugin({
         filename: 'registered-iframe-entity-iframe.html',
-        minify: true,
+        minify: false,
         inject: false,
         templateContent: iframeContentTemplate('registered-iframe-entity')
       }),

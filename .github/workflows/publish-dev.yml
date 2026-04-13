@@ -7,6 +7,11 @@ name: Publish Dev
 
 on:
   workflow_call:
+    inputs:
+      skip_publish_notification:
+        description: 'Skip sending published agent Slack notification'
+        type: boolean
+        default: false
   workflow_dispatch:
   push:
     branches:
@@ -88,7 +93,7 @@ jobs:
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
         # This step creates a new Change Tracking Marker
       - name: New Relic Application Deployment Marker
-        continue-on-error: true    
+        continue-on-error: true
         uses: newrelic/deployment-marker-action@v2.3.0
         with:
           apiKey: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -97,7 +102,7 @@ jobs:
           version: "${{ github.ref_name }}"
           user: "${{ github.actor }}"
       - name: Get local stats
-        continue-on-error: true    
+        continue-on-error: true
         id: get-stats
         shell: bash
         run: |
@@ -105,7 +110,7 @@ jobs:
           full=$(cat ./build/nr-full-standard.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;
           spa=$(cat ./build/nr-spa-standard.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
       - name: Report lite size to NR
-        continue-on-error: true    
+        continue-on-error: true
         uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -127,7 +132,7 @@ jobs:
           trigger: 'publish-dev'
           traverse: true
       - name: Report spa size to NR
-        continue-on-error: true    
+        continue-on-error: true
         uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -177,8 +182,10 @@ jobs:
       - name: Build Agent2Query assets
         uses: ./.github/actions/build-agent2query
         with:
-          released_license_key: ${{ secrets.A2Q_RELEASED_LICENSE_KEY }}
-          latest_license_key: ${{ secrets.A2Q_LATEST_LICENSE_KEY }}
+          latest_staging_license_key: ${{ secrets.A2Q_LATEST_STAGING_LICENSE_KEY }}
+          latest_us_prod_license_key: ${{ secrets.A2Q_LATEST_US_PROD_LICENSE_KEY }}
+          released_staging_license_key: ${{ secrets.A2Q_RELEASED_STAGING_LICENSE_KEY }}
+          released_us_prod_license_key: ${{ secrets.A2Q_RELEASED_US_PROD_LICENSE_KEY }}
       - name: Upload Agent2Query assets to S3
         id: s3-upload-agent2query
         uses: ./.github/actions/s3-upload
@@ -219,6 +226,7 @@ jobs:
 
   # Rebuild and publish the dev environment A/B script
   publish-dev-ab:
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     needs: [publish-dev-to-s3]
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -248,6 +256,7 @@ jobs:
 
   # Rebuild and publish the staging environment A/B script
   publish-staging-ab:
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     needs: [publish-dev-to-s3]
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -277,7 +286,10 @@ jobs:
 
   # Create change tracking events for staging environment
   create-staging-change-tracking:
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
+    environment: staging
     needs: [publish-dev-to-s3]
+    continue-on-error: true
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     defaults:
@@ -320,6 +332,8 @@ jobs:
           type: 'Basic'
           description: 'Staging deployment when PR merged to main'
           shortDescription: 'Staging: main branch deployment'
+          changelog: 'This deployment updates the second agent (pointed at Browser 550352) on New Relic pages to use the latest build from the main branch. This is a release-candidate build synchronized with the HEAD of main, ahead of the officially released agent used in New Relic One production accounts.'
+          deepLink: 'https://github.com/${{ github.repository }}/tree/main'
           commit: ${{ github.sha }}
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
@@ -337,6 +351,7 @@ jobs:
           featureFlagId: 'hardcoded feature flag'
           description: 'Feature flag configuration updated in released.js'
           shortDescription: 'Staging: Feature flags updated (released.js)'
+          deepLink: 'https://github.com/${{ github.repository }}/tree/main'
           commit: ${{ github.sha }}
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
@@ -354,8 +369,40 @@ jobs:
           featureFlagId: 'latest.js feature flag'
           description: 'Feature flag configuration updated in latest.js'
           shortDescription: 'Staging: Feature flags updated (latest.js)'
+          deepLink: 'https://github.com/${{ github.repository }}/tree/main'
           commit: ${{ github.sha }}
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
 
+  # Notify about new staging deploy in Slack
+  send-slack-notifications:
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure') && !inputs.skip_publish_notification
+    needs: [publish-staging-ab]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - name: Get PR Description
+        id: get-pr-description
+        run: |
+          PR_NUMBER=$(git log -1 --pretty=%B | grep -oP '(?<=#)\d+' | head -1)
 
+          if [ -n "$PR_NUMBER" ]; then
+            PR_TITLE=$(gh pr view $PR_NUMBER --json title --jq '.title')
+            echo "text=PR #$PR_NUMBER: $PR_TITLE" >> $GITHUB_OUTPUT
+          else
+            echo "text=Manual deployment from main" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Send Slack notifications
+        uses: ./.github/actions/slack-notification
+        with:
+          notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
+          dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
+          message: ":tada: Published browser agent <https://github.com/newrelic/newrelic-browser-agent/commits/main/|main> latest in staging. ${{ steps.get-pr-description.outputs.text }}. Sent from this <https://github.com/newrelic/newrelic-browser-agent/actions/workflows/publish-dev.yml|workflow>."

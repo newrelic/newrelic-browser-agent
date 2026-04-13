@@ -12,6 +12,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { parseGQL } from './gql'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { gosNREUMOriginals } from '../../../common/window/nreum'
+import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -30,8 +31,8 @@ export class Aggregate extends AggregateBase {
 
     registerHandler('returnAjax', event => this.events.add(event), this.featureName, this.ee)
 
-    registerHandler('xhr', function () { // the EE-drain system not only switches "this" but also passes a new EventContext with info. Should consider platform refactor to another system which passes a mutable context around separately and predictably to avoid problems like this.
-      classThis.storeXhr(...arguments, this) // this switches the context back to the class instance while passing the NR context as an argument -- see "ctx" in storeXhr
+    registerHandler('xhr', function (params, metrics, startTime, endTime, type, target) { // the EE-drain system not only switches "this" but also passes a new EventContext with info. Should consider platform refactor to another system which passes a mutable context around separately and predictably to avoid problems like this.
+      classThis.storeXhr(params, metrics, startTime, endTime, type, target, this) // this switches the context back to the class instance while passing the NR context as an argument -- see "ctx" in storeXhr
     }, this.featureName, this.ee)
 
     this.ee.on('long-task', (task, originator) => {
@@ -44,7 +45,7 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(([])).then(() => this.drain())
   }
 
-  storeXhr (params, metrics, startTime, endTime, type, ctx) {
+  storeXhr (params, metrics, startTime, endTime, type, target, ctx) {
     metrics.time = startTime
 
     // send to session traces
@@ -108,11 +109,21 @@ export class Aggregate extends AggregateBase {
     })
     if (event.gql) this.reportSupportabilityMetric('Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length)
 
+    /** make a copy of the event for the MFE target if it exists */
+    if (target) {
+      this.events.add({ ...event, targetAttributes: getVersion2Attributes(target, this) })
+      if (shouldDuplicate(target, this)) this.reportContainerEvent({ ...event, targetAttributes: getVersion2DuplicationAttributes(target, this) }, ctx)
+    } else {
+      this.reportContainerEvent(event, ctx)
+    }
+  }
+
+  reportContainerEvent (evt, ctx) {
     const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
     if (softNavInUse) { // when SN is running, pass the event w/ info to it for evaluation -- either part of an interaction or is given back
-      handle('ajax', [event, ctx], undefined, FEATURE_NAMES.softNav, this.ee)
+      handle('ajax', [evt, ctx], undefined, FEATURE_NAMES.softNav, this.ee)
     } else {
-      this.events.add(event)
+      this.events.add(evt)
     }
   }
 
@@ -154,7 +165,12 @@ export class Aggregate extends AggregateBase {
 
       // add custom attributes
       // gql decorators are added as custom attributes to alleviate need for new BEL schema
-      const attrParts = addCustomAttributes({ ...(jsAttributes || {}), ...(event.gql || {}) }, addString)
+      const attrParts = addCustomAttributes({
+        ...(jsAttributes || {}),
+        ...(event.gql || {}),
+        ...(event.targetAttributes || {}) // used to supply the version 2 attributes, either MFE target or duplication attributes for the main agent app
+      }, addString)
+
       fields.unshift(numeric(attrParts.length))
 
       insert += fields.join(',')

@@ -28,5 +28,6 @@ if [ -n "$STAGED_SRC_FILES" ]; then
 fi
 
 npm run lint
+
 npm run test -- --onlyChanged
 npm run test:types

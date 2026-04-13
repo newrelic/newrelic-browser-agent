@@ -1,0 +1,28 @@
+# This composite action is used to post notifications to Slack channels.
+
+name: 'Slack Notification'
+
+inputs:
+  notifications_channel_url:
+    description: 'Slack API URL for the notifications channel'
+    required: false
+  dem_platform_ops_channel_url:
+    description: 'Slack API URL for the dem platform ops release channel'
+    required: false
+  message:
+    description: 'The message to post to Slack channels'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
+    - name: Send Slack notification
+      run: |
+        node $GITHUB_ACTION_PATH/index.js \
+          --notifications-channel-url "${{ inputs.notifications_channel_url }}" \
+          --dem-platform-ops-channel-url "${{ inputs.dem_platform_ops_channel_url }}" \
+          --message "${{ inputs.message }}"
+      shell: bash

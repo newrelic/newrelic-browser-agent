@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getRegisteredTargetsFromId } from '../util/v2'
+import { getRegisteredTargetsFromId } from '../v2/utils'
 
 /**
  * Generates a CSS selector path for the given element, if possible.

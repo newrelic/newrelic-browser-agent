@@ -25,9 +25,9 @@ import { gosCDN } from '../../src/common/window/nreum'
 import { now } from '../../src/common/timing/now'
 
 // Mock script-tracker to avoid PerformanceObserver requirement
-jest.mock('../../src/common/util/script-tracker', () => {
+jest.mock('../../src/common/v2/script-tracker', () => {
   return {
-    findScriptTimings: jest.fn(() => ({ registeredAt: performance.now(), reportedAt: undefined, fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown' }))
+    findScriptTimings: jest.fn(() => ({ registeredAt: performance.now(), reportedAt: undefined, fetchStart: 0, fetchEnd: 0, scriptStart: 0, scriptEnd: 0, asset: undefined, type: 'unknown' }))
   }
 })
 
@@ -630,7 +630,7 @@ describe('API tests', () => {
       })
 
       beforeEach(async () => {
-        agent.init.api.allow_registered_children = true
+        agent.init.api.register.enabled = true
         id = faker.string.uuid()
         name = faker.string.uuid()
       })
@@ -665,7 +665,7 @@ describe('API tests', () => {
       })
 
       test('should warn and not work if disabled', () => {
-        agent.init.api.allow_registered_children = false
+        agent.init.api.register.enabled = false
         let myApi = agent.register({ id, name })
         expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#54'))).toEqual(true)
         myApi.addPageAction()
@@ -1059,8 +1059,8 @@ describe('API tests', () => {
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'])
 
-          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), 'myObservedLogger'])
-          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined])
+          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), 'myObservedLogger', []])
+          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined, []])
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/logging/info/called'])
           expectHandled('log', [expect.any(Number), 'test1', {}, 'INFO', false, undefined])
@@ -1087,8 +1087,8 @@ describe('API tests', () => {
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'])
 
-          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName])
-          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined])
+          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName, []])
+          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined, []])
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/logging/warn/called'])
           expectHandled('log', [expect.any(Number), 'test1', {}, 'warn', false, undefined])
@@ -1108,8 +1108,8 @@ describe('API tests', () => {
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'])
 
-          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName])
-          expectEmitted('wrap-logger-end', [['test1', { test2: 2 }, ['test3'], true, 1], expect.any(Object), undefined])
+          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName, []])
+          expectEmitted('wrap-logger-end', [['test1', { test2: 2 }, ['test3'], true, 1], expect.any(Object), undefined, []])
         })
 
         test('wrapped function should still behave as intended', () => {

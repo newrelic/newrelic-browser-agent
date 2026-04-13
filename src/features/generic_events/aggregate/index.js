@@ -14,7 +14,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
-import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/util/v2'
+import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -261,6 +261,25 @@ export class Aggregate extends AggregateBase {
           this.reportSupportabilityMetric('WebSocket/Completed/Bytes', stringify(event).length)
 
           this.addEvent(event)
+        }, this.featureName, this.ee)
+      }
+      if (!agentRef.init.feature_flags.includes('no_spv')) {
+        registerHandler('spv', (evt) => {
+          this.addEvent({
+            eventType: 'SecurityPolicyViolation',
+            timestamp: this.#toEpoch(evt.timeStamp),
+            blockedUri: evt.blockedURI,
+            documentUri: evt.documentURI,
+            effectiveDirective: evt.effectiveDirective,
+            originalPolicy: evt.originalPolicy,
+            sourceFile: evt.sourceFile,
+            statusCode: evt.statusCode,
+            lineNumber: evt.lineNumber,
+            columnNumber: evt.columnNumber,
+            disposition: evt.disposition,
+            sample: evt.sample,
+            referrer: evt.referrer
+          })
         }, this.featureName, this.ee)
       }
 

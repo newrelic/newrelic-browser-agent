@@ -5,6 +5,121 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "a20856668b26fc3b2763112a8c78a8eb2cd3a25c",
+          "message": ".at causes issues in older browsers",
+          "issues": [
+            "1737"
+          ]
+        }
+      ],
+      "version": "1.312.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "1b26d1d4-5264-4d5f-a889-7f907b1bbeaa",
+      "createTime": "2026-04-02T23:33:57.759Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "8433d470192bdac69bcdbf5476496f733a8e96bf",
+          "message": "Session replays not working for Angular app running on Safari",
+          "issues": [
+            "1733"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "a82d9761e64d4b8b014c9c686756be052b5461b1",
+          "message": "Revert circular replacer",
+          "issues": [
+            "1732"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "c7558a04cd984640c5bbb9451d83b9eddc24cc78",
+          "message": "Automatically Detect MFE Logs",
+          "issues": [
+            "1721"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "ed8e90cb4e0c6a0749d615a91bec27b799475543",
+          "message": "Automatically Detect MFE AJAX",
+          "issues": [
+            "1722"
+          ]
+        }
+      ],
+      "version": "1.312.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "ed4c3af1-c6b5-4944-8434-da249314d8ee",
+      "createTime": "2026-03-30T21:16:27.664Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "d9f6711e4f1073b1e7713fe7966721fd6b31b864",
+          "message": "agentIdentifier removal",
+          "issues": [
+            "1712"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "847b6a72650a113fdf2f074a6a057ac601aafb02",
+          "message": "Attribute original page URL to all PageViewTiming nodes",
+          "issues": [
+            "1716"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "38fae0758645c5f0cd26f7067be973f7ee807819",
+          "message": "Enforce string IDs for new MFE registrations",
+          "issues": [
+            "1725"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "9a3ef06652a36a05b950f9154969a767fa3b731e",
+          "message": "improve MFE timing logic",
+          "issues": [
+            "1714"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "76024d0f3465db42ddaa297d0f87a9e21f2f9b03",
+          "message": "Circular replacer removed reused objects from harvests",
+          "issues": [
+            "1718"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "1a2408f15c8ae96396cf3597058a5d18fa5cb4fd",
+          "message": "Update RegExp to prevent un-minimized webpack build issue",
+          "issues": [
+            "1711"
+          ]
+        }
+      ],
+      "version": "1.311.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "671cd66a-480c-43ad-9874-517d2f9f3ec1",
+      "createTime": "2026-03-20T18:31:05.662Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "a21277667d7ff05642c9a01ea77a492ecb8c0522",
           "message": "Enhance LCP entry with fallback attribution values",
           "issues": [
@@ -3732,5 +3847,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-02-19T14:30:11.075Z"
+  "updateTime": "2026-04-02T23:33:57.759Z"
 }

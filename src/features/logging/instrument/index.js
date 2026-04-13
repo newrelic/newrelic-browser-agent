@@ -27,13 +27,15 @@ export class Instrument extends InstrumentBase {
 
     globals.forEach((method) => {
       isNative(globalScope.console[method])
-      wrapLogger(instanceEE, globalScope.console, method, { level: method === 'log' ? 'info' : method })
+      wrapLogger(instanceEE, globalScope.console, method, { level: method === 'log' ? 'info' : method }, undefined, agentRef)
     })
 
     /** emitted by wrap-logger function */
-    this.ee.on('wrap-logger-end', function handleLog ([message]) {
+    this.ee.on('wrap-logger-end', function handleLog ([message], _, __, targets = []) {
       const { level, customAttributes, autoCaptured } = this
-      bufferLog(instanceEE, message, customAttributes, level, autoCaptured)
+      targets.forEach(target => {
+        bufferLog(instanceEE, message, customAttributes, level, autoCaptured, target)
+      })
     })
     this.importAggregator(agentRef, () => import(/* webpackChunkName: "logging-aggregate" */ '../aggregate'))
   }

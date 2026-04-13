@@ -21,7 +21,7 @@ import { eventOrigin } from '../../../common/util/event-origin'
 import { loadTime } from '../../../common/vitals/load-time'
 import { webdriverDetected } from '../../../common/util/webdriver-detection'
 import { analyzeElemPath } from '../../../common/dom/selector-path'
-import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/util/v2'
+import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
 import { cleanURL } from '../../../common/url/clean-url'
 
 export class Aggregate extends AggregateBase {

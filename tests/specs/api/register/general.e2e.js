@@ -13,7 +13,7 @@ describe('Register API - General Behaviors', () => {
     await browser.destroyAgentSession()
   })
 
-  // TODO: Uncomment this when all the features have been updated in the auto PRs
+  // TODO: Uncomment this block once all the various auto PRs have been merged
   // it('should add child.* attributes to duplicated data', async () => {
   //   const [mfeErrorsCapture, mfeInsightsCapture, logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
   //     { test: testMFEErrorsRequest },
@@ -25,7 +25,9 @@ describe('Register API - General Behaviors', () => {
   //     init: {
   //       feature_flags: ['register'],
   //       api: {
-  //         duplicate_registered_data: true
+  //         register: {
+  //           duplicate_data_to_container: true
+  //         }
   //       }
   //     }
   //   }))
@@ -178,7 +180,7 @@ describe('Register API - General Behaviors', () => {
     expect(errorsHarvests2.length).toEqual(errorsHarvests.length)
   })
 
-  it('should allow to share a registration', async () => {
+  it('should create independent registrations with same id', async () => {
     const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testMFEErrorsRequest }
     ])
@@ -187,15 +189,15 @@ describe('Register API - General Behaviors', () => {
     await browser.execute(function () {
       window.agent1 = newrelic.register({
         id: '1',
-        name: 'my agent',
-        isolated: false
+        name: 'my agent'
       })
       window.agent2 = newrelic.register({
         id: '1',
-        isolated: false
+        name: 'my agent'
       })
-      // should get data as "agent2"
-      window.agent1.setCustomAttribute('sharedAttr', 'shared for both instances')
+      // Each should have its own independent custom attributes
+      window.agent1.setCustomAttribute('agent1Attr', 'only on agent1')
+      window.agent2.setCustomAttribute('agent2Attr', 'only on agent2')
       window.agent1.noticeError('1')
       window.agent2.noticeError('2')
     })
@@ -204,16 +206,18 @@ describe('Register API - General Behaviors', () => {
 
     errorsHarvests.forEach(({ request: { query, body } }) => {
       const data = body.err
-      data.forEach((err, idx) => {
-        expect(Number(err.params.message)).toEqual(idx + 1)
-        expect(err.custom['source.id']).toEqual('1')
-        expect(err.custom['source.name']).toEqual('my agent')
-        expect(err.custom.sharedAttr).toEqual('shared for both instances')
-      })
+      expect(data.length).toEqual(2)
+      // Each error should have its own custom attribute
+      const error1 = data.find(err => err.params.message === '1')
+      const error2 = data.find(err => err.params.message === '2')
+      expect(error1.custom.agent1Attr).toEqual('only on agent1')
+      expect(error1.custom.agent2Attr).toBeUndefined()
+      expect(error2.custom.agent2Attr).toEqual('only on agent2')
+      expect(error2.custom.agent1Attr).toBeUndefined()
     })
   })
 
-  it('should allow a nested register', async () => {
+  it('should allow parent-child relationships via parent parameter', async () => {
     const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testMFEErrorsRequest }
     ])
@@ -224,15 +228,17 @@ describe('Register API - General Behaviors', () => {
         id: '1',
         name: 'agent1'
       })
-      window.agent2 = window.agent1.register({
+      window.agent2 = newrelic.register({
         id: '2',
-        name: 'agent2'
+        name: 'agent2',
+        parent: window.agent1.metadata.target
       })
-      window.agent3 = window.agent2.register({
+      window.agent3 = newrelic.register({
         id: '3',
-        name: 'agent3'
+        name: 'agent3',
+        parent: window.agent2.metadata.target
       })
-      // should get data as "agent2"
+      // should get data with proper parent relationships
       window.agent1.noticeError('1')
       window.agent2.noticeError('2')
       window.agent3.noticeError('3')
@@ -244,7 +250,7 @@ describe('Register API - General Behaviors', () => {
       return Object.values(newrelic.initializedAgents)[0].runtime.appMetadata.agents[0].entityGuid
     })
 
-    // should get ALL data as "agent2" since it replaced the name of agent 1 of the same id
+    // should get ALL data with proper parent relationships
     errorsHarvests.forEach(({ request: { query, body } }) => {
       const data = body.err
       data.forEach((err, idx) => {

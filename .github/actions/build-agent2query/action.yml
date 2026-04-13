@@ -2,11 +2,17 @@ name: 'Build Agent2Query Assets'
 description: 'Builds Agent2Query test assets with templated license keys'
 
 inputs:
-  released_license_key:
-    description: 'License key for the released version'
+  latest_staging_license_key:
+    description: 'License key for the latest staging version'
     required: true
-  latest_license_key:
-    description: 'License key for the latest version'
+  latest_us_prod_license_key:
+    description: 'License key for the latest US production version'
+    required: true
+  released_staging_license_key:
+    description: 'License key for the released staging version'
+    required: true
+  released_us_prod_license_key:
+    description: 'License key for the released US production version'
     required: true
 
 runs:
@@ -18,6 +24,8 @@ runs:
     - name: Build Agent2Query assets
       run: |
         node $GITHUB_ACTION_PATH/index.js \
-          --released-license-key "${{ inputs.released_license_key }}" \
-          --latest-license-key "${{ inputs.latest_license_key }}"
+          --latest-staging-license-key "${{ inputs.latest_staging_license_key }}" \
+          --latest-us-prod-license-key "${{ inputs.latest_us_prod_license_key }}" \
+          --released-staging-license-key "${{ inputs.released_staging_license_key }}" \
+          --released-us-prod-license-key "${{ inputs.released_us_prod_license_key }}"
       shell: bash

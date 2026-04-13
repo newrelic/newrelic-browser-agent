@@ -7,7 +7,7 @@ import { FEATURE_NAME } from '../constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { TraceStorage } from './trace/storage'
 import { obj as encodeObj } from '../../../common/url/encode'
-import { globalScope, getNavigationEntry } from '../../../common/constants/runtime'
+import { globalScope } from '../../../common/constants/runtime'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { cleanURL } from '../../../common/url/clean-url'
@@ -41,6 +41,7 @@ export class Aggregate extends AggregateBase {
     this.entitled ??= stEntitled
     if (!this.entitled) this.blocked = true
     if (this.blocked) return this.deregisterDrain()
+    this.timeKeeper ??= this.agentRef.runtime.timeKeeper
 
     if (!this.initialized) {
       this.initialized = true
@@ -62,9 +63,8 @@ export class Aggregate extends AggregateBase {
         if (this.sessionId !== sessionState.value || (eventType === 'cross-tab' && sessionState.sessionTraceMode === MODE.OFF)) this.abort(2)
       })
 
-      const navEntry = getNavigationEntry()
-      if (navEntry) {
-        this.traceStorage.storeTiming(navEntry)
+      if (typeof PerformanceNavigationTiming !== 'undefined' && globalScope.performance?.getEntriesByType('navigation')?.length > 0) {
+        this.traceStorage.storeTiming(globalScope.performance.getEntriesByType('navigation')[0])
       } else {
         this.traceStorage.storeTiming(globalScope.performance?.timing, true)
       }
@@ -78,8 +78,6 @@ export class Aggregate extends AggregateBase {
     /** If the mode is off, we do not want to hold up draining for other features, so we deregister the feature for now.
      * If it drains later (due to a mode change), data and handlers will instantly drain instead of waiting for the registry. */
     if (this.mode === MODE.OFF) return this.deregisterDrain()
-
-    this.timeKeeper ??= this.agentRef.runtime.timeKeeper
 
     /** The handlers set up by the Inst file */
     registerHandler('bst', (...args) => this.traceStorage.storeEvent(...args), this.featureName, this.ee)

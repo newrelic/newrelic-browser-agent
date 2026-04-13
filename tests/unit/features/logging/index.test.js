@@ -32,7 +32,9 @@ describe('Logging aggregate', () => {
           cookies_enabled: true
         },
         api: {
-          allow_registered_children: false
+          register: {
+            enabled: false
+          }
         }
       },
       runtime: {

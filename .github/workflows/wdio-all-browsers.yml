@@ -22,6 +22,9 @@ on:
       LAMBDA_ACCESS_KEY:
         required: true
 
+permissions:
+  contents: read
+
 jobs:
   chrome:
     uses: ./.github/workflows/wdio-single-browser.yml

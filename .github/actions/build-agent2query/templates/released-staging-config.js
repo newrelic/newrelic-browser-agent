@@ -34,4 +34,4 @@ NREUM.init = {
   }
 }
 NREUM.feature_flags = ['soft_nav', 'websockets']
-NREUM.info = { beacon: 'staging-bam-cell.nr-data.net', errorBeacon: 'staging-bam-cell.nr-data.net', licenseKey: '{{{latestLicenseKey}}}', applicationID: '77606036', sa: 1 }
+NREUM.info = { beacon: 'staging-bam-cell.nr-data.net', errorBeacon: 'staging-bam-cell.nr-data.net', licenseKey: '{{{releasedStagingLicenseKey}}}', applicationID: '78536307', sa: 1 }

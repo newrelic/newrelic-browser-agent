@@ -143,6 +143,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Generic/CSPViolation/Detected
 <!-- Invalid timestamp seen in processing RUM response -->
 * Generic/TimeKeeper/InvalidTimestamp/Seen
+<!-- Performance.now and Date APIs have drifted (forward only by >1000ms). Drift value is reported alongside count. Only reported once per page load -->
+* Generic/TimeKeeper/ClockDrift/Detected
 
 ### Frameworks
 <!--- React was Detected --->

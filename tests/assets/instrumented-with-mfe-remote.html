@@ -19,7 +19,15 @@
   <body>
     Instrumented
     <!-- this was a case seen in NR1 where a preloaded script was not captured in the performance entries -->
-    <script src="./js/mfe/mfe-preload.js" crossorigin="anonymous"></script>
+    <script>
+      setTimeout(() =>{
+        console.log("appending preloaded script now")
+        const scrpt = document.createElement('script');
+        scrpt.src = './js/mfe/mfe-preload.js';
+        scrpt.crossOrigin = 'anonymous';
+        document.head.appendChild(scrpt);
+      }, 2000)
+    </script>
     <script>
       mainApi = newrelic.register({
         id: '9999',

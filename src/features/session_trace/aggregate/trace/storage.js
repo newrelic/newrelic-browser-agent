@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { MODE } from '../../../../common/session/constants'
@@ -168,7 +168,7 @@ export class TraceStorage {
       if (!(typeof val === 'number' && val >= 0)) continue
 
       val = Math.round(val)
-      if (this.parent.timeKeeper && this.parent.timeKeeper.ready && isAbsoluteTimestamp) {
+      if (isAbsoluteTimestamp && this.parent.timeKeeper?.ready) {
         val = this.parent.timeKeeper.convertAbsoluteTimestamp(
           Math.floor(this.parent.timeKeeper.correctAbsoluteTimestamp(val))
         )

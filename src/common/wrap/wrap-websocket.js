@@ -6,7 +6,7 @@ import { globalScope } from '../constants/runtime'
 import { generateRandomHexString } from '../ids/unique-id'
 import { now } from '../timing/now'
 import { cleanURL } from '../url/clean-url'
-import { findTargetsFromStackTrace } from '../util/v2'
+import { findTargetsFromStackTrace } from '../v2/utils'
 import { gosNREUMOriginals } from '../window/nreum'
 import { subscribeToPageUnload } from '../window/page-visibility'
 

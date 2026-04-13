@@ -1,6 +1,6 @@
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import * as nreumModule from '../../../src/common/window/nreum'
-import * as v2Module from '../../../src/common/util/v2'
+import * as v2Module from '../../../src/common/v2/utils'
 
 const origWebSocket = WebSocket
 let ws
@@ -254,14 +254,14 @@ describe('wrap-websocket', () => {
     ]
 
     // Create a module mock that returns our mocked targets
-    jest.doMock('../../../src/common/util/v2', () => ({
-      ...jest.requireActual('../../../src/common/util/v2'),
+    jest.doMock('../../../src/common/v2/utils', () => ({
+      ...jest.requireActual('../../../src/common/v2/utils'),
       findTargetsFromStackTrace: jest.fn(() => mockTargets)
     }))
     jest.resetModules() // ensure fresh import with module mock
 
     const { wrapWebSocket } = await import('../../../src/common/wrap/wrap-websocket')
-    const { findTargetsFromStackTrace } = await import('../../../src/common/util/v2')
+    const { findTargetsFromStackTrace } = await import('../../../src/common/v2/utils')
     const testEE = ee.get(Math.random().toString(36))
     const agentRef = { some: 'agentRef' }
     wrapWebSocket(testEE, agentRef)
@@ -272,7 +272,7 @@ describe('wrap-websocket', () => {
     expect(testWs.nrData.targets).toEqual(mockTargets)
 
     // Clean up the module mock
-    jest.dontMock('../../../src/common/util/v2')
+    jest.dontMock('../../../src/common/v2/utils')
   })
 
   it('defaults to empty array when findTargetsFromStackTrace returns nothing', () => {

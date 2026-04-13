@@ -27,6 +27,7 @@ export class Instrument extends InstrumentBase {
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
     const websocketsEnabled = agentRef.init.feature_flags.includes('websockets')
+    const securityPolicyViolationEnabled = !agentRef.init.feature_flags.includes('no_spv')
 
     /** config values that gate whether the generic events aggregator should be imported at all */
     const genericEventSourceConfigs = [
@@ -35,7 +36,8 @@ export class Instrument extends InstrumentBase {
       agentRef.init.performance.capture_measures,
       agentRef.init.performance.resources.enabled,
       agentRef.init.user_actions.enabled,
-      websocketsEnabled
+      websocketsEnabled,
+      securityPolicyViolationEnabled
     ]
 
     /** feature specific APIs */
@@ -45,11 +47,27 @@ export class Instrument extends InstrumentBase {
     setupRegisterAPI(agentRef)
     setupMeasureAPI(agentRef)
 
-    let historyEE, websocketsEE
-    if (websocketsEnabled) websocketsEE = wrapWebSocket(this.ee, agentRef)
+    this.removeOnAbort = new AbortController()
+    this.abortHandler = () => {
+      this.removeOnAbort.abort()
+      this.abortHandler = undefined // weakly allow this abort op to run only once
+    }
+
+    let historyEE
+    if (websocketsEnabled) { // this can apply outside browser scope such as in worker
+      const websocketsEE = wrapWebSocket(this.ee)
+      websocketsEE.on('ws', (nrData) => {
+        handle('ws-complete', [nrData], undefined, this.featureName, this.ee)
+      })
+    }
+    if (securityPolicyViolationEnabled) {
+      globalScope.addEventListener('securitypolicyviolation', (evt) => {
+        handle('spv', [evt], undefined, FEATURE_NAMES.genericEvents, this.ee)
+      }, eventListenerOpts(false, this.removeOnAbort.signal))
+    }
     if (isBrowserScope) {
-      wrapFetch(this.ee)
-      wrapXhr(this.ee)
+      wrapFetch(this.ee, agentRef)
+      wrapXhr(this.ee, agentRef)
       historyEE = wrapHistory(this.ee)
 
       if (agentRef.init.user_actions.enabled) {
@@ -65,7 +83,7 @@ export class Instrument extends InstrumentBase {
 
         globalScope.addEventListener('error', () => {
           handle('uaErr', [], undefined, FEATURE_NAMES.genericEvents, this.ee)
-        }, eventListenerOpts(false, this.removeOnAbort?.signal))
+        }, eventListenerOpts(false, this.removeOnAbort.signal))
 
         this.ee.on('open-xhr-start', (args, xhr) => {
           if (!isInternalTraffic(args[1])) {
@@ -73,7 +91,7 @@ export class Instrument extends InstrumentBase {
               if (xhr.readyState === 2) { // HEADERS_RECEIVED
                 handle('uaXhr', [], undefined, FEATURE_NAMES.genericEvents, this.ee)
               }
-            })
+            }, eventListenerOpts(undefined, this.removeOnAbort.signal))
           }
         })
         this.ee.on('fetch-start', (fetchArguments) => {
@@ -89,8 +107,8 @@ export class Instrument extends InstrumentBase {
 
         historyEE.on('pushState-end', navigationChange)
         historyEE.on('replaceState-end', navigationChange)
-        window.addEventListener('hashchange', navigationChange, eventListenerOpts(true, this.removeOnAbort?.signal))
-        window.addEventListener('popstate', navigationChange, eventListenerOpts(true, this.removeOnAbort?.signal))
+        window.addEventListener('hashchange', navigationChange, eventListenerOpts(true, this.removeOnAbort.signal))
+        window.addEventListener('popstate', navigationChange, eventListenerOpts(true, this.removeOnAbort.signal))
 
         function navigationChange () {
           historyEE.emit('navChange')
@@ -109,21 +127,6 @@ export class Instrument extends InstrumentBase {
         })
       }
     }
-    if (websocketsEnabled) { // this can apply outside browser scope such as in worker
-      websocketsEE.on('ws', (nrData) => {
-        handle('ws-complete', [nrData], undefined, this.featureName, this.ee)
-      })
-    }
-
-    try {
-      this.removeOnAbort = new AbortController()
-    } catch (e) {}
-
-    this.abortHandler = () => {
-      this.removeOnAbort?.abort()
-      this.abortHandler = undefined // weakly allow this abort op to run only once
-    }
-
     /** If any of the sources are active, import the aggregator. otherwise deregister */
     if (genericEventSourceConfigs.some(x => x)) this.importAggregator(agentRef, () => import(/* webpackChunkName: "generic_events-aggregate" */ '../aggregate'))
     else this.deregisterDrain()

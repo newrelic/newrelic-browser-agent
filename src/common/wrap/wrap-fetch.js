@@ -9,6 +9,7 @@
  */
 import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { globalScope } from '../constants/runtime'
+import { findTargetsFromStackTrace } from '../v2/utils'
 
 var prefix = 'fetch-'
 var bodyPrefix = prefix + 'body-'
@@ -27,7 +28,7 @@ const wrapped = {}
  *     event emitter will be based.
  * @returns {Object} Scoped event emitter with a debug ID of `fetch`.
  */
-export function wrapFetch (sharedEE) {
+export function wrapFetch (sharedEE, agentRef) {
   const ee = scopedEE(sharedEE)
   if (!(Req && Res && globalScope.fetch)) {
     return ee
@@ -44,13 +45,16 @@ export function wrapFetch (sharedEE) {
   })
   wrapPromiseMethod(globalScope, 'fetch', prefix)
 
-  ee.on(prefix + 'end', function (err, res) {
+  ee.on(prefix + 'end', function (err, res, targets) {
     var ctx = this
+    // undefined target reports to container
+    ctx.targets = targets || [undefined]
     if (res) {
       var size = res.headers.get('content-length')
       if (size !== null) {
         ctx.rxSize = size
       }
+
       ee.emit(prefix + 'done', [null, res], ctx)
     } else {
       ee.emit(prefix + 'done', [err], ctx)
@@ -67,11 +71,14 @@ export function wrapFetch (sharedEE) {
    */
   function wrapPromiseMethod (target, name, prefix) {
     var fn = target[name]
+
     if (typeof fn === 'function') {
       target[name] = function () {
         var args = [...arguments]
 
-        var ctx = {}
+        const ctx = {}
+        const targets = findTargetsFromStackTrace(agentRef)
+
         // we are wrapping args in an array so we can preserve the reference
         ee.emit(prefix + 'before-start', [args], ctx)
         var dtPayload
@@ -83,10 +90,10 @@ export function wrapFetch (sharedEE) {
 
         // Note we need to cast the returned (orig) Promise from native APIs into the current global Promise, which may or may not be our WrappedPromise.
         return origPromiseFromFetch.then(function (val) {
-          ee.emit(prefix + 'end', [null, val], origPromiseFromFetch)
+          ee.emit(prefix + 'end', [null, val, targets], origPromiseFromFetch)
           return val
         }, function (err) {
-          ee.emit(prefix + 'end', [err], origPromiseFromFetch)
+          ee.emit(prefix + 'end', [err, undefined, targets], origPromiseFromFetch)
           throw err
         })
       }

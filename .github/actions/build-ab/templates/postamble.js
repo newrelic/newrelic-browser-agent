@@ -16,6 +16,8 @@ try {
     const randomId = String(Math.floor(Math.random() * 3) + 1);
     const mfeName = `MOCK_MFE_${randomId}`;
 
+    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+
     for (let agentIdentifier in newrelic.initializedAgents) {
       const MfeToMfeParent = newrelic.initializedAgents[agentIdentifier].register({
         id: 'mfe-to-mfe-parent',
@@ -23,16 +25,18 @@ try {
         tags: { isParent: true, nested: true, dataTypes: 'all' }
       })
 
-      const MfeToMfeChild = MfeToMfeParent.register({
+      const MfeToMfeChild = newrelic.initializedAgents[agentIdentifier].register({
         id: 'mfe-to-mfe-child',
         name: 'MFE_TEST_CHILD',
-        tags: { isChild: true, isParent: true, nested: true, dataTypes: 'all' }
+        tags: { isChild: true, isParent: true, nested: true, dataTypes: 'all' },
+        parent: MfeToMfeParent.metadata.target
       })
 
-      const MfeToMfeGrandchild = MfeToMfeChild.register({
+      const MfeToMfeGrandchild = newrelic.initializedAgents[agentIdentifier].register({
         id: 'mfe-to-mfe-grandchild',
         name: 'MFE_TEST_GRANDCHILD',
-        tags: { isChild: true, isParent: false, nested: true, dataTypes: 'all' }
+        tags: { isChild: true, isParent: false, nested: true, dataTypes: 'all' },
+        parent: MfeToMfeChild.metadata.target
       })
 
       const jseOnlyMfe = newrelic.initializedAgents[agentIdentifier].register({
@@ -68,11 +72,35 @@ try {
         name: 'TIMINGS_TEST_MFE',
         tags: { isParent: false, isChild: false, dataTypes: 'micro frontend timings' }
       })
-      timingsTestMfe.deregister()
+      setTimeout(() => timingsTestMfe.deregister(), 100)
+
+      // 5000ms timing test - runs independently
+      ;(async () => {
+        await wait(5000)
+        const fiveThousandMfe = newrelic.initializedAgents[agentIdentifier].register({
+          id: '5000-mfe',
+          name: 'FIVE_THOUSAND_MFE',
+          tags: { isParent: false, isChild: false, dataTypes: 'micro frontend timings' }
+        })
+        await wait(5000)
+        fiveThousandMfe.deregister()
+      })()
+
+      // 10000ms timing test - runs independently
+      ;(async () => {
+        await wait(10000)
+        const tenThousandMfe = newrelic.initializedAgents[agentIdentifier].register({
+          id: '10000-mfe',
+          name: 'TEN_THOUSAND_MFE',
+          tags: { isParent: false, isChild: false, dataTypes: 'micro frontend timings' }
+         })
+        await wait(10000)
+        tenThousandMfe.deregister()
+      })()
 
       // Register the MFE API
       const mfeApi = newrelic.initializedAgents[agentIdentifier].register({ id: randomId, name: mfeName, tags: { isParent: false, isChild: false, dataTypes: 'all' } });
-      
+
       // Generate a random sentence for logging
       const randomSentences = [
         'This is a test log message from the registered MFE',
@@ -87,7 +115,7 @@ try {
         'Random MFE log event for validation'
       ];
       const randomSentence = randomSentences[Math.floor(Math.random() * randomSentences.length)];
-      
+
       // Call log with error level
       mfeApi.log(randomSentence, { level: 'error' });
       mfeApi.noticeError(new Error(`NRBA: This is a test error from ${mfeName}`));

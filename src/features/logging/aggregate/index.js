@@ -13,7 +13,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../../../common/session/constants'
 import { ABORT_REASONS } from '../../session_replay/constants'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
-import { getVersion2Attributes } from '../../../common/util/v2'
+import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
 
 const LOGGING_EVENT = 'Logging/Event/'
 
@@ -73,12 +73,6 @@ export class Aggregate extends AggregateBase {
 
     if (!attributes || typeof attributes !== 'object') attributes = {}
 
-    attributes = {
-      ...attributes,
-      /** Specific attributes only supplied if harvesting to endpoint version 2 */
-      ...(getVersion2Attributes(target, this))
-    }
-
     if (typeof level === 'string') level = level.toUpperCase()
     if (!isValidLogLevel(level)) return warn(30, level)
     if (modeForThisLog < (LOGGING_MODE[level] || Infinity)) {
@@ -104,14 +98,19 @@ export class Aggregate extends AggregateBase {
     }
     if (typeof message !== 'string' || !message) return warn(32)
 
-    const log = new Log(
-      Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp)),
-      message,
-      attributes,
-      level
-    )
+    const addEvent = (attributes) => {
+      const log = new Log(
+        Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp)),
+        message,
+        attributes,
+        level
+      )
 
-    if (this.events.add(log)) this.reportSupportabilityMetric(LOGGING_EVENT + (autoCaptured ? 'Auto' : 'API') + '/Added')
+      if (this.events.add(log)) this.reportSupportabilityMetric(LOGGING_EVENT + (autoCaptured ? 'Auto' : 'API') + '/Added')
+    }
+
+    addEvent({ ...attributes, ...getVersion2Attributes(target, this) })
+    if (shouldDuplicate(target, this)) addEvent({ ...attributes, ...getVersion2DuplicationAttributes(target, this) })
   }
 
   serializer (eventBuffer) {

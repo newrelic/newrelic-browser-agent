@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getVersion2Attributes, getRegisteredTargetsFromFilename, findTargetsFromStackTrace, getRegisteredTargetsFromId } from '../../../../src/common/util/v2'
+import { getVersion2Attributes, getRegisteredTargetsFromFilename, findTargetsFromStackTrace, getRegisteredTargetsFromId } from '../../../../src/common/v2/utils'
 
 describe('v2 utilities', () => {
   describe('getRegisteredTargetsFromFilename', () => {
@@ -26,8 +26,10 @@ describe('v2 utilities', () => {
         },
         init: {
           api: {
-            allow_registered_children: true,
-            duplicate_registered_data: false
+            register: {
+              enabled: true,
+              duplicate_data_to_container: false
+            }
           }
         }
       }
@@ -55,8 +57,10 @@ describe('v2 utilities', () => {
         },
         init: {
           api: {
-            allow_registered_children: true,
-            duplicate_registered_data: false
+            register: {
+              enabled: true,
+              duplicate_data_to_container: false
+            }
           }
         }
       }
@@ -85,8 +89,10 @@ describe('v2 utilities', () => {
         },
         init: {
           api: {
-            allow_registered_children: true,
-            duplicate_registered_data: false
+            register: {
+              enabled: true,
+              duplicate_data_to_container: false
+            }
           }
         }
       }
@@ -132,8 +138,10 @@ describe('v2 utilities', () => {
         },
         init: {
           api: {
-            allow_registered_children: true,
-            duplicate_registered_data: false
+            register: {
+              enabled: true,
+              duplicate_data_to_container: false
+            }
           }
         }
       }
@@ -160,8 +168,10 @@ describe('v2 utilities', () => {
         },
         init: {
           api: {
-            allow_registered_children: true,
-            duplicate_registered_data: false
+            register: {
+              enabled: true,
+              duplicate_data_to_container: false
+            }
           }
         }
       }
@@ -210,8 +220,10 @@ describe('v2 utilities', () => {
         },
         init: {
           api: {
-            allow_registered_children: true,
-            duplicate_registered_data: false
+            register: {
+              enabled: true,
+              duplicate_data_to_container: false
+            }
           }
         }
       }
@@ -242,8 +254,10 @@ describe('v2 utilities', () => {
         },
         init: {
           api: {
-            allow_registered_children: true,
-            duplicate_registered_data: false
+            register: {
+              enabled: true,
+              duplicate_data_to_container: false
+            }
           }
         }
       }
@@ -259,11 +273,13 @@ describe('v2 utilities', () => {
   })
 
   describe('findTargetsFromStackTrace', () => {
-    test('returns empty array when allow_registered_children is false', () => {
+    test('returns empty array when register.enabled is false', () => {
       const agentRef = {
         init: {
           api: {
-            allow_registered_children: false
+            register: {
+              enabled: false
+            }
           }
         },
         runtime: {
@@ -284,7 +300,9 @@ describe('v2 utilities', () => {
       const agentRef = {
         init: {
           api: {
-            allow_registered_children: true
+            register: {
+              enabled: true
+            }
           }
         },
         runtime: {
@@ -314,7 +332,9 @@ describe('v2 utilities', () => {
       const agentRef = {
         init: {
           api: {
-            allow_registered_children: true
+            register: {
+              enabled: true
+            }
           }
         },
         runtime: {

@@ -50,7 +50,9 @@ describe('Register API - Auto-Detection - AJAX', () => {
     await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html', {
       init: {
         api: {
-          allow_registered_children: true
+          register: {
+            enabled: true
+          }
         },
         logging: {
           enabled: true
@@ -96,7 +98,7 @@ describe('Register API - Auto-Detection - AJAX', () => {
     expect(secondMfeEvents.length).toBeGreaterThan(0)
   })
 
-  it('should support duplicate_registered_data with auto-detection for AJAX events', async () => {
+  it('should support duplicate_data_to_container with auto-detection for AJAX events', async () => {
     const [
       mfeAjaxCapture,
       containerEventsCapture
@@ -108,8 +110,10 @@ describe('Register API - Auto-Detection - AJAX', () => {
     await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html', {
       init: {
         api: {
-          allow_registered_children: true,
-          duplicate_registered_data: true
+          register: {
+            enabled: true,
+            duplicate_data_to_container: true
+          }
         }
       },
       loader: 'spa'

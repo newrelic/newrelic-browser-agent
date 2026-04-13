@@ -69,7 +69,6 @@ expectType<MicroAgent>(microAgent)
   expectType<(value: string | null) => void>(registeredEntity.setApplicationVersion)
   expectType<(name: string, value: string | number | boolean | null, persist?: boolean) => void>(registeredEntity.setCustomAttribute)
   expectType<(value: string | null, resetSession?: boolean) => void>(registeredEntity.setUserId)
-  expectType<(target: RegisterAPIConstructor) => RegisterAPI>(registeredEntity.register)
   expectType<RegisterAPIMetadata>(registeredEntity.metadata)
 })
 

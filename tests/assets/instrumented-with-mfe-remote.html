@@ -10,7 +10,7 @@
     <title>RUM Unit Test</title>
     {init} {config}
     <script>
-      NREUM.init.feature_flags = ["register", 'register.generic_events', 'register.jserrors'];
+      NREUM.init.feature_flags = ["register", 'websockets'];
       NREUM.init.performance = {capture_marks: false, capture_measures: false, resources: {enabled: false}}
       NREUM.init.user_actions.enabled = false
     </script>

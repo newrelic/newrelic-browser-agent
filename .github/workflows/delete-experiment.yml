@@ -52,6 +52,8 @@ jobs:
     needs: [delete-experiment-on-s3]
     uses: ./.github/workflows/publish-dev.yml
     secrets: inherit
+    with:
+      skip_publish_notification: true
 
   # Notify about experiments in Slack
   send-slack-notifications:

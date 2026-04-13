@@ -19,13 +19,7 @@ beforeAll(() => {
 
 beforeEach(async () => {
   const genericEventsInstrument = new GenericEvents(mainAgent)
-  console.log('blocked:', genericEventsInstrument.blocked)
-  console.log('featureName:', genericEventsInstrument.featureName)
-  // Trigger window load event to ensure aggregate is imported
-  window.dispatchEvent(new Event('load'))
-  const result = await genericEventsInstrument.onAggregateImported
-  console.log('onAggregateImported result:', result)
-  console.log('featAggregate:', genericEventsInstrument.featAggregate)
+  await genericEventsInstrument.onAggregateImported
   genericEventsAggregate = genericEventsInstrument.featAggregate
 })
 

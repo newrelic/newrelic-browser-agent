@@ -27,6 +27,17 @@ import { generateRandomHexString } from '../../common/ids/unique-id'
 const PROTECTED_KEYS = ['name', 'id', 'type']
 
 /**
+ * Warning functions that only fire once - can be reset in tests
+ * @private
+ */
+export const warnings = {
+  experimental: single(() => warn(54, 'newrelic.register')),
+  disabled: single(() => warn(55)),
+  invalidTarget: single((target) => warn(48, target)),
+  deregistered: single(() => warn(68))
+}
+
+/**
  * @experimental
  * IMPORTANT: This feature is being developed for use internally and is not in a public-facing production-ready state.
  * It is not recommended for use in production environments and will not receive support for issues.
@@ -45,7 +56,7 @@ export function setupRegisterAPI (agent) {
  * @returns {RegisterAPI} the api object to be returned from the register api method
  */
 function register (agentRef, target) {
-  warn(54, 'newrelic.register')
+  warnings.experimental()
 
   target ||= {}
   target.instance = generateRandomHexString(8)
@@ -104,8 +115,8 @@ function register (agentRef, target) {
   }
 
   /** primary cases that can block the register API from working at init time */
-  if (!agentRef.init.api.register.enabled) block(single(() => warn(55)))
-  if (!hasValidValue(target.id) || !hasValidValue(target.name)) block(single(() => warn(48, target)))
+  if (!agentRef.init.api.register.enabled) block(warnings.disabled)
+  if (!hasValidValue(target.id) || !hasValidValue(target.name)) block(() => warnings.invalidTarget(target))
 
   /** @type {RegisterAPI} */
   const api = {
@@ -113,7 +124,7 @@ function register (agentRef, target) {
     deregister: () => {
       /** note: blocking this instance will disable access for all entities sharing the instance, and will invalidate it from the v2 checks */
       reportTimings()
-      block(single(() => warn(68)))
+      block(warnings.deregistered)
     },
     log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     measure: (name, options = {}) => report(measure, [name, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),

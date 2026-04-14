@@ -23,6 +23,9 @@ import { setupConsentAPI } from '../../src/loaders/api/consent'
 import { setTopLevelCallers } from '../../src/loaders/api/topLevelCallers'
 import { gosCDN } from '../../src/common/window/nreum'
 import { now } from '../../src/common/timing/now'
+import { warnings } from '../../src/loaders/api/register'
+import { single } from '../../src/common/util/invoke'
+import { warn } from '../../src/common/util/console'
 
 // Mock script-tracker to avoid PerformanceObserver requirement
 jest.mock('../../src/common/v2/script-tracker', () => {
@@ -633,10 +636,18 @@ describe('API tests', () => {
         agent.init.api.register.enabled = true
         id = faker.string.uuid()
         name = faker.string.uuid()
+        // Reset warning state between tests
+        warnings.experimental = single(() => warn(54, 'newrelic.register'))
+        warnings.disabled = single(() => warn(55))
+        warnings.invalidTarget = single((target) => warn(48, target))
+        warnings.deregistered = single(() => warn(68))
       })
 
       test('should return api object', () => {
         const myApi = agent.register({ id, name })
+
+        // Verify experimental warning #54 fires
+        expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#54'))).toEqual(true)
 
         /** wait for entity guid to be assigned */
         expect(myApi).toMatchObject({
@@ -660,6 +671,7 @@ describe('API tests', () => {
           myApi.addPageAction()
           myApi.noticeError()
           myApi.log()
+          // Expects warning #48 (invalid target) and #54 (experimental API)
           expect(console.debug).toHaveBeenCalledTimes(2)
         })
       })
@@ -667,7 +679,9 @@ describe('API tests', () => {
       test('should warn and not work if disabled', () => {
         agent.init.api.register.enabled = false
         let myApi = agent.register({ id, name })
+        // Expects warning #54 (experimental API) and #55 (disabled)
         expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#54'))).toEqual(true)
+        expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#55'))).toEqual(true)
         myApi.addPageAction()
         myApi.noticeError()
         myApi.log()

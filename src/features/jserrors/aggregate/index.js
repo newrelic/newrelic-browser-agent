@@ -373,7 +373,10 @@ export class Aggregate extends AggregateBase {
 
     this.events.add([type, aggregateHash, params, newMetrics, allCustomAttrs])
 
-    if (shouldDuplicate(target, this.agentRef)) this.#storeJserrorForHarvest(errorInfoArr, getVersion2DuplicationAttributes(target, this))
+    if (shouldDuplicate(target, this)) {
+      // Clone the array with new object references to prevent deduplication in the shared aggregator
+      this.#storeJserrorForHarvest([type, bucketHash, { ...params }, { ...newMetrics }, localAttrs && { ...localAttrs }], getVersion2DuplicationAttributes(target, this))
+    }
 
     function setCustom (key, val) {
       allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)

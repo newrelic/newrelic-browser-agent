@@ -83,7 +83,7 @@ describe('Register API - Auto-Detection - Errors', () => {
     expect(lazyError.custom['source.name']).toEqual('Main MFE')
   })
 
-  it('should support duplicate_registered_data with auto-detection for error events', async () => {
+  it('should support duplicate_data_to_container with auto-detection for error events', async () => {
     const { testMFEErrorsRequest } = require('../../../../tools/testing-server/utils/expect-tests')
     const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testMFEErrorsRequest }

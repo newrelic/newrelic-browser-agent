@@ -39,7 +39,13 @@ function parseSingleGQL (contents) {
 
   /** parses gql query string and returns [fullmatch, type match, name match] */
   const matches = contents.query.trim().match(/^(query|mutation|subscription)\s?(\w*)/)
-  const operationType = matches?.[1]
+  /** 
+   * Since the regex above expects the operation (query|mutation|subscription) at the start of the query string.
+   * This is not true in every case, especially in the case of a GET request, 
+   * where the client usually sends the query hash, not the full query string.
+   * So, adding a capability where the application can pass the operationType explicitly
+   * **/
+  const operationType = matches?.[1] || contents.operationType
   if (!operationType) return
   const operationName = contents.operationName || matches?.[2] || 'Anonymous'
   return {

@@ -6,13 +6,14 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { stringify } from '../../../common/util/stringify'
 import { handle } from '../../../common/event-emitter/handle'
 import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
-import { FEATURE_NAME } from '../constants'
+import { AJAX_ID, FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { parseGQL } from './gql'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { gosNREUMOriginals } from '../../../common/window/nreum'
 import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
+import { generateUuid } from '../../../common/ids/unique-id'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -91,7 +92,8 @@ export class Aggregate extends AggregateBase {
       type,
       startTime,
       endTime,
-      callbackDuration: metrics.cbTime
+      callbackDuration: metrics.cbTime,
+      [AJAX_ID]: generateUuid() // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
     }
 
     if (ctx.dt) {
@@ -168,7 +170,8 @@ export class Aggregate extends AggregateBase {
       const attrParts = addCustomAttributes({
         ...(jsAttributes || {}),
         ...(event.gql || {}),
-        ...(event.targetAttributes || {}) // used to supply the version 2 attributes, either MFE target or duplication attributes for the main agent app
+        ...(event.targetAttributes || {}), // used to supply the version 2 attributes, either MFE target or duplication attributes for the main agent app
+        [AJAX_ID]: event[AJAX_ID] // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
       }, addString)
 
       fields.unshift(numeric(attrParts.length))

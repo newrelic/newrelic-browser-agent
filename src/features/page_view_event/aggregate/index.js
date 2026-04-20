@@ -17,10 +17,11 @@ import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { now } from '../../../common/timing/now'
 import { TimeKeeper } from '../../../common/timing/time-keeper'
 import { applyFnToProps } from '../../../common/util/traverse'
-import { send } from '../../../common/harvest/harvester'
+import { send } from '../../../common/harvest/send'
 import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { getSubmitMethod } from '../../../common/util/submit-data'
 import { webdriverDetected } from '../../../common/util/webdriver-detection'
+import { canEnableSessionTracking } from '../../utils/feature-gates'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -28,6 +29,7 @@ export class Aggregate extends AggregateBase {
   constructor (agentRef) {
     super(agentRef, CONSTANTS.FEATURE_NAME)
 
+    this.isSessionTrackingEnabled = canEnableSessionTracking(agentRef.init) && !!agentRef.runtime.session
     this.sentRum = false // flag to facilitate calling sendRum() once externally (by the consent API in agent-session.js)
 
     this.timeToFirstByte = 0
@@ -86,7 +88,7 @@ export class Aggregate extends AggregateBase {
       at: info.atts
     }
 
-    if (this.agentRef.runtime.session) queryParameters.fsh = Number(this.agentRef.runtime.session.isNew) // "first session harvest" aka RUM request or PageView event of a session
+    if (this.agentRef.runtime.session) queryParameters.fsh = Number(!this.agentRef.runtime.session.state.cachedRumResponse)
 
     let body = applyFnToProps({ ja: { ...customAttributes, webdriverDetected } }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
 
@@ -199,6 +201,8 @@ export class Aggregate extends AggregateBase {
       // Adding retry logic for the rum call will be a separate change; this.blocked will need to be changed since that prevents another triggerHarvestFor()
       this.ee.abort()
       return
+    } else if (this.isSessionTrackingEnabled && !this.agentRef.runtime.session.state.cachedRumResponse) {
+      this.agentRef.runtime.session.write({ cachedRumResponse: flags })
     }
 
     try {
@@ -225,6 +229,6 @@ export class Aggregate extends AggregateBase {
 
     this.drain()
     this.agentRef.runtime.harvester.startTimer()
-    activateFeatures(flags, this.agentRef)
+    activateFeatures(this.agentRef.runtime.session.state.cachedRumResponse || flags, this.agentRef)
   }
 }

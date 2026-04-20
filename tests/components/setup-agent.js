@@ -30,6 +30,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   const eventEmitter = ee.get(agentIdentifier)
   jest.spyOn(eventEmitter, 'on')
   jest.spyOn(eventEmitter, 'addEventListener')
+  jest.spyOn(eventEmitter, 'emit')
 
   if (!info.applicationID) info.applicationID = faker.string.uuid()
   if (!info.licenseKey) info.licenseKey = faker.string.uuid()

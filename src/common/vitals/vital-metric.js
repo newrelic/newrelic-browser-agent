@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 export class VitalMetric {
@@ -12,12 +12,13 @@ export class VitalMetric {
     this.roundingMethod = typeof roundingMethod === 'function' ? roundingMethod : Math.floor
   }
 
-  update ({ value, attrs = {} }) {
+  update ({ value, attrs = {}, element }) {
     if (value === undefined || value === null || value < 0) return
     const state = {
       value: this.roundingMethod(value),
       name: this.name,
-      attrs
+      attrs,
+      element
     }
 
     this.history.push(state)
@@ -34,7 +35,8 @@ export class VitalMetric {
     return this.history[this.history.length - 1] || {
       value: undefined,
       name: this.name,
-      attrs: {}
+      attrs: {},
+      element: undefined
     }
   }
 

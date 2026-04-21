@@ -2,6 +2,7 @@ afterEach(() => {
   jest.resetModules()
   jest.resetAllMocks()
   jest.clearAllMocks()
+  mockReturnVal = 0.123 // Reset to default value
 })
 
 const clsAttribution = {
@@ -22,8 +23,9 @@ const getFreshCLSImport = async (codeToRun) => {
 describe('cls', () => {
   test('reports cls', (done) => {
     getFreshCLSImport(metric => {
-      metric.subscribe(({ value, attrs }) => {
+      metric.subscribe(({ value, element, attrs }) => {
         expect(value).toEqual(0.123)
+        expect(element).toEqual('element')
         expect(attrs).toEqual({ ...clsAttribution, metricId: 'beepboop' })
         done()
       })

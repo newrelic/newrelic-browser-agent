@@ -18,7 +18,8 @@ const agentInst = {
   info: {},
   init: { page_view_timing: {} },
   runtime: {
-    jsAttributesMetadata: { bytes: 0 }
+    jsAttributesMetadata: { bytes: 0 },
+    registeredEntities: []
   }
 }
 const pvtAgg = new Aggregate(agentInst)

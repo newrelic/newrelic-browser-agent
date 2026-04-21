@@ -40,7 +40,12 @@ export class TimeKeeper {
    */
   #ready = false
 
-  #reportedDrift = false
+  /**
+   * The total measured drift in milliseconds. Represents how much performance.now()
+   * has fallen behind Date.now(), which is used to correct timestamp conversions.
+   * @type {number}
+   */
+  #measuredDrift = 0
 
   constructor (sessionObj) {
     this.#session = sessionObj
@@ -49,7 +54,6 @@ export class TimeKeeper {
   }
 
   #detectDrift () {
-    if (this.#reportedDrift) return
     try {
       // Drift detection: measures if performance.now() and Date.now() have become desynchronized
       // This can happen when a machine sleeps and the performance timer freezes while Date continues
@@ -60,8 +64,13 @@ export class TimeKeeper {
       // Note: localTimeDiff (server time offset) is NOT part of drift - that's a legitimate offset
       const drift = (Date.now() - originTime) - performance.now()
       if (drift > 1000) {
-        this.#reportedDrift = true
-        handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/TimeKeeper/ClockDrift/Detected', drift], undefined, FEATURE_NAMES.metrics, this.#session.agentRef.ee)
+        // Check if this is new drift (increase of >1000ms from last measurement)
+        const newDrift = drift - this.#measuredDrift
+        if (newDrift > 1000) {
+          // Update measured drift and report it
+          this.#measuredDrift = drift
+          if (this.#session) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/TimeKeeper/ClockDrift/Detected', drift], undefined, FEATURE_NAMES.metrics, this.#session.agentRef.ee)
+        }
       }
     } catch (err) {
       // Silently ignore drift detection errors to avoid breaking normal operation
@@ -116,7 +125,8 @@ export class TimeKeeper {
    */
   convertRelativeTimestamp (relativeTime) {
     this.#detectDrift()
-    return originTime + relativeTime
+    // Add measured drift to compensate for performance.now() falling behind
+    return originTime + relativeTime + this.#measuredDrift
   }
 
   /**
@@ -127,7 +137,8 @@ export class TimeKeeper {
    */
   convertAbsoluteTimestamp (timestamp) {
     this.#detectDrift()
-    return timestamp - originTime
+    // Subtract measured drift since we're converting from absolute to relative
+    return timestamp - originTime - this.#measuredDrift
   }
 
   /**

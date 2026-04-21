@@ -229,6 +229,6 @@ export class Aggregate extends AggregateBase {
 
     this.drain()
     this.agentRef.runtime.harvester.startTimer()
-    activateFeatures(this.agentRef.runtime.session.state.cachedRumResponse || flags, this.agentRef)
+    activateFeatures(this.agentRef.runtime.session?.state.cachedRumResponse || flags, this.agentRef)
   }
 }

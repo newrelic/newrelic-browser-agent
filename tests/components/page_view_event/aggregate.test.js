@@ -302,4 +302,51 @@ describe('RUM call', () => {
 
     expect(rumrespArg).toEqual(featFlags)
   })
+
+  // this is the scenario where the session is disabled (e.g. cookies are off) so there is no place to cache the response, but we still want to activate features based on the RUM response flags
+  test('passes flags to activate features, when session is not present', async () => {
+    const noSessionAgent = setupAgent({ init: { privacy: { cookies_enabled: false } } })
+    noSessionAgent.info.errorBeacon = 'fake-beacon'
+    const pveInst = new PageViewEvent(noSessionAgent)
+    await new Promise(process.nextTick)
+    const noSessionAgg = pveInst.featAggregate
+
+    sendSpy.mockImplementation((agentRef, { cbFinished }) => {
+      if (cbFinished) {
+        cbFinished({
+          sent: true,
+          status: 200,
+          retry: false,
+          fullUrl: 'https://fake-beacon/rum/1/license-key',
+          xhr: { status: 200 },
+          responseText: JSON.stringify({
+            app: {
+              agents: [{ entityGuid: 'test-guid' }],
+              nrServerTime: someServerTime
+            },
+            ...featFlags
+          })
+        })
+      }
+      return true
+    })
+
+    expect(() => noSessionAgg.sendRum()).not.toThrow()
+
+    const rumrespArg = noSessionAgent.ee.emit.mock.calls.find(call => call[0] === 'rumresp')[1][0]
+    expect(rumrespArg).toEqual(featFlags)
+  })
+
+  test('does not include fsh in RUM query params when session is not present', async () => {
+    const noSessionAgent = setupAgent({ init: { privacy: { cookies_enabled: false } } })
+    noSessionAgent.info.errorBeacon = 'fake-beacon'
+    const pveInst = new PageViewEvent(noSessionAgent)
+    await new Promise(process.nextTick)
+    const noSessionAgg = pveInst.featAggregate
+
+    noSessionAgg.sendRum()
+
+    const actualQueryString = sendSpy.mock.calls[0][1].payload.qs
+    expect(actualQueryString).not.toHaveProperty('fsh')
+  })
 })

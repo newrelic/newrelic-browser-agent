@@ -5,6 +5,7 @@ import * as handleModule from '../../../src/common/event-emitter/handle'
 import { Instrument as Ajax } from '../../../src/features/ajax/instrument'
 import { resetAgent, setupAgent } from '../setup-agent'
 import { EventContext } from '../../../src/common/event-emitter/event-context'
+import { AJAX_ID } from '../../../src/features/ajax/constants'
 
 const ajaxArguments = [
   { // params
@@ -131,7 +132,8 @@ describe('prepareHarvest', () => {
       customStringAttribute: 'customStringAttribute',
       customNumAttribute: 2,
       customBooleanAttribute: true,
-      nullCustomAttribute: null
+      nullCustomAttribute: null,
+      [AJAX_ID]: expect.any(String) // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
     }
     fakeAgent.info.jsAttributes = expectedCustomAttributes
 

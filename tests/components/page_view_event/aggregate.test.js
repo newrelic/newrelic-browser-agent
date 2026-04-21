@@ -123,7 +123,7 @@ describe('RUM call', () => {
   })
 
   test('sends fsh = 0, when cached response is present', () => {
-    testAgent.runtime.session.isNew = true
+    testAgent.runtime.session.isNew = true // ensure old logic is not taking effect
     testAgent.runtime.session.state.cachedRumResponse = { ...featFlags }
 
     pveAgg.sendRum()

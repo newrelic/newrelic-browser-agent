@@ -113,7 +113,8 @@ test('should only configure the agent once', () => {
 })
 
 test('should resolve waitForFlags correctly based on flags with real vals', async () => {
-  const flagNames = [faker.string.uuid(), faker.string.uuid(), faker.string.uuid()]
+  // the 4th flag is missing to emulate missing rum response
+  const flagNames = [faker.string.uuid(), faker.string.uuid(), faker.string.uuid(), faker.string.uuid()]
   const aggregateBase = new AggregateBase(mainAgent, featureName)
   const flagWait = aggregateBase.waitForFlags(flagNames)
   aggregateBase.ee.emit('rumresp', [{
@@ -124,7 +125,8 @@ test('should resolve waitForFlags correctly based on flags with real vals', asyn
     'not-expected1': 1,
     'not-expected2': 2
   }])
-  await expect(flagWait).resolves.toEqual([0, 1, 2])
+  // use null to avoid locking into 0/OFF mode
+  await expect(flagWait).resolves.toEqual([0, 1, 2, null])
 })
 
 test('should return empty array when flagNames is empty', async () => {

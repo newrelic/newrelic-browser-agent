@@ -16,20 +16,31 @@ export const RRWEB_EVENT_TYPES = {
   Custom: 5
 }
 
-export function buildExpectedSessionState (additionalExpectations) {
+export function getDefaultExpectedSessionState () {
   return Object.assign({
     value: expect.any(String),
     expiresAt: expect.any(Number),
     inactiveAt: expect.any(Number),
     updatedAt: expect.any(Number),
-    sessionReplayMode: expect.any(Number),
+    sessionReplayMode: null,
     sessionReplaySentFirstChunk: expect.any(Boolean),
-    sessionTraceMode: expect.any(Number),
-    loggingMode: expect.any(Number),
-    logApiMode: expect.any(Number),
+    sessionTraceMode: null,
+    loggingMode: null,
+    logApiMode: null,
     numOfResets: expect.any(Number),
     consent: expect.any(Boolean)
-  }, additionalExpectations)
+  })
+}
+
+export function buildExpectedSessionState (additionalExpectations) {
+  return Object.assign(getDefaultExpectedSessionState(),
+    {
+      sessionReplayMode: expect.any(Number),
+      sessionTraceMode: expect.any(Number),
+      loggingMode: expect.any(Number),
+      logApiMode: expect.any(Number),
+      ...additionalExpectations
+    })
 }
 
 export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasError, isFirstChunk, contentEncoding, decompressedBytes, appId, entityGuid, harvestId, currentUrl }) {

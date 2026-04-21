@@ -7,7 +7,7 @@ import { warn } from '../util/console'
 import { stringify } from '../util/stringify'
 import { Timer } from '../timer/timer'
 import { isBrowserScope } from '../constants/runtime'
-import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, MODE, PREFIX, SESSION_EVENTS, SESSION_EVENT_TYPES } from './constants'
+import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, PREFIX, SESSION_EVENTS, SESSION_EVENT_TYPES } from './constants'
 import { InteractionTimer } from '../timer/interaction-timer'
 import { wrapEvents } from '../wrap/wrap-events'
 import { getModeledObject } from '../config/configurable'
@@ -15,7 +15,6 @@ import { handle } from '../event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { windowAddEventListener } from '../event-listener/event-listener-opts'
-import { LOGGING_MODE } from '../../features/logging/constants'
 
 // this is what can be stored in local storage (not enforced but probably should be)
 // these values should sync between local storage and the parent class props
@@ -24,12 +23,12 @@ const model = {
   inactiveAt: 0,
   expiresAt: 0,
   updatedAt: Date.now(),
-  sessionReplayMode: MODE.OFF,
+  sessionReplayMode: null,
   sessionReplaySentFirstChunk: false,
-  sessionTraceMode: MODE.OFF,
+  sessionTraceMode: null,
   traceHarvestStarted: false,
-  loggingMode: LOGGING_MODE.OFF,
-  logApiMode: LOGGING_MODE.OFF,
+  loggingMode: null,
+  logApiMode: null,
   serverTimeDiff: null, // set by TimeKeeper; "undefined" value will not be stringified and stored but "null" will
   custom: {},
   numOfResets: 0,

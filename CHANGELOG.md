@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.313.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.313.0...v1.313.1) (2026-04-21)
+
+
+### Bug Fixes
+
+* Fix method names for MFE methods ([#1758](https://github.com/newrelic/newrelic-browser-agent/issues/1758)) ([8442a5b](https://github.com/newrelic/newrelic-browser-agent/commit/8442a5b0db01a929315dd7c7e3bd4817e6525200))
+
 ## [1.313.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.312.1...v1.313.0) (2026-04-14)
 
 

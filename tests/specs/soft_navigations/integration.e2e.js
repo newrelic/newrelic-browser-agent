@@ -15,9 +15,29 @@ describe('Soft navigations', () => {
     ])
   })
 
+  // e2e tests all operate in the same agent session, so test this FIRST
+  // as a "standalone" test to prevent RUM caching from overriding the RUM response
+  it('does not harvest when spa is blocked by rum response', async () => {
+    await browser.testHandle.scheduleReply('bamServer', {
+      test: testRumRequest,
+      body: JSON.stringify(rumFlags({ spa: 0 }))
+    })
+
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('soft_navigations/soft-nav-interaction-on-click.html'))
+        .then(() => browser.waitForAgentLoad())
+        .then(() => $('body').click())
+    ])
+
+    expect(interactionHarvests.length).toEqual(0)
+
+    await browser.resetAgentSession()
+  })
+
   it('replaces old spa when flag enabled, captures ipl and route-change ixns', async () => {
     let [interactionHarvests] = await Promise.all([
-      interactionsCapture.waitForResult({ totalCount: 1 }),
+      interactionsCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
       browser.url(await browser.testHandle.assetURL('soft_navigations/soft-nav-interaction-on-click.html'))
         .then(() => browser.waitForAgentLoad())
     ])
@@ -34,27 +54,11 @@ describe('Soft navigations', () => {
     expect(interactionHarvests[0].request.body[0].category).toEqual('Initial page load')
 
     ;[interactionHarvests] = await Promise.all([
-      interactionsCapture.waitForResult({ totalCount: 2 }),
+      interactionsCapture.waitForResult({ totalCount: 2, timeout: 10000 }),
       $('body').click()]
     )
     expect(interactionHarvests[1].request.body.length).toEqual(1)
     expect(interactionHarvests[1].request.body[0].category).toEqual('Route change')
-  })
-
-  it('does not harvest when spa is blocked by rum response', async () => {
-    await browser.testHandle.scheduleReply('bamServer', {
-      test: testRumRequest,
-      body: JSON.stringify(rumFlags({ spa: 0 }))
-    })
-
-    const [interactionHarvests] = await Promise.all([
-      interactionsCapture.waitForResult({ timeout: 10000 }),
-      browser.url(await browser.testHandle.assetURL('soft_navigations/soft-nav-interaction-on-click.html'))
-        .then(() => browser.waitForAgentLoad())
-        .then(() => $('body').click())
-    ])
-
-    expect(interactionHarvests.length).toEqual(0)
   })
 
   it('(multiple) ajax and errors are captured before page load by iPL ixn', async () => {

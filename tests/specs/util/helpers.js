@@ -35,7 +35,7 @@ export function getDefaultExpectedSessionState () {
 export function buildExpectedSessionState (additionalExpectations) {
   return Object.assign(getDefaultExpectedSessionState(),
     {
-      sessionReplayMode: expect.any(Number),
+      // sessionReplayMode omitted here because session_replay is not enabled by default in test-server
       sessionTraceMode: expect.any(Number),
       loggingMode: expect.any(Number),
       logApiMode: expect.any(Number),

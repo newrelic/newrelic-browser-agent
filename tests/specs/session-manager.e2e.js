@@ -12,7 +12,19 @@ describe('newrelic session ID', () => {
   const anySession = () => buildExpectedSessionState({
     traceHarvestStarted: expect.any(Boolean),
     custom: expect.any(Object),
-    serverTimeDiff: expect.any(Number)
+    serverTimeDiff: expect.any(Number),
+    cachedRumResponse: expect.objectContaining({
+      loaded: expect.any(Number), // this exists in test-server only, see testing-server/constants.js
+      err: expect.any(Number),
+      ins: expect.any(Number),
+      log: expect.any(Number),
+      logapi: expect.any(Number),
+      spa: expect.any(Number),
+      sr: expect.any(Number),
+      srs: expect.any(Number),
+      st: expect.any(Number),
+      sts: expect.any(Number)
+    })
   })
 
   afterEach(async () => {

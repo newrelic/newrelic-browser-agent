@@ -148,6 +148,21 @@ describe('reset()', () => {
     expect(session.read()?.custom?.test).toEqual(undefined)
   })
 
+  test('cached RUM response should be wiped on reset', () => {
+    const now = Date.now()
+    jest.setSystemTime(now)
+    const featFlags = { err: 1, ins: 1, log: 1, logapi: 1, spa: 1, sr: 1, srs: 1, st: 1, sts: 1 }
+    const session = new SessionEntity({ agentRef, key, storage, expiresMs: 10 })
+    session.write({ cachedRumResponse: featFlags })
+    expect(session.state.cachedRumResponse).toEqual(featFlags)
+    expect(session.read().cachedRumResponse).toEqual(featFlags)
+
+    // simulate a timer expiring
+    session.reset()
+    expect(session.state.cachedRumResponse).toBeUndefined()
+    expect(session.read().cachedRumResponse).toBeUndefined()
+  })
+
   test('should increment numOfResets', () => {
     const session = new SessionEntity({ agentRef, key, storage, expiresMs: 10 })
     expect(session.state.numOfResets).toEqual(0)

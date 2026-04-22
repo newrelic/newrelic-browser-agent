@@ -53,20 +53,6 @@ describe('class setup', () => {
     expect(loggingAggregate.supportsRegisteredEntities).toBe(true)
   })
 
-  test('should wait for flags - log flag is missing', async () => {
-    expect(loggingAggregate.drained).toBeUndefined()
-    loggingAggregate.ee.emit('rumresp', [{}])
-    await new Promise(process.nextTick)
-    expect(loggingAggregate.blocked).toEqual(true)
-    expect(loggingAggregate.loggingMode).toEqual({ auto: null, api: null })
-
-    expect(mainAgent.runtime.session.state.loggingMode).toEqual(null)
-    expect(mainAgent.runtime.session.state.logApiMode).toEqual(null)
-    const localStorageSessionState = mainAgent.runtime.session.read()
-    expect(localStorageSessionState.loggingMode).toEqual(null)
-    expect(localStorageSessionState.logApiMode).toEqual(null)
-  })
-
   test('should wait for flags - 0 = OFF', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
     await mockLoggingRumResponse(LOGGING_MODE.OFF, LOGGING_MODE.OFF)
@@ -108,6 +94,18 @@ describe('class setup', () => {
 
     // if the session state values are present, they take precedence over any new RUM flags
     expect(loggingAggregate.loggingMode).toEqual({ auto: LOGGING_MODE.ERROR, api: LOGGING_MODE.ERROR })
+  })
+
+  test('should block if session is not enabled', async () => {
+    const originalSession = mainAgent.runtime.session
+    mainAgent.runtime.session = undefined
+    expect(loggingAggregate.drained).toBeUndefined()
+    await mockLoggingRumResponse(LOGGING_MODE.OFF, LOGGING_MODE.OFF)
+
+    expect(loggingAggregate.blocked).toEqual(true)
+    expect(loggingAggregate.loggingMode).toEqual({ auto: LOGGING_MODE.OFF, api: LOGGING_MODE.OFF })
+
+    mainAgent.runtime.session = originalSession
   })
 })
 

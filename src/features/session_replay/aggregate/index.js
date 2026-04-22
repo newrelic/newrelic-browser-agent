@@ -98,17 +98,8 @@ export class Aggregate extends AggregateBase {
       if (!this.entitled) {
         this.deregisterDrain()
         if (this.agentRef.runtime.isRecording) {
-          if (entitled === 0) {
-            this.abort(ABORT_REASONS.ENTITLEMENTS)
-            this.reportSupportabilityMetric('SessionReplay/EnabledNotEntitled/Detected')
-          } else {
-            // avoid locking the session into OFF mode if entitled is unconfirmed
-            this.mode = null
-            this.recorder?.stopRecording?.()
-            this.syncWithSessionManager({ sessionReplayMode: this.mode })
-            this.recorder?.clearTimestamps?.()
-            while (this.recorder?.getEvents().events.length) this.recorder?.clearBuffer?.()
-          }
+          this.abort(ABORT_REASONS.ENTITLEMENTS)
+          this.reportSupportabilityMetric('SessionReplay/EnabledNotEntitled/Detected')
         }
         return
       }

@@ -38,14 +38,10 @@ export class Aggregate extends AggregateBase {
 
   /** Sets up event listeners, and initializes this module to run in the correct "mode".  Can be triggered from a few places, but makes an effort to only set up listeners once */
   initialize (stMode, stEntitled, ignoreSession) {
-    if (!this.blocked) this.entitled ??= stEntitled
-    if (this.entitled === null || this.entitled === undefined) {
-      this.blocked = true
-      return this.deregisterDrain()
-    } else if (!this.entitled) {
-      this.deregisterDrain()
+    this.entitled ??= stEntitled
+    if (!this.entitled) {
       this.abort()
-      return
+      return this.deregisterDrain()
     }
     this.timeKeeper ??= this.agentRef.runtime.timeKeeper
 

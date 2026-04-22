@@ -74,34 +74,6 @@ describe('Session Replay Session Behavior', () => {
     expect(mainAgent.runtime.isRecording).toBeTruthy()
   })
 
-  test('should wait for flags - when session replay entitlement + flag is missing and not recording yet', async () => {
-    mainAgent.runtime.isRecording = false
-    expect(sessionReplayAggregate.drained).toBeUndefined()
-    sessionReplayAggregate.ee.emit('rumresp', [{}])
-    await new Promise(process.nextTick)
-
-    // if entitlement is unconfirmed, avoid locking into OFF mode for the entire session
-    expect(sessionReplayAggregate.blocked).toEqual(false)
-    expect(sessionReplayAggregate.mode).toEqual(null)
-    expect(session.state.sessionReplayMode).toEqual(null)
-    const localStorageSessionState = session.read()
-    expect(localStorageSessionState.sessionReplayMode).toEqual(null)
-  })
-
-  test('should wait for flags - when session replay entitlement + flag is missing and recording', async () => {
-    mainAgent.runtime.isRecording = true
-    expect(sessionReplayAggregate.drained).toBeUndefined()
-    sessionReplayAggregate.ee.emit('rumresp', [{}])
-    await new Promise(process.nextTick)
-
-    // if entitlement is unconfirmed, avoid locking into OFF mode for the entire session
-    expect(sessionReplayAggregate.blocked).toEqual(false)
-    expect(sessionReplayAggregate.mode).toEqual(null)
-    expect(session.state.sessionReplayMode).toEqual(null)
-    const localStorageSessionState = session.read()
-    expect(localStorageSessionState.sessionReplayMode).toEqual(null)
-  })
-
   test.each(Object.keys(MODE))('session SR mode matches SR mode -- %s', async (key) => {
     session.isNew = false
     const mode = MODE[key]

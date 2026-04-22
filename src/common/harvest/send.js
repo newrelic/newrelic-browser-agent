@@ -23,21 +23,9 @@ const warnings = {}
 
 /**
  * Initiate a harvest call.
- * @param {NetworkSendSpec} param0 Specification for sending data
+ * @param {object} agentRef The initialized agent reference
+ * @param {NetworkSendSpec} spec Specification for sending data
  * @returns {boolean} True if a network call was made. Note that this does not mean or guarantee that it was successful.
- */
-/**
- *
- * @param agentRef
- * @param endpoint
- * @param payload
- * @param localOpts
- * @param submitMethod
- * @param cbFinished
- * @param raw
- * @param featureName
- * @param endpointVersion
- * @returns {boolean}
  */
 export function send (agentRef, { endpoint, payload, localOpts = {}, submitMethod, cbFinished, raw, featureName, endpointVersion = 1 }) {
   if (!agentRef.info.errorBeacon) return false

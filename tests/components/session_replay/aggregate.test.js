@@ -1,4 +1,4 @@
-import { faker } from '@faker-js/faker/'
+import { faker } from '@faker-js/faker'
 import { ERROR_DURING_REPLAY } from '../../../src/features/session_replay/constants'
 import { IDEAL_PAYLOAD_SIZE, MAX_PAYLOAD_SIZE } from '../../../src/common/constants/agent-constants'
 import { MODE, SESSION_EVENTS } from '../../../src/common/session/constants'
@@ -80,7 +80,7 @@ describe('Session Replay Session Behavior', () => {
     sessionReplayAggregate.ee.emit('rumresp', [{}])
     await new Promise(process.nextTick)
 
-    // if entitlement is unconfirmed, avoid locking into off for the entire session
+    // if entitlement is unconfirmed, avoid locking into OFF mode for the entire session
     expect(sessionReplayAggregate.blocked).toEqual(false)
     expect(sessionReplayAggregate.mode).toEqual(null)
     expect(session.state.sessionReplayMode).toEqual(null)
@@ -94,7 +94,7 @@ describe('Session Replay Session Behavior', () => {
     sessionReplayAggregate.ee.emit('rumresp', [{}])
     await new Promise(process.nextTick)
 
-    // if entitlement is unconfirmed, avoid locking into off for the entire session
+    // if entitlement is unconfirmed, avoid locking into OFF mode for the entire session
     expect(sessionReplayAggregate.blocked).toEqual(false)
     expect(sessionReplayAggregate.mode).toEqual(null)
     expect(session.state.sessionReplayMode).toEqual(null)

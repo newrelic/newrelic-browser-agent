@@ -16,7 +16,7 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { windowAddEventListener } from '../event-listener/event-listener-opts'
 
-// this is what can be stored in local storage (not enforced but probably should be)
+// this is what can be stored in local storage (enforced during reads)
 // these values should sync between local storage and the parent class props
 const model = {
   value: '',
@@ -32,7 +32,8 @@ const model = {
   serverTimeDiff: null, // set by TimeKeeper; "undefined" value will not be stringified and stored but "null" will
   custom: {},
   numOfResets: 0,
-  consent: false // set by consent() API call
+  consent: false, // set by consent() API call
+  cachedRumResponse: null
 }
 
 export class SessionEntity {

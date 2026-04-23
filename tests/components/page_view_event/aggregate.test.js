@@ -225,7 +225,7 @@ describe('RUM call', () => {
     expect(testAgent.runtime.session.state.cachedRumResponse).toBe(featFlags)
   })
 
-  test('does not cache response when cached response is already present', () => {
+  test('does not overwrite cached response when one is already present', () => {
     testAgent.runtime.session.state.cachedRumResponse = featFlags
 
     sendSpy.mockImplementation((agentRef, { cbFinished }) => {
@@ -348,5 +348,39 @@ describe('RUM call', () => {
 
     const actualQueryString = sendSpy.mock.calls[0][1].payload.qs
     expect(actualQueryString).not.toHaveProperty('fsh')
+  })
+
+  test('cachedRumResponse survives session onPause write triggered by page visibility change', () => {
+    testAgent.runtime.session.state.cachedRumResponse = undefined
+
+    sendSpy.mockImplementation((agentRef, { cbFinished }) => {
+      if (cbFinished) {
+        cbFinished({
+          sent: true,
+          status: 200,
+          retry: false,
+          fullUrl: 'https://fake-beacon/rum/1/license-key',
+          xhr: { status: 200 },
+          responseText: JSON.stringify({
+            app: {
+              agents: [{ entityGuid: 'test-guid' }],
+              nrServerTime: someServerTime
+            },
+            ...featFlags
+          })
+        })
+      }
+      return true
+    })
+
+    pveAgg.sendRum()
+
+    expect(testAgent.runtime.session.state.cachedRumResponse).toEqual(featFlags)
+
+    // Simulate the onPause that fires when the page becomes hidden (e.g. during navigation).
+    testAgent.runtime.session.inactiveTimer.pause()
+
+    expect(testAgent.runtime.session.state.cachedRumResponse).toEqual(featFlags)
+    expect(testAgent.runtime.session.read().cachedRumResponse).toEqual(featFlags)
   })
 })

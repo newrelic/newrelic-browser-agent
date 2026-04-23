@@ -43,5 +43,6 @@ export const model = {
   serverTimeDiff: null,
   custom: {},
   numOfResets: 0,
-  consent: false
+  consent: false,
+  cachedRumResponse: null
 }

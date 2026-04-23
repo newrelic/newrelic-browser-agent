@@ -159,8 +159,8 @@ describe('reset()', () => {
 
     // simulate a timer expiring
     session.reset()
-    expect(session.state.cachedRumResponse).toBeUndefined()
-    expect(session.read().cachedRumResponse).toBeUndefined()
+    expect(session.state.cachedRumResponse).toBe(null)
+    expect(session.read().cachedRumResponse).toBe(null)
   })
 
   test('should increment numOfResets', () => {

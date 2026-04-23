@@ -58,6 +58,30 @@ const registeredEntityHtmlTemplate = (script) => `<html>
     <h1>This is a generic page that is instrumented by the NPM agent</h1>
   </body>
 </html>`
+const registeredIframeEntityHtmlTemplate = () => `<html>
+  <head>
+    <title>RUM Unit Test - Parent Page</title>
+    {init}
+    {config}
+    <script>
+      NREUM.init.api.register.enabled = true; // allow this parent page to accept registered entities (iframes) to report through it. This is required for the registered iframe entity tests, but not a default setting for security reasons, so we set it on a per test basis here.
+    </script>
+    {loader}
+  </head>
+  <body>
+    <h1>Parent Page - Main Agent Running</h1>
+    <iframe id="mfe-iframe" src="registered-iframe-entity-iframe.html" width="800" height="400"></iframe>
+  </body>
+</html>`
+const iframeContentTemplate = (script) => `<html>
+  <head>
+    <title>RUM Unit Test - Iframe Content</title>
+    <script src="${script}.js"></script>
+  </head>
+  <body>
+    <h1>Iframe Content - RegisteredEntity Interface</h1>
+  </body>
+</html>`
 
 const config = [
   // standard config
@@ -71,6 +95,7 @@ const config = [
       'custom-agent-spa': './src/custom-agent-spa.js',
       'micro-agent': './src/micro-agent.js',
       'registered-entity': './src/registered-entity.js',
+      'registered-iframe-entity': './src/registered-iframe-entity.js',
       // worker init script
       'worker-init': './src/worker-init.js'
     },
@@ -163,6 +188,18 @@ const config = [
         minify: false,
         inject: false,
         templateContent: registeredEntityHtmlTemplate('registered-entity')
+      }),
+      new HtmlWebpackPlugin({
+        filename: 'registered-iframe-entity.html',
+        minify: false,
+        inject: false,
+        templateContent: registeredIframeEntityHtmlTemplate()
+      }),
+      new HtmlWebpackPlugin({
+        filename: 'registered-iframe-entity-iframe.html',
+        minify: false,
+        inject: false,
+        templateContent: iframeContentTemplate('registered-iframe-entity')
       }),
       new HtmlWebpackPlugin({
         filename: 'multi-agent.html',

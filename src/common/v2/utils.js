@@ -17,13 +17,25 @@ export const V2_TYPES = {
 }
 
 /**
+ * Returns a single registered entity associated with a given iframe interface ID. Returns undefined if no entity is found.
+ * @param {string} iframeInterfaceId
+ * @param {*} agentRef the agent reference
+ * @returns {import("../../loaders/api/register-api-types").RegisterAPI|undefined}
+ */
+export function getRegisteredEntityByIframeInterfaceId (iframeInterfaceId, agentRef) {
+  if (!isValid(iframeInterfaceId, agentRef)) return undefined
+  const registeredEntities = agentRef.runtime.registeredEntities
+  return registeredEntities?.find(entity => entity.metadata.target.iframeInterfaceId === iframeInterfaceId)
+}
+
+/**
  * Returns the registered target associated with a given ID. Returns an empty array if no target is found.
  * @param {string|number} id
  * @param {*} agentRef the agent reference
  * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget[]}
  */
 export function getRegisteredTargetsFromId (id, agentRef) {
-  if (!id || !agentRef?.init.api.register.enabled) return []
+  if (!isValid(id, agentRef)) return []
   const registeredEntities = agentRef.runtime.registeredEntities
   return registeredEntities?.filter(entity => String(entity.metadata.target.id) === String(id)).map(entity => entity.metadata.target) || []
 }
@@ -35,7 +47,7 @@ export function getRegisteredTargetsFromId (id, agentRef) {
  * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget[]}
  */
 export function getRegisteredTargetsFromFilename (filename, agentRef) {
-  if (!filename || !agentRef?.init.api.register.enabled) return []
+  if (!isValid(filename, agentRef)) return []
   const registeredEntities = agentRef.runtime.registeredEntities
   return registeredEntities?.filter(entity => entity.metadata.timings?.asset?.endsWith(filename)).map(entity => entity.metadata.target) || []
 }
@@ -92,7 +104,7 @@ export function shouldDuplicate (target, aggregateInstance) {
  * @returns {Array} An array of targets found from the stack trace. If no targets are found or allowed, returns an array with undefined.
  */
 export function findTargetsFromStackTrace (agentRef) {
-  if (!agentRef?.init.api.register.enabled) return [undefined]
+  if (!isValid(true, agentRef)) return [undefined]
 
   const targets = []
   try {
@@ -117,4 +129,14 @@ export function findTargetsFromStackTrace (agentRef) {
  */
 function supportsV2 (aggregateInstance) {
   return aggregateInstance?.harvestEndpointVersion === 2
+}
+
+/**
+ * Determines if the given identifier and agent reference are valid for use for entity lookups and other operations in the utils methods. This is a common check that is used across multiple methods in this module to ensure that the necessary data is present and that the register API is enabled before attempting to perform operations that depend on those things.
+ * @param {*} identifier The identifier to check.
+ * @param {*} agentRef The agent reference to check.
+ * @returns {boolean} Returns true if the identifier and agent reference are valid, false otherwise.
+ */
+function isValid (identifier, agentRef) {
+  return !!identifier && !!agentRef?.init.api.register.enabled
 }

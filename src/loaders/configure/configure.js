@@ -12,6 +12,7 @@ import { redefinePublicPath } from './public-path'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 import { mergeLoaderConfig } from '../../common/config/loader-config'
+import { setupIframeMFEMessageListener } from './iframe-message-handler'
 
 /**
  * Sets or re-sets the agent's configuration values from global settings. This also attach those as properties to the agent instance.
@@ -80,6 +81,9 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
       feature: undefined,
       data: agent.config
     })
+
+    // Set up iframe postMessage listener for registered entities
+    setupIframeMFEMessageListener(agent)
 
     agent.runtime.configured = true
   }

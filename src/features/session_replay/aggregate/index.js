@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2026 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 /**
@@ -33,7 +33,7 @@ export class Aggregate extends AggregateBase {
     super(agentRef, FEATURE_NAME)
 
     // Create obfuscator for session replay query params
-    this.obfuscator = new Obfuscator(agentRef)
+    this.obfuscator = new Obfuscator(agentRef, 'SessionReplay')
 
     /** Set once the recorder has fully initialized after flag checks and sampling */
     this.initialized = false

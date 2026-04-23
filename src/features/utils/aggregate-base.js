@@ -214,8 +214,7 @@ export class AggregateBase extends FeatureBase {
    * This method should run after checkConfiguration, which may reset the agent's info/runtime object that is used here.
    */
   doOnceForAllAggregate (agentRef) {
-    if (!agentRef.runtime.obfuscator) agentRef.runtime.obfuscator = new Obfuscator(agentRef)
-    this.obfuscator = agentRef.runtime.obfuscator
+    // Note: obfuscator is now created per-feature for their specific event types
 
     if (!agentRef.runtime.harvester) agentRef.runtime.harvester = new Harvester(agentRef)
   }

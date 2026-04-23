@@ -31,8 +31,8 @@ export class AjaxNode extends BelNode {
     } else this.callbackEnd = this.end // if no long task was observed, callbackEnd is the same as end
   }
 
-  serialize (parentStartTimestamp, agentRef) {
-    const addString = getAddStringContext(agentRef.runtime.obfuscator)
+  serialize (parentStartTimestamp, agentRef, ajaxObfuscator) {
+    const addString = getAddStringContext(ajaxObfuscator)
     const nodeList = []
 
     // IMPORTANT: The order in which addString is called matters and correlates to the order in which string shows up in the harvest payload. Do not re-order the following code.

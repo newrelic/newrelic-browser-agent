@@ -10,7 +10,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
 import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { applyFnToProps } from '../../../common/util/traverse'
+import { Obfuscator } from '../../../common/util/obfuscate'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
@@ -23,6 +23,10 @@ export class Aggregate extends AggregateBase {
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
+
+    // Create generic obfuscator (no specific event types) since this feature handles multiple event types
+    // Will check each event's eventType property at runtime against obfuscation rules
+    this.obfuscator = new Obfuscator(agentRef)
 
     this.waitForFlags(['ins']).then(([ins]) => {
       if (!ins) {
@@ -332,7 +336,7 @@ export class Aggregate extends AggregateBase {
   }
 
   serializer (eventBuffer) {
-    return applyFnToProps({ ins: eventBuffer }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
+    return this.obfuscator.traverseAndObfuscateEvents({ ins: eventBuffer })
   }
 
   queryStringsBuilder () {

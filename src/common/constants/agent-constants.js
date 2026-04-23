@@ -2,6 +2,7 @@
  * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+import { LOG } from '../../loaders/api/constants'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
 export const IDEAL_PAYLOAD_SIZE = 16000
@@ -14,4 +15,20 @@ export const SUPPORTS_REGISTERED_ENTITIES = {
   [FEATURE_NAMES.genericEvents]: true,
   [FEATURE_NAMES.jserrors]: true,
   [FEATURE_NAMES.ajax]: true
+}
+
+export const EVENT_TYPES = {
+  AJAX: 'AjaxRequest',
+  PA: 'PageAction',
+  UA: 'UserAction',
+  BP: 'BrowserPerformance',
+  WS: 'WebSocket',
+  SPV: 'SecurityPolicyViolation',
+  JSE: 'JavaScriptError',
+  LOG: 'Log',
+  PVE: 'PageView',
+  PVT: 'PageViewTiming',
+  SR: 'SessionReplay',
+  ST: 'SessionTrace',
+  BI: 'BrowserInteraction'
 }

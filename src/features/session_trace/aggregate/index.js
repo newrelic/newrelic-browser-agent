@@ -9,7 +9,7 @@ import { TraceStorage } from './trace/storage'
 import { obj as encodeObj } from '../../../common/url/encode'
 import { globalScope } from '../../../common/constants/runtime'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
-import { applyFnToProps } from '../../../common/util/traverse'
+import { Obfuscator } from '../../../common/util/obfuscate'
 import { cleanURL } from '../../../common/url/clean-url'
 import { warn } from '../../../common/util/console'
 
@@ -21,6 +21,9 @@ export class Aggregate extends AggregateBase {
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
     this.harvestOpts.raw = true
+
+    // Create obfuscator for session trace nodes
+    this.obfuscator = new Obfuscator(agentRef, 'SessionTrace')
 
     /** Tied to the entitlement flag response from BCS.  Will short circuit operations of the agg if false  */
     this.entitled = undefined
@@ -114,7 +117,7 @@ export class Aggregate extends AggregateBase {
   serializer (stns) {
     if (!stns.length) return // there are no processed nodes
     this.everHarvested = true
-    return applyFnToProps(stns, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
+    return this.obfuscator.traverseAndObfuscateEvents(stns)
   }
 
   queryStringsBuilder (stns) {

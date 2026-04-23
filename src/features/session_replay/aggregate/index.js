@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 /**
@@ -22,6 +22,7 @@ import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { cleanURL } from '../../../common/url/clean-url'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
 import { PAUSE_REPLAY } from '../../../loaders/api/constants'
+import { Obfuscator } from '../../../common/util/obfuscate'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -30,6 +31,10 @@ export class Aggregate extends AggregateBase {
   // pass the recorder into the aggregator
   constructor (agentRef, args) {
     super(agentRef, FEATURE_NAME)
+
+    // Create obfuscator for session replay query params
+    this.obfuscator = new Obfuscator(agentRef)
+
     /** Set once the recorder has fully initialized after flag checks and sampling */
     this.initialized = false
     /** Set once the feature has been "aborted" to prevent other side-effects from continuing */

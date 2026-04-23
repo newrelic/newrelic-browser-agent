@@ -9,6 +9,7 @@ import { handle } from '../../../common/event-emitter/handle'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { Obfuscator } from '../../../common/util/obfuscate'
 import { cumulativeLayoutShift } from '../../../common/vitals/cumulative-layout-shift'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
 import { firstPaint } from '../../../common/vitals/first-paint'
@@ -35,6 +36,9 @@ export class Aggregate extends AggregateBase {
     this.firstIxnRecorded = false
 
     super.customAttributesAreSeparate = true
+
+    // Create obfuscator for page view timing events
+    this.obfuscator = new Obfuscator(agentRef, 'PageViewTiming')
 
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
     // Add the time of _window pagehide event_ firing to the next PVT harvest == NRDB windowUnload attr:
@@ -141,7 +145,7 @@ export class Aggregate extends AggregateBase {
   // serialize array of timing data
   serializer (eventBuffer) {
     if (!eventBuffer?.length) return ''
-    var addString = getAddStringContext(this.agentRef.runtime.obfuscator)
+    var addString = getAddStringContext(this.obfuscator)
 
     var payload = 'bel.6;'
 

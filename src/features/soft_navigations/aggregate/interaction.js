@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { globalScope, initialLocation } from '../../../common/constants/runtime'
@@ -133,11 +133,13 @@ export class Interaction extends BelNode {
    * Serializes (BEL) the interaction data for transmission.
    * @param {Number} firstStartTimeOfPayload timestamp
    * @param {Agent} agentRef Pass in the agent reference directly so that the event itself doesnt need to store the pointers and ruin the evaluation of the event size by including unused object references.
+   * @param {Obfuscator} interactionObfuscator Obfuscator for BrowserInteraction event type
+   * @param {Obfuscator} ajaxObfuscator Obfuscator for AjaxRequest event type (passed to child AjaxNodes)
    * @returns {String} A string that is the serialized representation of this interaction.
    */
-  serialize (firstStartTimeOfPayload, agentRef) {
+  serialize (firstStartTimeOfPayload, agentRef, interactionObfuscator, ajaxObfuscator) {
     const isFirstIxnOfPayload = firstStartTimeOfPayload === undefined
-    const addString = getAddStringContext(agentRef.runtime.obfuscator)
+    const addString = getAddStringContext(interactionObfuscator)
     const nodeList = []
     let ixnType
     if (this.trigger === IPL_TRIGGER_NAME) ixnType = INTERACTION_TYPE.INITIAL_PAGE_LOAD
@@ -170,7 +172,7 @@ export class Interaction extends BelNode {
     /* Querypack encoder+decoder quirkiness:
        - If first ixn node of payload is being processed, its children's start time must be offset by this node's start. (firstStartTime should be undefined.)
        - Else for subsequent ixns in the same payload, we go back to using that first ixn node's start to offset their children's start. */
-    this.children.forEach(node => allAttachedNodes.push(node.serialize(isFirstIxnOfPayload ? this.start : firstStartTimeOfPayload, agentRef))) // recursively add the serialized string of every child of this (ixn) bel node
+    this.children.forEach(node => allAttachedNodes.push(node.serialize(isFirstIxnOfPayload ? this.start : firstStartTimeOfPayload, agentRef, ajaxObfuscator))) // recursively add the serialized string of every child of this (ixn) bel node
 
     fields[1] = numeric(allAttachedNodes.length)
     nodeList.push(fields)

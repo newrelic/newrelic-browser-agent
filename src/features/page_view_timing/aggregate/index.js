@@ -22,6 +22,7 @@ import { eventOrigin } from '../../../common/util/event-origin'
 import { loadTime } from '../../../common/vitals/load-time'
 import { webdriverDetected } from '../../../common/util/webdriver-detection'
 import { cleanURL } from '../../../common/url/clean-url'
+import { EVENT_TYPES } from '../../../common/constants/agent-constants'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -38,7 +39,7 @@ export class Aggregate extends AggregateBase {
     super.customAttributesAreSeparate = true
 
     // Create obfuscator for page view timing events
-    this.obfuscator = new Obfuscator(agentRef, 'PageViewTiming')
+    this.obfuscator = new Obfuscator(agentRef, EVENT_TYPES.PVT)
 
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
     // Add the time of _window pagehide event_ firing to the next PVT harvest == NRDB windowUnload attr:

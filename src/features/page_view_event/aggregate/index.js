@@ -21,6 +21,7 @@ import { send } from '../../../common/harvest/harvester'
 import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { getSubmitMethod } from '../../../common/util/submit-data'
 import { webdriverDetected } from '../../../common/util/webdriver-detection'
+import { EVENT_TYPES } from '../../../common/constants/agent-constants'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -36,7 +37,7 @@ export class Aggregate extends AggregateBase {
     this.retries = 0
 
     // Create obfuscator for page view events
-    this.obfuscator = new Obfuscator(agentRef, 'PageView')
+    this.obfuscator = new Obfuscator(agentRef, EVENT_TYPES.PVE)
 
     if (!isValid(agentRef.info)) {
       this.ee.abort()

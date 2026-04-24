@@ -8,6 +8,7 @@ import { now } from '../timing/now'
 import { cleanURL } from '../url/clean-url'
 import { gosNREUMOriginals } from '../window/nreum'
 import { subscribeToPageUnload } from '../window/page-visibility'
+import { EVENT_TYPES } from '../constants/agent-constants'
 
 const wrapped = {}
 const openWebSockets = new Set() // track all instances to close out metrics on page unload
@@ -37,7 +38,7 @@ export function wrapWebSocket (sharedEE) {
   })
 
   class WrappedWebSocket extends WebSocket {
-    static name = 'WebSocket'
+    static name = EVENT_TYPES.WS
     static toString () { // fake native WebSocket when static class is stringified
       return 'function WebSocket() { [native code] }'
     }

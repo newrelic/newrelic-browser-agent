@@ -15,6 +15,7 @@ import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
 import { getVersion2Attributes } from '../../../common/v2/utils'
+import { EVENT_TYPES } from '../../../common/constants/agent-constants'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -50,7 +51,7 @@ export class Aggregate extends AggregateBase {
         registerHandler('api-addPageAction', (timestamp, name, attributes, target) => {
           this.addEvent({
             ...attributes,
-            eventType: 'PageAction',
+            eventType: EVENT_TYPES.PA,
             timestamp: this.#toEpoch(timestamp),
             timeSinceLoad: timestamp / 1000,
             actionName: name,
@@ -75,7 +76,7 @@ export class Aggregate extends AggregateBase {
             if (aggregatedUserAction?.event) {
               const { target, timeStamp, type } = aggregatedUserAction.event
               const userActionEvent = {
-                eventType: 'UserAction',
+                eventType: EVENT_TYPES.UA,
                 timestamp: this.#toEpoch(timeStamp),
                 action: type,
                 actionCount: aggregatedUserAction.count,
@@ -152,7 +153,7 @@ export class Aggregate extends AggregateBase {
                     const detailObj = agentRef.init.performance.capture_detail ? createDetailAttrs(entry.detail) : {}
                     this.addEvent({
                       ...detailObj,
-                      eventType: 'BrowserPerformance',
+                      eventType: EVENT_TYPES.BP,
                       timestamp: this.#toEpoch(entry.startTime),
                       entryName: entry.name,
                       entryDuration: entry.duration,
@@ -217,7 +218,7 @@ export class Aggregate extends AggregateBase {
             this.reportSupportabilityMetric('Generic/Performance/Resource/Seen')
             const event = {
               ...entryObject,
-              eventType: 'BrowserPerformance',
+              eventType: EVENT_TYPES.BP,
               timestamp: this.#toEpoch(entryObject.startTime),
               entryName: cleanURL(name),
               entryDuration: duration,
@@ -236,7 +237,7 @@ export class Aggregate extends AggregateBase {
 
         const event = {
           ...customAttributes,
-          eventType: 'BrowserPerformance',
+          eventType: EVENT_TYPES.BP,
           timestamp: this.#toEpoch(start),
           entryName: n,
           entryDuration: duration,
@@ -250,7 +251,7 @@ export class Aggregate extends AggregateBase {
         registerHandler('ws-complete', (nrData) => {
           const event = {
             ...nrData,
-            eventType: 'WebSocket',
+            eventType: EVENT_TYPES.WS,
             timestamp: this.#toEpoch(nrData.timestamp),
             openedAt: this.#toEpoch(nrData.openedAt),
             closedAt: this.#toEpoch(nrData.closedAt)
@@ -266,7 +267,7 @@ export class Aggregate extends AggregateBase {
       if (!agentRef.init.feature_flags.includes('no_spv')) {
         registerHandler('spv', (evt) => {
           this.addEvent({
-            eventType: 'SecurityPolicyViolation',
+            eventType: EVENT_TYPES.SPV,
             timestamp: this.#toEpoch(evt.timeStamp),
             blockedUri: evt.blockedURI,
             documentUri: evt.documentURI,

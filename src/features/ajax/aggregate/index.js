@@ -14,6 +14,7 @@ import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../
 import { gosNREUMOriginals } from '../../../common/window/nreum'
 import { Obfuscator } from '../../../common/util/obfuscate'
 import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
+import { EVENT_TYPES } from '../../../common/constants/agent-constants'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -24,7 +25,7 @@ export class Aggregate extends AggregateBase {
     const classThis = this
 
     // Create obfuscator for AJAX requests
-    this.obfuscator = new Obfuscator(agentRef, 'AjaxRequest')
+    this.obfuscator = new Obfuscator(agentRef, EVENT_TYPES.AJAX)
 
     if (!agentRef.init.ajax.block_internal) {
       // if the agent is tracking ITSELF, it can spawn endless ajax requests early if they are large from custom attributes, so we just disable early harvest for ajax in this case.

@@ -22,6 +22,7 @@ import { evaluateInternalError } from './internal-errors'
 import { getRegisteredTargetsFromFilename, getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
 import { buildCauseString } from './cause-string'
 import { ShortCircuit } from '../../../common/util/short-circuit'
+import { EVENT_TYPES } from '../../../common/constants/agent-constants'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -40,8 +41,8 @@ export class Aggregate extends AggregateBase {
     this.errorOnPage = false
 
     // Create obfuscators for each event type this feature handles
-    this.errorObfuscator = new Obfuscator(agentRef, 'JavaScriptError')
-    this.xhrObfuscator = new Obfuscator(agentRef, 'AjaxRequest')
+    this.errorObfuscator = new Obfuscator(agentRef, EVENT_TYPES.JSE)
+    this.xhrObfuscator = new Obfuscator(agentRef, EVENT_TYPES.AJAX)
 
     register('err', this.processError.bind(this), this.featureName, this.ee)
     register('ierr', this.processError.bind(this), this.featureName, this.ee)

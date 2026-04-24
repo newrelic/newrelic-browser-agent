@@ -2,7 +2,6 @@
  * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { LOG } from '../../loaders/api/constants'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
 export const IDEAL_PAYLOAD_SIZE = 16000

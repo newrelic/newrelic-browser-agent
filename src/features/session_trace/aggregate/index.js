@@ -12,6 +12,7 @@ import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 import { Obfuscator } from '../../../common/util/obfuscate'
 import { cleanURL } from '../../../common/url/clean-url'
 import { warn } from '../../../common/util/console'
+import { EVENT_TYPES } from '../../../common/constants/agent-constants'
 
 /** Reserved room for query param attrs */
 const QUERY_PARAM_PADDING = 5000
@@ -23,7 +24,7 @@ export class Aggregate extends AggregateBase {
     this.harvestOpts.raw = true
 
     // Create obfuscator for session trace nodes
-    this.obfuscator = new Obfuscator(agentRef, 'SessionTrace')
+    this.obfuscator = new Obfuscator(agentRef, EVENT_TYPES.ST)
 
     /** Tied to the entitlement flag response from BCS.  Will short circuit operations of the agg if false  */
     this.entitled = undefined

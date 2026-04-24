@@ -14,6 +14,7 @@ import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../../../common/session/con
 import { ABORT_REASONS } from '../../session_replay/constants'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
 import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
+import { EVENT_TYPES } from '../../../common/constants/agent-constants'
 
 const LOGGING_EVENT = 'Logging/Event/'
 
@@ -32,7 +33,7 @@ export class Aggregate extends AggregateBase {
     super.customAttributesAreSeparate = true
 
     // Create obfuscator for log entries
-    this.obfuscator = new Obfuscator(agentRef, 'Log')
+    this.obfuscator = new Obfuscator(agentRef, EVENT_TYPES.LOG)
 
     // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
     this.ee.on(SESSION_EVENTS.RESET, () => {

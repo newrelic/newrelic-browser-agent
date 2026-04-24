@@ -13,6 +13,7 @@ import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS, INTERACTION_TRIGGER
 import { AjaxNode } from './ajax-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
+import { EVENT_TYPES } from '../../../common/constants/agent-constants'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -22,8 +23,8 @@ export class Aggregate extends AggregateBase {
     super.customAttributesAreSeparate = true
 
     // Create obfuscators for browser interactions and nested AJAX requests
-    this.interactionObfuscator = new Obfuscator(agentRef, 'BrowserInteraction')
-    this.ajaxObfuscator = new Obfuscator(agentRef, 'AjaxRequest')
+    this.interactionObfuscator = new Obfuscator(agentRef, EVENT_TYPES.BI)
+    this.ajaxObfuscator = new Obfuscator(agentRef, EVENT_TYPES.AJAX)
 
     this.interactionsToHarvest = this.events
     this.domObserver = domObserver

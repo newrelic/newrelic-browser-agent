@@ -39,8 +39,10 @@ export class Aggregate extends AggregateBase {
   /** Sets up event listeners, and initializes this module to run in the correct "mode".  Can be triggered from a few places, but makes an effort to only set up listeners once */
   initialize (stMode, stEntitled, ignoreSession) {
     this.entitled ??= stEntitled
-    if (!this.entitled) this.blocked = true
-    if (this.blocked) return this.deregisterDrain()
+    if (!this.entitled) {
+      this.abort()
+      return this.deregisterDrain()
+    }
     this.timeKeeper ??= this.agentRef.runtime.timeKeeper
 
     if (!this.initialized) {
@@ -72,12 +74,15 @@ export class Aggregate extends AggregateBase {
 
     /** ST/SR sampling flow in BCS - https://drive.google.com/file/d/19hwt2oft-8Hh4RrjpLqEXfpP_9wYBLcq/view?usp=sharing */
     /** ST will run in the mode provided by BCS if the session IS NEW.  If not... it will use the state of the session entity to determine what mode to run in */
-    if (!this.agentRef.runtime.session.isNew && !ignoreSession) this.mode = this.agentRef.runtime.session.state.sessionTraceMode
+    if (this.agentRef.runtime.session.state.sessionTraceMode !== null && !ignoreSession) this.mode = this.agentRef.runtime.session.state.sessionTraceMode
     else this.mode = stMode
 
     /** If the mode is off, we do not want to hold up draining for other features, so we deregister the feature for now.
      * If it drains later (due to a mode change), data and handlers will instantly drain instead of waiting for the registry. */
-    if (this.mode === MODE.OFF) return this.deregisterDrain()
+    if (!this.mode) {
+      this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })
+      return this.deregisterDrain()
+    }
 
     /** The handlers set up by the Inst file */
     registerHandler('bst', (...args) => this.traceStorage.storeEvent(...args), this.featureName, this.ee)

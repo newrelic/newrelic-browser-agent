@@ -25,7 +25,9 @@ const model = {
     sleep: true,
     rave: true,
     repeat: false
-  }
+  },
+  surprise: null,
+  savings: { acct1: 100 }
 }
 
 test('empty object does not change model output', () => {
@@ -37,7 +39,9 @@ test('existing keys get their values changed', () => {
     sleep: false,
     repeat: {
       eat: false
-    }
+    },
+    surprise: { bonus: 'party' },
+    savings: null
   }
   expect(getModeledObject(obj, model)).toEqual({
     eat: true,
@@ -48,7 +52,9 @@ test('existing keys get their values changed', () => {
       sleep: true,
       rave: true,
       repeat: false
-    }
+    },
+    surprise: { bonus: 'party' },
+    savings: null
   })
 })
 
@@ -62,7 +68,9 @@ test('existing keys can change types too, to/from object', () => {
     eat: true,
     sleep: true,
     rave: {},
-    repeat: 'just a sad lonely string now'
+    repeat: 'just a sad lonely string now',
+    surprise: null,
+    savings: { acct1: 100 }
   })
 })
 
@@ -83,8 +91,13 @@ test('undefined key in object does not overwrite model value', () => {
   const output = getModeledObject({ key1: undefined }, template)
   expect(output).toEqual({ key1: 1 })
 })
-test('null key in object gets applied in output', () => {
-  const template = { key1: 1 }
-  const output = getModeledObject({ key1: null }, template)
+test('null value in object is NOT overwritten by default model value obj', () => {
+  const modelTemplate = { key1: { foo: 'bar' } }
+  const output = getModeledObject({ key1: null }, modelTemplate)
   expect(output).toEqual({ key1: null })
+})
+test('object value in object is NOT overwritten by default model value obj', () => {
+  const modelTemplate = { key1: null }
+  const output = getModeledObject({ key1: { foo: 'bar' } }, modelTemplate)
+  expect(output).toEqual({ key1: { foo: 'bar' } })
 })

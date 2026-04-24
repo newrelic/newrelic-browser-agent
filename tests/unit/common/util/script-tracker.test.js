@@ -54,16 +54,17 @@ beforeEach(() => {
     document: {
       querySelectorAll: jest.fn(() => []) // Returns DOM elements
     },
-    PerformanceObserver: jest.fn((callback) => {
-      // Capture callback so tests can trigger it manually
-      performanceObserverCallback = callback
-      return {
-        observe: jest.fn(),
-        disconnect: jest.fn()
-      }
-    }),
+
     Error: MockError
   }
+  global.window.PerformanceObserver = jest.fn((callback) => {
+    // Capture callback so tests can trigger it manually
+    performanceObserverCallback = callback
+    return {
+      observe: jest.fn(),
+      disconnect: jest.fn()
+    }
+  })
 
   global.window.PerformanceObserver.supportedEntryTypes = ['resource']
   // Expose as global properties for Node environment

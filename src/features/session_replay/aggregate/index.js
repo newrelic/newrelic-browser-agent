@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 /**
@@ -25,7 +25,7 @@ import { PAUSE_REPLAY } from '../../../loaders/api/constants'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  mode = MODE.OFF
+  mode = null
 
   // pass the recorder into the aggregator
   constructor (agentRef, args) {
@@ -68,7 +68,7 @@ export class Aggregate extends AggregateBase {
       if (!this.recorder) return
       // if the mode changed on a different tab, it needs to update this instance to match
       this.mode = agentRef.runtime.session.state.sessionReplayMode
-      if (!this.initialized || this.mode === MODE.OFF) return
+      if (!this.initialized || this.mode === MODE.OFF || !this.mode) return
       this.recorder?.startRecording(TRIGGERS.RESUME, this.mode)
     })
 
@@ -89,6 +89,11 @@ export class Aggregate extends AggregateBase {
     const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = agentRef.init.session_replay
 
     this.waitForFlags(['srs', 'sr']).then(([srMode, entitled]) => {
+      // set session to OFF mode only if there's a RUM response
+      if (!this.blocked && entitled === 0) {
+        this.mode = MODE.OFF
+        this.syncWithSessionManager({ sessionReplayMode: this.mode })
+      }
       this.entitled = !!entitled
       if (!this.entitled) {
         this.deregisterDrain()
@@ -100,7 +105,7 @@ export class Aggregate extends AggregateBase {
       }
       this.initializeRecording(srMode).then(() => { this.drain() })
     }).then(() => {
-      if (this.mode === MODE.OFF) {
+      if (!this.mode) {
         this.recorder?.stopRecording() // stop any conservative preload recording launched by instrument
         while (this.recorder?.getEvents().events.length) this.recorder?.clearBuffer?.()
       }
@@ -165,14 +170,16 @@ export class Aggregate extends AggregateBase {
 
     if (this.recorder?.trigger === TRIGGERS.API && this.agentRef.runtime.isRecording) {
       this.mode = MODE.FULL
-    } else if (!session.isNew && !ignoreSession) { // inherit the mode of the existing session
+    } else if (session.state.sessionReplayMode !== null && !ignoreSession) { // inherit the mode of the existing session
       this.mode = session.state.sessionReplayMode
     } else {
       // The session is new... determine the mode the new session should start in
       this.mode = srMode
+      this.syncWithSessionManager({ sessionReplayMode: this.mode })
     }
-    // If off, then don't record (early return)
-    if (this.mode === MODE.OFF) return
+
+    // If off or undetermined, then don't record (early return)
+    if (!this.mode) return
 
     try {
       /** will return a recorder instance if already imported, otherwise, will fetch the recorder and initialize it */
@@ -192,7 +199,6 @@ export class Aggregate extends AggregateBase {
     await this.prepUtils()
 
     if (!this.agentRef.runtime.isRecording) this.recorder.startRecording(trigger, this.mode)
-
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
   }
 

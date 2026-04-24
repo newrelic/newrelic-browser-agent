@@ -21,7 +21,7 @@ export function getModeledObject (obj, model) {
 
         if (Array.isArray(obj[key]) && Array.isArray(model[key])) output[key] = Array.from(new Set([...obj[key], ...model[key]]))
         else if (obj[key] instanceof Map || obj[key] instanceof Set || obj[key] instanceof Date || obj[key] instanceof RegExp) output[key] = obj[key]
-        else if (typeof obj[key] === 'object' && typeof model[key] === 'object') output[key] = getModeledObject(obj[key], model[key])
+        else if (typeof obj[key] === 'object' && model[key] !== null && typeof model[key] === 'object') output[key] = getModeledObject(obj[key], model[key])
         else output[key] = obj[key]
       } catch (e) {
         if (!output[key]) warn(1, e)

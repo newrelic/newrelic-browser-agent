@@ -29,7 +29,7 @@ test('InitialPageLoad serialized output is correct', () => {
   ipl.end = 123.45
 
   expect(ipl.navTiming).toBe('b,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1')
-  expect(ipl.serialize(0, mockAgent)).toBe("1,,,3f,,,'initialPageLoad,'http://localhost/,,1,,,cc,!!!'static-id,'4,33,66;b,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1")
+  expect(ipl.serialize(0, mockAgent)).toBe("1,,,3f,,,'initialPageLoad,'http://localhost/,,1,,,cc,!!!'static-id,'1,33,66;b,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1")
 })
 
 test('InitialPageLoad has correct oldURL', () => {

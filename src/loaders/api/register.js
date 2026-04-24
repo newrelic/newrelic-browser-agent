@@ -27,6 +27,18 @@ import { generateRandomHexString } from '../../common/ids/unique-id'
 const PROTECTED_KEYS = ['name', 'id', 'type']
 
 /**
+ * Map of API methods to their names (prevents minification from breaking method name references)
+ * @private
+ */
+const METHOD_NAMES = new Map([
+  [addPageAction, 'addPageAction'],
+  [log, 'log'],
+  [measure, 'measure'],
+  [noticeError, 'noticeError'],
+  [recordCustomEvent, 'recordCustomEvent']
+])
+
+/**
  * Warning functions that only fire once - can be reset in tests
  * @private
  */
@@ -203,7 +215,8 @@ function register (agentRef, target) {
     if (isBlocked() && methodToCall !== register) return
     /** set the timestamp before the async part of waiting for the rum response for better accuracy */
     const timestamp = now()
-    handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodToCall.name}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)
+    const methodName = METHOD_NAMES.get(methodToCall) || 'unknown'
+    handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodName}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)
     try {
       return methodToCall(...args, target, timestamp) // always report to target
     } catch (err) {

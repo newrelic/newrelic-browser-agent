@@ -1179,6 +1179,15 @@ describe('API tests', () => {
         expectHandled('api-ixn-get', [expect.toBeNumber(), expect.any(Object)])
       })
 
+      test('should forward interaction options to get handler', () => {
+        const opts = { waitForEnd: true, targetPageLoad: true }
+        agent.interaction(opts)
+
+        expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/interaction/called'])
+        expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/get/called'])
+        expectHandled('api-ixn-get', [expect.toBeNumber(), opts])
+      })
+
       test('should return an object containing the SPA interaction API methods', () => {
         const interaction = agent.interaction()
 

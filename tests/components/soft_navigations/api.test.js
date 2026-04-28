@@ -70,6 +70,41 @@ test('.interaction gets current or creates new api ixn', () => {
   expect(softNavAggregate.interactionInProgress.cancellationTimer).toBeUndefined()
 })
 
+test('.interaction with targetPageLoad binds to retained IPL without opening api ixn', () => {
+  const fakeIpl = {
+    trigger: 'initialPageLoad',
+    isActiveDuring: () => true
+  }
+  softNavAggregate.initialPageLoadInteraction = fakeIpl
+
+  const defaultIxn = mainAgent.interaction()
+  expect(getIxnContext(defaultIxn).associatedInteraction.trigger).toEqual('api') // default interaction() still cannot target iPL
+  defaultIxn.end()
+
+  const iplIxn = mainAgent.interaction({ targetPageLoad: true })
+  expect(getIxnContext(iplIxn).associatedInteraction).toBe(fakeIpl)
+  expect(softNavAggregate.interactionInProgress).toBeNull()
+})
+
+test('.interaction creates new api ixn when IPL is finished, while targetPageLoad still returns finished IPL', () => {
+  const finishedIpl = {
+    trigger: 'initialPageLoad',
+    status: 'finished',
+    isActiveDuring: () => false
+  }
+  softNavAggregate.initialPageLoadInteraction = finishedIpl
+
+  const apiIxn = mainAgent.interaction()
+  const apiCtx = getIxnContext(apiIxn)
+  expect(apiCtx.associatedInteraction.trigger).toEqual('api')
+  expect(softNavAggregate.interactionInProgress).toBe(apiCtx.associatedInteraction)
+
+  const iplIxn = mainAgent.interaction({ targetPageLoad: true })
+  expect(getIxnContext(iplIxn).associatedInteraction).toBe(finishedIpl)
+  expect(getIxnContext(iplIxn).associatedInteraction.status).toEqual('finished')
+  expect(softNavAggregate.interactionInProgress).toBe(apiCtx.associatedInteraction)
+})
+
 test('.interaction returns a different new context for every call', () => {
   const ixn1 = mainAgent.interaction()
   const ixn2 = mainAgent.interaction()

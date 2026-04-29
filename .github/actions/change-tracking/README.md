@@ -44,6 +44,7 @@ Before using this action, you need to create the following GitHub secrets:
 |-------------|--------|------------------------|----------------------|
 | staging | Staging | `NR_ENTITY_GUID_NR1_STAGING` | `NR_ENTITY_GUID_BROWSER_STAGING` |
 | us-prod | US | `NR_ENTITY_GUID_NR1_US_PROD` | N/A |
+| jp-prod | JP | `NR_ENTITY_GUID_NR1_JP_PROD` | N/A |
 | eu-prod | EU | `NR_ENTITY_GUID_NR1_EU_PROD` | N/A |
 
 **Note:** Dev environment is not supported by the New Relic Change Tracking API.

@@ -172,6 +172,31 @@ jobs:
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
 
+  # Rebuild and publish the jp-prod environment A/B script
+  publish-jp-prod-ab:
+    needs: [publish-current-to-s3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Deploy jp-prod a/b script
+        uses: ./.github/actions/internal-ab
+        with:
+          nr_environment: jp-prod
+          nrba_app_id: ${{ secrets.INTERNAL_JP_PRODUCTION_APPLICATION_ID }}
+          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+
   # Create change tracking event for US production
   create-us-prod-change-tracking:
     environment: staging
@@ -228,6 +253,37 @@ jobs:
           type: 'Rolling'
           description: 'EU production release v${{ steps.agent-loader-version.outputs.results }}'
           shortDescription: 'EU Prod: v${{ steps.agent-loader-version.outputs.results }}'
+          changelog: ${{ github.event.release.body }}
+          deepLink: ${{ github.event.release.html_url }}
+          commit: ${{ github.sha }}
+          user: ${{ github.actor }}
+          groupId: '${{ github.run_id }}-${{ github.sha }}'
+
+  # Create change tracking event for JP production
+  create-jp-prod-change-tracking:
+    environment: staging
+    needs: [publish-current-to-s3]
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get version number
+        id: agent-loader-version
+        run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Create JP production change tracking event (Account 1067061)
+        uses: ./.github/actions/change-tracking
+        with:
+          accountId: '1067061'
+          entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_JP_PROD }}
+          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          application: 'New Relic One - JP Production'
+          version: ${{ steps.agent-loader-version.outputs.results }}
+          type: 'Rolling'
+          description: 'JP production release v${{ steps.agent-loader-version.outputs.results }}'
+          shortDescription: 'JP Prod: v${{ steps.agent-loader-version.outputs.results }}'
           changelog: ${{ github.event.release.body }}
           deepLink: ${{ github.event.release.html_url }}
           commit: ${{ github.sha }}

@@ -84,6 +84,18 @@ function register (agentRef, target) {
   const timings = findScriptTimings()
 
   const attrs = {}
+  Object.defineProperty(target, 'attributes', {
+    get () {
+      return {
+        'source.id': target.id,
+        'source.name': target.name,
+        'source.type': target.type,
+        'parent.type': target.parent?.type || V2_TYPES.BA,
+        'parent.id': target.parent?.id,
+        ...attrs // this is abstracted out to a getter so that the other attributes cant be overridden
+      }
+    }
+  })
 
   // Only define attributes getter if it doesn't already exist
   if (!Object.prototype.hasOwnProperty.call(target, 'attributes')) {

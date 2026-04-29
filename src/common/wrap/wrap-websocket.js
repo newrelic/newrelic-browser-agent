@@ -6,13 +6,14 @@ import { globalScope } from '../constants/runtime'
 import { generateRandomHexString } from '../ids/unique-id'
 import { now } from '../timing/now'
 import { cleanURL } from '../url/clean-url'
+import { findTargetsFromStackTrace } from '../v2/utils'
 import { gosNREUMOriginals } from '../window/nreum'
 import { subscribeToPageUnload } from '../window/page-visibility'
 
 const wrapped = {}
 const openWebSockets = new Set() // track all instances to close out metrics on page unload
 
-export function wrapWebSocket (sharedEE) {
+export function wrapWebSocket (sharedEE, agentRef) {
   const originals = gosNREUMOriginals().o
   if (!originals.WS) return sharedEE
 
@@ -59,7 +60,7 @@ export function wrapWebSocket (sharedEE) {
     constructor (...args) {
       super(...args)
       /** @type {WebSocketData} */
-      this.nrData = new WebSocketData(args[0], args[1])
+      this.nrData = new WebSocketData(args[0], args[1], findTargetsFromStackTrace(agentRef))
 
       this.addEventListener('open', () => {
         this.nrData.openedAt = now()
@@ -187,13 +188,17 @@ class WebSocketData {
   /**
    * @param {string} requestedUrl - The URL passed to WebSocket constructor
    * @param {string|string[]} [requestedProtocols] - The protocols passed to WebSocket constructor
+   * @param {import("../../loaders/api/register-api-types").RegisterAPITarget[]} [targets=[]] - The registered entity targets associated with this WebSocket; defaults to an empty array if not provided
    */
-  constructor (requestedUrl, requestedProtocols) {
+  constructor (requestedUrl, requestedProtocols, targets = []) {
     /** @type {number} Timestamp when the WebSocket was constructed (relative time); will be time corrected later when timeKeeper is available */
     this.timestamp = now()
 
     /** @type {string} Most current URL when WebSocket was created; relevant for SPA */
     this.currentUrl = cleanURL(window.location.href)
+
+    /** @type {import("../../loaders/api/register-api-types").RegisterAPITarget[]} The registered entity targets associated with this WebSocket */
+    this.targets = targets.length ? targets : [undefined] // set to undefined if empty for v1 container payloads
 
     /*
      * pageUrl will be set by addEvent later; unlike timestamp and currentUrl, it's not sensitive to *when* it is set.

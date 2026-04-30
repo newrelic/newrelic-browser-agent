@@ -1,4 +1,5 @@
 import { Obfuscator } from '../../../../../src/common/util/obfuscate'
+import { AJAX_ID } from '../../../../../src/features/ajax/constants'
 
 jest.enableAutomock()
 jest.unmock('../../../../../src/features/soft_navigations/aggregate/ajax-node')
@@ -29,7 +30,7 @@ const someAjaxEvent = {
     operationType: 'QUERY',
     operationFramework: 'GraphQL'
   },
-  AJAX_ID: '1234'
+  [AJAX_ID]: '1234'
 }
 
 let AjaxNode
@@ -79,7 +80,7 @@ test('Ajax serialize output is correct', () => {
   const ajn = new AjaxNode(someAjaxEvent)
 
   expect(ajn.nodeId).toEqual(1)
-  expect(ajn.serialize(0, someAgent)).toEqual("2,4,sg,sg,,,'POST,5p,'google.com,'/,3f,co,1,'1,'some_span_id,'some_trace_id,lx;5,'operationName,'Anonymous;5,'operationType,'QUERY;5,'operationFramework,'GraphQL;9,'ajaxRequest.id")
+  expect(ajn.serialize(0, someAgent)).toEqual("2,4,sg,sg,,,'POST,5p,'google.com,'/,3f,co,1,'1,'some_span_id,'some_trace_id,lx;5,'operationName,'Anonymous;5,'operationType,'QUERY;5,'operationFramework,'GraphQL;5,'ajaxRequest.id,'1234")
   // The start (and end) timestamp should translate based on "parent" timestamp passed in:
-  expect(ajn.serialize(512, someAgent)).toEqual("2,4,e8,sg,,,'POST,5p,'google.com,'/,3f,co,1,'1,'some_span_id,'some_trace_id,lx;5,'operationName,'Anonymous;5,'operationType,'QUERY;5,'operationFramework,'GraphQL;9,'ajaxRequest.id")
+  expect(ajn.serialize(512, someAgent)).toEqual("2,4,e8,sg,,,'POST,5p,'google.com,'/,3f,co,1,'1,'some_span_id,'some_trace_id,lx;5,'operationName,'Anonymous;5,'operationType,'QUERY;5,'operationFramework,'GraphQL;5,'ajaxRequest.id,'1234")
 })

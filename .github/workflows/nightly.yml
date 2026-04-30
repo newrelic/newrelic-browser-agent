@@ -88,6 +88,8 @@ jobs:
             internal/staging-postamble.js \
             internal/prod-released.js \
             internal/prod-postamble.js \
+            internal/jp-prod-released.js \
+            internal/jp-prod-postamble.js \
             internal/eu-prod-released.js \
             internal/eu-prod-postamble.js
 

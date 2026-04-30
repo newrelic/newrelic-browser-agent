@@ -19,6 +19,7 @@ on:
         type: choice
         options:
           - 'New Relic One - Staging'
+          - 'New Relic One - JP Production'
           - 'New Relic One - EU Production'
           - 'New Relic One - Production'
       version:
@@ -106,7 +107,7 @@ jobs:
               "New Relic One - Staging")
                 echo "entityGuid=${{ secrets.NR_ENTITY_GUID_BROWSER_STAGING }}" >> $GITHUB_OUTPUT
                 ;;
-              "New Relic One - EU Production"|"New Relic One - Production")
+              "New Relic One - JP Production"|"New Relic One - EU Production"|"New Relic One - Production")
                 echo "Error: Account 550352 only supports 'New Relic One - Staging' application"
                 exit 1
                 ;;
@@ -122,6 +123,9 @@ jobs:
                 ;;
               "New Relic One - EU Production")
                 echo "entityGuid=${{ secrets.NR_ENTITY_GUID_NR1_EU_PROD }}" >> $GITHUB_OUTPUT
+                ;;
+              "New Relic One - JP Production")
+                echo "entityGuid=${{ secrets.NR_ENTITY_GUID_NR1_JP_PROD }}" >> $GITHUB_OUTPUT
                 ;;
               "New Relic One - Staging")
                 echo "entityGuid=${{ secrets.NR_ENTITY_GUID_NR1_STAGING }}" >> $GITHUB_OUTPUT

@@ -58,11 +58,9 @@ describe('Clock Drift Detection', () => {
     })
 
     // Simulate a 4-hour clock freeze (drift) - realistic machine sleep scenario
-    const freezeResult = await browser.execute(function () {
+    await browser.execute(function () {
       return window.simulateClockFreeze(14400000)
     })
-
-    console.log('Clock freeze result:', freezeResult)
 
     // Trigger drift detection and capture corrected timestamps
     const afterDrift = await browser.execute(function () {
@@ -246,11 +244,9 @@ describe('Clock Drift Detection', () => {
     })
 
     // First drift event: 4 hours
-    const firstFreezeResult = await browser.execute(function () {
+    await browser.execute(function () {
       return window.simulateClockFreeze(14400000)
     })
-
-    console.log('First clock freeze result:', firstFreezeResult)
 
     const afterFirstDrift = await browser.execute(function () {
       const agent = Object.values(newrelic.initializedAgents)[0]

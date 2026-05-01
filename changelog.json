@@ -4,6 +4,39 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "412ef8b6ea80ddd13900cea5f379e12b4fafc007",
+          "message": "Adjust timestamps for clock skew due to machine sleep",
+          "issues": [
+            "1749"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "2c2024e3cbb4b2f6afc22e2bc1c6385b07335be5",
+          "message": "Automatically Detect MFE User Actions",
+          "issues": [
+            "1723"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "9874ac5d851653641ed33241ad5e96678a9b9fee",
+          "message": "Allow Session Replay to retry payloads",
+          "issues": [
+            "1666"
+          ]
+        }
+      ],
+      "version": "1.314.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "e2406b81-b4d9-4a86-9c12-b517a78a629f",
+      "createTime": "2026-05-01T18:07:14.893Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "8442a5b0db01a929315dd7c7e3bd4817e6525200",
           "message": "Fix method names for MFE methods",
@@ -3921,5 +3954,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-04-21T01:00:29.936Z"
+  "updateTime": "2026-05-01T18:07:14.893Z"
 }

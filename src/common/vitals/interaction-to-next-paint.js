@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { onINP } from 'web-vitals/attribution'
@@ -25,6 +25,6 @@ if (isBrowserScope) {
       presentationDelay: attribution.presentationDelay,
       loadState: attribution.loadState
     }
-    interactionToNextPaint.update({ value, attrs })
+    interactionToNextPaint.update({ value, attrs, element: attribution.interactionTargetElement })
   })
 }

@@ -17,7 +17,8 @@ import { getRegisteredTargetsFromId } from '../v2/utils'
  * @returns {{path: (undefined|string), nearestFields: {}, targets: Array, hasButton: boolean, hasLink: boolean}}
  */
 export const analyzeElemPath = (elem, targetFields = [], agentRef) => {
-  const result = { path: undefined, nearestFields: {}, targets: [], hasButton: false, hasLink: false }
+  const targets = []
+  const result = { path: undefined, nearestFields: {}, get targets () { return targets.length ? targets : [undefined] }, hasButton: false, hasLink: false }
   if (!elem) return result
   if (elem === window) { result.path = 'window'; return result }
   if (elem === document) { result.path = 'document'; return result }
@@ -35,7 +36,7 @@ export const analyzeElemPath = (elem, targetFields = [], agentRef) => {
 
       const dataAttrs = elem?.dataset
       if (dataAttrs.nrMfeId) {
-        result.targets.push(...getRegisteredTargetsFromId(dataAttrs.nrMfeId, agentRef))
+        targets.push(...getRegisteredTargetsFromId(dataAttrs.nrMfeId, agentRef))
       }
 
       pathSelector = buildPathSelector(elem, pathSelector)

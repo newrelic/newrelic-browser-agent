@@ -5,7 +5,7 @@ import { hideBin } from 'yargs/helpers'
 export const args = yargs(hideBin(process.argv))
   .usage('$0 [options]')
 
-  .choices('environment', ['dev', 'staging', 'prod', 'eu-prod'])
+  .choices('environment', ['dev', 'staging', 'prod', 'eu-prod', 'jp-prod'])
   .describe('environment', 'Which environment are we building the a/b script for?')
 
   .string('released')

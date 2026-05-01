@@ -27,6 +27,29 @@ import { generateRandomHexString } from '../../common/ids/unique-id'
 const PROTECTED_KEYS = ['name', 'id', 'type']
 
 /**
+ * Map of API methods to their names (prevents minification from breaking method name references)
+ * @private
+ */
+const METHOD_NAMES = new Map([
+  [addPageAction, 'addPageAction'],
+  [log, 'log'],
+  [measure, 'measure'],
+  [noticeError, 'noticeError'],
+  [recordCustomEvent, 'recordCustomEvent']
+])
+
+/**
+ * Warning functions that only fire once - can be reset in tests
+ * @private
+ */
+export const warnings = {
+  experimental: single(() => warn(54, 'newrelic.register')),
+  disabled: single(() => warn(55)),
+  invalidTarget: single((target) => warn(48, target)),
+  deregistered: single(() => warn(68))
+}
+
+/**
  * @experimental
  * IMPORTANT: This feature is being developed for use internally and is not in a public-facing production-ready state.
  * It is not recommended for use in production environments and will not receive support for issues.
@@ -45,7 +68,7 @@ export function setupRegisterAPI (agent) {
  * @returns {RegisterAPI} the api object to be returned from the register api method
  */
 function register (agentRef, target) {
-  warn(54, 'newrelic.register')
+  warnings.experimental()
 
   target ||= {}
   target.instance = generateRandomHexString(8)
@@ -104,8 +127,8 @@ function register (agentRef, target) {
   }
 
   /** primary cases that can block the register API from working at init time */
-  if (!agentRef.init.api.register.enabled) block(single(() => warn(55)))
-  if (!hasValidValue(target.id) || !hasValidValue(target.name)) block(single(() => warn(48, target)))
+  if (!agentRef.init.api.register.enabled) block(warnings.disabled)
+  if (!hasValidValue(target.id) || !hasValidValue(target.name)) block(() => warnings.invalidTarget(target))
 
   /** @type {RegisterAPI} */
   const api = {
@@ -113,7 +136,7 @@ function register (agentRef, target) {
     deregister: () => {
       /** note: blocking this instance will disable access for all entities sharing the instance, and will invalidate it from the v2 checks */
       reportTimings()
-      block(single(() => warn(68)))
+      block(warnings.deregistered)
     },
     log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     measure: (name, options = {}) => report(measure, [name, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
@@ -192,7 +215,8 @@ function register (agentRef, target) {
     if (isBlocked() && methodToCall !== register) return
     /** set the timestamp before the async part of waiting for the rum response for better accuracy */
     const timestamp = now()
-    handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodToCall.name}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)
+    const methodName = METHOD_NAMES.get(methodToCall) || 'unknown'
+    handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodName}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)
     try {
       return methodToCall(...args, target, timestamp) // always report to target
     } catch (err) {

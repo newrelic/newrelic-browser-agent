@@ -9,7 +9,10 @@ const clsAttribution = {
   largestShiftTarget: 'element',
   largestShiftTime: 12345,
   largestShiftValue: 0.9712,
-  loadState: 'dom-content-loaded'
+  loadState: 'dom-content-loaded',
+  largestShiftSource: {
+    node: document.createElement('div')
+  }
 }
 let mockReturnVal = 0.123
 const getFreshCLSImport = async (codeToRun) => {
@@ -25,8 +28,10 @@ describe('cls', () => {
     getFreshCLSImport(metric => {
       metric.subscribe(({ value, element, attrs }) => {
         expect(value).toEqual(0.123)
-        expect(element).toEqual('element')
-        expect(attrs).toEqual({ ...clsAttribution, metricId: 'beepboop' })
+        const { largestShiftSource, ...expectedAttrs } = clsAttribution
+        expect(element).toEqual(largestShiftSource.node)
+        expect(element instanceof HTMLElement).toBe(true)
+        expect(attrs).toEqual({ ...expectedAttrs, metricId: 'beepboop' })
         done()
       })
     })

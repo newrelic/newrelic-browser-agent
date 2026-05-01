@@ -12,7 +12,8 @@ const inpAttribution = {
   nextPaintTime: 200,
   processingDuration: 0,
   presentationDelay: 0,
-  loadState: 'complete'
+  loadState: 'complete',
+  interactionTargetElement: document.createElement('div')
 }
 const getFreshINPImport = async (codeToRun) => {
   jest.doMock('web-vitals/attribution', () => ({
@@ -26,7 +27,8 @@ describe('inp', () => {
   test('reports inp from web-vitals', (done) => {
     getFreshINPImport(metric => metric.subscribe(({ value, element, attrs }) => {
       expect(value).toEqual(8)
-      expect(element).toEqual(inpAttribution.interactionTarget)
+      expect(element).toEqual(inpAttribution.interactionTargetElement)
+      expect(element instanceof HTMLElement).toBe(true)
       expect(attrs).toStrictEqual({
         eventTarget: inpAttribution.interactionTarget,
         eventTime: inpAttribution.interactionTime,

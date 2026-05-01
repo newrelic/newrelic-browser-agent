@@ -25,6 +25,6 @@ if (isBrowserScope) {
       presentationDelay: attribution.presentationDelay,
       loadState: attribution.loadState
     }
-    interactionToNextPaint.update({ value, attrs, element: attribution.interactionTarget })
+    interactionToNextPaint.update({ value, attrs, element: attribution.interactionTargetElement })
   })
 }

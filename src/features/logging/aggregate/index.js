@@ -48,10 +48,14 @@ export class Aggregate extends AggregateBase {
       this.loggingMode ??= { auto, api } // likewise, don't want to overwrite the mode if it was set already
       const session = this.agentRef.runtime.session
       if (canEnableSessionTracking(agentRef.init) && session) {
-        if (session.isNew) this.#syncWithSessionManager()
-        else updateLocalLoggingMode(session.state.loggingMode, session.state.logApiMode)
+        // if session mode is already set, use it
+        if (session.state.loggingMode !== null || session.state.logApiMode !== null) {
+          updateLocalLoggingMode(session.state.loggingMode, session.state.logApiMode)
+        } else {
+          this.#syncWithSessionManager()
+        }
       }
-      if (this.loggingMode.auto === LOGGING_MODE.OFF && this.loggingMode.api === LOGGING_MODE.OFF) {
+      if (!this.loggingMode.auto && !this.loggingMode.api) {
         this.blocked = true
         this.deregisterDrain()
         return

@@ -53,18 +53,12 @@ describe('class setup', () => {
     expect(loggingAggregate.supportsRegisteredEntities).toBe(true)
   })
 
-  test('should wait for flags - log flag is missing', async () => {
-    expect(loggingAggregate.drained).toBeUndefined()
-    loggingAggregate.ee.emit('rumresp', [{}])
-    await new Promise(process.nextTick)
-    expect(loggingAggregate.blocked).toEqual(true)
-  })
-
   test('should wait for flags - 0 = OFF', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
     await mockLoggingRumResponse(LOGGING_MODE.OFF, LOGGING_MODE.OFF)
 
     expect(loggingAggregate.blocked).toEqual(true)
+    expect(loggingAggregate.loggingMode).toEqual({ auto: LOGGING_MODE.OFF, api: LOGGING_MODE.OFF })
   })
 
   test('should wait for flags - 1 = ERROR', async () => {
@@ -72,6 +66,7 @@ describe('class setup', () => {
     await mockLoggingRumResponse(LOGGING_MODE.ERROR, LOGGING_MODE.OFF)
 
     expect(loggingAggregate.drained).toEqual(true)
+    expect(loggingAggregate.loggingMode).toEqual({ auto: LOGGING_MODE.ERROR, api: LOGGING_MODE.OFF })
   })
 
   test('is not blocked if just logapi is on while log is flagged off', async () => {
@@ -79,6 +74,7 @@ describe('class setup', () => {
     await mockLoggingRumResponse(LOGGING_MODE.OFF, LOGGING_MODE.INFO)
 
     expect(loggingAggregate.drained).toEqual(true)
+    expect(loggingAggregate.loggingMode).toEqual({ auto: LOGGING_MODE.OFF, api: LOGGING_MODE.INFO })
   })
 
   test('does not overwrite logging modes if set prior to rum response', async () => {
@@ -87,6 +83,29 @@ describe('class setup', () => {
 
     expect(loggingAggregate.loggingMode).toEqual({ auto: LOGGING_MODE.WARN, api: LOGGING_MODE.TRACE })
     expect(loggingAggregate.blocked).toEqual(false)
+  })
+
+  test('falls back to session logging modes if available', async () => {
+    mainAgent.runtime.session.isNew = true // ensure old logic does not take effect, only the session.state values matter
+    mainAgent.runtime.session.state.loggingMode = LOGGING_MODE.ERROR
+    mainAgent.runtime.session.state.logApiMode = LOGGING_MODE.ERROR
+
+    await mockLoggingRumResponse(LOGGING_MODE.INFO, LOGGING_MODE.INFO)
+
+    // if the session state values are present, they take precedence over any new RUM flags
+    expect(loggingAggregate.loggingMode).toEqual({ auto: LOGGING_MODE.ERROR, api: LOGGING_MODE.ERROR })
+  })
+
+  test('should block if session is not enabled', async () => {
+    const originalSession = mainAgent.runtime.session
+    mainAgent.runtime.session = undefined
+    expect(loggingAggregate.drained).toBeUndefined()
+    await mockLoggingRumResponse(LOGGING_MODE.OFF, LOGGING_MODE.OFF)
+
+    expect(loggingAggregate.blocked).toEqual(true)
+    expect(loggingAggregate.loggingMode).toEqual({ auto: LOGGING_MODE.OFF, api: LOGGING_MODE.OFF })
+
+    mainAgent.runtime.session = originalSession
   })
 })
 

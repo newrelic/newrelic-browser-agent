@@ -42,7 +42,8 @@ afterEach(() => {
 
 describe('Session Replay Session Behavior', () => {
   test('when session ends', async () => {
-    mainAgent.runtime.session.state.isNew = true
+    session.isNew = false
+
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
 
@@ -57,7 +58,7 @@ describe('Session Replay Session Behavior', () => {
   })
 
   test('when session is paused and resumed', async () => {
-    mainAgent.runtime.session.state.isNew = true
+    session.isNew = false
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
 
@@ -73,47 +74,35 @@ describe('Session Replay Session Behavior', () => {
     expect(mainAgent.runtime.isRecording).toBeTruthy()
   })
 
-  test('session SR mode matches SR mode -- FULL', async () => {
-    mainAgent.runtime.session.state.isNew = true
-    sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
+  test.each(Object.keys(MODE))('session SR mode matches SR mode -- %s', async (key) => {
+    session.isNew = false
+    const mode = MODE[key]
+    sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: mode }])
     await new Promise(process.nextTick)
 
-    expect(session.state.sessionReplayMode).toEqual(MODE.FULL)
-    expect(sessionReplayAggregate.mode).toEqual(MODE.FULL)
-  })
-
-  test('session SR mode matches SR mode -- ERROR', async () => {
-    mainAgent.runtime.session.state.isNew = true
-    sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.ERROR }])
-    await new Promise(process.nextTick)
-
-    expect(session.state.sessionReplayMode).toEqual(MODE.ERROR)
-    expect(sessionReplayAggregate.mode).toEqual(MODE.ERROR)
-  })
-
-  test('session SR mode matches SR mode -- OFF', async () => {
-    mainAgent.runtime.session.state.isNew = true
-    sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.OFF }])
-    await new Promise(process.nextTick)
-
-    expect(session.state.sessionReplayMode).toEqual(MODE.OFF)
-    expect(sessionReplayAggregate.mode).toEqual(MODE.OFF)
+    expect(sessionReplayAggregate.blocked).toEqual(false)
+    expect(session.state.sessionReplayMode).toEqual(mode)
+    expect(sessionReplayAggregate.mode).toEqual(mode)
+    const localStorageSessionState = session.read()
+    expect(localStorageSessionState.sessionReplayMode).toEqual(mode)
   })
 
   test('session SR mode is OFF when not entitled -- FULL', async () => {
-    mainAgent.runtime.session.state.isNew = true
+    session.isNew = false
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 0, srs: MODE.FULL }])
     await new Promise(process.nextTick)
 
+    expect(sessionReplayAggregate.blocked).toEqual(false)
     expect(session.state.sessionReplayMode).toEqual(MODE.OFF)
     expect(sessionReplayAggregate.mode).toEqual(MODE.OFF)
   })
 
   test('session SR mode is OFF when not entitled -- ERROR', async () => {
-    mainAgent.runtime.session.state.isNew = true
+    session.isNew = false
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 0, srs: MODE.ERROR }])
     await new Promise(process.nextTick)
 
+    expect(sessionReplayAggregate.blocked).toEqual(false)
     expect(session.state.sessionReplayMode).toEqual(MODE.OFF)
     expect(sessionReplayAggregate.mode).toEqual(MODE.OFF)
   })
@@ -308,7 +297,9 @@ describe('Session Replay Harvest Behaviors', () => {
 
     expectHarvests(mainAgent, FEATURE_NAMES.sessionReplay, { callCount: 1, harvestsCount: 1 }) // initial snapshot harvest
 
-    document.body.innerHTML = `<span>${faker.lorem.words(MAX_PAYLOAD_SIZE)}</span>`
+    // since these are words, we can take a rough estimate of 5 characters per word to speed up this test
+    // (1M words = ~7.5M str length, 22secs vs. 200k words = ~1.5M str length, <1-4secs)
+    document.body.innerHTML = `<span>${faker.lorem.words(MAX_PAYLOAD_SIZE / 5)}</span>`
     await new Promise(process.nextTick)
 
     expectHarvests(mainAgent, FEATURE_NAMES.sessionReplay, { harvestsCount: 1 }) // should not have harvested (2), span was too large

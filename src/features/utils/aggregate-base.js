@@ -119,7 +119,7 @@ export class AggregateBase extends FeatureBase {
       }
       function buildOutput (ref) {
         return flagNames.map(flag => {
-          if (!ref[flag]) return 0
+          if (ref[flag] === undefined) return null
           return ref[flag]
         })
       }

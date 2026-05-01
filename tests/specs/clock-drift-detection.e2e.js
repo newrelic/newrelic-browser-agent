@@ -1,4 +1,5 @@
 import { testSupportMetricsRequest, testInsRequest } from '../../tools/testing-server/utils/expect-tests'
+import { notFirefox } from '../../tools/browser-matcher/common-matchers.mjs'
 
 describe('Clock Drift Detection', () => {
   let supportabilityMetricsCapture
@@ -13,7 +14,8 @@ describe('Clock Drift Detection', () => {
     await browser.destroyAgentSession()
   })
 
-  it('should detect drift when performance.now() freezes while Date.now() continues', async () => {
+  // Firefox doesn't maintain performance.now() overrides across browser.execute() calls, so we can't reliably simulate clock drift
+  it.withBrowsersMatching(notFirefox)('should detect drift when performance.now() freezes while Date.now() continues', async () => {
     await browser.url(await browser.testHandle.assetURL('clock-drift-simulation.html', { loader: 'spa' }))
       .then(() => browser.waitForAgentLoad())
 
@@ -56,9 +58,11 @@ describe('Clock Drift Detection', () => {
     })
 
     // Simulate a 4-hour clock freeze (drift) - realistic machine sleep scenario
-    await browser.execute(function () {
+    const freezeResult = await browser.execute(function () {
       return window.simulateClockFreeze(14400000)
     })
+
+    console.log('Clock freeze result:', freezeResult)
 
     // Trigger drift detection and capture corrected timestamps
     const afterDrift = await browser.execute(function () {
@@ -223,7 +227,8 @@ describe('Clock Drift Detection', () => {
     expect(driftMetric).toBeUndefined()
   })
 
-  it('should handle multiple drift events and continue correcting timestamps', async () => {
+  // Firefox doesn't allow performance.now() overrides so we can't reliably simulate clock drift
+  it.withBrowsersMatching(notFirefox)('should handle multiple drift events and continue correcting timestamps', async () => {
     await browser.url(await browser.testHandle.assetURL('clock-drift-simulation.html', { loader: 'spa' }))
       .then(() => browser.waitForAgentLoad())
 
@@ -241,9 +246,11 @@ describe('Clock Drift Detection', () => {
     })
 
     // First drift event: 4 hours
-    await browser.execute(function () {
+    const firstFreezeResult = await browser.execute(function () {
       return window.simulateClockFreeze(14400000)
     })
+
+    console.log('First clock freeze result:', firstFreezeResult)
 
     const afterFirstDrift = await browser.execute(function () {
       const agent = Object.values(newrelic.initializedAgents)[0]

@@ -14,7 +14,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
-import { getVersion2Attributes } from '../../../common/v2/utils'
+import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -61,7 +61,7 @@ export class Aggregate extends AggregateBase {
 
       let addUserAction = () => { /** no-op */ }
       if (isBrowserScope && agentRef.init.user_actions.enabled) {
-        this.#userActionAggregator = new UserActionsAggregator()
+        this.#userActionAggregator = new UserActionsAggregator(this.agentRef)
         this.harvestOpts.beforeUnload = () => addUserAction?.(this.#userActionAggregator.aggregationEvent)
 
         addUserAction = (aggregatedUserAction) => {
@@ -70,50 +70,54 @@ export class Aggregate extends AggregateBase {
              * so we still need to validate that an event was given to this method before we try to add */
             if (aggregatedUserAction?.event) {
               const { target, timeStamp, type } = aggregatedUserAction.event
-              const userActionEvent = {
-                eventType: 'UserAction',
-                timestamp: this.#toEpoch(timeStamp),
-                action: type,
-                actionCount: aggregatedUserAction.count,
-                actionDuration: aggregatedUserAction.relativeMs[aggregatedUserAction.relativeMs.length - 1],
-                actionMs: aggregatedUserAction.relativeMs,
-                rageClick: aggregatedUserAction.rageClick,
-                target: aggregatedUserAction.selectorPath,
-                currentUrl: aggregatedUserAction.currentUrl,
-                ...(isIFrameWindow(window) && { iframe: true }),
-                ...(this.agentRef.init.user_actions.elementAttributes.reduce((acc, field) => {
-                  /** prevent us from capturing an obscenely long value */
-                  if (canTrustTargetAttribute(field)) acc[targetAttrName(field)] = String(target[field]).trim().slice(0, 128)
-                  return acc
-                }, {})),
-                ...aggregatedUserAction.nearestTargetFields,
-                ...(aggregatedUserAction.deadClick && { deadClick: true }),
-                ...(aggregatedUserAction.errorClick && { errorClick: true })
-              }
-              this.addEvent(userActionEvent)
-              this.#trackUserActionSM(userActionEvent)
 
-              /**
+              aggregatedUserAction.targets.forEach(mfeTarget => {
+                const userActionEvent = {
+                  eventType: 'UserAction',
+                  timestamp: this.#toEpoch(timeStamp),
+                  action: type,
+                  actionCount: aggregatedUserAction.count,
+                  actionDuration: aggregatedUserAction.relativeMs[aggregatedUserAction.relativeMs.length - 1],
+                  actionMs: aggregatedUserAction.relativeMs,
+                  rageClick: aggregatedUserAction.rageClick,
+                  target: aggregatedUserAction.selectorPath,
+                  currentUrl: aggregatedUserAction.currentUrl,
+                  ...(isIFrameWindow(window) && { iframe: true }),
+                  ...(this.agentRef.init.user_actions.elementAttributes.reduce((acc, field) => {
+                  /** prevent us from capturing an obscenely long value */
+                    if (canTrustTargetAttribute(field)) acc[targetAttrName(field)] = String(target[field]).trim().slice(0, 128)
+                    return acc
+                  }, {})),
+                  ...aggregatedUserAction.nearestTargetFields,
+                  ...(aggregatedUserAction.deadClick && { deadClick: true }),
+                  ...(aggregatedUserAction.errorClick && { errorClick: true })
+                }
+                this.addEvent(userActionEvent, mfeTarget)
+
+                this.#trackUserActionSM(userActionEvent)
+
+                /**
                * Returns the original target field name with `target` prepended and camelCased
                * @param {string} originalFieldName
                * @returns {string} the target field name
                */
-              function targetAttrName (originalFieldName) {
+                function targetAttrName (originalFieldName) {
                 /** preserve original renaming structure for pre-existing field maps */
-                if (originalFieldName === 'tagName') originalFieldName = 'tag'
-                if (originalFieldName === 'className') originalFieldName = 'class'
-                /** return the original field name, cap'd and prepended with target to match formatting */
-                return `target${originalFieldName.charAt(0).toUpperCase() + originalFieldName.slice(1)}`
-              }
+                  if (originalFieldName === 'tagName') originalFieldName = 'tag'
+                  if (originalFieldName === 'className') originalFieldName = 'class'
+                  /** return the original field name, cap'd and prepended with target to match formatting */
+                  return `target${originalFieldName.charAt(0).toUpperCase() + originalFieldName.slice(1)}`
+                }
 
-              /**
+                /**
                * Only trust attributes that exist on HTML element targets, which excludes the window and the document targets
                * @param {string} attribute The attribute to check for on the target element
                * @returns {boolean} Whether the target element has the attribute and can be trusted
                */
-              function canTrustTargetAttribute (attribute) {
-                return !!(aggregatedUserAction.selectorPath !== 'window' && aggregatedUserAction.selectorPath !== 'document' && target instanceof HTMLElement && target?.[attribute])
-              }
+                function canTrustTargetAttribute (attribute) {
+                  return !!(aggregatedUserAction.selectorPath !== 'window' && aggregatedUserAction.selectorPath !== 'document' && target instanceof HTMLElement && target?.[attribute])
+                }
+              })
             }
           } catch (e) {
             // do nothing for now
@@ -314,9 +318,7 @@ export class Aggregate extends AggregateBase {
       timestamp: this.#toEpoch(now()),
       /** all generic events require pageUrl(s) */
       pageUrl: cleanURL('' + initialLocation),
-      currentUrl: cleanURL('' + location),
-      /** Specific attributes only supplied if harvesting to endpoint version 2 */
-      ...(getVersion2Attributes(target, this))
+      currentUrl: cleanURL('' + location)
     }
 
     const eventAttributes = {
@@ -328,7 +330,8 @@ export class Aggregate extends AggregateBase {
       ...obj
     }
 
-    this.events.add(eventAttributes)
+    this.events.add({ ...eventAttributes, ...getVersion2Attributes(target, this) })
+    if (shouldDuplicate(target, this.agentRef)) this.addEvent({ ...eventAttributes, ...getVersion2DuplicationAttributes(target, this) })
   }
 
   serializer (eventBuffer) {

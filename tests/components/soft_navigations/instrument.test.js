@@ -5,6 +5,7 @@ import { resetAgent, setupAgent } from '../setup-agent'
 import { faker } from '@faker-js/faker'
 
 let mainAgent
+let softNavInstrument
 
 beforeAll(() => {
   mainAgent = setupAgent({
@@ -16,15 +17,28 @@ beforeAll(() => {
 
 beforeEach(async () => {
   jest.spyOn(handleModule, 'handle')
-  new SoftNav(mainAgent)
+  softNavInstrument = new SoftNav(mainAgent)
 })
 
 afterEach(() => {
+  softNavInstrument?.abortHandler?.()
+  softNavInstrument = undefined
+
+  // SoftNav subscribes to history scoped emitter events; clear those listeners per test
+  const historyEE = mainAgent.ee.get('history')
+  ;['pushState-end', 'replaceState-end'].forEach((eventName) => {
+    historyEE.listeners(eventName).forEach((listener) => {
+      historyEE.removeEventListener(eventName, listener)
+    })
+  })
+
   resetAgent(mainAgent)
   jest.clearAllMocks()
 })
 
 test('instrument detects heuristic steps', async () => {
+  handleModule.handle.mockClear()
+
   history.pushState({}, '/foo')
   expect(handleModule.handle).toHaveBeenLastCalledWith('newURL', [expect.any(Number), window.location.href], undefined, FEATURE_NAME, expect.any(Object))
   history.replaceState({}, '')

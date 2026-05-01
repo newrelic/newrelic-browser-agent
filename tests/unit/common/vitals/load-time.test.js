@@ -208,8 +208,11 @@ describe('load-time', () => {
       })
       windowLoadCallback()
       windowLoadCallback() // Should not trigger again due to isValid check
-      expect(triggered).toEqual(1)
-      done()
+      // Defer assertions past the setTimeout(0) used to ensure loadEventEnd is valid
+      setTimeout(() => {
+        expect(triggered).toEqual(1)
+        done()
+      }, 100)
     })
   })
 

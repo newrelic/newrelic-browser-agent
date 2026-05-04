@@ -82,25 +82,32 @@ export function checkAjaxEvents ({ query, body }, { specificPath, hasTrace } = {
   expect(body?.length).toBeGreaterThanOrEqual(1)
   body
     .filter(x => !specificPath || (specificPath && x.path === specificPath))
-    .forEach(x => expect(x).toMatchObject({
-      callbackDuration: expect.any(Number),
-      callbackEnd: expect.any(Number),
-      children: expect.any(Array),
-      domain: expect.any(String),
-      end: expect.any(Number),
-      guid: hasTrace ? expect.any(String) : expect.toSatisfy(n => n === null),
-      method: expect.any(String),
-      nodeId: expect.any(String),
-      path: specificPath ? specificPath : expect.any(String),
-      requestBodySize: expect.any(Number),
-      requestedWith: expect.any(String),
-      responseBodySize: expect.any(Number),
-      start: expect.any(Number),
-      status: expect.any(Number),
-      timestamp: hasTrace ? expect.any(Number) : expect.toSatisfy(n => n === null),
-      traceId: hasTrace ? expect.any(String) : expect.toSatisfy(n => n === null),
-      type: expect.any(String)
-    }))
+    .forEach(x => {
+      expect(x).toMatchObject({
+        callbackDuration: expect.any(Number),
+        callbackEnd: expect.any(Number),
+        children: expect.any(Array),
+        domain: expect.any(String),
+        end: expect.any(Number),
+        guid: hasTrace ? expect.any(String) : expect.toSatisfy(n => n === null),
+        method: expect.any(String),
+        nodeId: expect.any(String),
+        path: specificPath ? specificPath : expect.any(String),
+        requestBodySize: expect.any(Number),
+        requestedWith: expect.any(String),
+        responseBodySize: expect.any(Number),
+        start: expect.any(Number),
+        status: expect.any(Number),
+        timestamp: hasTrace ? expect.any(Number) : expect.toSatisfy(n => n === null),
+        traceId: hasTrace ? expect.any(String) : expect.toSatisfy(n => n === null),
+        type: expect.any(String)
+      })
+
+      // AjaxRequest events should always have an 'ajaxRequest.id' custom attribute with a uuid value
+       expect(x.children.find(x => x.type === 'stringAttribute' && x.key === 'ajaxRequest.id')?.value).toEqual(
+        expect.stringMatching(/^[0-9a-zA-Z]{8}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{12}$/)
+       )
+    })
 }
 
 export function checkAjaxMetrics ({ query, body }, { specificPath, hasTrace, isFetch } = {}) {

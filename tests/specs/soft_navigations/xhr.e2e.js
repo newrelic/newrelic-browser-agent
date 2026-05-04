@@ -29,7 +29,13 @@ describe('XHR SPA Interaction Tracking', () => {
             requestedWith: 'XMLHttpRequest',
             path: '/json',
             nodeId: expect.any(String),
-            children: [],
+            children: [
+              expect.objectContaining({
+                type: 'stringAttribute',
+                key: 'ajaxRequest.id',
+                value: expect.any(String)
+              })
+            ],
             method: 'GET',
             status: 200,
             domain: browser.testHandle.assetServerConfig.host + ':' + browser.testHandle.assetServerConfig.port,
@@ -71,7 +77,13 @@ describe('XHR SPA Interaction Tracking', () => {
             requestedWith: 'XMLHttpRequest',
             path: '/json',
             nodeId: expect.any(String),
-            children: [],
+            children: [
+              expect.objectContaining({
+                type: 'stringAttribute',
+                key: 'ajaxRequest.id',
+                value: expect.any(String)
+              })
+            ],
             method: 'GET',
             status: 200,
             domain: browser.testHandle.assetServerConfig.host + ':' + browser.testHandle.assetServerConfig.port,
@@ -134,7 +146,14 @@ describe('XHR SPA Interaction Tracking', () => {
             requestedWith: 'XMLHttpRequest',
             path: '/echo',
             requestBodySize: 3,
-            responseBodySize: 3
+            responseBodySize: 3,
+            children: [
+              expect.objectContaining({
+                type: 'stringAttribute',
+                key: 'ajaxRequest.id',
+                value: expect.any(String)
+              })
+            ]
           })
         ])
       })
@@ -197,7 +216,14 @@ describe('XHR SPA Interaction Tracking', () => {
             path: expect.stringMatching(/^\/dt\/[\w\d]+/),
             guid: expect.stringMatching(/[\w\d]+/),
             traceId: expect.stringMatching(/[\w\d]+/),
-            timestamp: expect.toBePositive()
+            timestamp: expect.toBePositive(),
+            children: [
+              expect.objectContaining({
+                type: 'stringAttribute',
+                key: 'ajaxRequest.id',
+                value: expect.any(String)
+              })
+            ]
           })
         ])
       })

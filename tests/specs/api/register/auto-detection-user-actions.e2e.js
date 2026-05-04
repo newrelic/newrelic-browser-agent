@@ -43,7 +43,9 @@ describe('Register API - Auto-Detection - User Actions', () => {
     await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html', {
       init: {
         api: {
-          allow_registered_children: true
+          register: {
+            enabled: true
+          }
         },
         logging: {
           enabled: true
@@ -83,7 +85,7 @@ describe('Register API - Auto-Detection - User Actions', () => {
     expect(lazyUserAction['source.type']).toEqual('MFE')
   })
 
-  it('should support duplicate_registered_data with auto-detection for UserAction events', async () => {
+  it('should support duplicate_data_to_container with auto-detection for UserAction events', async () => {
     const [mfeInsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testMFEInsRequest }
     ])
@@ -91,8 +93,10 @@ describe('Register API - Auto-Detection - User Actions', () => {
     await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html', {
       init: {
         api: {
-          allow_registered_children: true,
-          duplicate_registered_data: true
+          register: {
+            enabled: true,
+            duplicate_data_to_container: true
+          }
         }
       },
       loader: 'spa'

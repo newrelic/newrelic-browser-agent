@@ -89,11 +89,16 @@ await spawnAsync(
 )
 
 console.log('Updating third-party licenses')
-await spawnAsync(
-  `npm${os.platform() === 'win32' ? '.cmd' : ''}`,
-  [ 'run', 'third-party-updates' ],
-  DEFAULT_SPAWN_OPTIONS
-)
+try {
+  await spawnAsync(
+    `npm${os.platform() === 'win32' ? '.cmd' : ''}`,
+    [ 'run', 'third-party-updates' ],
+    DEFAULT_SPAWN_OPTIONS
+  )
+} catch (error) {
+  console.warn('⚠️  WARNING: Third-party manifest updates failed. Continuing with other actions...')
+  console.warn(error.message)
+}
 
 console.log('#############################')
 console.log('# Rebuilding Test Projects  #')

@@ -37,15 +37,18 @@ describe('pvt timings tests', () => {
 
         const load = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'load'))
           ?.request.body.find(timing => timing.name === 'load')
-        expect(load?.value).toBeBetween(0, duration)
+        expect(load?.value).toBeGreaterThan(0)
+        expect(load?.value).toBeLessThanOrEqual(duration)
 
         const unload = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'unload'))
           ?.request.body.find(timing => timing.name === 'unload')
-        expect(unload?.value).toBeBetween(0, duration)
+        expect(unload?.value).toBeGreaterThan(0)
+        expect(unload?.value).toBeLessThanOrEqual(duration)
 
         const pageHide = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'pageHide'))
           ?.request.body.find(timing => timing.name === 'pageHide')
-        expect(pageHide?.value).toBeBetween(0, duration)
+        expect(pageHide?.value).toBeGreaterThan(0)
+        expect(pageHide?.value).toBeLessThanOrEqual(duration)
 
         if (browserMatch(supportsCumulativeLayoutShift)) {
           const emptyCls = pageHide.attributes.find(a => a.key === 'cls')

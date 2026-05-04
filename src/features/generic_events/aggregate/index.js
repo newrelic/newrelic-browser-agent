@@ -331,7 +331,7 @@ export class Aggregate extends AggregateBase {
     }
 
     this.events.add({ ...eventAttributes, ...getVersion2Attributes(target, this) })
-    if (shouldDuplicate(target, this.agentRef)) this.addEvent({ ...eventAttributes, ...getVersion2DuplicationAttributes(target, this) })
+    if (shouldDuplicate(target, this)) this.addEvent({ ...eventAttributes, ...getVersion2DuplicationAttributes(target, this) })
   }
 
   serializer (eventBuffer) {

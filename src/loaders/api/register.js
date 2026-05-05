@@ -84,8 +84,6 @@ function register (agentRef, target) {
 
   const timings = findScriptTimings()
 
-  console.log('timings', timings)
-
   // Subscribe to MFE FCP detection for this entity
   subscribeMFEFCP(target.id, timings, agentRef)
 
@@ -171,7 +169,6 @@ function register (agentRef, target) {
   /** only allow registered APIs to be tracked in the agent runtime */
   if (!isBlocked()) {
     registeredEntities.push(api)
-    console.log('subscribe to page unload with report timings', { registeredEntities })
     subscribeToPageUnload(reportTimings)
   }
 
@@ -181,7 +178,6 @@ function register (agentRef, target) {
    * @returns {void}
    */
   function reportTimings () {
-    console.log('REPORT timings...', timings)
     // only ever report the timings the first time this is called
     if (timings.reportedAt) return
     timings.reportedAt = now()
@@ -196,7 +192,7 @@ function register (agentRef, target) {
       timeToFetch, // fetchStart to fetchEnd
       timeToLoad: timeToFetch + timeToExecute, // fetch time and script time together
       timeToRegister: timings.registeredAt, // timestamp when register() was called
-      timeToFirstPaint: timings.mfeFCP - timings.scriptStart
+      timeToFirstPaint: timings.fcp - timings.scriptStart
     })
   }
 

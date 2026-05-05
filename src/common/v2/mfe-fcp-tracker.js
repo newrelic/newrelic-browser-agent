@@ -42,7 +42,7 @@ export function subscribeMFEFCP (mfeId, timings, agentReference) {
 
   // If FCP already detected, set it immediately
   if (mfeFCPDetected.has(id)) {
-    timings.mfeFCP = mfeFCPDetected.get(id)
+    timings.fcp = mfeFCPDetected.get(id)
     return
   }
 
@@ -112,8 +112,6 @@ function setupMFEFCPObserver () {
 
           const { targets } = analyzeElemPath(elem, [], agentRef)
 
-          console.log('targets found', targets)
-
           // Process each target that hasn't had FCP detected yet
           targets.forEach(target => {
             if (!target?.id) return
@@ -123,14 +121,13 @@ function setupMFEFCPObserver () {
 
             // Record the FCP time for this MFE
             const fcpTime = now()
-            console.log('MFE FCP detected', fcpTime)
             mfeFCPDetected.set(mfeId, fcpTime)
 
             // Notify all subscribers for this MFE ID
             const subscribers = mfeTimingsSubscribers.get(mfeId)
             if (subscribers) {
               subscribers.forEach(timings => {
-                timings.mfeFCP = fcpTime
+                timings.fcp = fcpTime
               })
               // Clean up subscribers after notifying
               mfeTimingsSubscribers.delete(mfeId)

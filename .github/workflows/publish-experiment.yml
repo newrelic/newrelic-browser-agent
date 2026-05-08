@@ -134,38 +134,6 @@ jobs:
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
 
-  # Create change tracking events for dev experiment
-  create-experiment-change-tracking:
-    environment: change-tracking
-    if: ${{ inputs.nr_environment == 'dev' }}
-    needs: [publish-experiment-to-s3]
-    runs-on: Browser-Agent-Assigned-IP-Linux
-    timeout-minutes: 5
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v4
-        with:
-            ref: ${{ github.ref }}
-      - name: Clean branch name
-        id: clean-branch-name
-        run: echo "results=$(echo '${{ github.ref }}' | sed 's/refs\/heads\///g' | sed 's/[^[:alnum:].-]/-/g')" >> $GITHUB_OUTPUT
-      - name: Create experiment shadow event (Account 550352)
-        uses: ./.github/actions/change-tracking
-        with:
-          accountId: '550352'
-          entityGuid: ${{ secrets.NR_ENTITY_GUID_BROWSER_STAGING }}
-          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_BROWSER }}
-          application: 'New Relic One - Staging'
-          version: ${{ inputs.nr_environment }}-${{ steps.clean-branch-name.outputs.results }}
-          type: 'Shadow'
-          description: ${{ inputs.experiment_description }}
-          shortDescription: 'Experiment: ${{ steps.clean-branch-name.outputs.results }}'
-          deepLink: 'https://github.com/${{ github.repository }}/tree/${{ github.ref_name }}'
-          commit: ${{ github.sha }}
-          user: ${{ github.actor }}
-          groupId: '${{ github.run_id }}-${{ github.sha }}'
 
   # Notify about new experiment in Slack
   send-slack-notifications:

@@ -40,7 +40,8 @@ export const args = yargs(hideBin(process.argv))
 
   .demandOption(['environment', 'app-id', 'license-key'])
   .check((argv) => {
-    if (['dev', 'staging'].includes(argv.environment) && (!argv.abAppId || !argv.abLicenseKey)) {
+    // Only dev environment needs A/B app ID and license key now (for the "latest" script)
+    if (argv.environment === 'dev' && (!argv.abAppId || !argv.abLicenseKey)) {
       throw new Error(`Cannot create ${argv.environment} script without A/B app ID and license key.`)
     }
 

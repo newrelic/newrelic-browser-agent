@@ -16,27 +16,29 @@ const fileList = []
 // 0. Ensure the output directory is available and the target file does not exist
 await fs.promises.mkdir(outputDir, { recursive: true })
 
-// 1. Create the released environment script
-const releasedScriptRequest = await fetchRetry(`${args.released}?_nocache=${uuidv4()}`, { retry: 3 })
+// 1. Create the released environment script (skip for dev environment)
+if (args.environment !== 'dev') {
+  const releasedScriptRequest = await fetchRetry(`${args.released}?_nocache=${uuidv4()}`, { retry: 3 })
 
-if (!releasedScriptRequest.ok || typeof releasedScriptRequest.text !== 'function') {
-  throw new Error('Could not retrieve the latest published loader script.')
+  if (!releasedScriptRequest.ok || typeof releasedScriptRequest.text !== 'function') {
+    throw new Error('Could not retrieve the latest published loader script.')
+  }
+
+  const releasedScript = (await releasedScriptRequest.text()).replace(/\/\/# sourceMappingURL=.*?\.map/, '')
+  const releasedScriptOutput = path.join(outputDir, `${args.environment}-released.js`)
+  const releasedScriptTemplate = Handlebars.compile(await fs.promises.readFile(path.resolve(__dirname, './templates/released.js'), 'utf-8'))
+  await fs.promises.writeFile(
+    releasedScriptOutput,
+    releasedScriptTemplate({
+      args, releasedScript
+    }),
+    { encoding: 'utf-8' }
+  )
+  fileList.push(releasedScriptOutput)
 }
 
-const releasedScript = (await releasedScriptRequest.text()).replace(/\/\/# sourceMappingURL=.*?\.map/, '')
-const releasedScriptOutput = path.join(outputDir, `${args.environment}-released.js`)
-const releasedScriptTemplate = Handlebars.compile(await fs.promises.readFile(path.resolve(__dirname, './templates/released.js'), 'utf-8'))
-await fs.promises.writeFile(
-  releasedScriptOutput,
-  releasedScriptTemplate({
-    args, releasedScript
-  }),
-  { encoding: 'utf-8' }
-)
-fileList.push(releasedScriptOutput)
-
-if (['dev', 'staging'].includes(args.environment)) {
-  // 2. Create latest environment script
+// 2. Create latest environment script (only for dev environment)
+if (args.environment === 'dev') {
   const latestScriptRequest = await fetchRetry(`${args.latest}?_nocache=${uuidv4()}`, { retry: 3 })
 
   if (!latestScriptRequest.ok || typeof latestScriptRequest.text !== 'function') {
@@ -45,17 +47,17 @@ if (['dev', 'staging'].includes(args.environment)) {
 
   const latestScript = (await latestScriptRequest.text()).replace(/\/\/# sourceMappingURL=.*?\.map/, '')
   const latestScriptOutput = path.join(outputDir, `${args.environment}-latest.js`)
-  const releasedScriptTemplate = Handlebars.compile(await fs.promises.readFile(path.resolve(__dirname, './templates/latest.js'), 'utf-8'))
+  const latestScriptTemplate = Handlebars.compile(await fs.promises.readFile(path.resolve(__dirname, './templates/latest.js'), 'utf-8'))
   await fs.promises.writeFile(
     latestScriptOutput,
-    releasedScriptTemplate({
+    latestScriptTemplate({
       args, latestScript
     }),
     { encoding: 'utf-8' }
   )
   fileList.push(latestScriptOutput)
 
-  // 3. Creating experiments script
+  // 3. Creating experiments script (only for dev environment)
   if (!args.role || !args.bucket || !args.region) {
     console.warn('Skipping experiments; AWS role, bucket, and region must be defined.')
   } else if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {

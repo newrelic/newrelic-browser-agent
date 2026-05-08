@@ -151,12 +151,6 @@ After deployment:
 - **Communicate deployments** - Let the team know when deploying to production
 - **Document versions** - Track which versions are in each environment
 
-### For Automation
-
-- The `publish-internal` workflow still exists for backward compatibility
-- It accepts the same parameters but is no longer called automatically
-- Consider deprecating once all processes migrate to `internal-promotion`
-
 ## Related Documentation
 
 - [CDD NR-355574](https://new-relic.atlassian.net/browse/NR-355574) - Original change design

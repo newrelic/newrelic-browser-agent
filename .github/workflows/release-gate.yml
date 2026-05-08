@@ -32,22 +32,26 @@ jobs:
         id: pr-info
         env:
           GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER_EVENT: ${{ github.event.pull_request.number }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          WR_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: |
           # Determine the PR number and branch
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            PR_NUMBER="${{ github.event.pull_request.number }}"
-            BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
-          elif [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            PR_NUMBER="$PR_NUMBER_EVENT"
+            BRANCH_NAME="$PR_HEAD_REF"
+          elif [[ "$EVENT_NAME" == "workflow_run" ]]; then
             # Get PR info from the workflow_run event
-            PR_NUMBER=$(gh pr list --json number,headRefName --jq '.[] | select(.headRefName == "${{ github.event.workflow_run.head_branch }}") | .number' | head -1)
-            BRANCH_NAME="${{ github.event.workflow_run.head_branch }}"
+            PR_NUMBER=$(gh pr list --json number,headRefName --jq '.[] | select(.headRefName == $branch) | .number' --arg branch "$WR_HEAD_BRANCH" | head -1)
+            BRANCH_NAME="$WR_HEAD_BRANCH"
           else
-            echo "Unexpected event type: ${{ github.event_name }}"
+            echo "Unexpected event type: $EVENT_NAME"
             exit 1
           fi
           
-          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "branch_name=$BRANCH_NAME" >> "$GITHUB_OUTPUT"
           echo "📋 PR Number: $PR_NUMBER"
           echo "🌿 Branch: $BRANCH_NAME"
       

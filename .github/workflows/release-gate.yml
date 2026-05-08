@@ -57,8 +57,10 @@ jobs:
       
       - name: Check if Release-Please PR
         id: is-release-pr
+        env:
+          BRANCH_NAME: ${{ steps.pr-info.outputs.branch_name }}
         run: |
-          BRANCH="${{ steps.pr-info.outputs.branch_name }}"
+          BRANCH="$BRANCH_NAME"
           
           if [[ "$BRANCH" == release-please--* ]]; then
             echo "is_release_pr=true" >> $GITHUB_OUTPUT
@@ -78,8 +80,9 @@ jobs:
         if: steps.is-release-pr.outputs.is_release_pr == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_BRANCH: ${{ steps.pr-info.outputs.branch_name }}
         run: |
-          BRANCH="${{ steps.pr-info.outputs.branch_name }}"
+          BRANCH="$PR_BRANCH"
           
           echo "🔍 Checking for successful Internal Promotion workflow on branch: $BRANCH"
           

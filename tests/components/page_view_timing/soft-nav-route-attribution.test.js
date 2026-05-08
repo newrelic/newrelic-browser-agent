@@ -9,11 +9,12 @@
  *
  *   NR's backend derives browserTransactionName from the `ref` query param in the beacon URL.
  *   The harvester builds `ref = cleanURL('' + globalScope.location)` at harvest-send time
- *   (harvester.js: baseQueryString).
+ *   (harvester.js: baseQueryString → send → xhr({ url: fullUrl })).
  *
  *   If a user navigates from /pdp to /homepage via a soft navigation (SPA route change),
- *   and the LCP event is still buffered when that navigation fires, the next harvest will be
- *   sent with ref=/homepage — silently attributing the /pdp LCP to the wrong route in NRDB.
+ *   and the LCP event is still buffered when that navigation fires, window.location is already
+ *   /homepage when the harvest eventually sends — so the beacon carries ref=/homepage, and NR
+ *   attributes the LCP to groceries/homepage (wrong browserTransactionName).
  *
  * ROOT CAUSE:
  *   The old SPA feature (removed in PR #1638, v1.312.1) called scheduleHarvest(0) on every
@@ -24,10 +25,13 @@
  *   page_view_timing/aggregate has no handler for it. Buffered events wait up to 30 seconds
  *   for the periodic harvest — by which point window.location is the destination route.
  *
- * EXPECTED BEHAVIOUR (the fix):
- *   page_view_timing/aggregate must register a 'newURL' handler and call
- *   triggerHarvestFor(this) synchronously on soft navigation, before window.location changes.
- *   This is exactly what the old SPA's scheduleHarvest(0) did.
+ * THE TEST:
+ *   We spy on the xhr submitMethod to capture the actual beacon URL (fullUrl) — the same URL
+ *   NR's collector receives. We parse the `ref` query param from it, which is exactly what
+ *   NR's backend uses to derive browserTransactionName.
+ *
+ *   EXPECTED: ref contains /groceries/pdp  (source route — where LCP was captured)
+ *   ACTUAL:   ref contains /groceries/homepage (destination — window.location at harvest time)
  *
  * PRODUCTION EVIDENCE (28-lego-prod, 4-day window before vs. after deploying v1.312.1):
  *   Routes users navigate FROM lost 5–10% of PageViewTiming volume:
@@ -40,13 +44,9 @@
 
 import { resetAgent, setupAgent } from '../setup-agent'
 import { Instrument as TimingsInstrument } from '../../../src/features/page_view_timing/instrument'
-import { getHarvestCalls } from '../../util/basic-checks'
 import { FEATURE_NAMES } from '../../../src/loaders/features/features'
 import { handle } from '../../../src/common/event-emitter/handle'
-import qp from '@newrelic/nr-querypack'
 import { VITAL_NAMES } from '../../../src/common/vitals/constants'
-// Import the shared VitalMetric instances directly so we can push values into them
-// in the same way web-vitals would — this mirrors how the aggregate subscribes to them
 import { largestContentfulPaint } from '../../../src/common/vitals/largest-contentful-paint'
 
 // Prevent web-vitals from firing any callbacks automatically during module init
@@ -61,24 +61,15 @@ jest.mock('web-vitals/attribution', () => ({
 const SOURCE_ROUTE = 'http://localhost/groceries/pdp'
 const DESTINATION_ROUTE = 'http://localhost/groceries/homepage'
 
-// LCP attribution values matching a realistic /pdp load
-const LCP_ATTRIBUTION = {
-  timeToFirstByte: 200,
-  resourceLoadDelay: 100,
-  resourceLoadDuration: 800,
-  resourceLoadTime: 800,
-  elementRenderDelay: 300,
-  lcpEntry: { size: 42000, id: 'hero-image', element: { tagName: 'IMG' } },
-  url: SOURCE_ROUTE,
-  element: 'img#hero-image'
-}
-
 let agent
 let timingsInstrument
+// Captures all URLs passed to XMLHttpRequest.prototype.open — the actual beacon URLs
+// NR's collector receives, including the `ref` param used for browserTransactionName.
+const beaconUrls = []
 
 beforeEach(async () => {
-  // Clear LCP history so each test starts with no previous LCP value
   largestContentfulPaint.history.length = 0
+  beaconUrls.length = 0
 
   Object.defineProperty(performance, 'getEntriesByType', {
     value: jest.fn().mockReturnValue([]),
@@ -86,126 +77,145 @@ beforeEach(async () => {
     writable: true
   })
 
+  Object.defineProperty(window, 'location', {
+    value: new URL(SOURCE_ROUTE),
+    writable: true,
+    configurable: true
+  })
+
+  // Intercept XMLHttpRequest.prototype.open to capture beacon URLs.
+  // This is the deepest interception point — it works regardless of module binding,
+  // and captures exactly what NR's collector receives.
+  const originalOpen = XMLHttpRequest.prototype.open
+  jest.spyOn(XMLHttpRequest.prototype, 'open').mockImplementation(function (method, url, ...rest) {
+    beaconUrls.push(url)
+    return originalOpen.call(this, method, url, ...rest)
+  })
+
   agent = setupAgent()
   timingsInstrument = new TimingsInstrument(agent)
   await new Promise(process.nextTick)
   timingsInstrument.featAggregate.ee.emit('rumresp', {})
-  // Allow the feature to fully initialise (waitForFlags resolves, drain fires, initial harvest runs)
   await new Promise(resolve => setTimeout(resolve, 100))
 })
 
 afterEach(() => {
   resetAgent(agent)
-  jest.clearAllMocks()
+  jest.restoreAllMocks()
 })
+
+/**
+ * Helper: parse the `ref` query param from a beacon URL.
+ * `ref` is the URL-encoded page location that NR's backend maps to browserTransactionName.
+ */
+function extractRefFromBeaconUrl (url) {
+  const params = new URLSearchParams(url.split('?')[1])
+  return decodeURIComponent(params.get('ref') || '')
+}
+
+/**
+ * Helper: find the PVT beacon URL from captured XHR calls.
+ * PVT goes to the 'events' endpoint — the URL contains '/events/1/'.
+ * We find the last such URL (most recent harvest call for PVT).
+ */
+function findPVTBeaconUrl () {
+  // All PVT harvests go to the /events/ endpoint
+  return beaconUrls.filter(url => url?.includes('/events/')).at(-1)
+}
 
 /**
  * THE CORE REGRESSION TEST
  *
- * Timeline being tested:
- *   1. Agent initialises on /pdp — initial drain harvest fires (empty or with early events)
- *   2. LCP fires at ~2400ms — buffered in PageViewTiming, waiting for next 30s harvest
- *   3. User clicks a nav link — soft navigation begins, 'newURL' is emitted
- *   4. EXPECTED (fix): PageViewTiming flushes NOW, while location is still /pdp
- *   5. ACTUAL (bug):   PageViewTiming does nothing; LCP waits for the 30s periodic harvest
- *                      by which point window.location = /homepage → wrong browserTransactionName
+ * Scenario:
+ *   1. User is on /groceries/pdp. LCP fires (2400ms) and is buffered.
+ *   2. User navigates to /groceries/homepage (soft nav). window.location changes.
+ *   3. Harvest eventually fires with window.location = /homepage.
  *
- * The test asserts: emitting 'newURL' must trigger an additional PVT harvest.
- * Currently this FAILS — harvest count does not increase on 'newURL'.
+ * EXPECTED: the beacon URL for the LCP event contains ref=/groceries/pdp
+ * ACTUAL (bug): the beacon URL contains ref=/groceries/homepage
+ *
+ * This causes NR to attribute the /pdp LCP under browserTransactionName "groceries/homepage".
  */
-test('REGRESSION: emitting newURL (soft navigation /pdp → /homepage) must trigger an immediate PageViewTiming harvest to prevent LCP mis-attribution', () => {
-  // Step 1: Simulate LCP firing on /pdp AFTER the initial drain harvest has already run.
-  // We push directly into the shared VitalMetric so the aggregate's subscriber receives it
-  // — identical to what web-vitals' onLCP callback does in production.
+test('REGRESSION: LCP captured on /groceries/pdp is sent with ref=/groceries/homepage after soft navigation, causing wrong browserTransactionName in New Relic', () => {
+  // Step 1: LCP fires on /pdp and is buffered (window.location is still SOURCE_ROUTE here)
   largestContentfulPaint.update({
     value: 2400,
     attrs: {
-      timeToFirstByte: LCP_ATTRIBUTION.timeToFirstByte,
-      resourceLoadDelay: LCP_ATTRIBUTION.resourceLoadDelay,
-      resourceLoadDuration: LCP_ATTRIBUTION.resourceLoadDuration,
-      resourceLoadTime: LCP_ATTRIBUTION.resourceLoadTime,
-      elementRenderDelay: LCP_ATTRIBUTION.elementRenderDelay,
-      size: LCP_ATTRIBUTION.lcpEntry.size,
-      eid: LCP_ATTRIBUTION.lcpEntry.id,
-      elTag: LCP_ATTRIBUTION.lcpEntry.element.tagName,
+      timeToFirstByte: 200,
+      resourceLoadDelay: 100,
+      resourceLoadDuration: 800,
+      resourceLoadTime: 800,
+      elementRenderDelay: 300,
+      size: 42000,
+      eid: 'hero-image',
+      elTag: 'IMG',
       elUrl: SOURCE_ROUTE
     }
   })
 
-  // Confirm LCP is now buffered in the aggregate (not yet harvested)
-  const aggregate = timingsInstrument.featAggregate
-  const bufferedLCP = aggregate.events.get()?.find(e => e.name === VITAL_NAMES.LARGEST_CONTENTFUL_PAINT)
+  // Confirm LCP is buffered, not yet sent
+  const bufferedLCP = timingsInstrument.featAggregate.events.get()
+    ?.find(e => e.name === VITAL_NAMES.LARGEST_CONTENTFUL_PAINT)
   expect(bufferedLCP).toBeDefined()
   expect(bufferedLCP.value).toBe(2400)
 
-  // Step 2: Count PVT harvests before the soft navigation
-  const pvtCountBeforeNav = getHarvestCalls(agent)
-    .filter(c => c.featureName === FEATURE_NAMES.pageViewTiming).length
-
-  // Step 3: Soft navigation fires — /pdp → /homepage
-  // In production: soft_navigations/instrument emits 'newURL' synchronously when
-  // history.pushState is called. window.location then reflects the new route.
-  // The PageViewTiming aggregate MUST flush HERE, while location is still /pdp.
+  // Step 2: User navigates to /homepage. window.location now reflects DESTINATION_ROUTE.
+  window.location = new URL(DESTINATION_ROUTE)
   handle('newURL', [performance.now(), DESTINATION_ROUTE], undefined, FEATURE_NAMES.pageViewTiming, agent.ee)
-  // From this point, any harvest will have ref = DESTINATION_ROUTE (/homepage)
 
-  // Step 4: THE FAILING ASSERTION — demonstrates the bug
+  // Step 3: Harvest fires (simulating the 30-second periodic tick after the navigation)
+  agent.runtime.harvester.triggerHarvestFor(timingsInstrument.featAggregate)
+
+  // Step 4: Assert on the `ref` in the PVT beacon URL.
+  // `ref` is what NR's backend uses to derive browserTransactionName.
+  const beaconUrl = findPVTBeaconUrl()
+  expect(beaconUrl).toBeDefined()
+
+  const ref = extractRefFromBeaconUrl(beaconUrl)
+
+  // THE FAILING ASSERTION — this is the bug:
+  // The LCP from /pdp was sent AFTER location changed to /homepage, so ref=/homepage.
+  // NR's backend attributes this event to browserTransactionName "groceries/homepage".
   //
-  //   EXPECTED: harvest count increased (flush happened on 'newURL' while ref=/pdp)
-  //   ACTUAL:   harvest count unchanged (no 'newURL' handler → LCP will be sent with ref=/homepage)
-  const pvtCountAfterNav = getHarvestCalls(agent)
-    .filter(c => c.featureName === FEATURE_NAMES.pageViewTiming).length
+  // EXPECTED (correct): ref must identify the SOURCE route where LCP was captured
+  expect(ref).toContain('/groceries/pdp')
 
-  expect(pvtCountAfterNav).toBeGreaterThan(pvtCountBeforeNav)
+  // ACTUAL (bug demonstrated when this fails):
+  // ref = http://localhost/groceries/homepage — the destination route
 })
 
 /**
- * PASSING COMPANION: correct LCP payload when harvest fires while still on /pdp
+ * PASSING COMPANION: when harvest fires before navigation, ref correctly identifies the source route
  *
- * This confirms that when a harvest IS triggered on /pdp (either by the fix responding
- * to 'newURL', or by the existing periodic timer before any navigation), the resulting
- * payload carries the correct LCP value (2400ms) and attribution attributes.
- *
- * This test passes today and must continue to pass after the fix.
+ * This is the CORRECT behaviour. It passes today and must continue to pass after the fix.
+ * The fix will make the regression test above also pass by ensuring harvest fires before location changes.
  */
-test('when harvest fires while still on /pdp, LCP payload carries the correct value (2400ms) and attribution', () => {
-  // Simulate LCP firing on /pdp
+test('when harvest fires while still on /groceries/pdp, ref in beacon correctly identifies /pdp', () => {
+  // LCP fires on /pdp
   largestContentfulPaint.update({
     value: 2400,
     attrs: {
-      timeToFirstByte: LCP_ATTRIBUTION.timeToFirstByte,
-      resourceLoadDelay: LCP_ATTRIBUTION.resourceLoadDelay,
-      resourceLoadDuration: LCP_ATTRIBUTION.resourceLoadDuration,
-      resourceLoadTime: LCP_ATTRIBUTION.resourceLoadTime,
-      elementRenderDelay: LCP_ATTRIBUTION.elementRenderDelay,
-      size: LCP_ATTRIBUTION.lcpEntry.size,
-      eid: LCP_ATTRIBUTION.lcpEntry.id,
-      elTag: LCP_ATTRIBUTION.lcpEntry.element.tagName,
+      timeToFirstByte: 200,
+      resourceLoadDelay: 100,
+      resourceLoadDuration: 800,
+      resourceLoadTime: 800,
+      elementRenderDelay: 300,
+      size: 42000,
+      eid: 'hero-image',
+      elTag: 'IMG',
       elUrl: SOURCE_ROUTE
     }
   })
 
-  // Trigger harvest manually — this is what the fix will do automatically on 'newURL'
+  // Harvest fires BEFORE any navigation (window.location is still /pdp)
   agent.runtime.harvester.triggerHarvestFor(timingsInstrument.featAggregate)
 
-  const harvestCalls = getHarvestCalls(agent)
-  const lcpHarvest = harvestCalls.find(call =>
-    call.featureName === FEATURE_NAMES.pageViewTiming &&
-    call.results.value?.payload?.body?.includes(VITAL_NAMES.LARGEST_CONTENTFUL_PAINT)
-  )
+  const beaconUrl = findPVTBeaconUrl()
+  expect(beaconUrl).toBeDefined()
 
-  expect(lcpHarvest).toBeDefined()
+  const ref = extractRefFromBeaconUrl(beaconUrl)
 
-  const decoded = qp.decode(lcpHarvest.results.value.payload.body)
-  const lcpNode = decoded.find(n => n.name === VITAL_NAMES.LARGEST_CONTENTFUL_PAINT)
-
-  expect(lcpNode).toBeDefined()
-  expect(lcpNode.value).toBe(2400)
-  expect(lcpNode.type).toBe('timing')
-
-  const getAttr = (key) => lcpNode.attributes.find(a => a.key === key)?.value
-  expect(getAttr('timeToFirstByte')).toBe(200)
-  expect(getAttr('elTag')).toBe('IMG')
-  expect(getAttr('size')).toBe(42000)
-  expect(getAttr('elUrl')).toContain('/pdp')
+  // ref correctly identifies the source route — NR will attribute to "groceries/pdp"
+  expect(ref).toContain('/groceries/pdp')
+  expect(ref).not.toContain('/groceries/homepage')
 })

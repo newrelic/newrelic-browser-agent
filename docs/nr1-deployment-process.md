@@ -8,7 +8,7 @@ As of May 2026 (per CDD NR-355574), Browser Agent deployments to NR1 environment
 
 ### What Changed
 
-1. **Manual Deployments Only**: NR1 environments (dev, staging, jp-prod, eu-prod, prod) no longer automatically receive agent updates
+1. **Manual Deployments Only**: NR1 environments (staging, jp-prod, eu-prod, prod) no longer automatically receive agent updates
 2. **Single Agent Instance**: Each environment now loads only one agent instance instead of two (no more "latest" + "released" double-shipping)
 3. **Explicit Version Control**: Team members must explicitly choose which agent version to deploy to each environment
 4. **Change Tracking**: All deployments create change tracking markers in New Relic for observability
@@ -160,5 +160,5 @@ After deployment:
 ## Questions or Issues?
 
 Contact the Browser Agent team via:
-- Slack: #browser-agent-team
+- Slack: #help-browser-agent
 - GitHub: Open an issue in this repository

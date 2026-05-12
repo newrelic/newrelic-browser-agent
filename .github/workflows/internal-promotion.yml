@@ -1,0 +1,219 @@
+# This workflow is used to manually deploy a specific Browser Agent version
+# to NR1 environments by updating the "released" asset that NR1 pages load.
+# This workflow enforces a strict sequential promotion path:
+# staging -> jp-prod -> eu-prod -> prod
+# Each environment requires manual approval via GitHub Environment protection rules.
+
+name: Internal Promotion
+
+on:
+  workflow_dispatch:
+    inputs:
+      cdn_path:
+        description: 'CDN path or version to deploy (default: "dev build"). Examples: "https://js-agent.newrelic.com/dev/nr-loader-spa.min.js", "https://js-agent.newrelic.com/nr-loader-spa-1.x.x.min.js", or "1.x.x"'
+        required: false
+        type: string
+        default: 'https://js-agent.newrelic.com/dev/nr-loader-spa.min.js'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  # Resolve the CDN path once for all environments
+  resolve-version:
+    runs-on: ubuntu-latest
+    outputs:
+      script_url: ${{ steps.resolve-cdn-path.outputs.script_url }}
+      version_label: ${{ steps.resolve-cdn-path.outputs.version_label }}
+    steps:
+      - name: Resolve CDN path
+        id: resolve-cdn-path
+        run: |
+          CDN_PATH="${{ inputs.cdn_path }}"
+          
+          if [[ "$CDN_PATH" =~ ^https?:// ]]; then
+            # Full URL provided
+            SCRIPT_URL="$CDN_PATH"
+            VERSION_LABEL="$CDN_PATH"
+          elif [[ "$CDN_PATH" =~ ^[0-9]+\. ]]; then
+            # Version number provided (e.g., "1.314.0" or "1.x.x")
+            SCRIPT_URL="https://js-agent.newrelic.com/nr-loader-spa-${CDN_PATH}.min.js"
+            VERSION_LABEL="v${CDN_PATH}"
+          else
+            echo "Invalid cdn_path format: $CDN_PATH"
+            exit 1
+          fi
+          
+          echo "script_url=$SCRIPT_URL" >> $GITHUB_OUTPUT
+          echo "version_label=$VERSION_LABEL" >> $GITHUB_OUTPUT
+          echo "Resolved CDN path: $SCRIPT_URL"
+
+  # Step 1: Deploy to Staging
+  deploy-staging:
+    needs: [resolve-version]
+    runs-on: ubuntu-latest
+    environment: nr1-staging
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0
+      
+      - name: Promote agent to Staging
+        uses: ./.github/actions/internal-promotion
+        with:
+          nr_environment: staging
+          nrba_released_script_url: ${{ needs.resolve-version.outputs.script_url }}
+          nrba_app_id: ${{ secrets.INTERNAL_STAGING_APPLICATION_ID }}
+          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+      
+      - name: Staging deployment complete
+        run: echo "✅ Staging deployment successful: ${{ needs.resolve-version.outputs.version_label }}"
+
+  # Notify staging deployment
+  notify-staging:
+    needs: [deploy-staging]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Send Slack notification
+        uses: ./.github/actions/slack-notification
+        with:
+          notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
+          dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
+          message: ":rocket: Browser Agent promoted to \\`staging\\` environment.\\n*Version:* ${{ needs.resolve-version.outputs.version_label }}\\n*Asset:* ${{ needs.resolve-version.outputs.script_url }}\\nSee <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
+
+  # Step 2: Deploy to Japan Production
+  deploy-jp-prod:
+    needs: [deploy-staging]
+    runs-on: ubuntu-latest
+    environment: nr1-jp-prod
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0
+      
+      - name: Promote agent to JP Production
+        uses: ./.github/actions/internal-promotion
+        with:
+          nr_environment: jp-prod
+          nrba_released_script_url: ${{ needs.resolve-version.outputs.script_url }}
+          nrba_app_id: ${{ secrets.INTERNAL_JP_PRODUCTION_APPLICATION_ID }}
+          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+      
+      - name: JP Production deployment complete
+        run: echo "✅ JP Production deployment successful: ${{ needs.resolve-version.outputs.version_label }}"
+
+  # Notify JP production deployment
+  notify-jp-prod:
+    needs: [deploy-jp-prod]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Send Slack notification
+        uses: ./.github/actions/slack-notification
+        with:
+          notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
+          dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
+          message: ":rocket: Browser Agent promoted to \\`jp-prod\\` environment.\\n*Version:* ${{ needs.resolve-version.outputs.version_label }}\\n*Asset:* ${{ needs.resolve-version.outputs.script_url }}\\nSee <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
+
+  # Step 3: Deploy to EU Production
+  deploy-eu-prod:
+    needs: [deploy-jp-prod]
+    runs-on: ubuntu-latest
+    environment: nr1-eu-prod
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0
+      
+      - name: Promote agent to EU Production
+        uses: ./.github/actions/internal-promotion
+        with:
+          nr_environment: eu-prod
+          nrba_released_script_url: ${{ needs.resolve-version.outputs.script_url }}
+          nrba_app_id: ${{ secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID }}
+          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+      
+      - name: EU Production deployment complete
+        run: echo "✅ EU Production deployment successful: ${{ needs.resolve-version.outputs.version_label }}"
+
+  # Notify EU production deployment
+  notify-eu-prod:
+    needs: [deploy-eu-prod]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Send Slack notification
+        uses: ./.github/actions/slack-notification
+        with:
+          notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
+          dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
+          message: ":rocket: Browser Agent promoted to \\`eu-prod\\` environment.\\n*Version:* ${{ needs.resolve-version.outputs.version_label }}\\n*Asset:* ${{ needs.resolve-version.outputs.script_url }}\\nSee <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
+
+  # Step 4: Deploy to US Production
+  deploy-us-prod:
+    needs: [deploy-eu-prod]
+    runs-on: ubuntu-latest
+    environment: nr1-us-prod
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0
+      
+      - name: Promote agent to US Production
+        uses: ./.github/actions/internal-promotion
+        with:
+          nr_environment: prod
+          nrba_released_script_url: ${{ needs.resolve-version.outputs.script_url }}
+          nrba_app_id: ${{ secrets.INTERNAL_PRODUCTION_APPLICATION_ID }}
+          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+      
+      - name: US Production deployment complete
+        run: echo "✅ US Production deployment successful: ${{ needs.resolve-version.outputs.version_label }}"
+
+  # Notify US production deployment
+  notify-us-prod:
+    needs: [deploy-us-prod]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Send Slack notification
+        uses: ./.github/actions/slack-notification
+        with:
+          notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
+          dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
+          message: ":rocket: Browser Agent promoted to \\`us-prod\\` environment.\\n*Version:* ${{ needs.resolve-version.outputs.version_label }}\\n*Asset:* ${{ needs.resolve-version.outputs.script_url }}\\nSee <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
+

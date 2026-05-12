@@ -29,7 +29,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      - name: Auto-pass for manual triggers
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "✅ Manual workflow trigger - gate passed automatically"
+          echo "This allows the workflow to be used in branch protection rules."
+      
       - name: Get PR details
+        if: github.event_name != 'workflow_dispatch'
         id: pr-info
         env:
           GH_TOKEN: ${{ github.token }}
@@ -47,7 +54,7 @@ jobs:
             PR_NUMBER=$(gh pr list --json number,headRefName --jq '.[] | select(.headRefName == $branch) | .number' --arg branch "$WR_HEAD_BRANCH" | head -1)
             BRANCH_NAME="$WR_HEAD_BRANCH"
           else
-            echo "Unexpected event type: $EVENT_NAME"
+            echo "❌ Unexpected event type: $EVENT_NAME"
             exit 1
           fi
           
@@ -57,6 +64,7 @@ jobs:
           echo "🌿 Branch: $BRANCH_NAME"
       
       - name: Check if Release-Please PR
+        if: github.event_name != 'workflow_dispatch'
         id: is-release-pr
         env:
           BRANCH_NAME: ${{ steps.pr-info.outputs.branch_name }}

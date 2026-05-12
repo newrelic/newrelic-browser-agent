@@ -14,6 +14,7 @@ on:
   workflow_run:
     workflows: ["Internal Promotion"]
     types: [completed]
+  workflow_dispatch:
 
 permissions:
   contents: read

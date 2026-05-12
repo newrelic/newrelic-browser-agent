@@ -77,9 +77,32 @@ jobs:
       - name: Staging deployment complete
         run: echo "✅ Staging deployment successful: ${{ needs.resolve-version.outputs.version_label }}"
 
+  # Create change tracking event for staging
+  create-staging-change-tracking:
+    needs: [resolve-version, deploy-staging]
+    environment: change-tracking
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create staging change tracking event (Account 1067061)
+        uses: ./.github/actions/change-tracking
+        with:
+          accountId: '1067061'
+          entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_STAGING }}
+          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          region: 'Staging'
+          version: ${{ needs.resolve-version.outputs.version_label }}
+          type: 'Basic'
+          description: 'Staging promoted to ${{ needs.resolve-version.outputs.version_label }}'
+          shortDescription: 'Staging: ${{ needs.resolve-version.outputs.version_label }}'
+          commit: ${{ github.sha }}
+          user: ${{ github.actor }}
+          groupId: '${{ github.run_id }}-${{ github.sha }}'
+
   # Notify staging deployment
   notify-staging:
-    needs: [deploy-staging]
+    needs: [resolve-version, deploy-staging]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -93,7 +116,7 @@ jobs:
 
   # Step 2: Deploy to Japan Production
   deploy-jp-prod:
-    needs: [deploy-staging]
+    needs: [resolve-version, deploy-staging]
     runs-on: ubuntu-latest
     environment: nr1-jp-prod
     timeout-minutes: 30
@@ -119,9 +142,32 @@ jobs:
       - name: JP Production deployment complete
         run: echo "✅ JP Production deployment successful: ${{ needs.resolve-version.outputs.version_label }}"
 
+  # Create change tracking event for JP production
+  create-jp-prod-change-tracking:
+    needs: [resolve-version, deploy-jp-prod]
+    environment: change-tracking
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create JP production change tracking event (Account 1067061)
+        uses: ./.github/actions/change-tracking
+        with:
+          accountId: '1067061'
+          entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_JP_PROD }}
+          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          region: 'JP'
+          version: ${{ needs.resolve-version.outputs.version_label }}
+          type: 'Rolling'
+          description: 'JP production promoted to ${{ needs.resolve-version.outputs.version_label }}'
+          shortDescription: 'JP Prod: ${{ needs.resolve-version.outputs.version_label }}'
+          commit: ${{ github.sha }}
+          user: ${{ github.actor }}
+          groupId: '${{ github.run_id }}-${{ github.sha }}'
+
   # Notify JP production deployment
   notify-jp-prod:
-    needs: [deploy-jp-prod]
+    needs: [resolve-version, deploy-jp-prod]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -135,7 +181,7 @@ jobs:
 
   # Step 3: Deploy to EU Production
   deploy-eu-prod:
-    needs: [deploy-jp-prod]
+    needs: [resolve-version, deploy-jp-prod]
     runs-on: ubuntu-latest
     environment: nr1-eu-prod
     timeout-minutes: 30
@@ -161,9 +207,32 @@ jobs:
       - name: EU Production deployment complete
         run: echo "✅ EU Production deployment successful: ${{ needs.resolve-version.outputs.version_label }}"
 
+  # Create change tracking event for EU production
+  create-eu-prod-change-tracking:
+    needs: [resolve-version, deploy-eu-prod]
+    environment: change-tracking
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create EU production change tracking event (Account 1067061)
+        uses: ./.github/actions/change-tracking
+        with:
+          accountId: '1067061'
+          entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_EU_PROD }}
+          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          region: 'EU'
+          version: ${{ needs.resolve-version.outputs.version_label }}
+          type: 'Rolling'
+          description: 'EU production promoted to ${{ needs.resolve-version.outputs.version_label }}'
+          shortDescription: 'EU Prod: ${{ needs.resolve-version.outputs.version_label }}'
+          commit: ${{ github.sha }}
+          user: ${{ github.actor }}
+          groupId: '${{ github.run_id }}-${{ github.sha }}'
+
   # Notify EU production deployment
   notify-eu-prod:
-    needs: [deploy-eu-prod]
+    needs: [resolve-version, deploy-eu-prod]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -177,7 +246,7 @@ jobs:
 
   # Step 4: Deploy to US Production
   deploy-us-prod:
-    needs: [deploy-eu-prod]
+    needs: [resolve-version, deploy-eu-prod]
     runs-on: ubuntu-latest
     environment: nr1-us-prod
     timeout-minutes: 30
@@ -203,9 +272,32 @@ jobs:
       - name: US Production deployment complete
         run: echo "✅ US Production deployment successful: ${{ needs.resolve-version.outputs.version_label }}"
 
+  # Create change tracking event for US production
+  create-us-prod-change-tracking:
+    needs: [resolve-version, deploy-us-prod]
+    environment: change-tracking
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create US production change tracking event (Account 1067061)
+        uses: ./.github/actions/change-tracking
+        with:
+          accountId: '1067061'
+          entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_US_PROD }}
+          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          region: 'US'
+          version: ${{ needs.resolve-version.outputs.version_label }}
+          type: 'Rolling'
+          description: 'US production promoted to ${{ needs.resolve-version.outputs.version_label }}'
+          shortDescription: 'US Prod: ${{ needs.resolve-version.outputs.version_label }}'
+          commit: ${{ github.sha }}
+          user: ${{ github.actor }}
+          groupId: '${{ github.run_id }}-${{ github.sha }}'
+
   # Notify US production deployment
   notify-us-prod:
-    needs: [deploy-us-prod]
+    needs: [resolve-version, deploy-us-prod]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

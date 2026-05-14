@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { FEATURE_NAME } from '../constants'
+import { ABORT_REASONS, FEATURE_NAME } from '../constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { TraceStorage } from './trace/storage'
 import { obj as encodeObj } from '../../../common/url/encode'
@@ -40,7 +40,7 @@ export class Aggregate extends AggregateBase {
   initialize (stMode, stEntitled, ignoreSession) {
     this.entitled ??= stEntitled
     if (!this.entitled) {
-      this.abort()
+      this.abort(ABORT_REASONS.ENTITLEMENTS)
       return this.deregisterDrain()
     }
     this.timeKeeper ??= this.agentRef.runtime.timeKeeper
@@ -53,7 +53,7 @@ export class Aggregate extends AggregateBase {
       // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
       this.ee.on(SESSION_EVENTS.RESET, () => {
         if (this.blocked) return
-        this.abort(1)
+        this.abort(ABORT_REASONS.RESET)
       })
       // The SessionEntity can have updates (locally or across tabs for SR mode changes), (across tabs for ST mode changes).
       // Those updates should be sync'd here to ensure this page also honors the mode after initialization
@@ -62,7 +62,7 @@ export class Aggregate extends AggregateBase {
         // this will only have an effect if ST is NOT already in full mode
         if (this.mode !== MODE.FULL && (sessionState.sessionReplayMode === MODE.FULL || sessionState.sessionTraceMode === MODE.FULL)) this.switchToFull()
         // if another page's session entity has expired, or another page has transitioned to off and this one hasn't... we can just abort straight away here
-        if (this.sessionId !== sessionState.value || (eventType === 'cross-tab' && sessionState.sessionTraceMode === MODE.OFF)) this.abort(2)
+        if (this.sessionId !== sessionState.value || (eventType === 'cross-tab' && sessionState.sessionTraceMode === MODE.OFF)) this.abort(ABORT_REASONS.CROSS_TAB)
       })
 
       if (typeof PerformanceNavigationTiming !== 'undefined' && globalScope.performance?.getEntriesByType('navigation')?.length > 0) {
@@ -79,7 +79,7 @@ export class Aggregate extends AggregateBase {
 
     /** If the mode is off, we do not want to hold up draining for other features, so we deregister the feature for now.
      * If it drains later (due to a mode change), data and handlers will instantly drain instead of waiting for the registry. */
-    if (!this.mode) {
+    if (this.mode === MODE.OFF) {
       this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })
       return this.deregisterDrain()
     }
@@ -109,7 +109,7 @@ export class Aggregate extends AggregateBase {
     if (!this.agentRef.runtime.session) return // session entity is required for trace to run and continue running
     if (this.sessionId !== this.agentRef.runtime.session.state.value || this.ptid !== this.agentRef.runtime.ptid) {
       // If something unexpected happened and we somehow still got to harvesting after a session identifier changed, we should force-exit instead of harvesting:
-      this.abort(3)
+      this.abort(ABORT_REASONS.SESSION_CHANGED)
       return
     }
 
@@ -186,8 +186,8 @@ export class Aggregate extends AggregateBase {
   }
 
   /** Stop running for the remainder of the page lifecycle */
-  abort (code) {
-    warn(60, code)
+  abort (reason = {}) {
+    warn(60, reason.message)
     this.blocked = true
     this.mode = MODE.OFF
     this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })

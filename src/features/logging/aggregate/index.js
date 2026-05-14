@@ -49,7 +49,8 @@ export class Aggregate extends AggregateBase {
       const session = this.agentRef.runtime.session
       if (canEnableSessionTracking(agentRef.init) && session) {
         // if session mode is already set, use it
-        if (session.state.loggingMode !== null || session.state.logApiMode !== null) {
+        if (session.state.loggingMode == null || session.state.logApiMode == null) this.#syncWithSessionManager()
+        else updateLocalLoggingMode(session.state.loggingMode, session.state.logApiMode)
           updateLocalLoggingMode(session.state.loggingMode, session.state.logApiMode)
         } else {
           this.#syncWithSessionManager()

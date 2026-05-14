@@ -39,6 +39,21 @@ describe('vital-metric', () => {
     })
   })
 
+  test('update with element', () => {
+    vitalMetric.update({ value: 100, element: '#root>div>p', attrs: { test: 'value' } })
+    expect(vitalMetric.current).toMatchObject({
+      value: 100,
+      element: '#root>div>p',
+      attrs: { test: 'value' }
+    })
+
+    vitalMetric.update({ value: 200, element: 'body>main>section' })
+    expect(vitalMetric.current).toMatchObject({
+      value: 200,
+      element: 'body>main>section'
+    })
+  })
+
   test('rounding', () => {
     // default rounding
     vitalMetric.update({ value: 1.234 })
@@ -66,6 +81,16 @@ describe('vital-metric', () => {
     })
 
     vitalMetric.update({ value: 1 })
+  })
+
+  test('subscribers get updates with element when supplied', (done) => {
+    vitalMetric.subscribe(({ value, element }) => {
+      expect(value).toEqual(100)
+      expect(element).toEqual('#root>div>button')
+      done()
+    })
+
+    vitalMetric.update({ value: 100, element: '#root>div>button' })
   })
 
   test('multiple subscribers get same update when valid', (done) => {
@@ -99,6 +124,16 @@ describe('vital-metric', () => {
 
     vitalMetric.subscribe(({ value }) => {
       expect(value).toEqual(1)
+      done()
+    })
+  })
+
+  test('subscribers get latest value with element immediately if already valid', (done) => {
+    vitalMetric.update({ value: 50, element: 'div.container>p' })
+
+    vitalMetric.subscribe(({ value, element }) => {
+      expect(value).toEqual(50)
+      expect(element).toEqual('div.container>p')
       done()
     })
   })

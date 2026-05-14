@@ -1,5 +1,6 @@
 import { Instrument as SoftNav } from '../../../src/features/soft_navigations/instrument'
 import { resetAgent, setupAgent } from '../setup-agent'
+import { AJAX_ID } from '../../../src/features/ajax/constants'
 
 import querypack from '@newrelic/nr-querypack'
 
@@ -68,6 +69,41 @@ test('.interaction gets current or creates new api ixn', () => {
   mainAgent.interaction()
   expect(softNavAggregate.interactionInProgress.trigger).toEqual('api') // once iPL is over, get creates a new api ixn
   expect(softNavAggregate.interactionInProgress.cancellationTimer).toBeUndefined()
+})
+
+test('.interaction with targetPageLoad binds to retained IPL without opening api ixn', () => {
+  const fakeIpl = {
+    trigger: 'initialPageLoad',
+    isActiveDuring: () => true
+  }
+  softNavAggregate.initialPageLoadInteraction = fakeIpl
+
+  const defaultIxn = mainAgent.interaction()
+  expect(getIxnContext(defaultIxn).associatedInteraction.trigger).toEqual('api') // default interaction() still cannot target iPL
+  defaultIxn.end()
+
+  const iplIxn = mainAgent.interaction({ targetPageLoad: true })
+  expect(getIxnContext(iplIxn).associatedInteraction).toBe(fakeIpl)
+  expect(softNavAggregate.interactionInProgress).toBeNull()
+})
+
+test('.interaction creates new api ixn when IPL is finished, while targetPageLoad still returns finished IPL', () => {
+  const finishedIpl = {
+    trigger: 'initialPageLoad',
+    status: 'finished',
+    isActiveDuring: () => false
+  }
+  softNavAggregate.initialPageLoadInteraction = finishedIpl
+
+  const apiIxn = mainAgent.interaction()
+  const apiCtx = getIxnContext(apiIxn)
+  expect(apiCtx.associatedInteraction.trigger).toEqual('api')
+  expect(softNavAggregate.interactionInProgress).toBe(apiCtx.associatedInteraction)
+
+  const iplIxn = mainAgent.interaction({ targetPageLoad: true })
+  expect(getIxnContext(iplIxn).associatedInteraction).toBe(finishedIpl)
+  expect(getIxnContext(iplIxn).associatedInteraction.status).toEqual('finished')
+  expect(softNavAggregate.interactionInProgress).toBe(apiCtx.associatedInteraction)
 })
 
 test('.interaction returns a different new context for every call', () => {
@@ -330,9 +366,9 @@ test('multiple finished ixns with ajax have correct start/end timestamps (in aja
   ixnContext.associatedInteraction.forceSave = true
   softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [4.56], ixnContext)
 
-  softNavAggregate.ee.emit('ajax', [{ startTime: 2.34, endTime: 5.67 }])
+  softNavAggregate.ee.emit('ajax', [{ startTime: 2.34, endTime: 5.67, [AJAX_ID]: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' }])
   ixnContext.associatedInteraction.children[0].nodeId = 2
-  softNavAggregate.ee.emit('ajax', [{ startTime: 3.45, endTime: 6.78 }])
+  softNavAggregate.ee.emit('ajax', [{ startTime: 3.45, endTime: 6.78, [AJAX_ID]: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' }])
   ixnContext.associatedInteraction.children[1].nodeId = 3
 
   softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [10])
@@ -342,14 +378,14 @@ test('multiple finished ixns with ajax have correct start/end timestamps (in aja
   ixnContext.associatedInteraction.forceSave = true
   softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [14], ixnContext)
 
-  softNavAggregate.ee.emit('ajax', [{ startTime: 11, endTime: 12 }])
+  softNavAggregate.ee.emit('ajax', [{ startTime: 11, endTime: 12, [AJAX_ID]: 'cccccccc-cccc-cccc-cccc-cccccccccccc' }])
   ixnContext.associatedInteraction.children[0].nodeId = 5
-  softNavAggregate.ee.emit('ajax', [{ startTime: 12, endTime: 13 }])
+  softNavAggregate.ee.emit('ajax', [{ startTime: 12, endTime: 13, [AJAX_ID]: 'dddddddd-dddd-dddd-dddd-dddddddddddd' }])
   ixnContext.associatedInteraction.children[1].nodeId = 6
 
   expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(2)
   // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
-  expect(softNavAggregate.makeHarvestPayload().body).toEqual("bel.7;1,2,1,3,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;2,,1,3,,,,,,,,,,'2,!!!;2,,2,3,,,,,,,,,,'3,!!!;;1,2,9,4,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'4,!!;2,,a,1,,,,,,,,,,'5,!!!;2,,b,1,,,,,,,,,,'6,!!!;")
+  expect(softNavAggregate.makeHarvestPayload().body).toEqual("bel.7;1,2,1,3,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;2,1,1,3,,,,,,,,,,'2,!!!;5,'ajaxRequest.id,'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa;2,1,2,3,,,,,,,,,,'3,!!!;5,'ajaxRequest.id,'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb;;1,2,9,4,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'4,!!;2,1,a,1,,,,,,,,,,'5,!!!;5,'ajaxRequest.id,'cccccccc-cccc-cccc-cccc-cccccccccccc;2,1,b,1,,,,,,,,,,'6,!!!;5,'ajaxRequest.id,'dddddddd-dddd-dddd-dddd-dddddddddddd;")
 })
 
 function getIxnContext (ixn) {

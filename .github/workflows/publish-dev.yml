@@ -1,7 +1,10 @@
 # This workflow runs on push to the main branch. This is to execute checks
 # like jest, upload test coverage to keep codecov updates, and build and deploy
-# the main branch changes to our internal dev and stage environment. This workflow
+# the main branch changes to our internal dev environment and public CDN. This workflow
 # can be manually executed but only on the main branch.
+#
+# Note: Staging and production NR1 environments are deployed via the
+# 'internal-promotion' workflow to maintain controlled releases.
 
 name: Publish Dev
 
@@ -143,6 +146,77 @@ jobs:
           trigger: 'publish-dev'
           traverse: true
 
+  # Publish dev a/b script to NR1 dev environment
+  publish-dev-ab:
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
+    needs: [publish-dev-to-s3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Publish dev a/b script
+        uses: ./.github/actions/internal-ab
+        with:
+          nr_environment: dev
+          nrba_app_id: ${{ secrets.INTERNAL_DEV_APPLICATION_ID }}
+          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
+          nrba_ab_app_id: ${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}
+          nrba_ab_license_key: ${{ secrets.INTERNAL_AB_LICENSE_KEY }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+
+  # Create change tracking events for dev environment
+  create-dev-change-tracking:
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
+    environment: change-tracking
+    needs: [publish-dev-ab]
+    continue-on-error: true
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 2
+      - name: Check if latest.js changed
+        id: check-latest
+        run: |
+          if git diff HEAD^ HEAD --name-only | grep -q ".github/actions/build-ab/templates/latest.js"; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Latest.js was changed in this commit"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "Latest.js was not changed in this commit"
+          fi
+      - name: New Relic Change Tracking Marker - Dev Latest
+        if: steps.check-latest.outputs.changed == 'true'
+        continue-on-error: true
+        uses: newrelic/deployment-marker-action@v2.3.0
+        with:
+          apiKey: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          region: US
+          accountId: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          applicationId: ${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}
+          revision: "${{ github.sha }}"
+          description: "Dev Latest Script Updated"
+          user: "${{ github.actor }}"
+          deploymentType: "BASIC"
+          groupId: "Dev Latest Update"
+
   # Publish dev to staging NRDB
   # publish-dev-nr:
   #   needs: [publish-dev-to-s3]
@@ -223,186 +297,3 @@ jobs:
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: staging-js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.s3-upload-agent2query.outputs.results).*.Key, ' ') }}
-
-  # Rebuild and publish the dev environment A/B script
-  publish-dev-ab:
-    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
-    needs: [publish-dev-to-s3]
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
-      - name: Publish dev a/b script
-        uses: ./.github/actions/internal-ab
-        with:
-          nr_environment: dev
-          nrba_app_id: ${{ secrets.INTERNAL_DEV_APPLICATION_ID }}
-          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
-          nrba_ab_app_id: ${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}
-          nrba_ab_license_key: ${{ secrets.INTERNAL_AB_LICENSE_KEY }}
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-
-  # Rebuild and publish the staging environment A/B script
-  publish-staging-ab:
-    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
-    needs: [publish-dev-to-s3]
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
-      - name: Deploy staging a/b script
-        uses: ./.github/actions/internal-ab
-        with:
-          nr_environment: staging
-          nrba_app_id: ${{ secrets.INTERNAL_STAGING_APPLICATION_ID }}
-          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
-          nrba_ab_app_id: ${{ secrets.INTERNAL_AB_STAGING_APPLICATION_ID }}
-          nrba_ab_license_key: ${{ secrets.INTERNAL_AB_LICENSE_KEY }}
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-
-  # Create change tracking events for staging environment
-  create-staging-change-tracking:
-    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
-    environment: staging
-    needs: [publish-dev-to-s3]
-    continue-on-error: true
-    runs-on: Browser-Agent-Assigned-IP-Linux
-    timeout-minutes: 5
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 2
-      - name: Check if released.js changed
-        id: check-released
-        run: |
-          if git diff HEAD^ HEAD --name-only | grep -q ".github/actions/build-ab/templates/released.js"; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "Released.js was changed in this commit"
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "Released.js was not changed in this commit"
-          fi
-      - name: Check if latest.js changed
-        id: check-latest
-        run: |
-          if git diff HEAD^ HEAD --name-only | grep -q ".github/actions/build-ab/templates/latest.js"; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "Latest.js was changed in this commit"
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "Latest.js was not changed in this commit"
-          fi
-      - name: Create staging basic deployment event (Account 550352)
-        uses: ./.github/actions/change-tracking
-        with:
-          accountId: '550352'
-          entityGuid: ${{ secrets.NR_ENTITY_GUID_BROWSER_STAGING }}
-          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_BROWSER }}
-          application: 'New Relic One - Staging'
-          version: staging-latest
-          category: 'Deployment'
-          type: 'Basic'
-          description: 'Staging deployment when PR merged to main'
-          shortDescription: 'Staging: main branch deployment'
-          changelog: 'This deployment updates the second agent (pointed at Browser 550352) on New Relic pages to use the latest build from the main branch. This is a release-candidate build synchronized with the HEAD of main, ahead of the officially released agent used in New Relic One production accounts.'
-          deepLink: 'https://github.com/${{ github.repository }}/tree/main'
-          commit: ${{ github.sha }}
-          user: ${{ github.actor }}
-          groupId: '${{ github.run_id }}-${{ github.sha }}'
-      - name: Create staging feature flag event for released.js (Account 1067061)
-        if: steps.check-released.outputs.changed == 'true'
-        uses: ./.github/actions/change-tracking
-        with:
-          accountId: '1067061'
-          entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_STAGING }}
-          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
-          application: 'New Relic One - Staging'
-          version: staging-latest
-          category: 'Feature Flag'
-          type: 'Basic'
-          featureFlagId: 'hardcoded feature flag'
-          description: 'Feature flag configuration updated in released.js'
-          shortDescription: 'Staging: Feature flags updated (released.js)'
-          deepLink: 'https://github.com/${{ github.repository }}/tree/main'
-          commit: ${{ github.sha }}
-          user: ${{ github.actor }}
-          groupId: '${{ github.run_id }}-${{ github.sha }}'
-      - name: Create staging feature flag event for latest.js (Account 550352)
-        if: steps.check-latest.outputs.changed == 'true'
-        uses: ./.github/actions/change-tracking
-        with:
-          accountId: '550352'
-          entityGuid: ${{ secrets.NR_ENTITY_GUID_BROWSER_STAGING }}
-          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_BROWSER }}
-          application: 'New Relic One - Staging'
-          version: staging-latest
-          category: 'Feature Flag'
-          type: 'Basic'
-          featureFlagId: 'latest.js feature flag'
-          description: 'Feature flag configuration updated in latest.js'
-          shortDescription: 'Staging: Feature flags updated (latest.js)'
-          deepLink: 'https://github.com/${{ github.repository }}/tree/main'
-          commit: ${{ github.sha }}
-          user: ${{ github.actor }}
-          groupId: '${{ github.run_id }}-${{ github.sha }}'
-
-  # Notify about new staging deploy in Slack
-  send-slack-notifications:
-    if: always() && !cancelled() && !contains(needs.*.result, 'failure') && !inputs.skip_publish_notification
-    needs: [publish-staging-ab]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref }}
-      - name: Get PR Description
-        id: get-pr-description
-        run: |
-          PR_NUMBER=$(git log -1 --pretty=%B | grep -oP '(?<=#)\d+' | head -1)
-
-          if [ -n "$PR_NUMBER" ]; then
-            PR_TITLE=$(gh pr view $PR_NUMBER --json title --jq '.title')
-            echo "text=PR #$PR_NUMBER: $PR_TITLE" >> $GITHUB_OUTPUT
-          else
-            echo "text=Manual deployment from main" >> $GITHUB_OUTPUT
-          fi
-        env:
-          GH_TOKEN: ${{ github.token }}
-      - name: Send Slack notifications
-        uses: ./.github/actions/slack-notification
-        with:
-          notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
-          dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          message: ":tada: Published browser agent <https://github.com/newrelic/newrelic-browser-agent/commits/main/|main> latest in staging. ${{ steps.get-pr-description.outputs.text }}. Sent from this <https://github.com/newrelic/newrelic-browser-agent/actions/workflows/publish-dev.yml|workflow>."

@@ -23,7 +23,10 @@ beforeEach(() => {
   }
   session = {
     read: jest.fn(),
-    write: jest.fn()
+    write: jest.fn(),
+    agentRef: {
+      ee: eventEmitter
+    }
   }
   serverTime = 1706213061000
 
@@ -277,5 +280,176 @@ describe('session entity integration', () => {
     expect(sessionTimeKeeper.ready).toEqual(false)
 
     expect(session.write).not.toHaveBeenCalled()
+  })
+})
+
+describe('clock drift detection and correction', () => {
+  let mockPerformanceNow
+  let mockDateNow
+  let handleModule
+
+  beforeEach(() => {
+    // Use real timers for drift detection tests
+    jest.useRealTimers()
+
+    mockPerformanceNow = jest.spyOn(performance, 'now')
+    mockDateNow = jest.spyOn(Date, 'now')
+
+    // Mock the handle module
+    handleModule = require('../../../../src/common/event-emitter/handle')
+    jest.spyOn(handleModule, 'handle').mockImplementation(() => {})
+
+    // Setup TimeKeeper with server time
+    timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+    jest.useFakeTimers({ now: originTime })
+  })
+
+  test('should detect drift when performance.now() falls behind Date.now()', () => {
+    // Initially no drift
+    mockPerformanceNow.mockReturnValue(1000)
+    mockDateNow.mockReturnValue(originTime + 1000)
+
+    timeKeeper.convertRelativeTimestamp(1000)
+    expect(handleModule.handle).not.toHaveBeenCalled()
+
+    // Simulate 2-second drift (performance.now frozen while Date.now advanced)
+    mockPerformanceNow.mockReturnValue(1000) // Frozen at 1000
+    mockDateNow.mockReturnValue(originTime + 3000) // Advanced 2000ms more
+
+    timeKeeper.convertRelativeTimestamp(1000)
+
+    // Should detect drift
+    expect(handleModule.handle).toHaveBeenCalledWith(
+      expect.any(String),
+      ['Generic/TimeKeeper/ClockDrift/Detected', 2000],
+      undefined,
+      expect.any(String),
+      expect.anything()
+    )
+  })
+
+  test('should NOT detect drift below 1000ms threshold', () => {
+    // Small drift under threshold
+    mockPerformanceNow.mockReturnValue(1000)
+    mockDateNow.mockReturnValue(originTime + 1500) // Only 500ms drift
+
+    timeKeeper.convertRelativeTimestamp(1000)
+
+    expect(handleModule.handle).not.toHaveBeenCalled()
+  })
+
+  test('should NOT apply correction when performance.now() is ahead of Date.now()', () => {
+    // Simulate negative drift - performance ahead of Date (unusual scenario)
+    mockPerformanceNow.mockReturnValue(5000)
+    mockDateNow.mockReturnValue(originTime + 2000) // Date is behind performance
+
+    timeKeeper.convertRelativeTimestamp(5000)
+
+    // Should NOT detect drift (we only detect positive drift)
+    expect(handleModule.handle).not.toHaveBeenCalled()
+
+    // Timestamp should be converted without any drift correction
+    const convertedTimestamp = timeKeeper.convertRelativeTimestamp(5000)
+    expect(convertedTimestamp).toEqual(originTime + 5000) // No drift adjustment
+  })
+
+  test('should correct timestamps after drift is detected', () => {
+    // Initially no drift
+    mockPerformanceNow.mockReturnValue(1000)
+    mockDateNow.mockReturnValue(originTime + 1000)
+
+    const beforeDriftTimestamp = timeKeeper.convertRelativeTimestamp(1000)
+    expect(beforeDriftTimestamp).toEqual(originTime + 1000)
+
+    // Simulate 2-second drift
+    mockPerformanceNow.mockReturnValue(1000) // Frozen
+    mockDateNow.mockReturnValue(originTime + 3000) // Advanced 2000ms
+
+    const afterDriftTimestamp = timeKeeper.convertRelativeTimestamp(1000)
+    // Should add the 2000ms drift correction
+    expect(afterDriftTimestamp).toEqual(originTime + 1000 + 2000)
+  })
+
+  test('should correct convertAbsoluteTimestamp after drift is detected', () => {
+    // Simulate 2-second drift
+    mockPerformanceNow.mockReturnValue(1000)
+    mockDateNow.mockReturnValue(originTime + 3000)
+
+    // Trigger drift detection
+    timeKeeper.convertRelativeTimestamp(1000)
+
+    // Convert absolute back to relative - should subtract the drift
+    const absoluteTime = originTime + 3000
+    const relativeTime = timeKeeper.convertAbsoluteTimestamp(absoluteTime)
+
+    // Should return approximately performance.now() (1000ms)
+    expect(relativeTime).toEqual(1000)
+  })
+
+  test('should handle multiple drift events cumulatively', () => {
+    // First drift event: 2 seconds
+    mockPerformanceNow.mockReturnValue(1000)
+    mockDateNow.mockReturnValue(originTime + 3000)
+
+    timeKeeper.convertRelativeTimestamp(1000)
+    expect(handleModule.handle).toHaveBeenCalledWith(
+      expect.any(String),
+      ['Generic/TimeKeeper/ClockDrift/Detected', 2000],
+      undefined,
+      expect.any(String),
+      expect.anything()
+    )
+
+    const afterFirstDrift = timeKeeper.convertRelativeTimestamp(1000)
+    expect(afterFirstDrift).toEqual(originTime + 3000)
+
+    // Second drift event: another 1.5 seconds (cumulative 3.5s total)
+    mockPerformanceNow.mockReturnValue(1000) // Still frozen
+    mockDateNow.mockReturnValue(originTime + 4500)
+
+    timeKeeper.convertRelativeTimestamp(1000)
+
+    // Should detect the new drift (increase of 1500ms)
+    expect(handleModule.handle).toHaveBeenCalledWith(
+      expect.any(String),
+      ['Generic/TimeKeeper/ClockDrift/Detected', 3500],
+      undefined,
+      expect.any(String),
+      expect.anything()
+    )
+
+    const afterSecondDrift = timeKeeper.convertRelativeTimestamp(1000)
+    expect(afterSecondDrift).toEqual(originTime + 4500)
+  })
+
+  test('should NOT report same drift multiple times', () => {
+    // Simulate drift
+    mockPerformanceNow.mockReturnValue(1000)
+    mockDateNow.mockReturnValue(originTime + 3000)
+
+    timeKeeper.convertRelativeTimestamp(1000)
+    expect(handleModule.handle).toHaveBeenCalledTimes(1)
+
+    // Call again with same drift - should not report again
+    timeKeeper.convertRelativeTimestamp(1000)
+    expect(handleModule.handle).toHaveBeenCalledTimes(1) // Still only 1 call
+  })
+
+  test('should apply drift correction to correctRelativeTimestamp', () => {
+    // Simulate drift
+    mockPerformanceNow.mockReturnValue(1000)
+    mockDateNow.mockReturnValue(originTime + 3000)
+
+    const correctedTimestamp = timeKeeper.correctRelativeTimestamp(1000)
+
+    // Should convert relative to absolute (with drift), then correct to server time
+    // convertRelativeTimestamp(1000) = originTime + 1000 + 2000 (drift)
+    // correctAbsoluteTimestamp applies server offset on top of that
+    const expectedServerCorrected = originTime + 3000 - timeKeeper.localTimeDiff
+    expect(correctedTimestamp).toEqual(expectedServerCorrected)
   })
 })

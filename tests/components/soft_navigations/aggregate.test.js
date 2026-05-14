@@ -66,7 +66,8 @@ test('processes interaction heuristics', async () => {
 
   const loadTimeSubscriber = jest.mocked(loadTimeModule.loadTime.subscribe).mock.calls[0][0]
   loadTimeSubscriber({ value: 123 })
-  expect(softNavAggregate.initialPageLoadInteraction).toBeNull()
+  expect(softNavAggregate.initialPageLoadInteraction).toBeTruthy()
+  expect(softNavAggregate.initialPageLoadInteraction.status).toEqual(INTERACTION_STATUS.FIN)
   expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(1)
 
   softNavAggregate.ee.emit('newURL', [234, 'new_location'])
@@ -371,7 +372,7 @@ test('calling done on the initialPageLoad actually closes it correctly', () => {
   let endTime = performance.now()
   let ipl = softNavAggregate.initialPageLoadInteraction
   softNavAggregate.initialPageLoadInteraction.done(endTime)
-  expect(softNavAggregate.initialPageLoadInteraction).toBeNull()
+  expect(softNavAggregate.initialPageLoadInteraction).toBe(ipl)
   expect(ipl.end).toEqual(endTime)
   expect(ipl.status).toEqual(INTERACTION_STATUS.FIN)
   expect(softNavAggregate.interactionsToHarvest.get()).toEqual([ipl])

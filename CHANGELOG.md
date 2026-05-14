@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.314.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.313.1...v1.314.0) (2026-05-04)
+
+
+### Features
+
+* Add ajaxRequest.id attribute ([#1757](https://github.com/newrelic/newrelic-browser-agent/issues/1757)) ([c8a345b](https://github.com/newrelic/newrelic-browser-agent/commit/c8a345bc9cd22eb56f876c598677310a2da6be8f))
+* Adjust timestamps for clock skew due to machine sleep ([#1749](https://github.com/newrelic/newrelic-browser-agent/issues/1749)) ([412ef8b](https://github.com/newrelic/newrelic-browser-agent/commit/412ef8b6ea80ddd13900cea5f379e12b4fafc007))
+* Allow Session Replay to retry payloads ([#1666](https://github.com/newrelic/newrelic-browser-agent/issues/1666)) ([9874ac5](https://github.com/newrelic/newrelic-browser-agent/commit/9874ac5d851653641ed33241ad5e96678a9b9fee))
+* Automatically Detect MFE User Actions ([#1723](https://github.com/newrelic/newrelic-browser-agent/issues/1723)) ([2c2024e](https://github.com/newrelic/newrelic-browser-agent/commit/2c2024e3cbb4b2f6afc22e2bc1c6385b07335be5))
+* Improve PageViewTiming load timing capture ([#1764](https://github.com/newrelic/newrelic-browser-agent/issues/1764)) ([7ca2164](https://github.com/newrelic/newrelic-browser-agent/commit/7ca2164771f5c88b0a053a5af9f07d607c0e1d29))
+
 ## [1.313.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.313.0...v1.313.1) (2026-04-21)
 
 

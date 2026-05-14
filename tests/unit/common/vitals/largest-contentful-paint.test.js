@@ -8,7 +8,7 @@ const lcpAttribution = {
   lcpEntry: {
     size: 1,
     id: 'someid',
-    element: { tagName: 'sometagName' }
+    element: document.createElement('someTagName')
   },
   element: '#someid',
   timeToFirstByte: 1,
@@ -36,8 +36,10 @@ const getFreshLCPImportWithAttribution = async (attribution, codeToRun) => {
 
 describe('lcp', () => {
   test('reports lcp from web-vitals', (done) => {
-    getFreshLCPImport(metric => metric.subscribe(({ value, attrs }) => {
+    getFreshLCPImport(metric => metric.subscribe(({ value, element, attrs }) => {
       expect(value).toEqual(1)
+      expect(element).toEqual(lcpAttribution.lcpEntry.element)
+      expect(element instanceof HTMLElement).toBe(true)
       expect(attrs).toStrictEqual({
         size: lcpAttribution.lcpEntry.size,
         eid: lcpAttribution.lcpEntry.id,

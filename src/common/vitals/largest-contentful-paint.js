@@ -31,6 +31,6 @@ if (isBrowserScope) {
     if (attribution.element) attrs.element = attribution.element
     if (attribution.url) attrs.elUrl = cleanURL(attribution.url)
 
-    largestContentfulPaint.update({ value, attrs })
+    largestContentfulPaint.update({ value, attrs, element: lcpEntry?.element })
   })
 }

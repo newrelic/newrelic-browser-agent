@@ -88,6 +88,32 @@ module.exports.testTimingEventsRequest = function testTimingEventsRequest (reque
   }
 }
 
+module.exports.testMFETimingEventsRequest = function testMFETimingEventsRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== `/events/2/${this.testId}`) {
+    return false
+  }
+
+  if (
+    Array.isArray(request.body) &&
+    request.body.findIndex((qpData) => qpData.type === 'timing') > -1
+  ) {
+    return true
+  }
+
+  if (request?.query?.e) {
+    try {
+      const events = require('@newrelic/nr-querypack').decode(request.query.e)
+      return (
+        Array.isArray(events) &&
+        events.findIndex((qpData) => qpData.type === 'timing') > -1
+      )
+    } catch (error) {
+      return false
+    }
+  }
+}
+
 module.exports.testAjaxEventsRequest = function testAjaxEventsRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/events/1/${this.testId}`) {

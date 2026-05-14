@@ -95,7 +95,7 @@ export default class CustomCommands {
       // WDIO converts empty objects from IE to null (as with default session.state.custom).
       // Waiting to parse the JSON string until it is returned preserves the value.
       const localStorageJSON = await browser.execute(function () {
-        return window.localStorage.getItem('NRBA_SESSION') || '{}'
+        return window.localStorage.getItem(Object.keys(window.localStorage).filter(key => key.startsWith('NRBA_SESSION::'))[0]) || '{}'
       })
       const localStorage = JSON.parse(localStorageJSON)
       return { agentSessions, agentSessionInstances, localStorage }

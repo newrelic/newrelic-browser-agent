@@ -134,23 +134,33 @@ export class Aggregate extends AggregateBase {
   postHarvestCleanup ({ sent, status, responseText, xhr, retry }) {
     const rumEndTime = now()
     let app, flags
+    const hasCachedRumResponse = !!this.agentRef.runtime.session?.state.cachedRumResponse
+    let shouldCacheResponse = this.isSessionTrackingEnabled && !hasCachedRumResponse
     try {
       ({ app, ...flags } = JSON.parse(responseText))
+      shouldCacheResponse = shouldCacheResponse && !!app
     } catch (error) {
       // wont set entity stuff here, if main agent will later abort, if registered agent, nothing will happen
       warn(53, error)
     }
 
-    super.postHarvestCleanup({ sent, retry }) // this will set isRetrying & re-buffer the body if request is to be retried
+    if (hasCachedRumResponse) {
+      let { app: cachedApp, ...cachedFlags } = this.agentRef.runtime.session.state.cachedRumResponse
+      app ??= cachedApp
+      flags = cachedFlags
+    }
+
+    super.postHarvestCleanup({ sent, retry: retry && !hasCachedRumResponse }) // this will set isRetrying & re-buffer the body if request is to be retried
+
     if (this.isRetrying && this.retries++ < 1) { // Only retry once
       setTimeout(() => this.agentRef.runtime.harvester.triggerHarvestFor(this, {
         sendEmptyBody: true
       }), 5000) // Retry sending the RUM event after 5 seconds
       return
     }
+
     if (status >= 400 || status === 0) {
       warn(18, status)
-      this.blocked = true
 
       // Get estimated payload size of our backlog
       const textEncoder = new TextEncoder()
@@ -162,16 +172,24 @@ export class Aggregate extends AggregateBase {
       }, 0)
       const BCSError = 'BCS/Error/'
       // Send SMs about failed RUM request
-      const body = {
-        sm: [{
-          params: {
-            name: BCSError + status
-          },
-          stats: {
-            c: 1
-          }
+      const sm = [{
+        params: {
+          name: BCSError + status
         },
-        {
+        stats: {
+          c: 1
+        }
+      }, {
+        params: {
+          name: BCSError + 'Duration/Ms'
+        },
+        stats: {
+          c: 1,
+          t: rumEndTime - this.rumStartTime
+        }
+      }]
+      if (!hasCachedRumResponse) {
+        sm.push({
           params: {
             name: BCSError + 'Dropped/Bytes'
           },
@@ -179,30 +197,23 @@ export class Aggregate extends AggregateBase {
             c: 1,
             t: payloadSize
           }
-        },
-        {
-          params: {
-            name: BCSError + 'Duration/Ms'
-          },
-          stats: {
-            c: 1,
-            t: rumEndTime - this.rumStartTime
-          }
-        }]
+        })
       }
 
       send(this.agentRef, {
         endpoint: FEATURE_TO_ENDPOINT[FEATURE_NAMES.metrics],
-        payload: { body },
+        payload: { body: { sm } },
         submitMethod: getSubmitMethod(),
         featureName: FEATURE_NAMES.metrics
       })
 
-      // Adding retry logic for the rum call will be a separate change; this.blocked will need to be changed since that prevents another triggerHarvestFor()
-      this.ee.abort()
-      return
-    } else if (this.isSessionTrackingEnabled && !this.agentRef.runtime.session.state.cachedRumResponse) {
-      this.agentRef.runtime.session.write({ cachedRumResponse: flags })
+      if (!hasCachedRumResponse) {
+        this.blocked = true
+        this.ee.abort()
+        return
+      }
+    } else if (shouldCacheResponse) {
+      this.agentRef.runtime.session.write({ cachedRumResponse: { app, ...flags } })
     }
 
     try {
@@ -229,6 +240,6 @@ export class Aggregate extends AggregateBase {
 
     this.drain()
     this.agentRef.runtime.harvester.startTimer()
-    activateFeatures(this.agentRef.runtime.session?.state.cachedRumResponse || flags, this.agentRef)
+    activateFeatures(flags, this.agentRef)
   }
 }

@@ -134,173 +134,328 @@ describe('RUM call', () => {
     )
   })
 
-  test('caches response when RUM call succeeds and no cached response is present yet', () => {
-    testAgent.runtime.session.state.cachedRumResponse = undefined
+  describe('when cached response is not present yet', () => {
+    test('caches response when RUM call succeeds', () => {
+      testAgent.runtime.session.state.cachedRumResponse = undefined
 
-    sendSpy.mockImplementation((agentRef, { cbFinished }) => {
-      if (cbFinished) {
-        const mockResult = {
-          sent: true,
-          status: 200,
-          retry: false,
-          fullUrl: 'https://fake-beacon/rum/1/license-key',
-          xhr: { status: 200 },
-          responseText: JSON.stringify({
-            app: {
-              agents: [{ entityGuid: 'test-guid' }],
-              nrServerTime: someServerTime
-            },
-            ...featFlags
-          })
+      sendSpy.mockImplementation((agentRef, { cbFinished }) => {
+        if (cbFinished) {
+          const mockResult = {
+            sent: true,
+            status: 200,
+            retry: false,
+            fullUrl: 'https://fake-beacon/rum/1/license-key',
+            xhr: { status: 200 },
+            responseText: JSON.stringify({
+              app: {
+                agents: [{ entityGuid: 'test-guid' }],
+                nrServerTime: someServerTime
+              },
+              ...featFlags
+            })
+          }
+
+          // Call the callback to trigger postHarvestCleanup
+          cbFinished(mockResult)
         }
+        return true
+      })
 
-        // Call the callback to trigger postHarvestCleanup
-        cbFinished(mockResult)
-      }
-      return true
+      pveAgg.sendRum()
+
+      // Assert: Response flags should be cached, including app
+      expect(testAgent.runtime.session.state.cachedRumResponse).toEqual({
+        app: {
+          agents: [{ entityGuid: 'test-guid' }],
+          nrServerTime: someServerTime
+        },
+        err: 1,
+        ins: 1,
+        log: 1,
+        logapi: 1,
+        spa: 1,
+        sr: 1,
+        srs: 1,
+        st: 1,
+        sts: 1
+      })
     })
 
-    pveAgg.sendRum()
+    test('does not cache response when RUM call fails', () => {
+      testAgent.runtime.session.state.cachedRumResponse = undefined
 
-    // Assert: Response flags should be cached (everything except 'app')
-    expect(testAgent.runtime.session.state.cachedRumResponse).toEqual({
-      err: 1,
-      ins: 1,
-      log: 1,
-      logapi: 1,
-      spa: 1,
-      sr: 1,
-      srs: 1,
-      st: 1,
-      sts: 1
+      sendSpy.mockImplementation((agentRef, { cbFinished }) => {
+        if (cbFinished) {
+          const mockResult = {
+            sent: true,
+            status: 400,
+            retry: false,
+            fullUrl: 'https://fake-beacon/rum/1/license-key',
+            xhr: { status: 400 },
+            responseText: ''
+          }
+
+          cbFinished(mockResult)
+        }
+        return true
+      })
+
+      pveAgg.sendRum()
+
+      expect(testAgent.runtime.session.state.cachedRumResponse).toBeUndefined()
     })
-    expect(testAgent.runtime.session.state.cachedRumResponse.app).toBeUndefined()
   })
 
-  test('does not cache response when RUM call fails', () => {
-    testAgent.runtime.session.state.cachedRumResponse = undefined
-
-    sendSpy.mockImplementation((agentRef, { cbFinished }) => {
-      if (cbFinished) {
-        const mockResult = {
-          sent: true,
-          status: 400,
-          retry: false,
-          fullUrl: 'https://fake-beacon/rum/1/license-key',
-          xhr: { status: 400 },
-          responseText: ''
-        }
-
-        cbFinished(mockResult)
+  describe('when cached response is present', () => {
+    test('does not overwrite cached response when new PVE/RUM call succeeds', () => {
+      testAgent.runtime.session.state.cachedRumResponse = {
+        app: {
+          agents: [{ entityGuid: 'test-guid' }],
+          nrServerTime: someServerTime
+        },
+        ...featFlags
       }
-      return true
+
+      sendSpy.mockImplementation((agentRef, { cbFinished }) => {
+        if (cbFinished) {
+          const mockResult = {
+            sent: true,
+            status: 200,
+            retry: false,
+            fullUrl: 'https://fake-beacon/rum/1/license-key',
+            xhr: { status: 200 },
+            responseText: JSON.stringify({
+              app: {
+                agents: [{ entityGuid: 'test-guid' }],
+                nrServerTime: someServerTime
+              },
+              err: 0,
+              ins: 0,
+              log: 0,
+              logapi: 0,
+              spa: 0,
+              sr: 0,
+              srs: 0,
+              st: 0,
+              sts: 0
+            })
+          }
+
+          cbFinished(mockResult)
+        }
+        return true
+      })
+
+      pveAgg.sendRum()
+
+      expect(testAgent.runtime.session.state.cachedRumResponse).toEqual({
+        app: {
+          agents: [{ entityGuid: 'test-guid' }],
+          nrServerTime: someServerTime
+        },
+        ...featFlags
+      })
     })
 
-    pveAgg.sendRum()
-
-    expect(testAgent.runtime.session.state.cachedRumResponse).toBeUndefined()
-  })
-
-  test('does not remove old cached response when new PVE/RUM call fails', () => {
-    testAgent.runtime.session.state.cachedRumResponse = featFlags
-
-    sendSpy.mockImplementation((agentRef, { cbFinished }) => {
-      if (cbFinished) {
-        const mockResult = {
-          sent: true,
-          status: 400,
-          retry: false,
-          fullUrl: 'https://fake-beacon/rum/1/license-key',
-          xhr: { status: 400 },
-          responseText: ''
+    describe('and new PVE/RUM call fails', () => {
+      let mockSessionEntity
+      beforeEach(async () => {
+        mockSessionEntity = {
+          read: () => {
+            return {
+              serverTimeDiff: -1000,
+              app: {
+                agents: [{ entityGuid: 'test-guid' }],
+                nrServerTime: someServerTime
+              }
+            }
+          },
+          serverTimeDiff: -1234,
+          state: {
+            cachedRumResponse: {
+              app: {
+                agents: [{ entityGuid: 'test-guid' }],
+                nrServerTime: someServerTime
+              },
+              ...featFlags
+            }
+          }
         }
 
-        cbFinished(mockResult)
-      }
-      return true
+        testAgent = setupAgent({ runtime: { session: mockSessionEntity } })
+        testAgent.info.errorBeacon = 'fake-beacon' // Required for send() to execute
+
+        const pveInst = new PageViewEvent(testAgent)
+        await new Promise(process.nextTick)
+        pveAgg = pveInst.featAggregate
+      })
+      afterEach(() => {
+        testAgent = undefined
+        mockSessionEntity = undefined
+      })
+      test('does not remove old cached response', () => {
+        sendSpy.mockImplementation((agentRef, { cbFinished }) => {
+          if (cbFinished) {
+            const mockResult = {
+              sent: true,
+              status: 400,
+              retry: true,
+              fullUrl: 'https://fake-beacon/rum/1/license-key',
+              xhr: { status: 400 },
+              responseText: ''
+            }
+
+            cbFinished(mockResult)
+          }
+          return true
+        })
+
+        pveAgg.sendRum()
+
+        expect(testAgent.runtime.session.state.cachedRumResponse).toEqual({
+          app: {
+            agents: [{ entityGuid: 'test-guid' }],
+            nrServerTime: someServerTime
+          },
+          ...featFlags
+        })
+      })
+
+      test('does not block PVE', () => {
+        sendSpy.mockImplementation((agentRef, { cbFinished }) => {
+          if (cbFinished) {
+            cbFinished({
+              sent: true,
+              status: 400,
+              retry: true,
+              xhr: { status: 400 },
+              responseText: ''
+            })
+          }
+          return true
+        })
+
+        pveAgg.sendRum()
+
+        expect(pveAgg.blocked).toEqual(false)
+      })
+
+      test('does not send Dropped/Bytes SM', () => {
+        sendSpy.mockImplementation((agentRef, { cbFinished }) => {
+          if (cbFinished) {
+            cbFinished({
+              sent: true,
+              status: 400,
+              retry: true,
+              xhr: { status: 400 },
+              responseText: ''
+            })
+          }
+          return true
+        })
+
+        pveAgg.sendRum()
+
+        const smSendCalls = sendSpy.mock.calls.filter(call => call[1].payload?.body?.sm)
+        const hasDroppedBytesSM = smSendCalls.some(call =>
+          call[1].payload.body.sm.some(item => item.params.name.includes('Dropped/Bytes'))
+        )
+        expect(hasDroppedBytesSM).toEqual(false)
+      })
+
+      test('does not retry RUM call', () => {
+        jest.useFakeTimers()
+
+        const triggerHarvestSpy = jest.spyOn(testAgent.runtime.harvester, 'triggerHarvestFor')
+
+        sendSpy.mockImplementation((agentRef, { cbFinished }) => {
+          if (cbFinished) {
+            cbFinished({
+              sent: true,
+              status: 400,
+              retry: true,
+              xhr: { status: 400 },
+              responseText: ''
+            })
+          }
+          return true
+        })
+
+        pveAgg.sendRum()
+
+        expect(pveAgg.isRetrying).toEqual(false)
+        expect(pveAgg.retries).toEqual(0)
+
+        jest.advanceTimersByTime(5001) // past the 5-second retry window
+        expect(triggerHarvestSpy).toHaveBeenCalledTimes(2) // second call is from the first harvest after drain
+
+        jest.useRealTimers()
+        triggerHarvestSpy.mockRestore()
+      })
+
+      test('sets appMetadata from cached response', () => {
+        testAgent.runtime.appMetadata = {}
+        sendSpy.mockImplementation((agentRef, { cbFinished }) => {
+          if (cbFinished) {
+            cbFinished({
+              sent: true,
+              status: 400,
+              retry: true,
+              xhr: { status: 400 },
+              responseText: ''
+            })
+          }
+          return true
+        })
+
+        pveAgg.sendRum()
+
+        expect(testAgent.runtime.appMetadata).toEqual({
+          agents: [{ entityGuid: 'test-guid' }],
+          nrServerTime: someServerTime
+        })
+      })
+
+      test('passes cached response to activate features', () => {
+        testAgent.runtime.session.state.cachedRumResponse = featFlags
+
+        sendSpy.mockImplementation((agentRef, { cbFinished }) => {
+          if (cbFinished) {
+            const mockResult = {
+              sent: true,
+              status: 200,
+              retry: true,
+              fullUrl: 'https://fake-beacon/rum/1/license-key',
+              xhr: { status: 200 },
+              responseText: JSON.stringify({
+                app: {
+                  agents: [{ entityGuid: 'test-guid' }],
+                  nrServerTime: someServerTime
+                },
+                err: 0,
+                ins: 0,
+                log: 0,
+                logapi: 0,
+                spa: 0,
+                sr: 0,
+                srs: 0,
+                st: 0,
+                sts: 0
+              })
+            }
+
+            cbFinished(mockResult)
+          }
+          return true
+        })
+
+        pveAgg.sendRum()
+
+        const rumrespArg = testAgent.ee.emit.mock.calls.find(call => call[0] === 'rumresp')[1][0]
+
+        expect(rumrespArg).toEqual(featFlags)
+      })
     })
-
-    pveAgg.sendRum()
-
-    expect(testAgent.runtime.session.state.cachedRumResponse).toBe(featFlags)
-  })
-
-  test('does not overwrite cached response when one is already present', () => {
-    testAgent.runtime.session.state.cachedRumResponse = featFlags
-
-    sendSpy.mockImplementation((agentRef, { cbFinished }) => {
-      if (cbFinished) {
-        const mockResult = {
-          sent: true,
-          status: 200,
-          retry: false,
-          fullUrl: 'https://fake-beacon/rum/1/license-key',
-          xhr: { status: 200 },
-          responseText: JSON.stringify({
-            app: {
-              agents: [{ entityGuid: 'test-guid' }],
-              nrServerTime: someServerTime
-            },
-            err: 0,
-            ins: 0,
-            log: 0,
-            logapi: 0,
-            spa: 0,
-            sr: 0,
-            srs: 0,
-            st: 0,
-            sts: 0
-          })
-        }
-
-        cbFinished(mockResult)
-      }
-      return true
-    })
-
-    pveAgg.sendRum()
-
-    expect(testAgent.runtime.session.state.cachedRumResponse).toBe(featFlags)
-  })
-
-  test('passes cached response to activate features, even when PVE/RUM call fails', () => {
-    testAgent.runtime.session.state.cachedRumResponse = featFlags
-
-    sendSpy.mockImplementation((agentRef, { cbFinished }) => {
-      if (cbFinished) {
-        const mockResult = {
-          sent: true,
-          status: 200,
-          retry: false,
-          fullUrl: 'https://fake-beacon/rum/1/license-key',
-          xhr: { status: 200 },
-          responseText: JSON.stringify({
-            app: {
-              agents: [{ entityGuid: 'test-guid' }],
-              nrServerTime: someServerTime
-            },
-            err: 0,
-            ins: 0,
-            log: 0,
-            logapi: 0,
-            spa: 0,
-            sr: 0,
-            srs: 0,
-            st: 0,
-            sts: 0
-          })
-        }
-
-        cbFinished(mockResult)
-      }
-      return true
-    })
-
-    pveAgg.sendRum()
-
-    const rumrespArg = testAgent.ee.emit.mock.calls.find(call => call[0] === 'rumresp')[1][0]
-
-    expect(rumrespArg).toEqual(featFlags)
   })
 
   // this is the scenario where the session is disabled (e.g. cookies are off) so there is no place to cache the response, but we still want to activate features based on the RUM response flags
@@ -375,12 +530,75 @@ describe('RUM call', () => {
 
     pveAgg.sendRum()
 
-    expect(testAgent.runtime.session.state.cachedRumResponse).toEqual(featFlags)
+    const expectedCachedResponse = {
+      app: {
+        agents: [{ entityGuid: 'test-guid' }],
+        nrServerTime: someServerTime
+      },
+      ...featFlags
+    }
+    expect(testAgent.runtime.session.state.cachedRumResponse).toEqual(expectedCachedResponse)
 
     // Simulate the onPause that fires when the page becomes hidden (e.g. during navigation).
     testAgent.runtime.session.inactiveTimer.pause()
 
-    expect(testAgent.runtime.session.state.cachedRumResponse).toEqual(featFlags)
-    expect(testAgent.runtime.session.read().cachedRumResponse).toEqual(featFlags)
+    expect(testAgent.runtime.session.state.cachedRumResponse).toEqual(expectedCachedResponse)
+    expect(testAgent.runtime.session.read().cachedRumResponse).toEqual(expectedCachedResponse)
+  })
+
+  test('cachedRumResponse is stored separately for multiple apps', async () => {
+    testAgent.runtime.session.state.cachedRumResponse = undefined
+
+    const testAgent2 = setupAgent()
+    testAgent2.info.errorBeacon = 'fake-beacon'
+    const pveInst2 = new PageViewEvent(testAgent2)
+    await new Promise(process.nextTick)
+    const pveAgg2 = pveInst2.featAggregate
+    testAgent2.runtime.session.state.cachedRumResponse = undefined
+
+    const featFlags1 = { err: 1, ins: 1, log: 1, logapi: 1, spa: 1, sr: 1, srs: 1, st: 1, sts: 1 }
+    const featFlags2 = { err: 0, ins: 0, log: 2, logapi: 2, spa: 0, sr: 0, srs: 0, st: 0, sts: 0 }
+
+    sendSpy.mockImplementation((agentRef, { cbFinished }) => {
+      if (cbFinished) {
+        const flags = agentRef.agentIdentifier === testAgent.agentIdentifier ? featFlags1 : featFlags2
+        const app = agentRef.agentIdentifier === testAgent.agentIdentifier ? { agents: [{ entityGuid: 'test-guid-1' }], nrServerTime: someServerTime } : { agents: [{ entityGuid: 'test-guid-2' }], nrServerTime: someServerTime }
+        cbFinished({
+          sent: true,
+          status: 200,
+          retry: false,
+          fullUrl: 'https://fake-beacon/rum/1/license-key',
+          xhr: { status: 200 },
+          responseText: JSON.stringify({ app, ...flags })
+        })
+      }
+      return true
+    })
+
+    pveAgg.sendRum()
+    pveAgg2.sendRum()
+
+    // Each agent's session uses a unique lookupKey (keyed by applicationID + licenseKey)
+    expect(testAgent.runtime.session.lookupKey).not.toEqual(testAgent2.runtime.session.lookupKey)
+
+    // Agent 1 only sees its own cached response
+    expect(testAgent.runtime.session.state.cachedRumResponse).toEqual({
+      app: { agents: [{ entityGuid: 'test-guid-1' }], nrServerTime: someServerTime },
+      ...featFlags1
+    })
+    expect(testAgent.runtime.session.read().cachedRumResponse).toEqual({
+      app: { agents: [{ entityGuid: 'test-guid-1' }], nrServerTime: someServerTime },
+      ...featFlags1
+    })
+
+    // Agent 2 only sees its own cached response
+    expect(testAgent2.runtime.session.state.cachedRumResponse).toEqual({
+      app: { agents: [{ entityGuid: 'test-guid-2' }], nrServerTime: someServerTime },
+      ...featFlags2
+    })
+    expect(testAgent2.runtime.session.read().cachedRumResponse).toEqual({
+      app: { agents: [{ entityGuid: 'test-guid-2' }], nrServerTime: someServerTime },
+      ...featFlags2
+    })
   })
 })

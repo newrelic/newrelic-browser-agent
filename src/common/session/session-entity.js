@@ -160,7 +160,8 @@ export class SessionEntity {
 
   // This is the actual key appended to the storage API
   get lookupKey () {
-    return `${PREFIX}_${this.key}`
+    // Note: using license, since appId alone may not guarantee uniqueness
+    return `${PREFIX}_${this.key}::${this.agentRef.info.licenseKey}:${this.agentRef.info.applicationID}`
   }
 
   sync (data) {
@@ -242,7 +243,6 @@ export class SessionEntity {
       delete this.isNew
 
       this.setup({
-        agentRef: this.agentRef,
         key: this.key,
         storage: this.storage,
         expiresMs: this.expiresMs,

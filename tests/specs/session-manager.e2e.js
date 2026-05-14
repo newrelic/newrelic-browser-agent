@@ -14,6 +14,14 @@ describe('newrelic session ID', () => {
     custom: expect.any(Object),
     serverTimeDiff: expect.any(Number),
     cachedRumResponse: expect.objectContaining({
+      app: expect.objectContaining({
+        agents: expect.arrayContaining([
+          expect.objectContaining({
+            entityGuid: expect.any(String)
+          })
+        ]),
+        nrServerTime: expect.any(Number)
+      }),
       loaded: expect.any(Number), // this exists in test-server only, see testing-server/constants.js
       err: expect.any(Number),
       ins: expect.any(Number),

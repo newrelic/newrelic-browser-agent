@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 /**
@@ -30,8 +30,9 @@ export class Instrument extends InstrumentBase {
     setupPauseReplayAPI(agentRef)
 
     let session
+    const fullNamespacedKey = `${PREFIX}_${DEFAULT_KEY}::${agentRef.info.licenseKey}:${agentRef.info.applicationID}`
     try {
-      session = JSON.parse(localStorage.getItem(`${PREFIX}_${DEFAULT_KEY}`))
+      session = JSON.parse(localStorage.getItem(fullNamespacedKey))
     } catch (err) { }
 
     if (hasReplayPrerequisite(agentRef.init)) {

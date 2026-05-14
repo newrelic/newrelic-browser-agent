@@ -19,10 +19,11 @@ export function setupAgentSession (agentRef) {
   if (agentRef.runtime.session) return agentRef.runtime.session // already setup
 
   const sessionInit = agentRef.init.session
+  const namespacedKey = `${DEFAULT_KEY}::${agentRef.info.licenseKey}:${agentRef.info.applicationID}`
 
   agentRef.runtime.session = new SessionEntity({
     agentRef,
-    key: DEFAULT_KEY,
+    key: namespacedKey,
     storage: new LocalStorage(),
     expiresMs: sessionInit?.expiresMs,
     inactiveMs: sessionInit?.inactiveMs

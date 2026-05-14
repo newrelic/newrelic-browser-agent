@@ -39,7 +39,7 @@ const model = {
 export class SessionEntity {
   /**
    * Create a self-managing Session Entity. This entity is scoped to the agent which triggered it, allowing for multiple simultaneous session objects to exist.
-   * There is one "namespace" an agent can store data in LS -- NRBA_{key}. If there are two agents on one page, and they both use the same key, they could overwrite each other since they would both use the same namespace in LS by default.
+  * Session data is stored at NRBA_{key}, where key can be app-namespaced by the caller to avoid collisions across multiple agents on the same origin.
    * The value can be overridden in the constructor, but will default to a unique 16 character hex string
    * expiresMs and inactiveMs are used to "expire" the session, but can be overridden in the constructor. Pass 0 to disable expiration timers.
    */

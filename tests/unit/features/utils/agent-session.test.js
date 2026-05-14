@@ -76,6 +76,22 @@ test('should register handlers and drain the session feature', async () => {
   expect(drain).toHaveBeenCalledWith(mockAgent, 'session')
 })
 
+test('should initialize SessionEntity with an app-namespaced storage key', async () => {
+  mockAgent.info = {
+    licenseKey: faker.string.uuid(),
+    applicationID: faker.string.uuid()
+  }
+
+  const { setupAgentSession } = await import('../../../../src/features/utils/agent-session')
+  setupAgentSession(mockAgent)
+
+  const { SessionEntity } = await import('../../../../src/common/session/session-entity')
+  expect(SessionEntity).toHaveBeenCalledWith(expect.objectContaining({
+    agentRef: mockAgent,
+    key: `SESSION::${mockAgent.info.licenseKey}:${mockAgent.info.applicationID}`
+  }))
+})
+
 test('multiple calls to setupAgentSession for same agent does not re-execute it', async () => {
   const { setupAgentSession } = await import('../../../../src/features/utils/agent-session')
   const result1 = setupAgentSession(mockAgent)

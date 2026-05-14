@@ -96,7 +96,8 @@ describe('newrelic api', () => {
       expect(rumResult[0].request.body.ja).toEqual({ testing: randomValue, 'testing-load': randomValue, webdriverDetected: expectedWebdriverDetected }) // initial page load has custom attribute
 
       const session = await browser.execute(function () {
-        return localStorage.getItem('NRBA_SESSION')
+        const agent = Object.values(newrelic.initializedAgents)[0]
+        return localStorage.getItem(`NRBA_${agent.runtime.session.key}`)
       })
       expect(JSON.parse(session).custom.testing).toEqual(randomValue) // initial page load has custom attribute in memory
       expect(JSON.parse(session).custom['testing-load']).toEqual(randomValue) // initial page load has custom attribute in memory
@@ -126,7 +127,8 @@ describe('newrelic api', () => {
       expect(rumResultAfterNavigate[1].request.body.ja).not.toEqual({ testing: randomValue, 'testing-load': randomValueAfterNavigate, webdriverDetected: expectedWebdriverDetected }) // 2nd page load value is not first load value
 
       const sessionAfterNavigate = await browser.execute(function () {
-        return localStorage.getItem('NRBA_SESSION')
+        const agent = Object.values(newrelic.initializedAgents)[0]
+        return localStorage.getItem(`NRBA_${agent.runtime.session.key}`)
       })
       expect(JSON.parse(sessionAfterNavigate).custom.testing).toEqual(randomValueAfterNavigate) // initial page load has custom attribute in memory
       expect(JSON.parse(sessionAfterNavigate).custom['testing-load']).toEqual(randomValueAfterNavigate) // initial page load has custom attribute in memory

@@ -1,6 +1,7 @@
 import { supportsMultiTabSessions } from '../../tools/browser-matcher/common-matchers.mjs'
 import { testErrorsRequest } from '../../tools/testing-server/utils/expect-tests'
 import { buildExpectedSessionState } from './util/helpers'
+import { PREFIX } from '../../src/common/session/constants'
 
 const config = {
   init: {
@@ -27,6 +28,23 @@ describe('newrelic session ID', () => {
       const { localStorage } = await browser.getAgentSessionInfo()
 
       expect(localStorage).toEqual(anySession())
+    })
+
+    it('should store session data under app namespaced key', async () => {
+      await browser.url(await browser.testHandle.assetURL('session-entity.html', config))
+        .then(() => browser.waitForAgentLoad())
+
+      const namespacedStorage = await browser.execute(function (prefix) {
+        const agent = Object.values(newrelic.initializedAgents)[0]
+        const key = `${prefix}_${agent.runtime.session.key}`
+        return {
+          key,
+          value: JSON.parse(localStorage.getItem(key) || '{}')
+        }
+      }, PREFIX)
+
+      expect(namespacedStorage.key).toEqual(expect.stringMatching(/^NRBA_SESSION::.+:.+$/))
+      expect(namespacedStorage.value).toEqual(anySession())
     })
   })
 

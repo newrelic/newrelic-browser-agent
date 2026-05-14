@@ -5,61 +5,39 @@
 
 import { globalScope } from '../constants/runtime'
 import { now } from '../timing/now'
-import { getRegisteredTargetsFromId } from './utils'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPITimings} RegisterAPITimings
  */
 
-// MFE FCP Tracker (compact version for minimal bundle impact)
-const mfeFCP = new Map()
-const mfeSubs = new Map()
-let mfeObs = null
-let mfeAgent = null
-
 /**
- * Subscribes a timings object to receive FCP updates for a specific MFE ID
+ * Tracks first contentful paint for a specific MFE by observing DOM mutations.
+ * Creates a dedicated MutationObserver that auto-disconnects after detecting FCP.
  * @param {string} id - The MFE ID to track
- * @param {RegisterAPITimings} timings - The timings object to update when FCP is detected
- * @param {Object} agent - The agent reference
+ * @returns {Promise<number>} Promise that resolves with the FCP timestamp
  */
-export function subscribeMFEFCP (id, timings, agent) {
-  if (!id || !agent) return
-  if (!mfeObs) {
-    mfeAgent = agent
-    if (globalScope.MutationObserver && globalScope.document) {
-      mfeObs = new MutationObserver(ms => {
-        if (!mfeSubs.size) return
-        ms.forEach(m => m.addedNodes.forEach(n => {
-          const t = n.textContent?.trim()
-          const tag = n.nodeName?.toLowerCase()
-          if (!t && tag !== 'img' && tag !== 'video' && tag !== 'canvas' && tag !== 'svg') return
-          try {
-            let e = n.nodeType === 1 ? n : n.parentElement
-            while (e?.tagName) {
-              const mid = e.dataset?.nrMfeId
-              if (mid) {
-                getRegisteredTargetsFromId(mid, mfeAgent).forEach(tgt => {
-                  if (tgt?.id && !mfeFCP.has(tgt.id)) {
-                    const fcp = now()
-                    mfeFCP.set(tgt.id, fcp)
-                    mfeSubs.get(tgt.id)?.forEach(ti => { ti.fcp = fcp })
-                    mfeSubs.delete(tgt.id)
-                  }
-                })
-              }
-              e = e.parentNode
+export function trackMFEFirstPaint (id) {
+  return new Promise((resolve) => {
+    if (!id || !globalScope.MutationObserver || !globalScope.document) return
+
+    const obs = new MutationObserver(mutations => {
+      mutations.forEach(mutation => mutation.addedNodes.forEach(node => {
+        if (!node.textContent?.trim() && !['img', 'video', 'canvas', 'svg'].includes(node.nodeName?.toLowerCase())) return
+        try {
+          let curr = node.nodeType === 1 ? node : node.parentElement
+          while (curr?.tagName) {
+            if (curr.dataset?.nrMfeId === id) {
+              const fcp = now()
+              obs.disconnect()
+              resolve(fcp)
+              return
             }
-          } catch (e) {}
-        }))
-      })
-      mfeObs.observe(globalScope.document, { childList: true, subtree: true })
-    }
-  }
-  const sid = String(id)
-  if (mfeFCP.has(sid)) timings.fcp = mfeFCP.get(sid)
-  else {
-    if (!mfeSubs.has(sid)) mfeSubs.set(sid, new Set())
-    mfeSubs.get(sid).add(timings)
-  }
+            curr = curr.parentNode
+          }
+        } catch (e) {}
+      }))
+    })
+
+    obs.observe(globalScope.document, { childList: true, subtree: true })
+  })
 }

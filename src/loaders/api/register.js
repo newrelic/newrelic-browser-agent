@@ -18,7 +18,7 @@ import { measure } from './measure'
 import { recordCustomEvent } from './recordCustomEvent'
 import { subscribeToPageUnload } from '../../common/window/page-visibility'
 import { findScriptTimings } from '../../common/v2/script-tracker'
-import { subscribeMFEFCP } from '../../common/v2/mfe-fcp-tracker'
+import { trackMFEFirstPaint } from '../../common/v2/mfe-fcp-tracker'
 import { generateRandomHexString } from '../../common/ids/unique-id'
 
 /**
@@ -84,8 +84,8 @@ function register (agentRef, target) {
 
   const timings = findScriptTimings()
 
-  // Subscribe to MFE FCP detection for this entity
-  subscribeMFEFCP(target.id, timings, agentRef)
+  // Track MFE first contentful paint for this entity
+  trackMFEFirstPaint(target.id).then(fcp => { timings.fcp = fcp }).catch(() => {})
 
   const attrs = {}
 

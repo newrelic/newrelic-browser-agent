@@ -89,13 +89,10 @@ export class Aggregate extends AggregateBase {
     const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = agentRef.init.session_replay
 
     this.waitForFlags(['srs', 'sr']).then(([srMode, entitled]) => {
-      // set session to OFF mode only if there's a RUM response
-      if (!this.blocked && entitled === 0) {
-        this.mode = MODE.OFF
-        this.syncWithSessionManager({ sessionReplayMode: this.mode })
-      }
       this.entitled = !!entitled
       if (!this.entitled) {
+        this.mode = MODE.OFF
+        this.#writeToStorage({ sessionReplayMode: this.mode })
         this.deregisterDrain()
         if (this.agentRef.runtime.isRecording) {
           this.abort(ABORT_REASONS.ENTITLEMENTS)
@@ -142,7 +139,7 @@ export class Aggregate extends AggregateBase {
     // if the error was noticed AFTER the recorder was already imported....
     if (this.recorder && this.initialized) {
       if (!this.agentRef.runtime.isRecording) this.recorder.startRecording(TRIGGERS.SWITCH_TO_FULL, this.mode) // off --> full
-      this.syncWithSessionManager({ sessionReplayMode: this.mode })
+      this.#writeToStorage({ sessionReplayMode: this.mode })
     } else {
       this.initializeRecording(MODE.FULL, true, TRIGGERS.SWITCH_TO_FULL)
     }
@@ -175,11 +172,13 @@ export class Aggregate extends AggregateBase {
     } else {
       // The session is new... determine the mode the new session should start in
       this.mode = srMode
-      this.syncWithSessionManager({ sessionReplayMode: this.mode })
     }
 
-    // If off or undetermined, then don't record (early return)
-    if (!this.mode) return
+    // If off, then don't record (early return)
+    if (!this.mode === MODE.OFF) {
+      this.#writeToStorage({ sessionReplayMode: this.mode })
+      return
+    }
 
     try {
       /** will return a recorder instance if already imported, otherwise, will fetch the recorder and initialize it */
@@ -199,7 +198,7 @@ export class Aggregate extends AggregateBase {
     await this.prepUtils()
 
     if (!this.agentRef.runtime.isRecording) this.recorder.startRecording(trigger, this.mode)
-    this.syncWithSessionManager({ sessionReplayMode: this.mode })
+    this.#writeToStorage({ sessionReplayMode: this.mode })
   }
 
   async prepUtils () {
@@ -246,7 +245,7 @@ export class Aggregate extends AggregateBase {
       return
     }
 
-    if (!this.agentRef.runtime.session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
+    if (!this.agentRef.runtime.session.state.sessionReplaySentFirstChunk) this.#writeToStorage({ sessionReplaySentFirstChunk: true })
     this.recorder.clearBuffer()
 
     if (!this.agentRef.runtime.session.state.traceHarvestStarted) {
@@ -370,7 +369,7 @@ export class Aggregate extends AggregateBase {
     if (forceHarvest) this.agentRef.runtime.harvester.triggerHarvestFor(this)
     this.mode = MODE.OFF
     this.recorder?.stopRecording?.()
-    this.syncWithSessionManager({ sessionReplayMode: this.mode })
+    this.#writeToStorage({ sessionReplayMode: this.mode })
   }
 
   /** Abort the feature, once aborted it will not resume */
@@ -380,12 +379,12 @@ export class Aggregate extends AggregateBase {
     this.blocked = true
     this.mode = MODE.OFF
     this.recorder?.stopRecording?.()
-    this.syncWithSessionManager({ sessionReplayMode: this.mode })
+    this.#writeToStorage({ sessionReplayMode: this.mode })
     this.recorder?.clearTimestamps?.()
     while (this.recorder?.getEvents().events.length) this.recorder?.clearBuffer?.()
   }
 
-  syncWithSessionManager (state = {}) {
+  #writeToStorage (state = {}) {
     if (this.isSessionTrackingEnabled) {
       this.agentRef.runtime.session.write(state)
     }

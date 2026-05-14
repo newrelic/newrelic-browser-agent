@@ -93,6 +93,7 @@ jobs:
           type: 'Basic'
           description: 'Staging promoted to ${{ needs.resolve-version.outputs.version_label }}'
           shortDescription: 'Staging: ${{ needs.resolve-version.outputs.version_label }}'
+          deepLink: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
           commit: ${{ github.sha }}
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
@@ -109,7 +110,7 @@ jobs:
         with:
           notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          message: ":rocket: Browser Agent promoted to \\`staging\\` environment.\\n*Version:* ${{ needs.resolve-version.outputs.version_label }}\\n*Asset:* ${{ needs.resolve-version.outputs.script_url }}\\nSee <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
+          message: ":rocket: New Browser Agent version promoted to \\`staging\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
 
   # Step 2: Deploy to Japan Production
   deploy-jp-prod:
@@ -155,6 +156,7 @@ jobs:
           type: 'Rolling'
           description: 'JP production promoted to ${{ needs.resolve-version.outputs.version_label }}'
           shortDescription: 'JP Prod: ${{ needs.resolve-version.outputs.version_label }}'
+          deepLink: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
           commit: ${{ github.sha }}
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
@@ -171,7 +173,7 @@ jobs:
         with:
           notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          message: ":rocket: Browser Agent promoted to \\`jp-prod\\` environment.\\n*Version:* ${{ needs.resolve-version.outputs.version_label }}\\n*Asset:* ${{ needs.resolve-version.outputs.script_url }}\\nSee <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
+          message: ":rocket: New Browser Agent version promoted to \\`jp-prod\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
 
   # Step 3: Deploy to EU Production
   deploy-eu-prod:
@@ -217,6 +219,7 @@ jobs:
           type: 'Rolling'
           description: 'EU production promoted to ${{ needs.resolve-version.outputs.version_label }}'
           shortDescription: 'EU Prod: ${{ needs.resolve-version.outputs.version_label }}'
+          deepLink: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
           commit: ${{ github.sha }}
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
@@ -233,7 +236,7 @@ jobs:
         with:
           notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          message: ":rocket: Browser Agent promoted to \\`eu-prod\\` environment.\\n*Version:* ${{ needs.resolve-version.outputs.version_label }}\\n*Asset:* ${{ needs.resolve-version.outputs.script_url }}\\nSee <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
+          message: ":rocket: New Browser Agent version promoted to \\`eu-prod\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
 
   # Step 4: Deploy to US Production
   deploy-us-prod:
@@ -279,6 +282,7 @@ jobs:
           type: 'Rolling'
           description: 'US production promoted to ${{ needs.resolve-version.outputs.version_label }}'
           shortDescription: 'US Prod: ${{ needs.resolve-version.outputs.version_label }}'
+          deepLink: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
           commit: ${{ github.sha }}
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
@@ -295,5 +299,5 @@ jobs:
         with:
           notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          message: ":rocket: Browser Agent promoted to \\`us-prod\\` environment.\\n*Version:* ${{ needs.resolve-version.outputs.version_label }}\\n*Asset:* ${{ needs.resolve-version.outputs.script_url }}\\nSee <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
+          message: ":rocket: New Browser Agent version promoted to \\`us-prod\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
 

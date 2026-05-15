@@ -18,7 +18,7 @@ import { measure } from './measure'
 import { recordCustomEvent } from './recordCustomEvent'
 import { subscribeToPageUnload } from '../../common/window/page-visibility'
 import { findScriptTimings } from '../../common/v2/script-tracker'
-import { trackMFEFirstPaint } from '../../common/v2/mfe-fcp-tracker'
+import { trackMFEFirstPaint, trackMFELargestPaint, trackMFELayoutShift } from '../../common/v2/mfe-vitals'
 import { generateRandomHexString } from '../../common/ids/unique-id'
 
 /**
@@ -84,8 +84,10 @@ function register (agentRef, target) {
 
   const timings = findScriptTimings()
 
-  // Track MFE first contentful paint for this entity
-  trackMFEFirstPaint(target.id).then(fcp => { timings.fcp = fcp }).catch(() => {})
+  // Track MFE vitals for this entity
+  const fcpTracker = trackMFEFirstPaint(target.id)
+  const lcpTracker = trackMFELargestPaint(target.id)
+  const clsTracker = trackMFELayoutShift(target.id)
 
   const attrs = {}
 
@@ -181,6 +183,14 @@ function register (agentRef, target) {
     // only ever report the timings the first time this is called
     if (timings.reportedAt) return
     timings.reportedAt = now()
+
+    // Disconnect observers and capture current values
+    lcpTracker.disconnect()
+    clsTracker.disconnect()
+    timings.fcp = fcpTracker.value
+    timings.lcp = lcpTracker.value
+    timings.cls = Number(clsTracker.value.toFixed(3))
+
     const timeToFetch = timings.fetchEnd - timings.fetchStart // fetchStart to fetchEnd
     const timeToExecute = timings.scriptEnd - timings.scriptStart // scriptStart to scriptEnd
     api.recordCustomEvent('MicroFrontEndTiming', {
@@ -192,7 +202,9 @@ function register (agentRef, target) {
       timeToFetch, // fetchStart to fetchEnd
       timeToLoad: timeToFetch + timeToExecute, // fetch time and script time together
       timeToRegister: timings.registeredAt, // timestamp when register() was called
-      timeToFirstPaint: timings.fcp - timings.scriptStart
+      timeToFirstPaint: timings.fcp - timings.scriptStart, // timestamp when script started executing to when FCP was observed for this MFE
+      timeToLargestPaint: timings.lcp - timings.scriptStart, // timestamp when script started executing to when LCP was observed for this MFE
+      cumulativeLayoutShift: timings.cls // the CLS score observed for this MFE
     })
   }
 

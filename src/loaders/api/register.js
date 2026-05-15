@@ -18,7 +18,7 @@ import { measure } from './measure'
 import { recordCustomEvent } from './recordCustomEvent'
 import { subscribeToPageUnload } from '../../common/window/page-visibility'
 import { findScriptTimings } from '../../common/v2/script-tracker'
-import { trackMFEFirstPaint, trackMFELargestPaint, trackMFELayoutShift } from '../../common/v2/mfe-vitals'
+import { trackMFEVitals } from '../../common/v2/mfe-vitals'
 import { generateRandomHexString } from '../../common/ids/unique-id'
 
 /**
@@ -85,9 +85,7 @@ function register (agentRef, target) {
   const timings = findScriptTimings()
 
   // Track MFE vitals for this entity
-  const fcpTracker = trackMFEFirstPaint(target.id)
-  const lcpTracker = trackMFELargestPaint(target.id)
-  const clsTracker = trackMFELayoutShift(target.id)
+  const vitals = trackMFEVitals(target.id)
 
   const attrs = {}
 
@@ -184,12 +182,12 @@ function register (agentRef, target) {
     if (timings.reportedAt) return
     timings.reportedAt = now()
 
-    // Disconnect observers and capture current values
-    lcpTracker.disconnect()
-    clsTracker.disconnect()
-    timings.fcp = fcpTracker.value
-    timings.lcp = lcpTracker.value
-    timings.cls = Number(clsTracker.value.toFixed(3))
+    // Disconnect observers and capture current values, store in timings obj for visibility
+    vitals.disconnect()
+    timings.fcp = vitals.fcp
+    timings.lcp = vitals.lcp
+    timings.cls = Number(vitals.cls.toFixed(3))
+    timings.inp = vitals.inp
 
     const timeToFetch = timings.fetchEnd - timings.fetchStart // fetchStart to fetchEnd
     const timeToExecute = timings.scriptEnd - timings.scriptStart // scriptStart to scriptEnd
@@ -204,7 +202,8 @@ function register (agentRef, target) {
       timeToRegister: timings.registeredAt, // timestamp when register() was called
       timeToFirstPaint: timings.fcp - timings.scriptStart, // timestamp when script started executing to when FCP was observed for this MFE
       timeToLargestPaint: timings.lcp - timings.scriptStart, // timestamp when script started executing to when LCP was observed for this MFE
-      cumulativeLayoutShift: timings.cls // the CLS score observed for this MFE
+      cumulativeLayoutShift: timings.cls, // the CLS score observed for this MFE
+      interactionToNextPaint: timings.inp // the worst interaction latency observed for this MFE
     })
   }
 

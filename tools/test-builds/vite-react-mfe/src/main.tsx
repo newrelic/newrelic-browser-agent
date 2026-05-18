@@ -3,10 +3,9 @@ import { App } from "./App";
 
 // Declare newrelic global
 declare const newrelic: any;
-declare const window: any;
 
 // Register the main MFE with id vite-main-mfe
-window.api = newrelic.register({
+newrelic.register({
     id: 'vite-main-mfe',
     name: 'Main MFE'
 })

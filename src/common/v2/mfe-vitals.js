@@ -10,7 +10,13 @@ import { now } from '../timing/now'
  * @typedef {import('./register-api-types').RegisterAPITimings} RegisterAPITimings
  */
 
-const isObservable = (node) => node.textContent?.trim() || ['img', 'video', 'canvas', 'svg'].includes(node.nodeName?.toLowerCase())
+const isObservable = (node) => {
+  try {
+    return node?.textContent?.trim() || ['img', 'video', 'canvas', 'svg'].includes(node?.nodeName?.toLowerCase())
+  } catch (e) {
+    return false
+  }
+}
 
 /**
  * Check if node is within a specific MFE
@@ -52,29 +58,31 @@ const observeMutations = (id, onMatch) => {
  * @param {Array} observers - Array to track observers
  * @param {Object} config - Observer configuration
  * @param {Function} onEntry - Callback for each entry
- * @returns {PerformanceObserver}
+ * @returns {PerformanceObserver|null} Observer if successful, null if unsupported
  */
 const observePerformance = (observers, config, onEntry) => {
-  const obs = new globalScope.PerformanceObserver(list => {
-    list.getEntries().forEach(onEntry)
-  })
   try {
+    const obs = new globalScope.PerformanceObserver(list => {
+      list.getEntries().forEach(onEntry)
+    })
     obs.observe(config)
     observers.push(obs)
-  } catch (e) {}
-  return obs
+    return obs
+  } catch (e) {
+    return null
+  }
 }
 
 /**
  * Tracks all Core Web Vitals for a specific MFE.
  * @param {string} id - The MFE ID to track
- * @returns {{fcp: number|null, lcp: number|null, cls: number, inp: number|null, disconnect: Function}}
+ * @returns {{fcp: number|null, lcp: number|null, cls: number|null, inp: number|null, disconnect: Function}}
  */
 export function trackMFEVitals (id) {
   const vitals = {
     fcp: null,
     lcp: null,
-    cls: 0,
+    cls: null,
     inp: null,
     disconnect: () => {}
   }
@@ -85,25 +93,30 @@ export function trackMFEVitals (id) {
 
   // Track FCP - first contentful paint
   observeMutations(id, (node, obs) => {
-    vitals.fcp = now()
+    vitals.fcp ??= now()
     obs.disconnect()
   })
 
   // Track LCP - largest contentful paint
   let largestSize = 0
   const lcpObs = observeMutations(id, (node) => {
-    const elem = node.nodeType === 1 ? node : node.parentElement
-    const rect = elem.getBoundingClientRect()
-    const size = rect.width * rect.height
-    if (size > largestSize) {
-      largestSize = size
-      vitals.lcp = now()
+    try {
+      const elem = node.nodeType === 1 ? node : node.parentElement
+      if (!elem) return
+      const rect = elem.getBoundingClientRect()
+      const size = rect.width * rect.height
+      if (size > largestSize) {
+        largestSize = size
+        vitals.lcp = now()
+      }
+    } catch (e) {
+      // Element may be detached from DOM
     }
   })
   observers.push(lcpObs)
 
   // Track CLS - cumulative layout shift
-  observePerformance(observers, { type: 'layout-shift', buffered: true }, (entry) => {
+  const clsObs = observePerformance(observers, { type: 'layout-shift', buffered: true }, (entry) => {
     if (entry.hadRecentInput) return
     (entry.sources || []).some(source => {
       if (isInMFE(source.node, id)) {
@@ -113,6 +126,8 @@ export function trackMFEVitals (id) {
       return false
     })
   })
+  // Initialize CLS to 0 if browser supports it (Chromium), leave as null if not (Firefox/Safari)
+  if (clsObs) vitals.cls = 0
 
   // Track INP - interaction to next paint
   observePerformance(observers, { type: 'event', buffered: true, durationThreshold: 16 }, (entry) => {
@@ -123,10 +138,32 @@ export function trackMFEVitals (id) {
   })
 
   // Disconnect all observers
-  vitals.disconnect = () => observers.forEach(obs => obs.disconnect())
+  vitals.disconnect = () => {
+    // Disconnect all observers
+    observers.forEach(obs => {
+      try {
+        obs?.disconnect()
+      } catch (e) {
+        // Observer may already be disconnected
+      }
+    })
+  }
 
-  // Auto-disconnect LCP/CLS/INP on interaction or visibility change
-  ;['click', 'keydown', 'scroll', 'visibilitychange', 'pagehide'].forEach(type => {
+  // Auto-disconnect LCP observer on user interaction (per Web Vitals spec)
+  // CLS and INP continue tracking until visibility change or deregister
+  const disconnectLCP = () => {
+    try {
+      lcpObs?.disconnect()
+    } catch (e) {
+      // Observer may already be disconnected
+    }
+  }
+  ;['click', 'keydown', 'scroll'].forEach(type => {
+    globalScope.addEventListener(type, disconnectLCP, { once: true, passive: true })
+  })
+
+  // Disconnect all observers on visibility change or page unload
+  ;['visibilitychange', 'pagehide'].forEach(type => {
     globalScope.addEventListener(type, vitals.disconnect, { once: true, passive: true })
   })
 

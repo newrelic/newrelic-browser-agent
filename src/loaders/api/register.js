@@ -186,7 +186,7 @@ function register (agentRef, target) {
     vitals.disconnect()
     timings.fcp = vitals.fcp
     timings.lcp = vitals.lcp
-    timings.cls = Number(vitals.cls.toFixed(3))
+    timings.cls = vitals.cls !== null && !isNaN(vitals.cls) ? Number(vitals.cls.toFixed(3)) : null
     timings.inp = vitals.inp
 
     const timeToFetch = timings.fetchEnd - timings.fetchStart // fetchStart to fetchEnd
@@ -200,10 +200,10 @@ function register (agentRef, target) {
       timeToFetch, // fetchStart to fetchEnd
       timeToLoad: timeToFetch + timeToExecute, // fetch time and script time together
       timeToRegister: timings.registeredAt, // timestamp when register() was called
-      timeToFirstPaint: timings.fcp - timings.scriptStart, // timestamp when script started executing to when FCP was observed for this MFE
-      timeToLargestPaint: timings.lcp - timings.scriptStart, // timestamp when script started executing to when LCP was observed for this MFE
-      cumulativeLayoutShift: timings.cls, // the CLS score observed for this MFE
-      interactionToNextPaint: timings.inp // the worst interaction latency observed for this MFE
+      fcp: timings.fcp !== null ? timings.fcp - timings.scriptStart : null, // timestamp when script started executing to when FCP was observed for this MFE
+      lcp: timings.lcp !== null ? timings.lcp - timings.scriptStart : null, // timestamp when script started executing to when LCP was observed for this MFE
+      cls: timings.cls, // the CLS score observed for this MFE
+      inp: timings.inp // the worst interaction latency observed for this MFE
     })
   }
 

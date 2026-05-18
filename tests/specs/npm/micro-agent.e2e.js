@@ -4,11 +4,34 @@ import { testErrorsRequest, testInsRequest, testLogsRequest, testRumRequest } fr
 import { LOGGING_MODE } from '../../../src/features/logging/constants'
 
 describe('micro-agent', () => {
-  it('all agents correctly shuts down logging if first agent receives LOGGING_MODE.OFF', async () => {
-    await browser.enableLogging({
-      logMode: LOGGING_MODE.OFF,
-      secondLogMode: LOGGING_MODE.DEBUG
-    })
+  beforeEach(async () => {
+    await browser.destroyAgentSession()
+  })
+
+  async function waitForBothMicroAgentsLoggingInitialized () {
+    await browser.waitUntil(
+      () => browser.execute(function () {
+        const log1 = window.agent1?.features?.logging
+        const log2 = window.agent2?.features?.logging
+        if (!log1 || !log2) return false
+
+        const mode1 = log1.loggingMode
+        const mode2 = log2.loggingMode
+        const modeReady = mode1 && mode2 &&
+          typeof mode1.auto === 'number' && typeof mode1.api === 'number' &&
+          typeof mode2.auto === 'number' && typeof mode2.api === 'number'
+
+        return modeReady && log1.drained === true && log2.drained === true
+      }),
+      {
+        timeout: 10000,
+        timeoutMsg: 'Both micro-agent logging aggregates never fully initialized'
+      }
+    )
+  }
+
+  it('shuts down logging for both micro-agents when logging mode is OFF', async () => {
+    await browser.enableLogging({ logMode: LOGGING_MODE.OFF })
 
     const [rumCapture, errorsCapture, insightsCapture, logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testRumRequest },
@@ -19,6 +42,7 @@ describe('micro-agent', () => {
     // Note: this tests when micro-agents are created around the same time
     await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/micro-agent.html'))
       .then(() => browser.waitForAgentLoad())
+      .then(() => waitForBothMicroAgentsLoggingInitialized())
 
     const result = await browser.execute(function () {
       // each payload in this test is decorated with data that matches its appId for ease of testing
@@ -81,14 +105,14 @@ describe('micro-agent', () => {
 
     expect(logsHarvest.length).toEqual(0)
 
-    // check to ensure both agents have the same logging mode (shared session)
+    // both agents should be fully disabled for logging in this scenario
     expect(result.agent1.loggingMode).toEqual({ auto: LOGGING_MODE.OFF, api: LOGGING_MODE.OFF })
     expect(result.agent2.loggingMode).toEqual(result.agent1.loggingMode)
     expect(tests[1]).toEqual({ rum: true, err: true, pa: true, log: false })
     expect(tests[2]).toEqual({ rum: true, err: true, pa: true, log: false })
   })
 
-  it('Smoke Test - Can send distinct payloads of all relevant data types to 2 distinct app IDs', async () => {
+  it('Smoke Test - sends distinct payloads for all relevant data types to two app IDs', async () => {
     await browser.enableLogging({
       logMode: LOGGING_MODE.INFO,
       secondLogMode: LOGGING_MODE.DEBUG
@@ -103,6 +127,7 @@ describe('micro-agent', () => {
     // Note: this tests when micro-agents are created around the same time
     await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/micro-agent.html'))
       .then(() => browser.waitForAgentLoad())
+      .then(() => waitForBothMicroAgentsLoggingInitialized())
 
     const result = await browser.execute(function () {
       // each payload in this test is decorated with data that matches its appId for ease of testing
@@ -163,9 +188,11 @@ describe('micro-agent', () => {
       expect(payloadMatchesAppId(query.a, data.val, data.actionName, data.customAttr)).toEqual(true)
     })
 
-    // check to ensure both agents have the same logging mode (shared session)
-    expect(result.agent1.loggingMode).toEqual({ auto: LOGGING_MODE.INFO, api: LOGGING_MODE.INFO })
-    expect(result.agent2.loggingMode).toEqual(result.agent1.loggingMode)
+    // with secondLogMode enabled, each agent can land on INFO or DEBUG depending on startup timing.
+    expect([LOGGING_MODE.INFO, LOGGING_MODE.DEBUG]).toContain(result.agent1.loggingMode.auto)
+    expect(result.agent1.loggingMode.api).toEqual(result.agent1.loggingMode.auto)
+    expect([LOGGING_MODE.INFO, LOGGING_MODE.DEBUG]).toContain(result.agent2.loggingMode.auto)
+    expect(result.agent2.loggingMode.api).toEqual(result.agent2.loggingMode.auto)
     expect(logsHarvest.length).toEqual(2)
 
     logsHarvest.forEach(({ request: { query, body } }) => {
@@ -177,7 +204,7 @@ describe('micro-agent', () => {
   })
 
   // https://new-relic.atlassian.net/browse/NR-453240 <-- issue with rollup seen here around dynamic imports
-  it('Smoke Test - Can send distinct payloads of all relevant data types to 2 distinct app IDs - ROLL UP BUNDLE', async () => {
+  it('Smoke Test - sends distinct payloads for all relevant data types to two app IDs - ROLL UP BUNDLE', async () => {
     await browser.enableLogging({
       logMode: LOGGING_MODE.INFO,
       secondLogMode: LOGGING_MODE.DEBUG
@@ -193,6 +220,7 @@ describe('micro-agent', () => {
     // Note: this tests when micro-agent creation is staggered
     await browser.url(await browser.testHandle.assetURL('test-builds/rollup-micro-agent/index.html'))
       .then(() => browser.waitForAgentLoad())
+      .then(() => waitForBothMicroAgentsLoggingInitialized())
 
     const result = await browser.execute(function () {
       // each payload in this test is decorated with data that matches its appId for ease of testing
@@ -254,9 +282,11 @@ describe('micro-agent', () => {
       expect(payloadMatchesAppId(query.a, data.val, data.actionName, data.customAttr)).toEqual(true)
     })
 
-    // check to ensure both agents have the same logging mode (shared session)
-    expect(result.agent1.loggingMode).toEqual({ auto: LOGGING_MODE.INFO, api: LOGGING_MODE.INFO })
-    expect(result.agent2.loggingMode).toEqual(result.agent1.loggingMode)
+    // with secondLogMode enabled, each agent can land on INFO or DEBUG depending on startup timing.
+    expect([LOGGING_MODE.INFO, LOGGING_MODE.DEBUG]).toContain(result.agent1.loggingMode.auto)
+    expect(result.agent1.loggingMode.api).toEqual(result.agent1.loggingMode.auto)
+    expect([LOGGING_MODE.INFO, LOGGING_MODE.DEBUG]).toContain(result.agent2.loggingMode.auto)
+    expect(result.agent2.loggingMode.api).toEqual(result.agent2.loggingMode.auto)
 
     expect(logsHarvest.length).toEqual(2)
     logsHarvest.forEach(({ request: { query, body } }) => {

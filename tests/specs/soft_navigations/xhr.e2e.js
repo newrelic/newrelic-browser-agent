@@ -1,6 +1,5 @@
 import { checkAjaxEvents, checkSpa } from '../../util/basic-checks'
 import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
-import { lambdaTestWebdriverFalse } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe('XHR SPA Interaction Tracking', () => {
   let interactionsCapture
@@ -118,8 +117,10 @@ describe('XHR SPA Interaction Tracking', () => {
         children: expect.any(Array)
       })
     ])
-    const expectedAttributeType = browserMatch(lambdaTestWebdriverFalse) ? 'falseAttribute' : 'trueAttribute'
-    expect(interactionHarvests[0].request.body[0].children).toEqual([{ key: 'webdriverDetected', type: expectedAttributeType }])
+    expect(interactionHarvests[0].request.body[0].children).toEqual([
+      { key: 'isFirstOfSession', type: 'trueAttribute' },
+      { key: 'webdriverDetected', type: 'falseAttribute' }
+    ])
   })
 
   it('should capture the ajax request and response size', async () => {

@@ -77,30 +77,28 @@ export class Aggregate extends AggregateBase {
     if (this.agentRef.runtime.session.state.sessionTraceMode !== null && !ignoreSession) this.mode = this.agentRef.runtime.session.state.sessionTraceMode
     else this.mode = stMode
 
-    /** If the mode is off, we do not want to hold up draining for other features, so we deregister the feature for now.
-     * If it drains later (due to a mode change), data and handlers will instantly drain instead of waiting for the registry. */
-    if (this.mode === MODE.OFF) {
-      this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })
-      return this.deregisterDrain()
-    }
+    if (this.mode !== MODE.OFF) {
+      /** The handlers set up by the Inst file */
+      registerHandler('bst', (...args) => this.traceStorage.storeEvent(...args), this.featureName, this.ee)
+      registerHandler('bstResource', (...args) => this.traceStorage.storeResources(...args), this.featureName, this.ee)
+      registerHandler('bstHist', (...args) => this.traceStorage.storeHist(...args), this.featureName, this.ee)
+      registerHandler('bstXhrAgg', (...args) => this.traceStorage.storeXhrAgg(...args), this.featureName, this.ee)
+      registerHandler('bstApi', (...args) => this.traceStorage.storeNode(...args), this.featureName, this.ee)
+      registerHandler('trace-jserror', (...args) => this.traceStorage.storeErrorAgg(...args), this.featureName, this.ee)
+      registerHandler('pvtAdded', (...args) => this.traceStorage.processPVT(...args), this.featureName, this.ee)
 
-    /** The handlers set up by the Inst file */
-    registerHandler('bst', (...args) => this.traceStorage.storeEvent(...args), this.featureName, this.ee)
-    registerHandler('bstResource', (...args) => this.traceStorage.storeResources(...args), this.featureName, this.ee)
-    registerHandler('bstHist', (...args) => this.traceStorage.storeHist(...args), this.featureName, this.ee)
-    registerHandler('bstXhrAgg', (...args) => this.traceStorage.storeXhrAgg(...args), this.featureName, this.ee)
-    registerHandler('bstApi', (...args) => this.traceStorage.storeNode(...args), this.featureName, this.ee)
-    registerHandler('trace-jserror', (...args) => this.traceStorage.storeErrorAgg(...args), this.featureName, this.ee)
-    registerHandler('pvtAdded', (...args) => this.traceStorage.processPVT(...args), this.featureName, this.ee)
-
-    if (this.mode !== MODE.FULL) {
-      /** A separate handler for noticing errors, and switching to "full" mode if running in "error" mode */
-      registerHandler('trace-jserror', () => {
-        if (this.mode === MODE.ERROR) this.switchToFull()
-      }, this.featureName, this.ee)
+      if (this.mode === MODE.ERROR) {
+        /** A separate handler for noticing errors, and switching to "full" mode if running in "error" mode */
+        registerHandler('trace-jserror', () => {
+          if (this.mode === MODE.ERROR) this.switchToFull()
+        }, this.featureName, this.ee)
+      }
     }
     this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })
-    this.drain()
+
+    /** If the mode is off, we do not want to hold up draining for other features, so we deregister the feature for now.
+     * If it drains later (due to a mode change), data and handlers will instantly drain instead of waiting for the registry. */
+    this.mode === MODE.OFF ? this.deregisterDrain() : this.drain()
   }
 
   preHarvestChecks () {

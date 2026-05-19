@@ -174,30 +174,28 @@ export class Aggregate extends AggregateBase {
       this.mode = srMode
     }
 
-    // If off, then don't record (early return)
-    if (this.mode === MODE.OFF) {
-      this.#writeToStorage({ sessionReplayMode: this.mode })
-      return
+    if (this.mode !== MODE.OFF) {
+      try {
+        /** will return a recorder instance if already imported, otherwise, will fetch the recorder and initialize it */
+        this.recorder ??= await this.instrumentClass.importRecorder()
+      } catch (err) {
+        /** if the recorder fails to import, abort the feature */
+        return this.abort(ABORT_REASONS.IMPORT, err)
+      }
+
+      // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
+      if (this.mode === MODE.ERROR && this.instrumentClass.errorNoticed) {
+        this.mode = MODE.FULL
+      }
+
+      // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
+      // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
+      // The makeHarvestPayload should ensure that no payload is returned if we're not in FULL mode...
+
+      await this.prepUtils()
+
+      if (!this.agentRef.runtime.isRecording) this.recorder.startRecording(trigger, this.mode)
     }
-
-    try {
-      /** will return a recorder instance if already imported, otherwise, will fetch the recorder and initialize it */
-      this.recorder ??= await this.instrumentClass.importRecorder()
-    } catch (err) {
-      /** if the recorder fails to import, abort the feature */
-      return this.abort(ABORT_REASONS.IMPORT, err)
-    }
-
-    // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
-    if (this.mode === MODE.ERROR && this.instrumentClass.errorNoticed) { this.mode = MODE.FULL }
-
-    // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
-    // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
-    // The makeHarvestPayload should ensure that no payload is returned if we're not in FULL mode...
-
-    await this.prepUtils()
-
-    if (!this.agentRef.runtime.isRecording) this.recorder.startRecording(trigger, this.mode)
     this.#writeToStorage({ sessionReplayMode: this.mode })
   }
 

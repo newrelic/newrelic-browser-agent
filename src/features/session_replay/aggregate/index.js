@@ -175,7 +175,7 @@ export class Aggregate extends AggregateBase {
     }
 
     // If off, then don't record (early return)
-    if (!this.mode === MODE.OFF) {
+    if (this.mode === MODE.OFF) {
       this.#writeToStorage({ sessionReplayMode: this.mode })
       return
     }

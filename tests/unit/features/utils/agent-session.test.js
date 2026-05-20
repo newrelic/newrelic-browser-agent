@@ -82,13 +82,14 @@ test('should initialize SessionEntity with an app-namespaced storage key', async
     applicationID: faker.string.uuid()
   }
 
+  const { getAppSessionKey } = await import('../../../../src/common/session/session-key')
   const { setupAgentSession } = await import('../../../../src/features/utils/agent-session')
   setupAgentSession(mockAgent)
 
   const { SessionEntity } = await import('../../../../src/common/session/session-entity')
   expect(SessionEntity).toHaveBeenCalledWith(expect.objectContaining({
     agentRef: mockAgent,
-    key: `SESSION::${mockAgent.info.licenseKey}:${mockAgent.info.applicationID}`
+    key: getAppSessionKey(mockAgent.info.licenseKey, mockAgent.info.applicationID)
   }))
 })
 

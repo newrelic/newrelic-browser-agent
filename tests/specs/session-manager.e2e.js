@@ -43,7 +43,7 @@ describe('newrelic session ID', () => {
         }
       }, PREFIX)
 
-      expect(namespacedStorage.key).toEqual(expect.stringMatching(/^NRBA_SESSION::.+:.+$/))
+      expect(namespacedStorage.key).toEqual(expect.stringMatching(/^NRBA_SESSION::[a-f0-9]{8}$/))
       expect(namespacedStorage.value).toEqual(anySession())
     })
   })

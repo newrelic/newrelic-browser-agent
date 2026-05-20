@@ -6,7 +6,7 @@ import { drain } from '../../common/drain/drain'
 import { registerHandler } from '../../common/event-emitter/register-handler'
 import { SessionEntity } from '../../common/session/session-entity'
 import { LocalStorage } from '../../common/storage/local-storage.js'
-import { DEFAULT_KEY } from '../../common/session/constants'
+import { getAppSessionHash } from '../../common/session/session-key'
 import { mergeInfo } from '../../common/config/info'
 import { trackObjectAttributeSize } from '../../common/util/attribute-size'
 import { handle } from '../../common/event-emitter/handle'
@@ -19,7 +19,7 @@ export function setupAgentSession (agentRef) {
   if (agentRef.runtime.session) return agentRef.runtime.session // already setup
 
   const sessionInit = agentRef.init.session
-  const namespacedKey = `${DEFAULT_KEY}::${agentRef.info.licenseKey}:${agentRef.info.applicationID}`
+  const namespacedKey = getAppSessionHash(agentRef.info.licenseKey, agentRef.info.applicationID)
 
   agentRef.runtime.session = new SessionEntity({
     agentRef,

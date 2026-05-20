@@ -1,7 +1,8 @@
 import { resetAgent, setupAgent } from '../setup-agent'
 import { Instrument as SessionReplay } from '../../../src/features/session_replay/instrument'
 import * as nreumModule from '../../../src/common/window/nreum'
-import { getAppSessionStorageKey } from '../../../src/common/session/session-key'
+import { getAppSessionHash } from '../../../src/common/session/session-key'
+import { SESSION_STORAGE_KEY_PREFIX } from '../../../src/common/session/constants'
 import { MODE } from '../../specs/util/helpers'
 
 let mainAgent, savedInitialSession
@@ -118,7 +119,7 @@ describe('Preload early records', () => {
   })
 
   test('when replay already on in namespaced localStorage session, even if preload flag disabled', async () => {
-    const namespacedKey = getAppSessionStorageKey(mainAgent.info.licenseKey, mainAgent.info.applicationID)
+    const namespacedKey = `${SESSION_STORAGE_KEY_PREFIX}${getAppSessionHash(mainAgent.info.licenseKey, mainAgent.info.applicationID)}`
     localStorage.setItem(namespacedKey, JSON.stringify({ sessionReplayMode: MODE.FULL }))
     mainAgent.runtime.session = undefined
     Object.assign(mainAgent.init.session_replay, { preload: false, enabled: true })

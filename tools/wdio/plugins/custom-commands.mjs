@@ -96,13 +96,9 @@ export default class CustomCommands {
       // Waiting to parse the JSON string until it is returned preserves the value.
       const localStorageJSON = await browser.execute(function () {
         const firstAgent = Object.values(newrelic.initializedAgents || {})[0]
-        const sessionStorageKey = firstAgent?.runtime?.session?.key
-          ? `NRBA_${firstAgent.runtime.session.key}`
-          : undefined
+        const sessionStorageKey = firstAgent?.runtime?.session?.lookupKey
 
-        return (sessionStorageKey ? window.localStorage.getItem(sessionStorageKey) : null) ||
-          window.localStorage.getItem('NRBA_SESSION') ||
-          '{}'
+        return (sessionStorageKey ? window.localStorage.getItem(sessionStorageKey) : null) || '{}'
       })
       const localStorage = JSON.parse(localStorageJSON)
       return { agentSessions, agentSessionInstances, localStorage }

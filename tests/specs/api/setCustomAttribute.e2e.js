@@ -97,7 +97,7 @@ describe('newrelic api', () => {
 
       const session = await browser.execute(function () {
         const agent = Object.values(newrelic.initializedAgents)[0]
-        return localStorage.getItem(`NRBA_${agent.runtime.session.key}`)
+        return localStorage.getItem(agent.runtime.session.lookupKey)
       })
       expect(JSON.parse(session).custom.testing).toEqual(randomValue) // initial page load has custom attribute in memory
       expect(JSON.parse(session).custom['testing-load']).toEqual(randomValue) // initial page load has custom attribute in memory
@@ -128,7 +128,7 @@ describe('newrelic api', () => {
 
       const sessionAfterNavigate = await browser.execute(function () {
         const agent = Object.values(newrelic.initializedAgents)[0]
-        return localStorage.getItem(`NRBA_${agent.runtime.session.key}`)
+        return localStorage.getItem(agent.runtime.session.lookupKey)
       })
       expect(JSON.parse(sessionAfterNavigate).custom.testing).toEqual(randomValueAfterNavigate) // initial page load has custom attribute in memory
       expect(JSON.parse(sessionAfterNavigate).custom['testing-load']).toEqual(randomValueAfterNavigate) // initial page load has custom attribute in memory

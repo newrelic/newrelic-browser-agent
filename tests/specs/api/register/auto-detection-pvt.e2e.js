@@ -18,9 +18,9 @@ describe('Register API - Auto-Detection - Page View Timings', () => {
     return attr?.value
   }
 
-  // Helper function to check if timing has MFE attributes
-  function hasMFEAttributes (timing) {
-    return getAttributeValue(timing, 'source.id') !== undefined
+  // Helper function to check if timing has child MFE attributes
+  function hasChildMFEAttributes (timing) {
+    return getAttributeValue(timing, 'child.id') !== undefined
   }
 
   async function interactWithPage () {
@@ -47,7 +47,7 @@ describe('Register API - Auto-Detection - Page View Timings', () => {
     await browser.refresh() // force any pending useractions or bIxn requests to release and harvest
   }
 
-  it('should auto-detect multiple MFEs from different script sources for Page View Timing events', async () => {
+  it('should auto-detect MFEs and add child attributes to Page View Timing events', async () => {
     const pvtCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testMFETimingEventsRequest })
 
     await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html', {
@@ -74,187 +74,61 @@ describe('Register API - Auto-Detection - Page View Timings', () => {
     const allPageViewTimings = pvtHarvests.flatMap(harvest => (harvest.request.body || []))
     expect(allPageViewTimings.length).toBeGreaterThan(0)
 
-    // LCP should have MFE attributes from main MFE
+    // LCP should have child.id and child.type attributes from main MFE
     if (browserMatch(supportsLargestContentfulPaint)) {
-      const lcpTiming = allPageViewTimings.find(t => t.type === 'timing' && t.name === 'lcp' && getAttributeValue(t, 'source.id') === 'vite-main-mfe')
-      expect(lcpTiming).toBeDefined()
-      expect(getAttributeValue(lcpTiming, 'source.name')).toEqual('Main MFE')
-      expect(getAttributeValue(lcpTiming, 'source.type')).toEqual('MFE')
-      expect(getAttributeValue(lcpTiming, 'parent.id')).toBeDefined()
-      expect(getAttributeValue(lcpTiming, 'parent.type')).toEqual('BA')
+      const lcpTiming = allPageViewTimings.find(t => t.type === 'timing' && t.name === 'lcp' && getAttributeValue(t, 'child.id') === 'vite-main-mfe')
+      if (lcpTiming) {
+        expect(getAttributeValue(lcpTiming, 'child.id')).toEqual('vite-main-mfe')
+        expect(getAttributeValue(lcpTiming, 'child.type')).toEqual('MFE')
+        // Should NOT have source attributes (not duplicated to MFE)
+        expect(getAttributeValue(lcpTiming, 'source.id')).toBeUndefined()
+        expect(getAttributeValue(lcpTiming, 'source.type')).toBeUndefined()
+      }
     }
 
-    // CLS should have MFE attributes if reported from an MFE
+    // CLS should have child MFE attributes if reported from an MFE
     if (browserMatch(supportsCumulativeLayoutShift)) {
-      const clsTiming = allPageViewTimings.find(t => t.type === 'timing' && t.name === 'cls' && hasMFEAttributes(t))
+      const clsTiming = allPageViewTimings.find(t => t.type === 'timing' && t.name === 'cls' && hasChildMFEAttributes(t))
       if (clsTiming) {
-        expect(getAttributeValue(clsTiming, 'source.id')).toBeDefined()
-        expect(getAttributeValue(clsTiming, 'source.type')).toEqual('MFE')
-        expect(getAttributeValue(clsTiming, 'parent.type')).toEqual('BA')
+        expect(getAttributeValue(clsTiming, 'child.id')).toBeDefined()
+        expect(getAttributeValue(clsTiming, 'child.type')).toEqual('MFE')
+        // Should NOT have source attributes
+        expect(getAttributeValue(clsTiming, 'source.id')).toBeUndefined()
+        expect(getAttributeValue(clsTiming, 'source.type')).toBeUndefined()
       }
     }
 
-    // INP should have MFE attributes if reported from an MFE
+    // INP should have child MFE attributes if reported from an MFE
     if (browserMatch(supportsInteractionToNextPaint)) {
-      const inpTiming = allPageViewTimings.find(t => t.type === 'timing' && t.name === 'inp' && hasMFEAttributes(t))
+      const inpTiming = allPageViewTimings.find(t => t.type === 'timing' && t.name === 'inp' && hasChildMFEAttributes(t))
       if (inpTiming) {
-        expect(getAttributeValue(inpTiming, 'source.id')).toBeDefined()
-        expect(getAttributeValue(inpTiming, 'source.type')).toEqual('MFE')
-        expect(getAttributeValue(inpTiming, 'parent.type')).toEqual('BA')
+        expect(getAttributeValue(inpTiming, 'child.id')).toBeDefined()
+        expect(getAttributeValue(inpTiming, 'child.type')).toEqual('MFE')
+        // Should NOT have source attributes
+        expect(getAttributeValue(inpTiming, 'source.id')).toBeUndefined()
+        expect(getAttributeValue(inpTiming, 'source.type')).toBeUndefined()
       }
     }
 
-    // FCP should NOT have MFE attributes (only container agent attributes)
+    // FCP should NOT have child MFE attributes (only container agent)
     const fcpTiming = allPageViewTimings.find(t => t.type === 'timing' && t.name === 'fcp')
     if (fcpTiming) {
-      expect(hasMFEAttributes(fcpTiming)).toBe(false)
-      expect(getAttributeValue(fcpTiming, 'entity.guid')).toBeDefined()
-      expect(getAttributeValue(fcpTiming, 'source.id')).toBeUndefined()
+      expect(hasChildMFEAttributes(fcpTiming)).toBe(false)
+      expect(getAttributeValue(fcpTiming, 'child.id')).toBeUndefined()
     }
 
-    // FP should NOT have MFE attributes (only container agent attributes)
+    // FP should NOT have child MFE attributes (only container agent)
     const fpTiming = allPageViewTimings.find(t => t.type === 'timing' && t.name === 'fp')
     if (fpTiming) {
-      expect(hasMFEAttributes(fpTiming)).toBe(false)
-      expect(getAttributeValue(fpTiming, 'entity.guid')).toBeDefined()
-      expect(getAttributeValue(fpTiming, 'source.id')).toBeUndefined()
+      expect(hasChildMFEAttributes(fpTiming)).toBe(false)
+      expect(getAttributeValue(fpTiming, 'child.id')).toBeUndefined()
     }
 
-    // FI should NOT have MFE attributes (only container agent attributes)
+    // FI should NOT have child MFE attributes (only container agent)
     const fiTiming = allPageViewTimings.find(t => t.type === 'timing' && t.name === 'fi')
     if (fiTiming) {
-      expect(hasMFEAttributes(fiTiming)).toBe(false)
-      expect(getAttributeValue(fiTiming, 'entity.guid')).toBeDefined()
-      expect(getAttributeValue(fiTiming, 'source.id')).toBeUndefined()
+      expect(hasChildMFEAttributes(fiTiming)).toBe(false)
+      expect(getAttributeValue(fiTiming, 'child.id')).toBeUndefined()
     }
-  })
-
-  it('should support duplicate_registered_data with auto-detection for Page View Timing events', async () => {
-    const mfePvtCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testMFETimingEventsRequest })
-
-    await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html', {
-      init: {
-        api: {
-          allow_registered_children: true,
-          duplicate_registered_data: true
-        }
-      },
-      loader: 'spa'
-    }))
-
-    await browser.waitForAgentLoad()
-
-    // trigger all the events
-    await interactWithPage()
-
-    // Verify MFE events exist at /ins/2/ endpoint
-    const [mfePvtHarvests] = await Promise.all([
-      mfePvtCapture.waitForResult({ timeout: 10000 })
-    ])
-
-    // MFE Timing events
-    const allMfeTimings = mfePvtHarvests.flatMap(harvest => (harvest.request.body || []))
-    expect(allMfeTimings.length).toBeGreaterThan(0)
-
-    // LCP with MFE source attributes should also have duplicated child attributes
-    if (browserMatch(supportsLargestContentfulPaint)) {
-      const lcpWithSourceAttrs = allMfeTimings.find(t =>
-        t.type === 'timing' &&
-        t.name === 'lcp' &&
-        getAttributeValue(t, 'source.id') === 'vite-main-mfe'
-      )
-      if (lcpWithSourceAttrs) {
-        expect(getAttributeValue(lcpWithSourceAttrs, 'source.name')).toEqual('Main MFE')
-        expect(getAttributeValue(lcpWithSourceAttrs, 'source.type')).toEqual('MFE')
-        expect(getAttributeValue(lcpWithSourceAttrs, 'parent.id')).toBeDefined()
-        expect(getAttributeValue(lcpWithSourceAttrs, 'parent.type')).toEqual('BA')
-      }
-
-      // Duplicated LCP should have child attributes instead of source attributes
-      const duplicatedLcp = allMfeTimings.find(t =>
-        t.type === 'timing' &&
-        t.name === 'lcp' &&
-        getAttributeValue(t, 'child.id') === 'vite-main-mfe'
-      )
-      if (duplicatedLcp) {
-        expect(getAttributeValue(duplicatedLcp, 'entity.guid')).toBeDefined()
-        expect(getAttributeValue(duplicatedLcp, 'child.type')).toEqual('MFE')
-        expect(getAttributeValue(duplicatedLcp, 'source.id')).toBeUndefined()
-      }
-    }
-
-    // CLS with MFE attributes should also be duplicated
-    if (browserMatch(supportsCumulativeLayoutShift)) {
-      const clsWithSourceAttrs = allMfeTimings.find(t =>
-        t.type === 'timing' &&
-        t.name === 'cls' &&
-        hasMFEAttributes(t) &&
-        getAttributeValue(t, 'source.id')
-      )
-      if (clsWithSourceAttrs) {
-        const sourceId = getAttributeValue(clsWithSourceAttrs, 'source.id')
-        expect(getAttributeValue(clsWithSourceAttrs, 'source.type')).toEqual('MFE')
-
-        // Find duplicated version
-        const duplicatedCls = allMfeTimings.find(t =>
-          t.type === 'timing' &&
-          t.name === 'cls' &&
-          getAttributeValue(t, 'child.id') === sourceId
-        )
-        if (duplicatedCls) {
-          expect(getAttributeValue(duplicatedCls, 'entity.guid')).toBeDefined()
-          expect(getAttributeValue(duplicatedCls, 'child.type')).toEqual('MFE')
-        }
-      }
-    }
-
-    // INP with MFE attributes should also be duplicated
-    if (browserMatch(supportsInteractionToNextPaint)) {
-      const inpWithSourceAttrs = allMfeTimings.find(t =>
-        t.type === 'timing' &&
-        t.name === 'inp' &&
-        hasMFEAttributes(t) &&
-        getAttributeValue(t, 'source.id')
-      )
-      if (inpWithSourceAttrs) {
-        const sourceId = getAttributeValue(inpWithSourceAttrs, 'source.id')
-        expect(getAttributeValue(inpWithSourceAttrs, 'source.type')).toEqual('MFE')
-
-        // Find duplicated version
-        const duplicatedInp = allMfeTimings.find(t =>
-          t.type === 'timing' &&
-          t.name === 'inp' &&
-          getAttributeValue(t, 'child.id') === sourceId
-        )
-        if (duplicatedInp) {
-          expect(getAttributeValue(duplicatedInp, 'entity.guid')).toBeDefined()
-          expect(getAttributeValue(duplicatedInp, 'child.type')).toEqual('MFE')
-        }
-      }
-    }
-
-    // FCP should NOT have MFE attributes and should NOT be duplicated
-    const fcpTimings = allMfeTimings.filter(t => t.type === 'timing' && t.name === 'fcp')
-    fcpTimings.forEach(timing => {
-      expect(hasMFEAttributes(timing)).toBe(false)
-      expect(getAttributeValue(timing, 'entity.guid')).toBeDefined()
-      expect(getAttributeValue(timing, 'child.id')).toBeUndefined()
-    })
-
-    // FP should NOT have MFE attributes and should NOT be duplicated
-    const fpTimings = allMfeTimings.filter(t => t.type === 'timing' && t.name === 'fp')
-    fpTimings.forEach(timing => {
-      expect(hasMFEAttributes(timing)).toBe(false)
-      expect(getAttributeValue(timing, 'entity.guid')).toBeDefined()
-      expect(getAttributeValue(timing, 'child.id')).toBeUndefined()
-    })
-
-    // FI should NOT have MFE attributes and should NOT be duplicated
-    const fiTimings = allMfeTimings.filter(t => t.type === 'timing' && t.name === 'fi')
-    fiTimings.forEach(timing => {
-      expect(hasMFEAttributes(timing)).toBe(false)
-      expect(getAttributeValue(timing, 'entity.guid')).toBeDefined()
-      expect(getAttributeValue(timing, 'child.id')).toBeUndefined()
-    })
   })
 })

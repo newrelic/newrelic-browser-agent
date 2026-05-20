@@ -21,7 +21,6 @@ import { eventOrigin } from '../../../common/util/event-origin'
 import { loadTime } from '../../../common/vitals/load-time'
 import { webdriverDetected } from '../../../common/util/webdriver-detection'
 import { analyzeElemPath } from '../../../common/dom/selector-path'
-import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
 import { cleanURL } from '../../../common/url/clean-url'
 
 export class Aggregate extends AggregateBase {
@@ -90,18 +89,22 @@ export class Aggregate extends AggregateBase {
       attrs.cls = cumulativeLayoutShift.current.value
     }
 
+    // Check if this timing belongs to an MFE by analyzing the element path
+    const { targets } = analyzeElemPath(element, [], this.agentRef)
+    const mfeTarget = targets.find(t => t) // Find first non-undefined target
+
+    // If MFE detected, add child attributes (but don't duplicate - only send to container)
+    if (mfeTarget) {
+      attrs['child.id'] = mfeTarget.id
+      attrs['child.type'] = mfeTarget.type
+    }
+
     const timing = {
       name,
       value,
       attrs
     }
-
-    const targets = analyzeElemPath(element, [], this.agentRef).targets
-    if (!targets.length) targets.push(undefined)
-    targets.forEach(target => {
-      this.events.add({ ...timing, attrs: { ...attrs, ...getVersion2Attributes(target, this) } })
-      if (shouldDuplicate(target, this.agentRef)) this.events.add({ ...timing, attrs: { ...attrs, ...getVersion2DuplicationAttributes(target, this) } })
-    })
+    this.events.add(timing)
 
     handle('pvtAdded', [name, value, attrs], undefined, FEATURE_NAMES.sessionTrace, this.ee)
 

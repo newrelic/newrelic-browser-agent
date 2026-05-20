@@ -10,13 +10,7 @@ import { now } from '../timing/now'
  * @typedef {import('./register-api-types').RegisterAPITimings} RegisterAPITimings
  */
 
-const isObservable = (node) => {
-  try {
-    return node?.textContent?.trim() || ['img', 'video', 'canvas', 'svg'].includes(node?.nodeName?.toLowerCase())
-  } catch (e) {
-    return false
-  }
-}
+const isObservable = (node) => node?.nodeType === 1 || ['IMG', 'VIDEO', 'CANVAS', 'SVG'].includes(node?.nodeName)
 
 /**
  * Check if node is within a specific MFE
@@ -51,26 +45,6 @@ const observeMutations = (id, onMatch) => {
   })
   obs.observe(globalScope.document, { childList: true, subtree: true })
   return obs
-}
-
-/**
- * Create performance observer for MFE entries
- * @param {Array} observers - Array to track observers
- * @param {Object} config - Observer configuration
- * @param {Function} onEntry - Callback for each entry
- * @returns {PerformanceObserver|null} Observer if successful, null if unsupported
- */
-const observePerformance = (observers, config, onEntry) => {
-  try {
-    const obs = new globalScope.PerformanceObserver(list => {
-      list.getEntries().forEach(onEntry)
-    })
-    obs.observe(config)
-    observers.push(obs)
-    return obs
-  } catch (e) {
-    return null
-  }
 }
 
 /**
@@ -116,55 +90,45 @@ export function trackMFEVitals (id) {
   observers.push(lcpObs)
 
   // Track CLS - cumulative layout shift
-  const clsObs = observePerformance(observers, { type: 'layout-shift', buffered: true }, (entry) => {
-    if (entry.hadRecentInput) return
-    (entry.sources || []).some(source => {
-      if (isInMFE(source.node, id)) {
-        vitals.cls += entry.value
-        return true
-      }
-      return false
+  try {
+    const clsObs = new globalScope.PerformanceObserver(list => {
+      list.getEntries().forEach(entry => {
+        if (entry.hadRecentInput) return
+        (entry.sources || []).some(source => {
+          if (isInMFE(source.node, id)) {
+            vitals.cls += entry.value
+            return true
+          }
+          return false
+        })
+      })
     })
-  })
-  // Initialize CLS to 0 if browser supports it (Chromium), leave as null if not (Firefox/Safari)
-  if (clsObs) vitals.cls = 0
+    clsObs.observe({ type: 'layout-shift', buffered: true })
+    observers.push(clsObs)
+    vitals.cls = 0
+  } catch (e) {}
 
   // Track INP - interaction to next paint
-  observePerformance(observers, { type: 'event', buffered: true, durationThreshold: 16 }, (entry) => {
-    if (!entry.interactionId || !entry.target || !isInMFE(entry.target, id)) return
-    if (vitals.inp === null || entry.duration > vitals.inp) {
-      vitals.inp = entry.duration
-    }
-  })
+  try {
+    const inpObs = new globalScope.PerformanceObserver(list => {
+      list.getEntries().forEach(entry => {
+        if (entry.interactionId && entry.target && isInMFE(entry.target, id) && (vitals.inp === null || entry.duration > vitals.inp)) {
+          vitals.inp = entry.duration
+        }
+      })
+    })
+    inpObs.observe({ type: 'event', buffered: true, durationThreshold: 16 })
+    observers.push(inpObs)
+  } catch (e) {}
 
   // Disconnect all observers
-  vitals.disconnect = () => {
-    // Disconnect all observers
-    observers.forEach(obs => {
-      try {
-        obs?.disconnect()
-      } catch (e) {
-        // Observer may already be disconnected
-      }
-    })
-  }
+  vitals.disconnect = () => observers.forEach(obs => obs?.disconnect?.())
 
   // Auto-disconnect LCP observer on user interaction (per Web Vitals spec)
-  // CLS and INP continue tracking until visibility change or deregister
-  const disconnectLCP = () => {
-    try {
-      lcpObs?.disconnect()
-    } catch (e) {
-      // Observer may already be disconnected
-    }
-  }
-  ;['click', 'keydown', 'scroll'].forEach(type => {
-    globalScope.addEventListener(type, disconnectLCP, { once: true, passive: true })
-  })
-
-  // Disconnect all observers on visibility change or page unload
-  ;['visibilitychange', 'pagehide'].forEach(type => {
-    globalScope.addEventListener(type, vitals.disconnect, { once: true, passive: true })
+  const disconnectLCP = () => lcpObs?.disconnect?.()
+  ;['click', 'keydown', 'scroll', 'visibilitychange', 'pagehide'].forEach(type => {
+    const disconnect = type === 'visibilitychange' || type === 'pagehide' ? vitals.disconnect : disconnectLCP
+    globalScope.addEventListener(type, disconnect, { once: true, passive: true })
   })
 
   return vitals

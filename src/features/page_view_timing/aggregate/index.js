@@ -20,7 +20,7 @@ import { initiallyHidden, getNavigationEntry, initialLocation } from '../../../c
 import { eventOrigin } from '../../../common/util/event-origin'
 import { loadTime } from '../../../common/vitals/load-time'
 import { webdriverDetected } from '../../../common/util/webdriver-detection'
-import { analyzeElemPath } from '../../../common/dom/selector-path'
+import { getRegisteredTargetsFromId } from '../../../common/v2/utils'
 import { cleanURL } from '../../../common/url/clean-url'
 
 export class Aggregate extends AggregateBase {
@@ -89,9 +89,24 @@ export class Aggregate extends AggregateBase {
       attrs.cls = cumulativeLayoutShift.current.value
     }
 
-    // Check if this timing belongs to an MFE by analyzing the element path
-    const { targets } = analyzeElemPath(element, [], this.agentRef)
-    const mfeTarget = targets.find(t => t) // Find first non-undefined target
+    // Check if this timing belongs to an MFE by walking up the DOM tree looking for data-nr-mfe-id
+    let mfeTarget
+    if (element && this.agentRef?.init.api.register.enabled) {
+      let elem = element
+      try {
+        while (elem?.tagName && !mfeTarget) {
+          const mfeId = elem.dataset?.nrMfeId
+          if (mfeId) {
+            const targets = getRegisteredTargetsFromId(mfeId, this.agentRef)
+            mfeTarget = targets[0]
+            break
+          }
+          elem = elem.parentNode
+        }
+      } catch (err) {
+        // Silent catch - if we can't traverse DOM, just skip MFE detection
+      }
+    }
 
     // If MFE detected, add child attributes (but don't duplicate - only send to container)
     if (mfeTarget) {

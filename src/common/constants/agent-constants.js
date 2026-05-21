@@ -13,6 +13,5 @@ export const SUPPORTS_REGISTERED_ENTITIES = {
   [FEATURE_NAMES.logging]: true,
   [FEATURE_NAMES.genericEvents]: true,
   [FEATURE_NAMES.jserrors]: true,
-  [FEATURE_NAMES.ajax]: true,
-  [FEATURE_NAMES.pageViewTiming]: true
+  [FEATURE_NAMES.ajax]: true
 }

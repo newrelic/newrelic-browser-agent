@@ -2,17 +2,13 @@ afterEach(() => {
   jest.resetModules()
   jest.resetAllMocks()
   jest.clearAllMocks()
-  mockReturnVal = 0.123 // Reset to default value
 })
 
 const clsAttribution = {
   largestShiftTarget: 'element',
   largestShiftTime: 12345,
   largestShiftValue: 0.9712,
-  loadState: 'dom-content-loaded',
-  largestShiftSource: {
-    node: document.createElement('div')
-  }
+  loadState: 'dom-content-loaded'
 }
 let mockReturnVal = 0.123
 const getFreshCLSImport = async (codeToRun) => {
@@ -26,12 +22,9 @@ const getFreshCLSImport = async (codeToRun) => {
 describe('cls', () => {
   test('reports cls', (done) => {
     getFreshCLSImport(metric => {
-      metric.subscribe(({ value, element, attrs }) => {
+      metric.subscribe(({ value, attrs }) => {
         expect(value).toEqual(0.123)
-        const { largestShiftSource, ...expectedAttrs } = clsAttribution
-        expect(element).toEqual(largestShiftSource.node)
-        expect(element instanceof HTMLElement).toBe(true)
-        expect(attrs).toEqual({ ...expectedAttrs, metricId: 'beepboop' })
+        expect(attrs).toEqual({ ...clsAttribution, metricId: 'beepboop' })
         done()
       })
     })

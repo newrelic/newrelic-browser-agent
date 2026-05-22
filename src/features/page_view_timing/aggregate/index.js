@@ -20,14 +20,13 @@ import { initiallyHidden, getNavigationEntry, initialLocation } from '../../../c
 import { eventOrigin } from '../../../common/util/event-origin'
 import { loadTime } from '../../../common/vitals/load-time'
 import { webdriverDetected } from '../../../common/util/webdriver-detection'
-import { getRegisteredTargetsFromId } from '../../../common/v2/utils'
 import { cleanURL } from '../../../common/url/clean-url'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
 
-  #handleVitalMetric = ({ name, value, attrs, element }) => {
-    this.addTiming(name, value, attrs, element)
+  #handleVitalMetric = ({ name, value, attrs }) => {
+    this.addTiming(name, value, attrs)
   }
 
   constructor (agentRef) {
@@ -51,9 +50,9 @@ export class Aggregate extends AggregateBase {
         /* Downstream, the event consumer interprets all timing node value as ms-unit and converts it to seconds via division by 1000. CLS is unitless so this normally is a problem.
           bel.6 schema also doesn't support decimal values, of which cls within [0,1). However, the two nicely cancels out, and we can multiply cls by 1000 to both negate the division
           and send an integer > 1. We effectively lose some precision down to 3 decimal places for this workaround. E.g. (real) 0.749132... -> 749.132...-> 749 -> 0.749 (final) */
-        const { name, value, attrs, element } = cumulativeLayoutShift.current
+        const { name, value, attrs } = cumulativeLayoutShift.current
         if (value === undefined) return
-        this.addTiming(name, value * 1000, attrs, element)
+        this.addTiming(name, value * 1000, attrs)
       }, true, true) // CLS node should only reports on vis change rather than on every change
 
       this.drain()
@@ -71,7 +70,7 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  addTiming (name, value, attrs, element) {
+  addTiming (name, value, attrs) {
     attrs = attrs || {}
     attrs.pageUrl = cleanURL(getNavigationEntry()?.name || initialLocation)
 
@@ -87,31 +86,6 @@ export class Aggregate extends AggregateBase {
     */
     if (name !== VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT && cumulativeLayoutShift.current.value >= 0) {
       attrs.cls = cumulativeLayoutShift.current.value
-    }
-
-    // Check if this timing belongs to an MFE by walking up the DOM tree looking for data-nr-mfe-id
-    let mfeTarget
-    if (element && this.agentRef?.init.api.register.enabled) {
-      let elem = element
-      try {
-        while (elem?.tagName && !mfeTarget) {
-          const mfeId = elem.dataset?.nrMfeId
-          if (mfeId) {
-            const targets = getRegisteredTargetsFromId(mfeId, this.agentRef)
-            mfeTarget = targets[0]
-            break
-          }
-          elem = elem.parentNode
-        }
-      } catch (err) {
-        // Silent catch - if we can't traverse DOM, just skip MFE detection
-      }
-    }
-
-    // If MFE detected, add child attributes (but don't duplicate - only send to container)
-    if (mfeTarget) {
-      attrs['child.id'] = mfeTarget.id
-      attrs['child.type'] = mfeTarget.type
     }
 
     const timing = {

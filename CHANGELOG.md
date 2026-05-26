@@ -7,10 +7,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 
 ### Features
-
-* Automatically Detect MFE Page View Timings ([#1724](https://github.com/newrelic/newrelic-browser-agent/issues/1724)) ([9f61421](https://github.com/newrelic/newrelic-browser-agent/commit/9f614212ac1453d5d5af350dfe39a266d7d85e88))
 * Enhance SPA API to support targetPageLoad option ([#1762](https://github.com/newrelic/newrelic-browser-agent/issues/1762)) ([937553b](https://github.com/newrelic/newrelic-browser-agent/commit/937553b208c2efcb66c696ec8d711306960dcba9))
-* Revert feat: Automatically Detect MFE Page View Timings ([#1724](https://github.com/newrelic/newrelic-browser-agent/issues/1724)) ([#1778](https://github.com/newrelic/newrelic-browser-agent/issues/1778)) ([b49d2f4](https://github.com/newrelic/newrelic-browser-agent/commit/b49d2f4522f1a2d7efe7c406683107fa6e2ad5d1))
 
 ## [1.314.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.313.1...v1.314.0) (2026-05-04)
 

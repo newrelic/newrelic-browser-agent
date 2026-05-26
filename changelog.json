@@ -5,26 +5,10 @@
       "changes": [
         {
           "type": "feat",
-          "sha": "b49d2f4522f1a2d7efe7c406683107fa6e2ad5d1",
-          "message": "Revert feat: Automatically Detect MFE Page View Timings (#1724)",
-          "issues": [
-            "1778"
-          ]
-        },
-        {
-          "type": "feat",
           "sha": "937553b208c2efcb66c696ec8d711306960dcba9",
           "message": "Enhance SPA API to support targetPageLoad option",
           "issues": [
             "1762"
-          ]
-        },
-        {
-          "type": "feat",
-          "sha": "9f614212ac1453d5d5af350dfe39a266d7d85e88",
-          "message": "Automatically Detect MFE Page View Timings",
-          "issues": [
-            "1724"
           ]
         }
       ],

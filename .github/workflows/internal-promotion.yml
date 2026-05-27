@@ -3,6 +3,9 @@
 # This workflow enforces a strict sequential promotion path:
 # staging -> jp-prod -> eu-prod -> prod
 # Each environment requires manual approval via GitHub Environment protection rules.
+#
+# When triggered from a release-please branch without specifying a version,
+# it automatically deploys the RC version (e.g., 1.315.0-rc) from package.json.
 
 name: Internal Promotion
 
@@ -10,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       cdn_path:
-        description: 'CDN path or version to deploy (default: "dev build"). Examples: "https://js-agent.newrelic.com/dev/nr-loader-spa.min.js", "https://js-agent.newrelic.com/nr-loader-spa-1.x.x.min.js", or "1.x.x"'
+        description: 'CDN path or version to deploy. Examples: "1.314.0". DO NOT ship a dynamic version like 1.x.x as this can create SRI issues when the version updates later. Leaving as the default will build and ship a new agent matching the version in package.json with an -rc suffix (e.g. 1.315.0-rc) when run from a release-please branch.
         required: false
         type: string
         default: 'https://js-agent.newrelic.com/dev/nr-loader-spa.min.js'
@@ -27,12 +30,35 @@ jobs:
       script_url: ${{ steps.resolve-cdn-path.outputs.script_url }}
       version_label: ${{ steps.resolve-cdn-path.outputs.version_label }}
     steps:
+      - uses: actions/checkout@v4
+      
       - name: Resolve CDN path
         id: resolve-cdn-path
         run: |
           CDN_PATH="${{ inputs.cdn_path }}"
+          BRANCH="${{ github.ref_name }}"
           
-          if [[ "$CDN_PATH" =~ ^https?:// ]]; then
+          # If running on a release-please branch and no explicit cdn_path provided,
+          # automatically use the RC version from package.json
+          if [[ "$BRANCH" == release-please--* ]] && [[ "$CDN_PATH" == "https://js-agent.newrelic.com/dev/nr-loader-spa.min.js" ]]; then
+            echo "🎯 Detected release-please branch: $BRANCH"
+            echo "📦 Reading version from package.json to create RC build..."
+            
+            # Extract version from package.json
+            PKG_VERSION=$(jq -r '.version' package.json)
+            
+            if [[ -z "$PKG_VERSION" || "$PKG_VERSION" == "null" ]]; then
+              echo "❌ ERROR: Could not read version from package.json"
+              exit 1
+            fi
+            
+            # Create RC version
+            RC_VERSION="${PKG_VERSION}-rc"
+            echo "🚀 Using Release Candidate version: $RC_VERSION"
+            
+            SCRIPT_URL="https://js-agent.newrelic.com/nr-loader-spa-${RC_VERSION}.min.js"
+            VERSION_LABEL="v${RC_VERSION}"
+          elif [[ "$CDN_PATH" =~ ^https?:// ]]; then
             # Full URL provided
             SCRIPT_URL="$CDN_PATH"
             VERSION_LABEL="$CDN_PATH"
@@ -300,4 +326,78 @@ jobs:
           notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
           message: ":rocket: New Browser Agent version promoted to \\`us-prod\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
+
+  # Re-trigger Release Gate check for Release-Please PRs
+  retrigger-release-gate:
+    needs: [deploy-us-prod]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Find Release-Please PR for this branch
+        id: find-pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          # Check if this is a release-please branch
+          if [[ ! "$BRANCH" =~ ^release-please-- ]]; then
+            echo "Not a release-please branch, skipping"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          
+          echo "🔍 Looking for Release-Please PR for branch: $BRANCH"
+          
+          # Find the PR for this branch
+          PR_NUMBER=$(gh pr list \
+            --head "$BRANCH" \
+            --state open \
+            --json number \
+            --jq '.[0].number')
+          
+          if [[ -z "$PR_NUMBER" || "$PR_NUMBER" == "null" ]]; then
+            echo "No open PR found for branch $BRANCH"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "✅ Found PR #$PR_NUMBER"
+      
+      - name: Re-request Release Gate check
+        if: steps.find-pr.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.find-pr.outputs.pr_number }}
+        run: |
+          echo "🔄 Re-requesting checks for PR #$PR_NUMBER to unblock merge"
+          
+          # Get the latest commit SHA for the PR
+          HEAD_SHA=$(gh pr view "$PR_NUMBER" --json headRefOid --jq '.headRefOid')
+          
+          echo "📌 HEAD SHA: $HEAD_SHA"
+          
+          # Find the Release Gate check suite for this commit
+          CHECK_SUITE_ID=$(gh api \
+            "repos/${{ github.repository }}/commits/$HEAD_SHA/check-suites" \
+            --jq '.check_suites[] | select(.app.slug == "github-actions" and .conclusion != null) | select(.check_runs[].name == "Verify Internal Promotion") | .id' \
+            | head -1)
+          
+          if [[ -n "$CHECK_SUITE_ID" ]]; then
+            echo "🔄 Requesting re-run of check suite $CHECK_SUITE_ID"
+            gh api -X POST "repos/${{ github.repository }}/check-suites/$CHECK_SUITE_ID/rerequest"
+            echo "✅ Check re-requested successfully"
+          else
+            echo "⚠️  Could not find Release Gate check suite, it may run automatically"
+          fi
+          
+          echo ""
+          echo "🎉 Internal Promotion complete! PR #$PR_NUMBER should now be unblocked."
 

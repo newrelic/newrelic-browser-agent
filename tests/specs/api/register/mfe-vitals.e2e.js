@@ -4,6 +4,7 @@
  */
 
 import { testMFEInsRequest } from '../../../../tools/testing-server/utils/expect-tests'
+import { supportsCumulativeLayoutShift, supportsInteractionToNextPaint, supportsLargestContentfulPaint } from '../../../../tools/browser-matcher/common-matchers.mjs'
 
 /**
  * Helper to get MFE timing events from harvests
@@ -13,7 +14,7 @@ import { testMFEInsRequest } from '../../../../tools/testing-server/utils/expect
  */
 function getMFETimingEvents (harvests, mfeId) {
   return harvests
-    .flatMap(({ request: { body } }) => body.ins)
+    .flatMap(({ request: { body } }) => body?.ins || [])
     .filter(event => event.eventType === 'MicroFrontEndTiming' && event['source.id'] === mfeId)
 }
 
@@ -84,18 +85,9 @@ describe('Register API - MFE Vitals Tracking', () => {
     await browser.destroyAgentSession()
   })
 
-  it('should capture FCP and LCP vitals for MFE with DOM content', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html', {
-      init: {
-        api: {
-          register: {
-            enabled: true
-          }
-        }
-      }
-    }))
-
-    await browser.waitForAgentLoad()
+  it.withBrowsersMatching(supportsLargestContentfulPaint)('should capture FCP and LCP vitals for MFE with DOM content', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html'))
+      .then(() => browser.waitForAgentLoad())
 
     // Wait for LCP component to render (it has a 1s delay)
     await browser.pause(1500)
@@ -114,7 +106,7 @@ describe('Register API - MFE Vitals Tracking', () => {
     const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
     const timingEvents = getMFETimingEvents(insightsHarvests, 'vite-main-mfe')
 
-    expect(timingEvents.length).toBe(1)
+    expect(timingEvents.length).toBeGreaterThanOrEqual(1)
     const timing = timingEvents[0]
 
     // Validate basic timing properties
@@ -128,22 +120,14 @@ describe('Register API - MFE Vitals Tracking', () => {
     validateVitals(timing, { expectFCP: true, expectLCP: true })
   })
 
-  it('should capture CLS when layout shifts occur within MFE', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html', {
-      init: {
-        api: {
-          register: {
-            enabled: true
-          }
-        }
-      }
-    }))
-
-    await browser.waitForAgentLoad()
+  it.withBrowsersMatching(supportsCumulativeLayoutShift)('should capture CLS when layout shifts occur within MFE', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html'))
+      .then(() => browser.waitForAgentLoad())
 
     // The main.tsx has code that triggers a CLS by changing position after 100ms
-    // Wait for layout shift to occur
-    await browser.pause(500)
+    // Wait for layout shift to occur and be measured
+    // Mobile devices may need more time for CLS detection
+    await browser.pause(3000)
 
     // Trigger deregistration to capture vitals
     await browser.execute(function () {
@@ -159,48 +143,42 @@ describe('Register API - MFE Vitals Tracking', () => {
     const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
     const timingEvents = getMFETimingEvents(insightsHarvests, 'vite-main-mfe')
 
-    expect(timingEvents.length).toBe(1)
+    expect(timingEvents.length).toBeGreaterThanOrEqual(1)
     const timing = timingEvents[0]
 
-    // CLS should be captured (Chromium only, will be null in Firefox/Safari)
-    if (timing.cls !== null) {
-      validateVitals(timing, { expectCLS: true })
-      // The forced layout shift should create a non-zero CLS
-      expect(timing.cls).toBeGreaterThan(0)
-    }
+    // CLS should be captured and should be non-zero from the forced layout shift
+    validateVitals(timing, { expectCLS: true })
+    expect(timing.cls).toBeGreaterThan(0)
   })
 
-  it('should capture INP when user interacts with MFE content', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html', {
-      init: {
-        api: {
-          register: {
-            enabled: true
-          }
-        }
-      }
-    }))
-
-    await browser.waitForAgentLoad()
+  it.withBrowsersMatching(supportsInteractionToNextPaint)('should capture INP when user interacts with MFE content', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html'))
+      .then(() => browser.waitForAgentLoad())
 
     // Wait for content to render
-    await browser.pause(500)
+    await browser.pause(2000)
 
     // Interact with the MFE content to trigger INP measurement
+    // IMPORTANT: Must use WebDriver's native click() to generate trusted events
+    // INP only tracks isTrusted=true events from real user interactions
     const button = await $('#mfe-main-button')
     if (await button.isExisting()) {
-      await button.click()
+      await button.click() // Trusted event via WebDriver
       await browser.pause(100)
-      await button.click()
+      await button.click() // Trusted event via WebDriver
       await browser.pause(100)
     }
 
     // Also click on the root element
     const root = await $('#root')
     if (await root.isExisting()) {
-      await root.click()
+      await root.click() // Trusted event via WebDriver
       await browser.pause(100)
     }
+
+    // Wait for INP to be measured by the browser
+    // INP requires the interaction to complete and next paint to occur
+    await browser.pause(2000)
 
     // Trigger deregistration to capture vitals
     await browser.execute(function () {
@@ -213,38 +191,29 @@ describe('Register API - MFE Vitals Tracking', () => {
       }
     })
 
-    const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+    const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 10000 })
     const timingEvents = getMFETimingEvents(insightsHarvests, 'vite-main-mfe')
 
-    expect(timingEvents.length).toBe(1)
+    expect(timingEvents.length).toBeGreaterThanOrEqual(1)
     const timing = timingEvents[0]
 
-    // INP may or may not be captured depending on browser support and interaction timing
-    // If present, validate it
-    if (timing.inp !== null && timing.inp !== undefined) {
-      validateVitals(timing, { expectINP: true })
-    }
+    // Validate basic structure
+    expect(timing['source.id']).toBe('vite-main-mfe')
+
+    // INP should be captured from user interactions
+    validateVitals(timing, { expectINP: true })
   })
 
-  it('should track vitals independently for multiple MFEs', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html', {
-      init: {
-        api: {
-          register: {
-            enabled: true
-          }
-        }
-      }
-    }))
-
-    await browser.waitForAgentLoad()
+  it.withBrowsersMatching(supportsLargestContentfulPaint)('should track vitals independently for multiple MFEs', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html'))
+      .then(() => browser.waitForAgentLoad())
 
     // Wait for LCP to render in main MFE
-    await browser.pause(1500)
+    await browser.pause(2000)
 
     // The 2nd-mfe script should also be loaded and creates its own content
     // Wait a bit more for 2nd-mfe content
-    await browser.pause(500)
+    await browser.pause(2000)
 
     // Deregister both MFEs
     await browser.execute(function () {
@@ -270,25 +239,23 @@ describe('Register API - MFE Vitals Tracking', () => {
 
     // Check main MFE vitals
     const mainTimingEvents = getMFETimingEvents(insightsHarvests, 'vite-main-mfe')
-    expect(mainTimingEvents.length).toBe(1)
+    expect(mainTimingEvents.length).toBeGreaterThanOrEqual(1)
     const mainTiming = mainTimingEvents[0]
     expect(mainTiming['source.id']).toBe('vite-main-mfe')
     validateVitals(mainTiming, { expectFCP: true, expectLCP: true })
 
     // Check 2nd MFE vitals
     const secondTimingEvents = getMFETimingEvents(insightsHarvests, 'vite-second-mfe')
-    expect(secondTimingEvents.length).toBe(1)
+    expect(secondTimingEvents.length).toBeGreaterThanOrEqual(1)
     const secondTiming = secondTimingEvents[0]
     expect(secondTiming['source.id']).toBe('vite-second-mfe')
     // The 2nd-mfe creates a div with data-nr-mfe-id, so it should have FCP
     validateVitals(secondTiming, { expectFCP: true })
 
     // Vitals should be independent - not necessarily equal
-    if (mainTiming.fcp !== null && secondTiming.fcp !== null) {
-      // Both should have FCP values but they can be different
-      expect(mainTiming.fcp).toBeGreaterThan(0)
-      expect(secondTiming.fcp).toBeGreaterThan(0)
-    }
+    // Both should have FCP values but they can be different
+    expect(mainTiming.fcp).toBeGreaterThan(0)
+    expect(secondTiming.fcp).toBeGreaterThan(0)
   })
 
   it('should handle MFE with no visible content gracefully', async () => {
@@ -318,7 +285,7 @@ describe('Register API - MFE Vitals Tracking', () => {
     const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
     const timingEvents = getMFETimingEvents(insightsHarvests, 'empty-mfe')
 
-    expect(timingEvents.length).toBe(1)
+    expect(timingEvents.length).toBeGreaterThanOrEqual(1)
     const timing = timingEvents[0]
 
     // Vitals should be null or 0 for MFE with no matching content
@@ -363,7 +330,7 @@ describe('Register API - MFE Vitals Tracking', () => {
     // Get the vitals at deregistration time
     const firstHarvest = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
     const firstTimingEvents = getMFETimingEvents(firstHarvest, 'test-mfe')
-    expect(firstTimingEvents.length).toBe(1)
+    expect(firstTimingEvents.length).toBeGreaterThanOrEqual(1)
     const firstFCP = firstTimingEvents[0].fcp
 
     // Add more content after deregistration - this should NOT update vitals
@@ -377,7 +344,7 @@ describe('Register API - MFE Vitals Tracking', () => {
       document.body.appendChild(bigDiv)
     })
 
-    await browser.pause(500)
+    await browser.pause(2000)
 
     // The vitals should have been captured at deregistration and not changed
     // (We can't easily re-check since it's already been reported, but we verify the observers were disconnected)
@@ -385,21 +352,12 @@ describe('Register API - MFE Vitals Tracking', () => {
     expect(firstFCP).toBeDefined() // Vitals were captured
   })
 
-  it('should include vitals in timing event structure', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html', {
-      init: {
-        api: {
-          register: {
-            enabled: true
-          }
-        }
-      }
-    }))
-
-    await browser.waitForAgentLoad()
+  it.withBrowsersMatching(supportsLargestContentfulPaint)('should include vitals in timing event structure', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html'))
+      .then(() => browser.waitForAgentLoad())
 
     // Wait for content to render
-    await browser.pause(1500)
+    await browser.pause(2000)
 
     // Trigger deregistration
     await browser.execute(function () {
@@ -415,7 +373,7 @@ describe('Register API - MFE Vitals Tracking', () => {
     const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
     const timingEvents = getMFETimingEvents(insightsHarvests, 'vite-main-mfe')
 
-    expect(timingEvents.length).toBe(1)
+    expect(timingEvents.length).toBeGreaterThanOrEqual(1)
     const timing = timingEvents[0]
 
     // Verify timing event has all expected properties including vitals

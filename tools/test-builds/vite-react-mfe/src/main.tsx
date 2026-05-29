@@ -15,10 +15,13 @@ const root = createRoot(document.getElementById("app") as HTMLElement);
 root.render(<App />);
 
 setTimeout(() => {
-    // force a CLS recalc
+    // Force a layout shift for CLS testing
+    // Wait longer to ensure React has fully rendered
+    // Make the shift more dramatic to ensure detection on all devices
     const app = document.getElementById("root")
     if (app){
         app.style.position = 'absolute'
-        app.style.top = '100px'
+        app.style.top = '200px'
+        app.style.left = '50px'
     }
-}, 100)
+}, 500)

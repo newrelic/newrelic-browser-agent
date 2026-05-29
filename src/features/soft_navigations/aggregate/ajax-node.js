@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
+import { AJAX_ID } from '../../ajax/constants'
 import { NODE_TYPE } from '../constants'
 import { BelNode } from './bel-node'
 
@@ -22,6 +23,7 @@ export class AjaxNode extends BelNode {
     this.spanTimestamp = ajaxEvent.spanTimestamp
     this.gql = ajaxEvent.gql
     this.targetAttributes = ajaxEvent.targetAttributes
+    this[AJAX_ID] = ajaxEvent[AJAX_ID] // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
 
     this.start = ajaxEvent.startTime
     this.end = ajaxEvent.endTime
@@ -55,7 +57,8 @@ export class AjaxNode extends BelNode {
     ]
     let allAttachedNodes = addCustomAttributes({
       ...(this.gql || {}),
-      ...(this.targetAttributes || {})
+      ...(this.targetAttributes || {}),
+      [AJAX_ID]: this[AJAX_ID]
     }, addString)
     this.children.forEach(node => allAttachedNodes.push(node.serialize())) // no children is expected under ajax nodes at this time
 

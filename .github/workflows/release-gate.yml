@@ -1,0 +1,153 @@
+# Release Gate Workflow
+# This workflow acts as a required status check to ensure Release-Please PRs
+# are only mergeable after the Internal Promotion workflow has successfully
+# deployed to production.
+#
+# For regular developer PRs (not release-please--*), this check auto-passes.
+# For Release-Please PRs, it verifies the prod deployment has completed.
+
+name: Release Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+
+jobs:
+  verify-promotion:
+    name: Verify Internal Promotion
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Auto-pass for manual triggers
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "✅ Manual workflow trigger - gate passed automatically"
+          echo "This allows the workflow to be used in branch protection rules."
+      
+      - name: Get PR details
+        if: github.event_name != 'workflow_dispatch'
+        id: pr-info
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+        run: |
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "branch_name=$BRANCH_NAME" >> "$GITHUB_OUTPUT"
+          echo "📋 PR Number: $PR_NUMBER"
+          echo "🌿 Branch: $BRANCH_NAME"
+      
+      - name: Check if Release-Please PR
+        if: github.event_name != 'workflow_dispatch'
+        id: is-release-pr
+        env:
+          BRANCH_NAME: ${{ steps.pr-info.outputs.branch_name }}
+        run: |
+          BRANCH="$BRANCH_NAME"
+          
+          if [[ "$BRANCH" == release-please--* ]]; then
+            echo "is_release_pr=true" >> $GITHUB_OUTPUT
+            echo "🎯 This is a Release-Please PR - promotion verification required"
+          else
+            echo "is_release_pr=false" >> $GITHUB_OUTPUT
+            echo "✅ This is a regular PR - auto-passing"
+          fi
+      
+      - name: Auto-pass for non-release PRs
+        if: steps.is-release-pr.outputs.is_release_pr == 'false'
+        run: |
+          echo "✅ Not a Release-Please PR - gate passed automatically"
+          echo "This PR does not require internal promotion to be complete."
+      
+      - name: Verify Internal Promotion completion
+        if: steps.is-release-pr.outputs.is_release_pr == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.pr-info.outputs.pr_number }}
+          PR_BRANCH: ${{ steps.pr-info.outputs.branch_name }}
+        run: |
+          BRANCH="$PR_BRANCH"
+          
+          # Get the PR's head commit SHA
+          PR_DATA=$(gh pr view "$PR_NUMBER" --json headRefOid)
+          PR_HEAD_SHA=$(echo "$PR_DATA" | jq -r '.headRefOid')
+          
+          # Get the commit timestamp for the head commit
+          COMMIT_DATA=$(gh api "repos/${{ github.repository }}/commits/$PR_HEAD_SHA" --jq '{author: .commit.author.date, committer: .commit.committer.date}')
+          COMMIT_TIMESTAMP=$(echo "$COMMIT_DATA" | jq -r '.committer')
+          
+          echo "🔍 Verifying GitHub Environment deployments completed AFTER the current commit"
+          echo "📌 Commit SHA: $PR_HEAD_SHA"
+          echo "📅 Commit Time: $COMMIT_TIMESTAMP"
+          echo ""
+          echo "Required environments: nr1-staging, nr1-jp-prod, nr1-eu-prod, nr1-us-prod"
+          echo ""
+          
+          # Define the required environments in deployment order
+          REQUIRED_ENVS=("nr1-staging" "nr1-jp-prod" "nr1-eu-prod" "nr1-us-prod")
+          ALL_PASSED=true
+          
+          for ENV in "${REQUIRED_ENVS[@]}"; do
+            echo "🔍 Checking environment: $ENV"
+            
+            # Get the most recent successful deployment to this environment after commit time from this branch
+            DEPLOYMENT=$(gh api \
+              "repos/${{ github.repository }}/deployments" \
+              -F environment="$ENV" \
+              -F per_page=50 \
+              --jq --arg commit_time "$COMMIT_TIMESTAMP" --arg branch "$BRANCH" \
+                'map(select(.created_at > $commit_time and .ref == $branch)) | sort_by(.created_at) | reverse | .[0]')
+            
+            if [[ -z "$DEPLOYMENT" || "$DEPLOYMENT" == "null" ]]; then
+              echo "  ❌ No deployment found for $ENV from branch $BRANCH after $COMMIT_TIMESTAMP"
+              ALL_PASSED=false
+              continue
+            fi
+            
+            DEPLOYMENT_ID=$(echo "$DEPLOYMENT" | jq -r '.id')
+            DEPLOYMENT_CREATED=$(echo "$DEPLOYMENT" | jq -r '.created_at')
+            
+            # Check the deployment status
+            DEPLOYMENT_STATUS=$(gh api \
+              "repos/${{ github.repository }}/deployments/$DEPLOYMENT_ID/statuses" \
+              --jq 'map(select(.state == "success")) | .[0]')
+            
+            if [[ -z "$DEPLOYMENT_STATUS" || "$DEPLOYMENT_STATUS" == "null" ]]; then
+              echo "  ❌ No successful deployment status found for $ENV (Deployment ID: $DEPLOYMENT_ID)"
+              ALL_PASSED=false
+            else
+              STATUS_CREATED=$(echo "$DEPLOYMENT_STATUS" | jq -r '.created_at')
+              echo "  ✅ Successfully deployed at $STATUS_CREATED"
+            fi
+          done
+          
+          echo ""
+          
+          if [[ "$ALL_PASSED" != "true" ]]; then
+            echo "❌ ERROR: Not all environments have been successfully deployed after commit $PR_HEAD_SHA"
+            echo ""
+            echo "📝 Required Action:"
+            echo "   1. Trigger the Internal Promotion workflow manually"
+            echo "   2. Complete deployments to: staging → jp-prod → eu-prod → us-prod"
+            echo "   3. Ensure all environments are approved and deployed successfully"
+            echo ""
+            echo "ℹ️  Note: All deployments must complete AFTER the commit timestamp ($COMMIT_TIMESTAMP)"
+            echo "   to ensure you're deploying the correct version."
+            echo ""
+            echo "🔗 Trigger workflow at:"
+            echo "   https://github.com/${{ github.repository }}/actions/workflows/internal-promotion.yml"
+            exit 1
+          fi
+          
+          # All checks passed
+          echo "✅ SUCCESS: All environments have been successfully deployed!"
+          echo "✅ Deployment chain completed: staging → jp-prod → eu-prod → us-prod"
+          echo ""
+          echo "🎉 This Release-Please PR is ready to merge!"

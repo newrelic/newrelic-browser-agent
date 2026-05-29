@@ -21,33 +21,4 @@ describe('Session Replay Ingest Behavior', () => {
 
     expect((await getSR()).events.length).toEqual(0)
   })
-
-  it('should stop recording if 429 response', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
-      .then(() => browser.waitForSessionReplayRecording())
-
-    await expect(getSR()).resolves.toEqual(expect.objectContaining({
-      events: expect.any(Array),
-      initialized: true,
-      recording: true,
-      mode: 1,
-      blocked: false
-    }))
-
-    await Promise.all([
-      browser.testHandle.scheduleReply('bamServer', {
-        test: testBlobReplayRequest,
-        statusCode: 429
-      }).then(() => $('body').click()),
-      sessionReplaysCapture.waitForResult({ timeout: 10000 })
-    ])
-
-    await expect(getSR()).resolves.toEqual(expect.objectContaining({
-      events: [],
-      initialized: true,
-      recording: false,
-      mode: 0,
-      blocked: true
-    }))
-  })
 })

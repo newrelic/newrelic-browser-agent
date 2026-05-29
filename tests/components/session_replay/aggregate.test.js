@@ -317,14 +317,22 @@ describe('Session Replay Harvest Behaviors', () => {
     expect(sessionReplayAggregate.mode).toEqual(MODE.OFF)
   })
 
-  test('Aborts if 429 response', async () => {
+  test('Does not abort if retryable response', async () => {
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
 
-    sessionReplayAggregate.postHarvestCleanup({ status: 429 })
+    // simulate failed harvest with retryable response
+    sessionReplayAggregate.postHarvestCleanup({ sent: true, retry: true })
 
-    expect(sessionReplayAggregate.blocked).toEqual(true)
+    expect(sessionReplayAggregate.blocked).toEqual(false)
     expect(sessionReplayAggregate.mode).toEqual(MODE.OFF)
+    expect(sessionReplayAggregate.recorder.retryPayload).not.toBeUndefined()
+
+    // simulate successful retry
+    sessionReplayAggregate.postHarvestCleanup({ sent: true, retry: false })
+    expect(sessionReplayAggregate.blocked).toEqual(false)
+    expect(sessionReplayAggregate.mode).toEqual(MODE.FULL)
+    expect(sessionReplayAggregate.recorder.retryPayload).toBeUndefined()
   })
 
   test('provides correct first and last timestamps, even when out of order', async () => {

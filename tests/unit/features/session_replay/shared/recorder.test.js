@@ -2,7 +2,6 @@ import { Recorder } from '../../../../../src/features/session_replay/shared/reco
 import { RRWEB_EVENT_TYPES } from '../../../../../src/features/session_replay/constants'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../../../../src/features/metrics/constants'
 import { FEATURE_NAMES } from '../../../../../src/loaders/features/features'
-import { record } from '@newrelic/rrweb'
 import { handle } from '../../../../../src/common/event-emitter/handle'
 import { warn } from '../../../../../src/common/util/console'
 import { stylesheetEvaluator } from '../../../../../src/features/session_replay/shared/stylesheet-evaluator'

@@ -197,6 +197,7 @@ export class ApiBase {
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/interaction/}
    * @param {Object} [opts] Options to configure the new or existing interaction with
    * @param {boolean} [opts.waitForEnd=false] To forcibly keep the interaction open until the `.end` method is called on its handle, set to true. Defaults to false. After an interaction is earmarked with this, it cannot be undone.
+    * @param {boolean} [opts.targetPageLoad=false] If true, bind this API handle to the initial page load interaction forcibly instead of creating or targeting a soft navigation interaction.
    * @returns {InteractionInstance} An API object that is bound to a specific BrowserInteraction event. Each time this method is called for the same BrowserInteraction, a new object is created, but it still references the same interaction.
    *  - Note: Does not apply to MicroAgent
    *  - Deprecation Notice: interaction.createTracer is deprecated.  See https://docs.newrelic.com/eol/2024/04/eol-04-24-24-createtracer/ for more information.

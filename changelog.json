@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "937553b208c2efcb66c696ec8d711306960dcba9",
+          "message": "Enhance SPA API to support targetPageLoad option",
+          "issues": [
+            "1762"
+          ]
+        }
+      ],
+      "version": "1.315.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "4355cf7b-49e0-48a0-a31e-d4562cf3a4fe",
+      "createTime": "2026-05-26T19:47:14.737Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "c8a345bc9cd22eb56f876c598677310a2da6be8f",
           "message": "Add ajaxRequest.id attribute",
           "issues": [
@@ -3970,5 +3987,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-05-04T21:54:16.395Z"
+  "updateTime": "2026-05-26T19:47:14.737Z"
 }

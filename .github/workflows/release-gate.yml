@@ -97,16 +97,16 @@ jobs:
           for ENV in "${REQUIRED_ENVS[@]}"; do
             echo "🔍 Checking environment: $ENV"
             
-            # Get the most recent successful deployment to this environment after commit time
+            # Get the most recent successful deployment to this environment after commit time from this branch
             DEPLOYMENT=$(gh api \
               "repos/${{ github.repository }}/deployments" \
               -F environment="$ENV" \
               -F per_page=50 \
-              --jq --arg commit_time "$COMMIT_TIMESTAMP" \
-                'map(select(.created_at > $commit_time)) | sort_by(.created_at) | reverse | .[0]')
+              --jq --arg commit_time "$COMMIT_TIMESTAMP" --arg branch "$BRANCH" \
+                'map(select(.created_at > $commit_time and .ref == $branch)) | sort_by(.created_at) | reverse | .[0]')
             
             if [[ -z "$DEPLOYMENT" || "$DEPLOYMENT" == "null" ]]; then
-              echo "  ❌ No deployment found for $ENV after $COMMIT_TIMESTAMP"
+              echo "  ❌ No deployment found for $ENV from branch $BRANCH after $COMMIT_TIMESTAMP"
               ALL_PASSED=false
               continue
             fi

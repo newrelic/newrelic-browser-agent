@@ -468,7 +468,7 @@ jobs:
           # Find the Release Gate check suite for this commit
           CHECK_SUITE_ID=$(gh api \
             "repos/${{ github.repository }}/commits/$HEAD_SHA/check-suites" \
-            --jq '.check_suites[] | select(.app.slug == "github-actions" and .conclusion != null) | select(.check_runs[].name == "Verify Internal Promotion") | .id' \
+            --jq '.check_suites[] | select(.app.slug == "github-actions" and .conclusion != null and any(.check_runs[]?; .name == "Verify Internal Promotion")) | .id' \
             | head -1)
           
           if [[ -n "$CHECK_SUITE_ID" ]]; then

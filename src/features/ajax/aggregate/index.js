@@ -14,7 +14,7 @@ import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../
 import { gosNREUMOriginals } from '../../../common/window/nreum'
 import { Obfuscator } from '../../../common/util/obfuscate'
 import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
-import { EVENT_TYPES } from '../../../common/constants/agent-constants'
+import { EVENT_TYPES } from '../../../common/constants/events'
 import { generateUuid } from '../../../common/ids/unique-id'
 
 export class Aggregate extends AggregateBase {

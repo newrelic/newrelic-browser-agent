@@ -22,7 +22,7 @@ import { eventOrigin } from '../../../common/util/event-origin'
 import { loadTime } from '../../../common/vitals/load-time'
 import { webdriverDetected } from '../../../common/util/webdriver-detection'
 import { cleanURL } from '../../../common/url/clean-url'
-import { EVENT_TYPES } from '../../../common/constants/agent-constants'
+import { EVENT_TYPES } from '../../../common/constants/events'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME

@@ -14,7 +14,7 @@ import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../../../common/session/con
 import { ABORT_REASONS } from '../../session_replay/constants'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
 import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
-import { EVENT_TYPES } from '../../../common/constants/agent-constants'
+import { EVENT_TYPES } from '../../../common/constants/events'
 
 const LOGGING_EVENT = 'Logging/Event/'
 

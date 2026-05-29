@@ -21,7 +21,7 @@ import { send } from '../../../common/harvest/harvester'
 import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { getSubmitMethod } from '../../../common/util/submit-data'
 import { webdriverDetected } from '../../../common/util/webdriver-detection'
-import { EVENT_TYPES } from '../../../common/constants/agent-constants'
+import { EVENT_TYPES } from '../../../common/constants/events'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME

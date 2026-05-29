@@ -2,7 +2,7 @@
  * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { EVENT_TYPES } from '../../common/constants/agent-constants'
+import { EVENT_TYPES } from '../../common/constants/events'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
 export const FEATURE_NAME = FEATURE_NAMES.genericEvents

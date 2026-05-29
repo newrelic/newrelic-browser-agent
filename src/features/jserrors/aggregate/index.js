@@ -22,7 +22,7 @@ import { evaluateInternalError } from './internal-errors'
 import { getRegisteredTargetsFromFilename, getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
 import { buildCauseString } from './cause-string'
 import { ShortCircuit } from '../../../common/util/short-circuit'
-import { EVENT_TYPES } from '../../../common/constants/agent-constants'
+import { EVENT_TYPES } from '../../../common/constants/events'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo

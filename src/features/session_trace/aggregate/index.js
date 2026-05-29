@@ -12,7 +12,7 @@ import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 import { Obfuscator } from '../../../common/util/obfuscate'
 import { cleanURL } from '../../../common/url/clean-url'
 import { warn } from '../../../common/util/console'
-import { EVENT_TYPES } from '../../../common/constants/agent-constants'
+import { EVENT_TYPES } from '../../../common/constants/events'
 
 /** Reserved room for query param attrs */
 const QUERY_PARAM_PADDING = 5000

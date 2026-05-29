@@ -14,7 +14,7 @@ import { Obfuscator } from '../../../common/util/obfuscate'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
-import { EVENT_TYPES } from '../../../common/constants/agent-constants'
+import { EVENT_TYPES } from '../../../common/constants/events'
 import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
 
 export class Aggregate extends AggregateBase {

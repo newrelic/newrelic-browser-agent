@@ -13,7 +13,7 @@ import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS, INTERACTION_TRIGGER
 import { AjaxNode } from './ajax-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
-import { EVENT_TYPES } from '../../../common/constants/agent-constants'
+import { EVENT_TYPES } from '../../../common/constants/events'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME

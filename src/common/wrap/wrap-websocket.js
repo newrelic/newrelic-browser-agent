@@ -8,7 +8,7 @@ import { now } from '../timing/now'
 import { cleanURL } from '../url/clean-url'
 import { gosNREUMOriginals } from '../window/nreum'
 import { subscribeToPageUnload } from '../window/page-visibility'
-import { EVENT_TYPES } from '../constants/agent-constants'
+import { EVENT_TYPES } from '../constants/events'
 
 const wrapped = {}
 const openWebSockets = new Set() // track all instances to close out metrics on page unload

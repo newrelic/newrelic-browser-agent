@@ -1,14 +1,13 @@
-# This workflow is used to manually deploy a Browser Agent version
+# This workflow is used to manually deploy a specific Browser Agent version
 # to NR1 environments by updating the "released" asset that NR1 pages load.
 # This workflow enforces a strict sequential promotion path:
 # staging -> jp-prod -> eu-prod -> prod
 # Each environment requires manual approval via GitHub Environment protection rules.
 #
 # Two deployment modes:
-# 1. "release candidate" (default): Builds fresh from current branch state and
-#    deploys to environment-specific paths (/staging/, /jp-prod/, /eu-prod/, /prod/)
-# 2. Specific version/URL: Uses an existing versioned build for rollbacks or
-#    re-promotions (e.g., "1.314.0" or full URL)
+# 1. Release Candidate (default on release-please branches): Builds fresh RC assets
+#    from current branch and uploads to environment-specific CDN paths
+# 2. Existing Version: Promotes an already-published CDN version (for rollbacks)
 
 name: Internal Promotion
 
@@ -151,7 +150,7 @@ jobs:
 
   # Notify staging deployment
   notify-staging:
-    needs: [deploy-staging]
+    needs: [resolve-version, deploy-staging]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -233,7 +232,7 @@ jobs:
 
   # Notify JP production deployment
   notify-jp-prod:
-    needs: [deploy-jp-prod]
+    needs: [resolve-version, deploy-jp-prod]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -315,7 +314,7 @@ jobs:
 
   # Notify EU production deployment
   notify-eu-prod:
-    needs: [deploy-eu-prod]
+    needs: [resolve-version, deploy-eu-prod]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -397,7 +396,7 @@ jobs:
 
   # Notify US production deployment
   notify-us-prod:
-    needs: [deploy-us-prod]
+    needs: [resolve-version, deploy-us-prod]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -408,4 +407,78 @@ jobs:
           notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
           message: ":rocket: New Browser Agent version promoted to \\`us-prod\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
+
+  # Re-trigger Release Gate check for Release-Please PRs
+  retrigger-release-gate:
+    needs: [deploy-us-prod]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Find Release-Please PR for this branch
+        id: find-pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          # Check if this is a release-please branch
+          if [[ ! "$BRANCH" =~ ^release-please-- ]]; then
+            echo "Not a release-please branch, skipping"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          
+          echo "🔍 Looking for Release-Please PR for branch: $BRANCH"
+          
+          # Find the PR for this branch
+          PR_NUMBER=$(gh pr list \
+            --head "$BRANCH" \
+            --state open \
+            --json number \
+            --jq '.[0].number')
+          
+          if [[ -z "$PR_NUMBER" || "$PR_NUMBER" == "null" ]]; then
+            echo "No open PR found for branch $BRANCH"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "✅ Found PR #$PR_NUMBER"
+      
+      - name: Re-request Release Gate check
+        if: steps.find-pr.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.find-pr.outputs.pr_number }}
+        run: |
+          echo "🔄 Re-requesting checks for PR #$PR_NUMBER to unblock merge"
+          
+          # Get the latest commit SHA for the PR
+          HEAD_SHA=$(gh pr view "$PR_NUMBER" --json headRefOid --jq '.headRefOid')
+          
+          echo "📌 HEAD SHA: $HEAD_SHA"
+          
+          # Find the Release Gate check suite for this commit
+          CHECK_SUITE_ID=$(gh api \
+            "repos/${{ github.repository }}/commits/$HEAD_SHA/check-suites" \
+            --jq '.check_suites[] | select(.app.slug == "github-actions" and .conclusion != null and any(.check_runs[]?; .name == "Verify Internal Promotion")) | .id' \
+            | head -1)
+          
+          if [[ -n "$CHECK_SUITE_ID" ]]; then
+            echo "🔄 Requesting re-run of check suite $CHECK_SUITE_ID"
+            gh api -X POST "repos/${{ github.repository }}/check-suites/$CHECK_SUITE_ID/rerequest"
+            echo "✅ Check re-requested successfully"
+          else
+            echo "⚠️  Could not find Release Gate check suite, it may run automatically"
+          fi
+          
+          echo ""
+          echo "🎉 Internal Promotion complete! PR #$PR_NUMBER should now be unblocked."
 

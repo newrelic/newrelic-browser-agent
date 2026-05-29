@@ -11,9 +11,6 @@ name: Release Gate
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-  workflow_run:
-    workflows: ["Internal Promotion"]
-    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -39,25 +36,9 @@ jobs:
         if: github.event_name != 'workflow_dispatch'
         id: pr-info
         env:
-          GH_TOKEN: ${{ github.token }}
-          EVENT_NAME: ${{ github.event_name }}
-          PR_NUMBER_EVENT: ${{ github.event.pull_request.number }}
-          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
-          WR_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
         run: |
-          # Determine the PR number and branch
-          if [[ "$EVENT_NAME" == "pull_request" ]]; then
-            PR_NUMBER="$PR_NUMBER_EVENT"
-            BRANCH_NAME="$PR_HEAD_REF"
-          elif [[ "$EVENT_NAME" == "workflow_run" ]]; then
-            # Get PR info from the workflow_run event
-            PR_NUMBER=$(gh pr list --json number,headRefName --jq '.[] | select(.headRefName == $branch) | .number' --arg branch "$WR_HEAD_BRANCH" | head -1)
-            BRANCH_NAME="$WR_HEAD_BRANCH"
-          else
-            echo "❌ Unexpected event type: $EVENT_NAME"
-            exit 1
-          fi
-          
           echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
           echo "branch_name=$BRANCH_NAME" >> "$GITHUB_OUTPUT"
           echo "📋 PR Number: $PR_NUMBER"
@@ -89,106 +70,84 @@ jobs:
         if: steps.is-release-pr.outputs.is_release_pr == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.pr-info.outputs.pr_number }}
           PR_BRANCH: ${{ steps.pr-info.outputs.branch_name }}
         run: |
           BRANCH="$PR_BRANCH"
           
-          echo "🔍 Checking for successful Internal Promotion workflow on branch: $BRANCH"
+          # Get the PR's head commit SHA
+          PR_DATA=$(gh pr view "$PR_NUMBER" --json headRefOid)
+          PR_HEAD_SHA=$(echo "$PR_DATA" | jq -r '.headRefOid')
           
-          # Get the most recent Internal Promotion workflow run for this branch
-          WORKFLOW_RUN=$(gh run list \
-            --workflow=internal-promotion.yml \
-            --branch="$BRANCH" \
-            --json databaseId,status,conclusion,createdAt,url \
-            --jq '.[0]')
+          # Get the commit timestamp for the head commit
+          COMMIT_DATA=$(gh api "repos/${{ github.repository }}/commits/$PR_HEAD_SHA" --jq '{author: .commit.author.date, committer: .commit.committer.date}')
+          COMMIT_TIMESTAMP=$(echo "$COMMIT_DATA" | jq -r '.committer')
           
-          if [[ -z "$WORKFLOW_RUN" || "$WORKFLOW_RUN" == "null" ]]; then
-            echo "❌ ERROR: No Internal Promotion workflow found for branch $BRANCH"
+          echo "🔍 Verifying GitHub Environment deployments completed AFTER the current commit"
+          echo "📌 Commit SHA: $PR_HEAD_SHA"
+          echo "📅 Commit Time: $COMMIT_TIMESTAMP"
+          echo ""
+          echo "Required environments: nr1-staging, nr1-jp-prod, nr1-eu-prod, nr1-us-prod"
+          echo ""
+          
+          # Define the required environments in deployment order
+          REQUIRED_ENVS=("nr1-staging" "nr1-jp-prod" "nr1-eu-prod" "nr1-us-prod")
+          ALL_PASSED=true
+          
+          for ENV in "${REQUIRED_ENVS[@]}"; do
+            echo "🔍 Checking environment: $ENV"
+            
+            # Get the most recent successful deployment to this environment after commit time from this branch
+            DEPLOYMENT=$(gh api \
+              "repos/${{ github.repository }}/deployments" \
+              -F environment="$ENV" \
+              -F per_page=50 \
+              --jq --arg commit_time "$COMMIT_TIMESTAMP" --arg branch "$BRANCH" \
+                'map(select(.created_at > $commit_time and .ref == $branch)) | sort_by(.created_at) | reverse | .[0]')
+            
+            if [[ -z "$DEPLOYMENT" || "$DEPLOYMENT" == "null" ]]; then
+              echo "  ❌ No deployment found for $ENV from branch $BRANCH after $COMMIT_TIMESTAMP"
+              ALL_PASSED=false
+              continue
+            fi
+            
+            DEPLOYMENT_ID=$(echo "$DEPLOYMENT" | jq -r '.id')
+            DEPLOYMENT_CREATED=$(echo "$DEPLOYMENT" | jq -r '.created_at')
+            
+            # Check the deployment status
+            DEPLOYMENT_STATUS=$(gh api \
+              "repos/${{ github.repository }}/deployments/$DEPLOYMENT_ID/statuses" \
+              --jq 'map(select(.state == "success")) | .[0]')
+            
+            if [[ -z "$DEPLOYMENT_STATUS" || "$DEPLOYMENT_STATUS" == "null" ]]; then
+              echo "  ❌ No successful deployment status found for $ENV (Deployment ID: $DEPLOYMENT_ID)"
+              ALL_PASSED=false
+            else
+              STATUS_CREATED=$(echo "$DEPLOYMENT_STATUS" | jq -r '.created_at')
+              echo "  ✅ Successfully deployed at $STATUS_CREATED"
+            fi
+          done
+          
+          echo ""
+          
+          if [[ "$ALL_PASSED" != "true" ]]; then
+            echo "❌ ERROR: Not all environments have been successfully deployed after commit $PR_HEAD_SHA"
             echo ""
             echo "📝 Required Action:"
             echo "   1. Trigger the Internal Promotion workflow manually"
-            echo "   2. Complete deployments to: staging → jp-prod → eu-prod → prod"
+            echo "   2. Complete deployments to: staging → jp-prod → eu-prod → us-prod"
             echo "   3. Ensure all environments are approved and deployed successfully"
+            echo ""
+            echo "ℹ️  Note: All deployments must complete AFTER the commit timestamp ($COMMIT_TIMESTAMP)"
+            echo "   to ensure you're deploying the correct version."
             echo ""
             echo "🔗 Trigger workflow at:"
             echo "   https://github.com/${{ github.repository }}/actions/workflows/internal-promotion.yml"
             exit 1
           fi
           
-          RUN_ID=$(echo "$WORKFLOW_RUN" | jq -r '.databaseId')
-          RUN_STATUS=$(echo "$WORKFLOW_RUN" | jq -r '.status')
-          RUN_CONCLUSION=$(echo "$WORKFLOW_RUN" | jq -r '.conclusion')
-          RUN_URL=$(echo "$WORKFLOW_RUN" | jq -r '.url')
-          
-          echo "📊 Workflow Run ID: $RUN_ID"
-          echo "📊 Status: $RUN_STATUS"
-          echo "📊 Conclusion: $RUN_CONCLUSION"
-          echo "🔗 URL: $RUN_URL"
-          
-          # Check if the workflow is still in progress
-          if [[ "$RUN_STATUS" != "completed" ]]; then
-            echo "⏳ Internal Promotion workflow is still in progress"
-            echo ""
-            echo "Current status: $RUN_STATUS"
-            echo ""
-            echo "📝 Required Action:"
-            echo "   Wait for the Internal Promotion workflow to complete all deployments"
-            echo "   Track progress at: $RUN_URL"
-            exit 1
-          fi
-          
-          # Check if the workflow completed successfully
-          if [[ "$RUN_CONCLUSION" != "success" ]]; then
-            echo "❌ ERROR: Internal Promotion workflow did not complete successfully"
-            echo ""
-            echo "Conclusion: $RUN_CONCLUSION"
-            echo ""
-            echo "📝 Required Action:"
-            echo "   1. Review the failed workflow run at: $RUN_URL"
-            echo "   2. Fix any issues and re-run the workflow"
-            echo "   3. Ensure all environments deploy successfully"
-            exit 1
-          fi
-          
-          # Verify that the prod job specifically completed
-          echo ""
-          echo "🔍 Verifying prod deployment job completion..."
-          
-          JOBS=$(gh run view "$RUN_ID" --json jobs --jq '.jobs')
-          PROD_JOB=$(echo "$JOBS" | jq -r '.[] | select(.name == "deploy-prod")')
-          
-          if [[ -z "$PROD_JOB" || "$PROD_JOB" == "null" ]]; then
-            echo "❌ ERROR: deploy-prod job not found in workflow run"
-            echo ""
-            echo "Available jobs:"
-            echo "$JOBS" | jq -r '.[].name'
-            echo ""
-            echo "The workflow may not have reached the production deployment stage."
-            exit 1
-          fi
-          
-          PROD_STATUS=$(echo "$PROD_JOB" | jq -r '.status')
-          PROD_CONCLUSION=$(echo "$PROD_JOB" | jq -r '.conclusion')
-          
-          echo "📊 Prod Job Status: $PROD_STATUS"
-          echo "📊 Prod Job Conclusion: $PROD_CONCLUSION"
-          
-          if [[ "$PROD_STATUS" != "completed" ]] || [[ "$PROD_CONCLUSION" != "success" ]]; then
-            echo "❌ ERROR: Production deployment has not completed successfully"
-            echo ""
-            echo "Status: $PROD_STATUS"
-            echo "Conclusion: $PROD_CONCLUSION"
-            echo ""
-            echo "📝 Required Action:"
-            echo "   Complete the production deployment in the Internal Promotion workflow"
-            echo "   Workflow: $RUN_URL"
-            exit 1
-          fi
-          
           # All checks passed
-          echo ""
-          echo "✅ SUCCESS: Internal Promotion workflow completed successfully!"
-          echo "✅ All environments deployed: staging → jp-prod → eu-prod → prod"
+          echo "✅ SUCCESS: All environments have been successfully deployed!"
+          echo "✅ Deployment chain completed: staging → jp-prod → eu-prod → us-prod"
           echo ""
           echo "🎉 This Release-Please PR is ready to merge!"
-          echo "🔗 Workflow run: $RUN_URL"

@@ -1,9 +1,8 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-export const PREFIX = 'NRBA'
-export const DEFAULT_KEY = 'SESSION'
+export const SESSION_STORAGE_KEY_PREFIX = 'NRBA_SESSION::'
 export const DEFAULT_EXPIRES_MS = 14400000
 export const DEFAULT_INACTIVE_MS = 1800000
 

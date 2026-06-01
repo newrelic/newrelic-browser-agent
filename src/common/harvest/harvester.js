@@ -267,7 +267,8 @@ function cleanPayload (payload = {}) {
 
 // The stuff that gets sent every time.
 function baseQueryString (agentRef, qs, endpoint, harvesterObfuscator) {
-  const ref = harvesterObfuscator.obfuscateString(cleanURL('' + globalScope.location))
+  const cleanedURL = cleanURL('' + globalScope.location)
+  const ref = harvesterObfuscator?.obfuscateString(cleanedURL) ?? cleanedURL
   const session = agentRef.runtime.session
   const hr = !!session?.state.sessionReplaySentFirstChunk && session?.state.sessionReplayMode === 1 && endpoint !== JSERRORS
   const ht = !!session?.state.traceHarvestStarted && session?.state.sessionTraceMode === 1 && ![LOGS, BLOBS].includes(endpoint)

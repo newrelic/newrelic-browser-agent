@@ -101,23 +101,29 @@ export class Obfuscator {
     // For generic obfuscators (no specific event types), check individual eventType properties
     // This path is for features like generic_events that handle multiple event types
     const eventTypesToObfuscate = new Set()
-    let hasEventFilters = false
+    const globalRules = []
+    const eventSpecificRules = []
 
     this.obfuscateConfigRules.forEach(rule => {
       if (rule.eventFilter && Array.isArray(rule.eventFilter) && rule.eventFilter.length > 0) {
-        hasEventFilters = true
+        eventSpecificRules.push(rule)
         rule.eventFilter.forEach(eventType => eventTypesToObfuscate.add(eventType))
+      } else {
+        globalRules.push(rule)
       }
     })
 
-    // If no rules have eventFilters, obfuscate everything
-    if (!hasEventFilters) {
+    // Optimization: if ALL rules are global (no event-specific rules exist),
+    // we can just apply all rules to everything without checking eventType properties
+    if (eventSpecificRules.length === 0) {
       this.#applyFnToAllStrings(obj, this.obfuscateString.bind(this))
       return obj
     }
 
-    // Selectively obfuscate based on eventType properties found in the data
-    this.#applyFnWithEventTypeFilter(obj, this.obfuscateString.bind(this), Array.from(eventTypesToObfuscate), null)
+    // We have a mix of global and event-specific rules:
+    // - Apply event-specific rules only to matching eventTypes
+    // - Apply global rules to ALL event types
+    this.#applyFnWithEventTypeFilter(obj, this.obfuscateString.bind(this), Array.from(eventTypesToObfuscate), globalRules, null)
     return obj
   }
 
@@ -144,12 +150,13 @@ export class Obfuscator {
   /**
    * Recursively applies a function to string properties based on eventType filtering.
    * @param {Object|Array} obj - The object or array to traverse
-   * @param {Function} fn - The function to apply to string properties
-   * @param {string[]} eventTypes - Array of event types to obfuscate
-   * @param {boolean|null} shouldObfuscate - Track obfuscation state: null = not determined yet, true = obfuscate, false = don't obfuscate
+   * @param {Function} fn - The function to apply to string properties (applies all rules)
+   * @param {string[]} eventTypes - Array of event types to apply event-specific obfuscation
+   * @param {Array} globalRules - Rules without eventFilter that apply to all events
+   * @param {boolean|null} shouldObfuscate - Track obfuscation state: null = not determined yet, true = obfuscate with all rules, false = obfuscate with global rules only
    * @private
    */
-  #applyFnWithEventTypeFilter (obj, fn, eventTypes, shouldObfuscate) {
+  #applyFnWithEventTypeFilter (obj, fn, eventTypes, globalRules, shouldObfuscate) {
     if (!obj || typeof obj !== 'object') return
 
     // Determine the obfuscation state for this object
@@ -157,12 +164,7 @@ export class Obfuscator {
 
     // Check if this object has an eventType property
     if ('eventType' in obj && typeof obj.eventType === 'string') {
-      currentShouldObfuscate = eventTypes.includes(obj.eventType)
-    }
-
-    // If we've determined not to obfuscate this branch, stop here
-    if (currentShouldObfuscate === false) {
-      return
+      currentShouldObfuscate = !!eventTypes.includes(obj.eventType)
     }
 
     // Process all properties
@@ -171,13 +173,38 @@ export class Obfuscator {
 
       if (typeof value === 'object' && value !== null) {
         // Recursively traverse objects/arrays, passing the current obfuscation state
-        this.#applyFnWithEventTypeFilter(value, fn, eventTypes, currentShouldObfuscate)
-      } else if (typeof value === 'string' && currentShouldObfuscate === true) {
-        // Only obfuscate strings if we've determined we should (true)
+        this.#applyFnWithEventTypeFilter(value, fn, eventTypes, globalRules, currentShouldObfuscate)
+      } else if (typeof value === 'string') {
+        if (currentShouldObfuscate === true) {
+          // Apply all rules (both global and event-specific)
+          obj[property] = fn(value)
+        } else if (currentShouldObfuscate === false && globalRules.length > 0) {
+          // Apply only global rules
+          obj[property] = this.#applyRulesToString(value, globalRules)
+        }
         // If currentShouldObfuscate is null, we haven't found an eventType yet, so don't obfuscate
-        obj[property] = fn(value)
       }
     })
+  }
+
+  /**
+   * Applies specific obfuscation rules to a string.
+   * @param {string} input - The string to obfuscate
+   * @param {Array} rules - The rules to apply
+   * @returns {string} The obfuscated string
+   * @private
+   */
+  #applyRulesToString (input, rules) {
+    if (typeof input !== 'string' || input.trim().length === 0) return input
+
+    const validatedRules = rules.map(rule => this.validateObfuscationRule(rule))
+
+    return validatedRules
+      .filter(ruleValidation => ruleValidation.isValid)
+      .reduce((input, ruleValidation) => {
+        const { rule } = ruleValidation
+        return input.replace(rule.regex, rule.replacement || '*')
+      }, input)
   }
 
   /**

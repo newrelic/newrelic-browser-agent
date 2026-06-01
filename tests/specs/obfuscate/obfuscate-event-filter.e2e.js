@@ -1,6 +1,6 @@
-import { LOGGING_MODE } from '../../src/features/logging/constants'
-import { rumFlags } from '../../tools/testing-server/constants'
-import { testInsRequest, testRumRequest } from '../../tools/testing-server/utils/expect-tests'
+import { LOGGING_MODE } from '../../../src/features/logging/constants'
+import { rumFlags } from '../../../tools/testing-server/constants'
+import { testInsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('obfuscate rules with eventFilter', () => {
   let insightsCapture

@@ -79,11 +79,11 @@ describe('micro-agent', () => {
       expect(payloadMatchesAppId(query.a, data.val, data.actionName, data.customAttr)).toEqual(true)
     })
 
-    expect(logsHarvest.length).toEqual(0)
+    expect(logsHarvest.length).toEqual(1)
 
-    // check to ensure both agents have the same logging mode (shared session)
+    // check to ensure both agents have the appropriate logging mode (separate session)
     expect(result.agent1.loggingMode).toEqual({ auto: LOGGING_MODE.OFF, api: LOGGING_MODE.OFF })
-    expect(result.agent2.loggingMode).toEqual(result.agent1.loggingMode)
+    expect(result.agent2.loggingMode).toEqual({ auto: LOGGING_MODE.DEBUG, api: LOGGING_MODE.DEBUG })
     expect(tests[1]).toEqual({ rum: true, err: true, pa: true, log: false })
     expect(tests[2]).toEqual({ rum: true, err: true, pa: true, log: false })
   })
@@ -163,9 +163,9 @@ describe('micro-agent', () => {
       expect(payloadMatchesAppId(query.a, data.val, data.actionName, data.customAttr)).toEqual(true)
     })
 
-    // check to ensure both agents have the same logging mode (shared session)
+    // check to ensure both agents have the appropriate logging mode (separate session)
     expect(result.agent1.loggingMode).toEqual({ auto: LOGGING_MODE.INFO, api: LOGGING_MODE.INFO })
-    expect(result.agent2.loggingMode).toEqual(result.agent1.loggingMode)
+    expect(result.agent2.loggingMode).toEqual({ auto: LOGGING_MODE.DEBUG, api: LOGGING_MODE.DEBUG })
     expect(logsHarvest.length).toEqual(2)
 
     logsHarvest.forEach(({ request: { query, body } }) => {
@@ -254,9 +254,9 @@ describe('micro-agent', () => {
       expect(payloadMatchesAppId(query.a, data.val, data.actionName, data.customAttr)).toEqual(true)
     })
 
-    // check to ensure both agents have the same logging mode (shared session)
+    // check to ensure both agents have the appropriate logging mode (separate session)
     expect(result.agent1.loggingMode).toEqual({ auto: LOGGING_MODE.INFO, api: LOGGING_MODE.INFO })
-    expect(result.agent2.loggingMode).toEqual(result.agent1.loggingMode)
+    expect(result.agent2.loggingMode).toEqual({ auto: LOGGING_MODE.DEBUG, api: LOGGING_MODE.DEBUG })
 
     expect(logsHarvest.length).toEqual(2)
     logsHarvest.forEach(({ request: { query, body } }) => {

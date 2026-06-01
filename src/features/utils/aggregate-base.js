@@ -3,9 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { FeatureBase } from './feature-base'
-import { isValid } from '../../common/config/info'
-import { configure } from '../../loaders/configure/configure'
-import { gosCDN } from '../../common/window/nreum'
 import { drain } from '../../common/drain/drain'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { Harvester } from '../../common/harvest/harvester'
@@ -23,7 +20,6 @@ export class AggregateBase extends FeatureBase {
    */
   constructor (agentRef, featureName) {
     super(agentRef, featureName)
-    this.checkConfiguration(agentRef)
     this.doOnceForAllAggregate(agentRef)
 
     /** @type {Boolean} indicates if custom attributes are combined in each event payload for size estimation purposes. this is set to true in derived classes that need to evaluate custom attributes separately from the event payload */
@@ -178,34 +174,6 @@ export class AggregateBase extends FeatureBase {
     this.isRetrying = result.sent && result.retry
     if (this.isRetrying) this.events.reloadSave(this.harvestOpts)
     this.events.clearSave(this.harvestOpts)
-  }
-
-  /**
-   * Checks for additional `jsAttributes` items to support backward compatibility with implementations of the agent where
-   * loader configurations may appear after the loader code is executed.
-   */
-  checkConfiguration (existingAgent) {
-    // NOTE: This check has to happen at aggregator load time
-    if (!isValid(existingAgent.info)) {
-      const cdn = gosCDN()
-      let jsAttributes = { ...cdn.info?.jsAttributes }
-      try {
-        jsAttributes = {
-          ...jsAttributes,
-          ...existingAgent.info?.jsAttributes
-        }
-      } catch (err) {
-        // do nothing
-      }
-      configure(existingAgent, {
-        ...cdn,
-        info: {
-          ...cdn.info,
-          jsAttributes
-        },
-        runtime: existingAgent.runtime
-      }, existingAgent.runtime.loaderType)
-    }
   }
 
   /**

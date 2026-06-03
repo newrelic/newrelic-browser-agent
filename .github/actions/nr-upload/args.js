@@ -19,6 +19,9 @@ export const args = yargs(hideBin(process.argv))
   .string('loader-version')
   .describe('loader-version', 'Browser Agent version number')
 
+  .string('local-dir')
+  .describe('local-dir', 'Local directory to read loader files from instead of fetching from CDN')
+
   .demandOption(['environment', 'loader-version'])
   .check((argv) => {
     if (argv.environment.includes('stage') && !argv.stageApiKey) {

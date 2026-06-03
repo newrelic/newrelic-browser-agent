@@ -200,10 +200,10 @@ function register (agentRef, target) {
       timeToFetch, // fetchStart to fetchEnd
       timeToLoad: timeToFetch + timeToExecute, // fetch time and script time together
       timeToRegister: timings.registeredAt, // timestamp when register() was called
-      fcp: timings.fcp !== null ? timings.fcp - timings.scriptStart : null, // timestamp when script started executing to when FCP was observed for this MFE
-      lcp: timings.lcp !== null ? timings.lcp - timings.scriptStart : null, // timestamp when script started executing to when LCP was observed for this MFE
-      cls: timings.cls, // the CLS score observed for this MFE
-      inp: timings.inp // the worst interaction latency observed for this MFE
+      'nr.fcp': timings.fcp !== null ? timings.fcp - timings.scriptStart : null, // timestamp when script started executing to when FCP was observed for this MFE
+      'nr.lcp': timings.lcp !== null ? timings.lcp - timings.scriptStart : null, // timestamp when script started executing to when LCP was observed for this MFE
+      'nr.cls': timings.cls, // the CLS score observed for this MFE
+      'nr.inp': timings.inp // the worst interaction latency observed for this MFE
     })
   }
 

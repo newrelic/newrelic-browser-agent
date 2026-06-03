@@ -148,7 +148,7 @@ describe('Register API - MFE Vitals Tracking', () => {
 
     // CLS should be captured and should be non-zero from the forced layout shift
     validateVitals(timing, { expectCLS: true })
-    expect(timing.cls).toBeGreaterThan(0)
+    expect(timing['nr.cls']).toBeGreaterThan(0)
   })
 
   it.withBrowsersMatching(supportsInteractionToNextPaint)('should capture INP when user interacts with MFE content', async () => {
@@ -254,8 +254,8 @@ describe('Register API - MFE Vitals Tracking', () => {
 
     // Vitals should be independent - not necessarily equal
     // Both should have FCP values but they can be different
-    expect(mainTiming.fcp).toBeGreaterThan(0)
-    expect(secondTiming.fcp).toBeGreaterThan(0)
+    expect(mainTiming['nr.fcp']).toBeGreaterThan(0)
+    expect(secondTiming['nr.fcp']).toBeGreaterThan(0)
   })
 
   it('should handle MFE with no visible content gracefully', async () => {
@@ -290,13 +290,13 @@ describe('Register API - MFE Vitals Tracking', () => {
 
     // Vitals should be null or 0 for MFE with no matching content
     // FCP should be null since no content was added within the MFE scope
-    expect(timing.fcp).toBeNull()
-    expect(timing.lcp).toBeNull()
+    expect(timing['nr.fcp']).toBeNull()
+    expect(timing['nr.lcp']).toBeNull()
     // CLS might be null (unsupported) or 0 (supported but no shifts)
-    if (timing.cls !== null) {
-      expect(timing.cls).toBe(0)
+    if (timing['nr.cls'] !== null) {
+      expect(timing['nr.cls']).toBe(0)
     }
-    expect(timing.inp).toBeNull()
+    expect(timing['nr.inp']).toBeNull()
   })
 
   it('should stop tracking vitals after deregistration', async () => {
@@ -391,13 +391,13 @@ describe('Register API - MFE Vitals Tracking', () => {
     expect(timing.timeToRegister).toBeGreaterThanOrEqual(0)
 
     // Vitals properties should exist (even if null)
-    expect(timing).toHaveProperty('fcp')
-    expect(timing).toHaveProperty('lcp')
-    expect(timing).toHaveProperty('cls')
-    expect(timing).toHaveProperty('inp')
+    expect(timing).toHaveProperty('nr.fcp')
+    expect(timing).toHaveProperty('nr.lcp')
+    expect(timing).toHaveProperty('nr.cls')
+    expect(timing).toHaveProperty('nr.inp')
 
     // At least FCP and LCP should have values for this test case
-    expect(timing.fcp).not.toBeNull()
-    expect(timing.lcp).not.toBeNull()
+    expect(timing['nr.fcp']).not.toBeNull()
+    expect(timing['nr.lcp']).not.toBeNull()
   })
 })

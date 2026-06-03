@@ -74,64 +74,10 @@ describe('Recorder', () => {
         expect(recorder.getEvents().events).toHaveLength(1)
       })
 
-      test('stores the event even when there are incomplete stylesheets', () => {
-        // evaluate() is not called when fix_stylesheets is false in config, incompletes always 0
-        const recorder = new Recorder(makeSrInstrument({ fix_stylesheets: false }))
-        recorder.audit(metaEvent())
-        expect(recorder.getEvents().events).toHaveLength(1)
-      })
-
       test('does not call stylesheetEvaluator.evaluate() when fix_stylesheets config is false', () => {
         const recorder = new Recorder(makeSrInstrument({ fix_stylesheets: false }))
         recorder.audit(metaEvent())
         expect(stylesheetEvaluator.evaluate).not.toHaveBeenCalled()
-      })
-
-      test('sets inlinedAllStylesheets to false when shouldFix is false and incompletes exist', () => {
-        // shouldFix starts as fix_stylesheets. To get incompletes with shouldFix=false,
-        // we degrade shouldFix by first triggering a failed fix with fix_stylesheets=true,
-        // then confirm the skipped-path behavior.
-        stylesheetEvaluator.evaluate.mockReturnValue(2)
-        stylesheetEvaluator.fix.mockResolvedValue(0)
-        const recorder = new Recorder(makeSrInstrument({ fix_stylesheets: true }))
-        // Manually set shouldFix=false to simulate degraded state while evaluate still runs
-        recorder.shouldFix = false
-        recorder.audit(metaEvent())
-        expect(recorder.events.inlinedAllStylesheets).toBe(false)
-      })
-
-      test('emits a warning when shouldFix is false and incompletes exist', () => {
-        stylesheetEvaluator.evaluate.mockReturnValue(1)
-        stylesheetEvaluator.fix.mockResolvedValue(0)
-        const recorder = new Recorder(makeSrInstrument({ fix_stylesheets: true }))
-        recorder.shouldFix = false
-        recorder.audit(metaEvent())
-        expect(warn).toHaveBeenCalledWith(47)
-      })
-
-      test('emits the warning only once across multiple audit calls', () => {
-        stylesheetEvaluator.evaluate.mockReturnValue(1)
-        stylesheetEvaluator.fix.mockResolvedValue(0)
-        const recorder = new Recorder(makeSrInstrument({ fix_stylesheets: true }))
-        recorder.shouldFix = false
-        recorder.audit(metaEvent())
-        recorder.audit(metaEvent())
-        expect(warn).toHaveBeenCalledTimes(1)
-      })
-
-      test('emits the Skipped SM with the incomplete count', () => {
-        stylesheetEvaluator.evaluate.mockReturnValue(3)
-        stylesheetEvaluator.fix.mockResolvedValue(0)
-        const recorder = new Recorder(makeSrInstrument({ fix_stylesheets: true }))
-        recorder.shouldFix = false
-        recorder.audit(metaEvent())
-        expect(handle).toHaveBeenCalledWith(
-          SUPPORTABILITY_METRIC_CHANNEL,
-          [CSS_SM_PREFIX + 'Skipped', 3],
-          undefined,
-          FEATURE_NAMES.metrics,
-          recorder.ee
-        )
       })
     })
 
@@ -143,7 +89,9 @@ describe('Recorder', () => {
           recorder.audit(metaEvent())
           expect(recorder.getEvents().events).toHaveLength(1)
         })
+      })
 
+      describe('with incomplete stylesheets — snapshot/meta-type events', () => {
         test('drops events of non-Meta type while in fixing state', () => {
           stylesheetEvaluator.evaluate.mockReturnValue(1)
           stylesheetEvaluator.fix.mockResolvedValue(0)
@@ -168,9 +116,7 @@ describe('Recorder', () => {
           recorder.audit(metaEvent()) // no incompletes + Meta clears fixing state
           expect(recorder.getEvents().events).toHaveLength(1)
         })
-      })
 
-      describe('with incomplete stylesheets — snapshot-type events', () => {
         test('does not store a Meta event when there are incomplete stylesheets', () => {
           stylesheetEvaluator.evaluate.mockReturnValue(1)
           stylesheetEvaluator.fix.mockResolvedValue(0)
@@ -237,6 +183,21 @@ describe('Recorder', () => {
             recorder.ee
           )
         })
+
+        test('emits Fixed SM with full count when fix fully succeeds', async () => {
+          stylesheetEvaluator.evaluate.mockReturnValue(2)
+          stylesheetEvaluator.fix.mockResolvedValue(0)
+          const recorder = new Recorder(makeSrInstrument())
+          recorder.audit(metaEvent())
+          await Promise.resolve()
+          expect(handle).toHaveBeenCalledWith(
+            SUPPORTABILITY_METRIC_CHANNEL,
+            [CSS_SM_PREFIX + 'Fixed', 2],
+            undefined,
+            FEATURE_NAMES.metrics,
+            recorder.ee
+          )
+        })
       })
 
       describe('with incomplete stylesheets — non-snapshot event types', () => {
@@ -270,15 +231,6 @@ describe('Recorder', () => {
           expect(recorder.events.inlinedAllStylesheets).toBe(false)
         })
 
-        test('degrades shouldFix to false when any fix attempt fails', async () => {
-          stylesheetEvaluator.evaluate.mockReturnValue(1)
-          stylesheetEvaluator.fix.mockResolvedValue(1)
-          const recorder = new Recorder(makeSrInstrument())
-          recorder.audit(metaEvent())
-          await Promise.resolve()
-          expect(recorder.shouldFix).toBe(false)
-        })
-
         test('still calls takeFullSnapshot even when fix fails', async () => {
           stylesheetEvaluator.evaluate.mockReturnValue(1)
           stylesheetEvaluator.fix.mockResolvedValue(1)
@@ -304,19 +256,62 @@ describe('Recorder', () => {
           )
         })
 
-        test('emits Fixed SM with full count when fix fully succeeds', async () => {
-          stylesheetEvaluator.evaluate.mockReturnValue(2)
-          stylesheetEvaluator.fix.mockResolvedValue(0)
-          const recorder = new Recorder(makeSrInstrument())
-          recorder.audit(metaEvent())
-          await Promise.resolve()
-          expect(handle).toHaveBeenCalledWith(
-            SUPPORTABILITY_METRIC_CHANNEL,
-            [CSS_SM_PREFIX + 'Fixed', 2],
-            undefined,
-            FEATURE_NAMES.metrics,
-            recorder.ee
-          )
+        describe('when shouldFix is degraded', () => {
+          test('degrades shouldFix to false when any fix attempt fails', async () => {
+            stylesheetEvaluator.evaluate.mockReturnValue(1)
+            stylesheetEvaluator.fix.mockResolvedValue(1)
+            const recorder = new Recorder(makeSrInstrument())
+            recorder.audit(metaEvent())
+            await Promise.resolve()
+            expect(recorder.shouldFix).toBe(false)
+          })
+
+          test('sets inlinedAllStylesheets to false when shouldFix is false and incompletes exist', () => {
+            // shouldFix starts as fix_stylesheets. To get incompletes with shouldFix=false,
+            // we degrade shouldFix by first triggering a failed fix with fix_stylesheets=true,
+            // then confirm the skipped-path behavior.
+            stylesheetEvaluator.evaluate.mockReturnValue(2)
+            stylesheetEvaluator.fix.mockResolvedValue(0)
+            const recorder = new Recorder(makeSrInstrument({ fix_stylesheets: true }))
+            // Manually set shouldFix=false to simulate degraded state while evaluate still runs
+            recorder.shouldFix = false
+            recorder.audit(metaEvent())
+            expect(recorder.events.inlinedAllStylesheets).toBe(false)
+          })
+
+          test('emits the Skipped SM with the incomplete count', () => {
+            stylesheetEvaluator.evaluate.mockReturnValue(3)
+            stylesheetEvaluator.fix.mockResolvedValue(0)
+            const recorder = new Recorder(makeSrInstrument({ fix_stylesheets: true }))
+            recorder.shouldFix = false
+            recorder.audit(metaEvent())
+            expect(handle).toHaveBeenCalledWith(
+              SUPPORTABILITY_METRIC_CHANNEL,
+              [CSS_SM_PREFIX + 'Skipped', 3],
+              undefined,
+              FEATURE_NAMES.metrics,
+              recorder.ee
+            )
+          })
+
+          test('emits a warning when shouldFix is false and incompletes exist', () => {
+            stylesheetEvaluator.evaluate.mockReturnValue(1)
+            stylesheetEvaluator.fix.mockResolvedValue(0)
+            const recorder = new Recorder(makeSrInstrument({ fix_stylesheets: true }))
+            recorder.shouldFix = false
+            recorder.audit(metaEvent())
+            expect(warn).toHaveBeenCalledWith(47)
+          })
+
+          test('emits the warning only once across multiple audit calls', () => {
+            stylesheetEvaluator.evaluate.mockReturnValue(1)
+            stylesheetEvaluator.fix.mockResolvedValue(0)
+            const recorder = new Recorder(makeSrInstrument({ fix_stylesheets: true }))
+            recorder.shouldFix = false
+            recorder.audit(metaEvent())
+            recorder.audit(metaEvent())
+            expect(warn).toHaveBeenCalledTimes(1)
+          })
         })
       })
     })

@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.315.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.314.0...v1.315.0) (2026-05-26)
+
+
+### Features
+* Enhance SPA API to support targetPageLoad option ([#1762](https://github.com/newrelic/newrelic-browser-agent/issues/1762)) ([937553b](https://github.com/newrelic/newrelic-browser-agent/commit/937553b208c2efcb66c696ec8d711306960dcba9))
+
 ## [1.314.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.313.1...v1.314.0) (2026-05-04)
 
 

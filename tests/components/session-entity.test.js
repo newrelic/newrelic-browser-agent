@@ -1,4 +1,4 @@
-import { PREFIX } from '../../src/common/session/constants'
+import { SESSION_STORAGE_KEY_PREFIX } from '../../src/common/session/constants'
 import { SessionEntity } from '../../src/common/session/session-entity'
 import { LocalMemory, model } from './session-helpers'
 import * as runtimeModule from '../../src/common/constants/runtime'
@@ -13,14 +13,6 @@ const value = 'test_value'
 
 let storage
 let agentRef
-
-const buildSessionKey = (agentRef, key) => {
-  return `${PREFIX}_${key}::${agentRef.info.licenseKey}:${agentRef.info.applicationID}`
-}
-
-const buildLocalStorage = (agentRef, key, data = {}) => {
-  return new LocalMemory({ [`${buildSessionKey(agentRef, key)}`]: data })
-}
 
 beforeEach(() => {
   jest.replaceProperty(runtimeModule, 'isBrowserScope', true)
@@ -71,7 +63,7 @@ describe('constructor', () => {
   test('expiresAt is the correct future timestamp - existing session', () => {
     const now = Date.now()
     jest.setSystemTime(now)
-    const existingData = buildLocalStorage(agentRef, key, { ...model, value, expiresAt: now + 5000, inactiveAt: Infinity, updatedAt: now })
+    const existingData = new LocalMemory({ [`${SESSION_STORAGE_KEY_PREFIX}${key}`]: { ...model, value, expiresAt: now + 5000, inactiveAt: Infinity, updatedAt: now } })
     const session = new SessionEntity({ agentRef, key, expiresMs: 100, storage: existingData })
     expect(session.state.expiresAt).toEqual(now + 5000)
   })
@@ -91,7 +83,7 @@ describe('constructor', () => {
   test('inactiveAt is the correct future timestamp - existing session', () => {
     const now = Date.now()
     jest.setSystemTime(now)
-    const existingData = buildLocalStorage(agentRef, key, { ...model, value, inactiveAt: now + 5000, expiresAt: Infinity, updatedAt: now })
+    const existingData = new LocalMemory({ [`${SESSION_STORAGE_KEY_PREFIX}${key}`]: { ...model, value, inactiveAt: now + 5000, expiresAt: Infinity, updatedAt: now } })
     const session = new SessionEntity({ agentRef, key, inactiveMs: 100, storage: existingData })
     expect(session.state.inactiveAt).toEqual(now + 5000)
   })
@@ -105,14 +97,14 @@ describe('constructor', () => {
     const newSession = new SessionEntity({ agentRef, key, storage, expiresMs: 10 })
     expect(newSession.isNew).toBeTruthy()
 
-    const newStorage = buildLocalStorage(agentRef, key, { ...model, value, expiresAt: Infinity, inactiveAt: Infinity, updatedAt: Date.now() })
+    const newStorage = new LocalMemory({ [`${SESSION_STORAGE_KEY_PREFIX}${key}`]: { ...model, value, expiresAt: Infinity, inactiveAt: Infinity, updatedAt: Date.now() } })
     const existingSession = new SessionEntity({ agentRef, key, expiresMs: 10, storage: newStorage })
     expect(existingSession.isNew).toBeFalsy()
   })
 
   test('invalid stored values sets new defaults', () => {
     // missing required fields
-    const storage = buildLocalStorage(agentRef, key, { invalid_fields: true })
+    const storage = new LocalMemory({ [`${SESSION_STORAGE_KEY_PREFIX}${key}`]: { invalid_fields: true } })
     const session = new SessionEntity({ agentRef, key, storage })
     expect(session.state).toEqual(expect.objectContaining(getDefaultExpectedSessionState()))
   })
@@ -120,7 +112,7 @@ describe('constructor', () => {
   test('expired expiresAt value in storage sets new defaults', () => {
     const now = Date.now()
     jest.setSystemTime(now)
-    const storage = buildLocalStorage(agentRef, key, { value, expiresAt: now - 100, inactiveAt: Infinity })
+    const storage = new LocalMemory({ [`${SESSION_STORAGE_KEY_PREFIX}${key}`]: { value, expiresAt: now - 100, inactiveAt: Infinity } })
     const session = new SessionEntity({ agentRef, key, storage })
     expect(session.state).toEqual(expect.objectContaining(getDefaultExpectedSessionState()))
   })
@@ -128,7 +120,7 @@ describe('constructor', () => {
   test('expired inactiveAt value in storage sets new defaults', () => {
     const now = Date.now()
     jest.setSystemTime(now)
-    const storage = buildLocalStorage(agentRef, key, { value, inactiveAt: now - 100, expiresAt: Infinity })
+    const storage = new LocalMemory({ [`${SESSION_STORAGE_KEY_PREFIX}${key}`]: { value, inactiveAt: now - 100, expiresAt: Infinity } })
     const session = new SessionEntity({ agentRef, key, storage })
     expect(session.state).toEqual(expect.objectContaining(getDefaultExpectedSessionState()))
   })
@@ -207,19 +199,19 @@ describe('isNew', () => {
     expect(sessionInstance.isNew).toEqual(true)
   })
   test('is true after the session resets by timers | false -> true', () => {
-    const storage = buildLocalStorage(agentRef, key, { ...model, value, expiresAt: Date.now() + 100000, inactiveAt: Date.now() + 100000, updatedAt: Date.now() })
+    storage.set(`${SESSION_STORAGE_KEY_PREFIX}${key}`, { ...model, value, expiresAt: Date.now() + 100000, inactiveAt: Date.now() + 100000, updatedAt: Date.now() })
     const sessionInstance = new SessionEntity({ agentRef, key, storage })
     expect(sessionInstance.isNew).toEqual(false)
     sessionInstance.reset()
     expect(sessionInstance.isNew).toEqual(true)
   })
   test('is true if reset happens on initialization after time outs off-view | expiresAt', () => {
-    const storage = buildLocalStorage(agentRef, key, { ...model, value, expiresAt: Date.now() - 1, inactiveAt: Date.now() + 100000, updatedAt: Date.now() })
+    storage.set(`${SESSION_STORAGE_KEY_PREFIX}${key}`, { ...model, value, expiresAt: Date.now() - 1, inactiveAt: Date.now() + 100000, updatedAt: Date.now() })
     const sessionInstance = new SessionEntity({ agentRef, key, storage })
     expect(sessionInstance.isNew).toEqual(true)
   })
   test('is true if reset happens on initialization after time outs off-view | inactiveAt', () => {
-    const storage = buildLocalStorage(agentRef, key, { ...model, value, expiresAt: Date.now() + 100000, inactiveAt: Date.now() - 1, updatedAt: Date.now() })
+    storage.set(`${SESSION_STORAGE_KEY_PREFIX}${key}`, { ...model, value, expiresAt: Date.now() + 100000, inactiveAt: Date.now() - 1, updatedAt: Date.now() })
     const sessionInstance = new SessionEntity({ agentRef, key, storage })
     expect(sessionInstance.isNew).toEqual(true)
   })
@@ -234,7 +226,7 @@ describe('read()', () => {
   })
 
   test('"pre-existing" sessions get data from read()', () => {
-    const storage = buildLocalStorage(agentRef, key, { ...model, value, expiresAt: Infinity, inactiveAt: Infinity })
+    const storage = new LocalMemory({ [`${SESSION_STORAGE_KEY_PREFIX}${key}`]: { ...model, value, expiresAt: Infinity, inactiveAt: Infinity } })
     const session = new SessionEntity({ agentRef, key, storage })
     expect(session.isNew).toBeFalsy()
     expect(session.read()).toEqual(expect.objectContaining({

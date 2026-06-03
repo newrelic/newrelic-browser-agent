@@ -119,7 +119,10 @@ describe('XHR SPA Interaction Tracking', () => {
       })
     ])
     const expectedAttributeType = browserMatch(lambdaTestWebdriverFalse) ? 'falseAttribute' : 'trueAttribute'
-    expect(interactionHarvests[0].request.body[0].children).toEqual([{ key: 'webdriverDetected', type: expectedAttributeType }])
+    expect(interactionHarvests[0].request.body[0].children).toEqual([
+      { key: 'isFirstOfSession', type: 'trueAttribute' },
+      { key: 'webdriverDetected', type: expectedAttributeType }
+    ])
   })
 
   it('should capture the ajax request and response size', async () => {

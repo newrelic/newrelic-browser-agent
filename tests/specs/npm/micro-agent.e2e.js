@@ -81,18 +81,11 @@ describe('micro-agent', () => {
       expect(payloadMatchesAppId(query.a, data.val, data.actionName, data.customAttr)).toEqual(true)
     })
 
-    // OFF is a special-case -
-    // - when agent version supported shared LS, second agent will also be turned OFF
-    // - if/when agent supports namespaced LS, second agent should be in DEBUG
     expect(logsHarvest.length).toEqual(1)
+
+    // check to ensure both agents have the appropriate logging mode (separate session)
     expect(result.agent1.loggingMode).toEqual({ auto: LOGGING_MODE.OFF, api: LOGGING_MODE.OFF })
     expect(result.agent2.loggingMode).toEqual({ auto: LOGGING_MODE.DEBUG, api: LOGGING_MODE.DEBUG })
-    logsHarvest.forEach(({ request: { query, body } }) => {
-      const data = JSON.parse(body)[0]
-      expect(data.logs.length).toEqual(1) // ensure only one log per appId
-      expect(ranOnce(data.common.attributes.appId, 'log')).toEqual(true)
-      expect(payloadMatchesAppId(data.common.attributes.appId, data.logs[0].message)).toEqual(true)
-    })
     expect(tests[1]).toEqual({ rum: true, err: true, pa: true, log: false })
     expect(tests[2]).toEqual({ rum: true, err: true, pa: true, log: true })
   })
@@ -173,7 +166,7 @@ describe('micro-agent', () => {
       expect(payloadMatchesAppId(query.a, data.val, data.actionName, data.customAttr)).toEqual(true)
     })
 
-    // check to ensure both agents have distinct logging modes
+    // check to ensure both agents have the appropriate logging mode (separate session)
     expect(result.agent1.loggingMode).toEqual({ auto: LOGGING_MODE.INFO, api: LOGGING_MODE.INFO })
     expect(result.agent2.loggingMode).toEqual({ auto: LOGGING_MODE.DEBUG, api: LOGGING_MODE.DEBUG })
     expect(logsHarvest.length).toEqual(2)
@@ -264,7 +257,7 @@ describe('micro-agent', () => {
       expect(payloadMatchesAppId(query.a, data.val, data.actionName, data.customAttr)).toEqual(true)
     })
 
-    // check to ensure both agents have distinct logging modes
+    // check to ensure both agents have the appropriate logging mode (separate session)
     expect(result.agent1.loggingMode).toEqual({ auto: LOGGING_MODE.INFO, api: LOGGING_MODE.INFO })
     expect(result.agent2.loggingMode).toEqual({ auto: LOGGING_MODE.DEBUG, api: LOGGING_MODE.DEBUG })
 

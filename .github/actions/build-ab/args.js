@@ -5,8 +5,8 @@ import { hideBin } from 'yargs/helpers'
 export const args = yargs(hideBin(process.argv))
   .usage('$0 [options]')
 
-  .choices('environment', ['dev', 'staging', 'prod', 'eu-prod', 'jp-prod'])
-  .describe('environment', 'Which environment are we building the a/b script for?')
+  .choices('environment', ['dev'])
+  .describe('environment', 'Which environment are we building the a/b script for? (Only dev is supported; other environments use internal-promotion workflow)')
 
   .string('released')
   .describe('released', 'current/stable build (defaults to -current)')
@@ -38,10 +38,10 @@ export const args = yargs(hideBin(process.argv))
   .describe('region', 'AWS region location of S3 bucket. Defaults to us-east-1.Used when including experiments in the ab script.')
   .default('region', 'us-east-1')
 
-  .demandOption(['environment', 'app-id', 'license-key'])
+  .demandOption(['environment', 'app-id', 'license-key', 'ab-app-id', 'ab-license-key'])
   .check((argv) => {
-    if (['dev', 'staging'].includes(argv.environment) && (!argv.abAppId || !argv.abLicenseKey)) {
-      throw new Error(`Cannot create ${argv.environment} script without A/B app ID and license key.`)
+    if (argv.environment !== 'dev') {
+      throw new Error(`Only 'dev' environment is supported. Other environments should use the internal-promotion workflow.`)
     }
 
     return true

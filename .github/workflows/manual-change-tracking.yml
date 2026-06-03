@@ -75,7 +75,7 @@ jobs:
   create-change-tracking-event:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
-    environment: staging
+    environment: change-tracking
     defaults:
       run:
         shell: bash

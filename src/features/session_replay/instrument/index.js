@@ -7,7 +7,8 @@
  */
 
 import { handle } from '../../../common/event-emitter/handle'
-import { MODE } from '../../../common/session/constants'
+import { MODE, SESSION_STORAGE_KEY_PREFIX } from '../../../common/session/constants'
+import { getAppSessionHash } from '../../../common/session/session-key'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { hasReplayPrerequisite, isPreloadAllowed } from '../shared/utils'
 import { ERROR_DURING_REPLAY, FEATURE_NAME, TRIGGERS } from '../constants'
@@ -30,8 +31,9 @@ export class Instrument extends InstrumentBase {
     setupPauseReplayAPI(agentRef)
 
     let session
+    const fullNamespacedKey = `${SESSION_STORAGE_KEY_PREFIX}${getAppSessionHash(agentRef.info.licenseKey, agentRef.info.applicationID)}`
     try {
-      session = agentRef.runtime.session?.read()
+      session = JSON.parse(localStorage.getItem(fullNamespacedKey))
     } catch (err) { }
 
     if (hasReplayPrerequisite(agentRef.init)) {

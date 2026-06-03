@@ -5,7 +5,6 @@
 import { globalScope, isBrowserScope, originTime, getNavigationEntry } from '../../../common/constants/runtime'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
-import { isValid } from '../../../common/config/info'
 import * as CONSTANTS from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
 import { activateFeatures } from '../../../common/util/feature-flags'
@@ -37,10 +36,6 @@ export class Aggregate extends AggregateBase {
     this.firstByteToDomContent = 0 // our "dom processing" duration
     this.retries = 0
 
-    if (!isValid(agentRef.info)) {
-      this.ee.abort()
-      return warn(43)
-    }
     agentRef.runtime.timeKeeper = new TimeKeeper(agentRef.runtime.session)
 
     if (isBrowserScope) {

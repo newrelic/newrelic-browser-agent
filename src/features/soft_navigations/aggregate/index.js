@@ -30,7 +30,6 @@ export class Aggregate extends AggregateBase {
       this.initialPageLoadInteraction.forceSave = true // unless forcibly ignored, iPL always finish by default
       const ixn = this.initialPageLoadInteraction
       this.events.add(ixn) // add the iPL ixn to the buffer for harvest
-      this.initialPageLoadInteraction = null
     })
 
     loadTime.subscribe(({ value: loadEventTime }) => {
@@ -230,16 +229,19 @@ export class Aggregate extends AggregateBase {
     const INTERACTION_API = 'api-ixn-'
     const thisClass = this
 
-    registerHandler(INTERACTION_API + 'get', function (time, { waitForEnd } = {}) {
+    registerHandler(INTERACTION_API + 'get', function (time, { waitForEnd, targetPageLoad } = {}) {
       // In here, 'this' refers to the EventContext specific to per InteractionHandle instance spawned by each .interaction() api call.
       // Each api call aka IH instance would therefore retain a reference to either the in-progress interaction *at the time of the call* OR a new api-started interaction.
-      this.associatedInteraction = thisClass.getInteractionFor(time)
-      if (this.associatedInteraction?.trigger === IPL_TRIGGER_NAME) this.associatedInteraction = null // the api get-interaction method cannot target IPL
-      if (!this.associatedInteraction) {
+      if (targetPageLoad) this.associatedInteraction = thisClass.initialPageLoadInteraction // this option only grabs the IPL, no frills
+      else {
+        this.associatedInteraction = thisClass.getInteractionFor(time)
+        if (this.associatedInteraction?.trigger === IPL_TRIGGER_NAME) this.associatedInteraction = null // the api get-interaction method cannot target IPL
+        if (!this.associatedInteraction) {
         // This new api-driven interaction will be the target of any subsequent .interaction() call, until it is closed by EITHER .end() OR the regular url>dom change process.
-        this.associatedInteraction = thisClass.interactionInProgress = new Interaction(API_TRIGGER_NAME, Math.floor(time), thisClass.latestRouteSetByApi)
-        thisClass.domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true }) // start observing for DOM changes like a regular UI-driven interaction
-        thisClass.setClosureHandlers()
+          this.associatedInteraction = thisClass.interactionInProgress = new Interaction(API_TRIGGER_NAME, Math.floor(time), thisClass.latestRouteSetByApi)
+          thisClass.domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true }) // start observing for DOM changes like a regular UI-driven interaction
+          thisClass.setClosureHandlers()
+        }
       }
       if (waitForEnd === true) {
         this.associatedInteraction.keepOpenUntilEndApi = true

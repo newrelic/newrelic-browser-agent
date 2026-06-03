@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.316.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.315.0...v1.316.0) (2026-06-01)
+
+
+### Features
+
+* Use app-namespaced keys for session ([#1776](https://github.com/newrelic/newrelic-browser-agent/issues/1776)) ([60ec5bf](https://github.com/newrelic/newrelic-browser-agent/commit/60ec5bf566d27d68e59c827f08dcd8dd73d8cd2c))
+
 ## [1.315.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.314.0...v1.315.0) (2026-05-26)
 
 

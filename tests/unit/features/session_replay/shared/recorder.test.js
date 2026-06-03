@@ -79,6 +79,21 @@ describe('Recorder', () => {
         recorder.audit(metaEvent())
         expect(stylesheetEvaluator.evaluate).not.toHaveBeenCalled()
       })
+
+      test('does not take new snapshot', async () => {
+        const recorder = new Recorder(makeSrInstrument({ fix_stylesheets: false }))
+        jest.spyOn(recorder, 'takeFullSnapshot')
+        recorder.audit(metaEvent())
+        await new Promise(resolve => setTimeout(resolve, 0))
+        expect(recorder.takeFullSnapshot).not.toHaveBeenCalled()
+      })
+
+      test('still decorate events with inlinedAllStylesheets = false', async () => {
+        const recorder = new Recorder(makeSrInstrument({ fix_stylesheets: false }))
+        recorder.audit(metaEvent())
+        await new Promise(resolve => setTimeout(resolve, 0))
+        expect(recorder.events.inlinedAllStylesheets).toBe(false)
+      })
     })
 
     describe('when fix_stylesheets is enabled', () => {
@@ -88,6 +103,7 @@ describe('Recorder', () => {
           const recorder = new Recorder(makeSrInstrument())
           recorder.audit(metaEvent())
           expect(recorder.getEvents().events).toHaveLength(1)
+          expect(recorder.events.inlinedAllStylesheets).toBe(true)
         })
       })
 
@@ -99,10 +115,12 @@ describe('Recorder', () => {
 
           recorder.audit(metaEvent()) // triggers fixing state
           expect(recorder.getEvents().events).toHaveLength(0)
+          expect(recorder.events.inlinedAllStylesheets).toBe(true)
 
           stylesheetEvaluator.evaluate.mockReturnValue(0)
           recorder.audit(fullSnapshotEvent()) // still fixing, not a Meta reset
           expect(recorder.getEvents().events).toHaveLength(0)
+          expect(recorder.events.inlinedAllStylesheets).toBe(true)
         })
 
         test('stores a Meta event and clears fixing state when no incompletes remain', () => {
@@ -112,9 +130,11 @@ describe('Recorder', () => {
 
           recorder.audit(metaEvent()) // triggers fixing state
           stylesheetEvaluator.evaluate.mockReturnValue(0)
+          expect(recorder.events.inlinedAllStylesheets).toBe(true)
 
           recorder.audit(metaEvent()) // no incompletes + Meta clears fixing state
           expect(recorder.getEvents().events).toHaveLength(1)
+          expect(recorder.events.inlinedAllStylesheets).toBe(true)
         })
 
         test('does not store a Meta event when there are incomplete stylesheets', () => {
@@ -143,60 +163,12 @@ describe('Recorder', () => {
 
         test('calls takeFullSnapshot after fix resolves on a Meta event', async () => {
           stylesheetEvaluator.evaluate.mockReturnValue(1)
-          stylesheetEvaluator.fix.mockResolvedValue(0)
+          stylesheetEvaluator.fix.mockResolvedValue(1) // still broken
           const recorder = new Recorder(makeSrInstrument())
           jest.spyOn(recorder, 'takeFullSnapshot')
           recorder.audit(metaEvent())
           await Promise.resolve()
           expect(recorder.takeFullSnapshot).toHaveBeenCalledTimes(1)
-        })
-
-        test('calls takeFullSnapshot after fix resolves on a FullSnapshot event', async () => {
-          stylesheetEvaluator.evaluate.mockReturnValue(1)
-          stylesheetEvaluator.fix.mockResolvedValue(0)
-          const recorder = new Recorder(makeSrInstrument())
-          jest.spyOn(recorder, 'takeFullSnapshot')
-          recorder.audit(fullSnapshotEvent())
-          await Promise.resolve()
-          expect(recorder.takeFullSnapshot).toHaveBeenCalledTimes(1)
-        })
-
-        test('emits Failed and Fixed SMs after fix resolves', async () => {
-          stylesheetEvaluator.evaluate.mockReturnValue(3)
-          stylesheetEvaluator.fix.mockResolvedValue(1) // 1 failed, 2 fixed
-          const recorder = new Recorder(makeSrInstrument())
-          recorder.audit(metaEvent())
-          await Promise.resolve()
-
-          expect(handle).toHaveBeenCalledWith(
-            SUPPORTABILITY_METRIC_CHANNEL,
-            [CSS_SM_PREFIX + 'Failed', 1],
-            undefined,
-            FEATURE_NAMES.metrics,
-            recorder.ee
-          )
-          expect(handle).toHaveBeenCalledWith(
-            SUPPORTABILITY_METRIC_CHANNEL,
-            [CSS_SM_PREFIX + 'Fixed', 2],
-            undefined,
-            FEATURE_NAMES.metrics,
-            recorder.ee
-          )
-        })
-
-        test('emits Fixed SM with full count when fix fully succeeds', async () => {
-          stylesheetEvaluator.evaluate.mockReturnValue(2)
-          stylesheetEvaluator.fix.mockResolvedValue(0)
-          const recorder = new Recorder(makeSrInstrument())
-          recorder.audit(metaEvent())
-          await Promise.resolve()
-          expect(handle).toHaveBeenCalledWith(
-            SUPPORTABILITY_METRIC_CHANNEL,
-            [CSS_SM_PREFIX + 'Fixed', 2],
-            undefined,
-            FEATURE_NAMES.metrics,
-            recorder.ee
-          )
         })
       })
 
@@ -241,12 +213,19 @@ describe('Recorder', () => {
           expect(recorder.takeFullSnapshot).toHaveBeenCalledTimes(1)
         })
 
-        test('emits Fixed SM with correct partial count when fix partially fails', async () => {
+        test('emits Failed and Fixed SMs after fix resolves', async () => {
           stylesheetEvaluator.evaluate.mockReturnValue(4)
           stylesheetEvaluator.fix.mockResolvedValue(1) // 1 failed → 3 fixed
           const recorder = new Recorder(makeSrInstrument())
           recorder.audit(metaEvent())
           await Promise.resolve()
+          expect(handle).toHaveBeenCalledWith(
+            SUPPORTABILITY_METRIC_CHANNEL,
+            [CSS_SM_PREFIX + 'Failed', 1],
+            undefined,
+            FEATURE_NAMES.metrics,
+            recorder.ee
+          )
           expect(handle).toHaveBeenCalledWith(
             SUPPORTABILITY_METRIC_CHANNEL,
             [CSS_SM_PREFIX + 'Fixed', 3],

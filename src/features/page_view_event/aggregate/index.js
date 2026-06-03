@@ -130,15 +130,14 @@ export class Aggregate extends AggregateBase {
     const rumEndTime = now()
     let app, flags
     const hasCachedRumResponse = !!this.agentRef.runtime.session?.state.cachedRumResponse
-    let shouldCacheResponse = this.isSessionTrackingEnabled && !hasCachedRumResponse
     try {
       ({ app, ...flags } = JSON.parse(responseText))
-      shouldCacheResponse = shouldCacheResponse && !!app
     } catch (error) {
       // wont set entity stuff here, if main agent will later abort, if registered agent, nothing will happen
       warn(53, error)
     }
 
+    const shouldCacheResponse = this.isSessionTrackingEnabled && !hasCachedRumResponse && !!app
     if (hasCachedRumResponse) {
       let { app: cachedApp, ...cachedFlags } = this.agentRef.runtime.session.state.cachedRumResponse
       app ??= cachedApp

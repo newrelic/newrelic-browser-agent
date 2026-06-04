@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "60ec5bf566d27d68e59c827f08dcd8dd73d8cd2c",
+          "message": "Use app-namespaced keys for session",
+          "issues": [
+            "1776"
+          ]
+        }
+      ],
+      "version": "1.316.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "19aaf3cf-3497-4553-9630-8b01ca1e865b",
+      "createTime": "2026-06-01T20:10:20.235Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "937553b208c2efcb66c696ec8d711306960dcba9",
           "message": "Enhance SPA API to support targetPageLoad option",
           "issues": [
@@ -3987,5 +4004,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-05-26T19:47:14.737Z"
+  "updateTime": "2026-06-01T20:10:20.235Z"
 }

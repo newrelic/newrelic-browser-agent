@@ -39,6 +39,17 @@ export class Aggregate extends AggregateBase {
     agentRef.runtime.timeKeeper = new TimeKeeper(agentRef.runtime.session)
 
     if (isBrowserScope) {
+      const cached = this.isSessionTrackingEnabled && agentRef.runtime.session?.state.cachedRumResponse
+      if (cached) {
+        const { app: cachedApp, ...cachedFlags } = cached
+
+        // set the agent runtime objects that require the rum response or entity guid
+        if (!Object.keys(this.agentRef.runtime.appMetadata).length) agentRef.runtime.appMetadata = cachedApp
+        this.drain()
+        agentRef.runtime.harvester.startTimer()
+        activateFeatures(cachedFlags, agentRef)
+      }
+
       timeToFirstByte.subscribe(({ value, attrs }) => {
         const navEntry = attrs.navigationEntry
         this.timeToFirstByte = Math.max(value, this.timeToFirstByte)

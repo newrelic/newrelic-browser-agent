@@ -207,6 +207,42 @@ describe('RUM call', () => {
   })
 
   describe('when cached response is present', () => {
+    test('sets appMetadata from cached app without waiting for RUM call/response', async () => {
+      const cachedApp = { agents: [{ entityGuid: 'cached-guid' }], nrServerTime: someServerTime }
+      const agentWithCache = setupAgent()
+      agentWithCache.runtime.appMetadata = {}
+      agentWithCache.runtime.session.state.cachedRumResponse = { app: cachedApp, ...featFlags }
+
+      new PageViewEvent(agentWithCache)
+      await new Promise(process.nextTick)
+
+      expect(agentWithCache.runtime.appMetadata).toEqual(cachedApp)
+    })
+
+    test('activates features immediately without waiting for RUM call/response', async () => {
+      const cachedApp = { agents: [{ entityGuid: 'cached-guid' }], nrServerTime: someServerTime }
+      const agentWithCache = setupAgent()
+      agentWithCache.runtime.session.state.cachedRumResponse = { app: cachedApp, ...featFlags }
+
+      expect(agentWithCache.runtime.activatedFeatures).toBeUndefined()
+      new PageViewEvent(agentWithCache)
+      await new Promise(process.nextTick)
+
+      expect(agentWithCache.runtime.activatedFeatures).toEqual({
+        err: 1,
+        ins: 1,
+        log: 1,
+        logapi: 1,
+        spa: 1,
+        sr: 1,
+        srs: 1,
+        st: 1,
+        sts: 1
+      })
+      const rumrespArg = agentWithCache.ee.emit.mock.calls.find(call => call[0] === 'rumresp')[1][0]
+      expect(rumrespArg).toEqual(featFlags)
+    })
+
     test('does not overwrite cached response when new PVE/RUM call succeeds', () => {
       testAgent.runtime.session.state.cachedRumResponse = {
         app: {
@@ -255,6 +291,49 @@ describe('RUM call', () => {
         },
         ...featFlags
       })
+    })
+
+    test('does not emit rumresp a second time when RUM call succeeds', async () => {
+      const cachedApp = { agents: [{ entityGuid: 'test-guid' }], nrServerTime: someServerTime }
+      const agentWithCache = setupAgent()
+      agentWithCache.info.errorBeacon = 'fake-beacon'
+      agentWithCache.runtime.session.state.cachedRumResponse = { app: cachedApp, ...featFlags }
+
+      const pveInst = new PageViewEvent(agentWithCache)
+      await new Promise(process.nextTick)
+      const cachedPveAgg = pveInst.featAggregate
+
+      sendSpy.mockImplementation((agentRef, { cbFinished }) => {
+        if (cbFinished) {
+          cbFinished({
+            sent: true,
+            status: 200,
+            retry: false,
+            fullUrl: 'https://fake-beacon/rum/1/license-key',
+            xhr: { status: 200 },
+            responseText: JSON.stringify({
+              app: cachedApp,
+              err: 0,
+              ins: 0,
+              log: 0,
+              logapi: 0,
+              spa: 0,
+              sr: 0,
+              srs: 0,
+              st: 0,
+              sts: 0
+            })
+          })
+        }
+        return true
+      })
+
+      // rumresp was emitted from cache during construction; clear to isolate sendRum's effect
+      agentWithCache.ee.emit.mockClear()
+      cachedPveAgg.sendRum()
+
+      const rumrespCalls = agentWithCache.ee.emit.mock.calls.filter(call => call[0] === 'rumresp')
+      expect(rumrespCalls).toHaveLength(0)
     })
 
     describe('and new PVE/RUM call fails', () => {
@@ -356,11 +435,10 @@ describe('RUM call', () => {
 
         pveAgg.sendRum()
 
-        const smSendCalls = sendSpy.mock.calls.filter(call => call[1].payload?.body?.sm)
-        const hasDroppedBytesSM = smSendCalls.some(call =>
-          call[1].payload.body.sm.some(item => item.params.name.includes('Dropped/Bytes'))
-        )
-        expect(hasDroppedBytesSM).toEqual(false)
+        const allSmNames = sendSpy.mock.calls
+          .flatMap(call => call[1].payload?.body?.sm ?? [])
+          .map(item => item.params.name)
+        expect(allSmNames).not.toContain(expect.stringContaining('Dropped/Bytes'))
       })
 
       test('does not retry RUM call', () => {
@@ -385,9 +463,10 @@ describe('RUM call', () => {
 
         expect(pveAgg.isRetrying).toEqual(false)
         expect(pveAgg.retries).toEqual(0)
+        expect(triggerHarvestSpy).toHaveBeenCalledTimes(1) // only the initial sendRum call
 
-        jest.advanceTimersByTime(5001) // past the 5-second retry window
-        expect(triggerHarvestSpy).toHaveBeenCalledTimes(2) // second call is from the first harvest after drain
+        jest.advanceTimersByTime(5001) // past the 5-second retry window — no second trigger expected
+        expect(triggerHarvestSpy).toHaveBeenCalledTimes(1) // still 1: no retry was scheduled
 
         jest.useRealTimers()
         triggerHarvestSpy.mockRestore()
@@ -414,46 +493,6 @@ describe('RUM call', () => {
           agents: [{ entityGuid: 'test-guid' }],
           nrServerTime: someServerTime
         })
-      })
-
-      test('passes cached response to activate features', () => {
-        testAgent.runtime.session.state.cachedRumResponse = featFlags
-
-        sendSpy.mockImplementation((agentRef, { cbFinished }) => {
-          if (cbFinished) {
-            const mockResult = {
-              sent: true,
-              status: 200,
-              retry: true,
-              fullUrl: 'https://fake-beacon/rum/1/license-key',
-              xhr: { status: 200 },
-              responseText: JSON.stringify({
-                app: {
-                  agents: [{ entityGuid: 'test-guid' }],
-                  nrServerTime: someServerTime
-                },
-                err: 0,
-                ins: 0,
-                log: 0,
-                logapi: 0,
-                spa: 0,
-                sr: 0,
-                srs: 0,
-                st: 0,
-                sts: 0
-              })
-            }
-
-            cbFinished(mockResult)
-          }
-          return true
-        })
-
-        pveAgg.sendRum()
-
-        const rumrespArg = testAgent.ee.emit.mock.calls.find(call => call[0] === 'rumresp')[1][0]
-
-        expect(rumrespArg).toEqual(featFlags)
       })
     })
   })

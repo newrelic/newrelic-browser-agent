@@ -47,7 +47,7 @@ export class Obfuscator {
     // Filter rules to only those that apply to this instance's event type
     return allRules.filter(rule => {
       // If rule has no eventFilter, it applies to all events
-      if (!rule.eventFilter || !Array.isArray(rule.eventFilter) || rule.eventFilter.length === 0) {
+      if (!this.#hasValidEventFilter(rule)) {
         return true
       }
       // Otherwise, check if this instance's event type matches the rule's filter
@@ -105,7 +105,7 @@ export class Obfuscator {
     const eventSpecificRules = []
 
     this.obfuscateConfigRules.forEach(rule => {
-      if (rule.eventFilter && Array.isArray(rule.eventFilter) && rule.eventFilter.length > 0) {
+      if (this.#hasValidEventFilter(rule)) {
         eventSpecificRules.push(rule)
         rule.eventFilter.forEach(eventType => eventTypesToObfuscate.add(eventType))
       } else {
@@ -164,7 +164,7 @@ export class Obfuscator {
 
     // Check if this object has an eventType property
     if ('eventType' in obj && typeof obj.eventType === 'string') {
-      currentShouldObfuscate = !!eventTypes.includes(obj.eventType)
+      currentShouldObfuscate = eventTypes.includes(obj.eventType)
     }
 
     // Process all properties
@@ -205,6 +205,10 @@ export class Obfuscator {
         const { rule } = ruleValidation
         return input.replace(rule.regex, rule.replacement || '*')
       }, input)
+  }
+
+  #hasValidEventFilter (rule) {
+    return Array.isArray(rule?.eventFilter) && rule.eventFilter.length > 0
   }
 
   /**

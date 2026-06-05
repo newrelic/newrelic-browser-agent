@@ -86,6 +86,12 @@ describe('micro-agent', () => {
     // check to ensure both agents have the appropriate logging mode (separate session)
     expect(result.agent1.loggingMode).toEqual({ auto: LOGGING_MODE.OFF, api: LOGGING_MODE.OFF })
     expect(result.agent2.loggingMode).toEqual({ auto: LOGGING_MODE.DEBUG, api: LOGGING_MODE.DEBUG })
+    logsHarvest.forEach(({ request: { query, body } }) => {
+      const data = JSON.parse(body)[0]
+      expect(data.logs.length).toEqual(1) // ensure only one log per appId
+      expect(ranOnce(data.common.attributes.appId, 'log')).toEqual(true)
+      expect(payloadMatchesAppId(data.common.attributes.appId, data.logs[0].message)).toEqual(true)
+    })
     expect(tests[1]).toEqual({ rum: true, err: true, pa: true, log: false })
     expect(tests[2]).toEqual({ rum: true, err: true, pa: true, log: true })
   })

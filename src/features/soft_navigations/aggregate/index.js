@@ -8,10 +8,12 @@ import { webdriverDetected } from '../../../common/util/webdriver-detection'
 import { loadTime } from '../../../common/vitals/load-time'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { Obfuscator } from '../../../common/util/obfuscate'
 import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS, INTERACTION_TRIGGERS, IPL_TRIGGER_NAME, NO_LONG_TASK_WINDOW, POPSTATE_MERGE_WINDOW, POPSTATE_TRIGGER } from '../constants'
 import { AjaxNode } from './ajax-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
+import { EVENT_TYPES } from '../../../common/constants/events'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -19,6 +21,10 @@ export class Aggregate extends AggregateBase {
     super(agentRef, FEATURE_NAME)
 
     super.customAttributesAreSeparate = true
+
+    // Create obfuscators for browser interactions and nested AJAX requests
+    this.interactionObfuscator = new Obfuscator(agentRef, EVENT_TYPES.BI)
+    this.ajaxObfuscator = new Obfuscator(agentRef, EVENT_TYPES.AJAX)
 
     this.interactionsToHarvest = this.events
     this.domObserver = domObserver
@@ -86,7 +92,7 @@ export class Aggregate extends AggregateBase {
     let firstIxnStartTime
     const serializedIxnList = []
     for (const interaction of eventBuffer) {
-      serializedIxnList.push(interaction.serialize(firstIxnStartTime, this.agentRef))
+      serializedIxnList.push(interaction.serialize(firstIxnStartTime, this.agentRef, this.interactionObfuscator, this.ajaxObfuscator))
       if (firstIxnStartTime === undefined) firstIxnStartTime = Math.floor(interaction.start) // careful not to match or overwrite on 0 value!
     }
     return `bel.7;${serializedIxnList.join(';')}`

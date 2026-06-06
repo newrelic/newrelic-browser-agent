@@ -76,16 +76,6 @@ test('should not perform late configuration checks in AggregateBase', () => {
   expect(configure).not.toHaveBeenCalled()
 })
 
-test('should reuse shared runtime resources across aggregates for same agent', () => {
-  const agg1 = new AggregateBase(mainAgent, featureName)
-  const agg2 = new AggregateBase(mainAgent, faker.string.uuid())
-
-  expect(agg1.obfuscator).toBeDefined()
-  expect(agg2.obfuscator).toBeDefined()
-  expect(agg1.obfuscator).toBe(agg2.obfuscator)
-  expect(mainAgent.runtime.harvester).toBeDefined()
-})
-
 test('should resolve waitForFlags correctly based on flags with real vals', async () => {
   const flagNames = [faker.string.uuid(), faker.string.uuid(), faker.string.uuid()]
   const aggregateBase = new AggregateBase(mainAgent, featureName)

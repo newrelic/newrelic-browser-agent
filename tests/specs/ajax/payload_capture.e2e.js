@@ -33,7 +33,7 @@ describe('capture_payloads', () => {
 
   const obfuscations = [
     false,
-    true // when true, uses obfuscation rules with eventFilter: ['AjaxRequest'] to validate event-specific obfuscation
+    true // when true, validates AjaxRequest-specific rules (CC & SSN with eventFilter) and global rules (header/body without eventFilter)
   ]
 
   const expected_values = {
@@ -49,7 +49,7 @@ describe('capture_payloads', () => {
     '/text-plain': {
       capturedWith: ['all'],
       values: {
-        requestBody: 'just some plain text',
+        requestBody: 'just some plain text with SSN 123-45-6789 and card 4532015112830366',
         requestHeaders: '{"content-type":"text/plain"}',
         requestQuery: undefined,
         responseBody: 'Plain text response'
@@ -132,6 +132,10 @@ describe('capture_payloads', () => {
   const obfuscatedValue = val => {
     if (typeof val !== 'string') return val
     return val
+      // Apply default backend obfuscation rules
+      .replace(/\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|6011[0-9]{12})\b/g, 'XXXX-XXXX-XXXX-XXXX')
+      .replace(/\b\d{3}-\d{2}-\d{4}\b/g, 'XXX-XX-XXXX')
+      // Apply test-specific rules
       .replace(/text\/plain/g, 'HEADER REDACTED')
       .replace(/plain text/g, 'BODY REDACTED')
   }

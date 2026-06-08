@@ -5,15 +5,25 @@
     {init} {config}
     <script>
       NREUM.init.obfuscate = [
+        // Default backend rules for sensitive data (AjaxRequest-specific)
         {
-          regex: /text\/plain/g,
-          replacement: 'HEADER REDACTED',
+          regex: /\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|6011[0-9]{12})\b/g,
+          replacement: 'XXXX-XXXX-XXXX-XXXX',
           eventFilter: ['AjaxRequest']
         },
         {
-          regex: /plain text/g,
-          replacement: 'BODY REDACTED',
+          regex: /\b\d{3}-\d{2}-\d{4}\b/g,
+          replacement: 'XXX-XX-XXXX',
           eventFilter: ['AjaxRequest']
+        },
+        // Test-specific rules (global - apply to all event types)
+        {
+          regex: /text\/plain/g,
+          replacement: 'HEADER REDACTED'
+        },
+        {
+          regex: /plain text/g,
+          replacement: 'BODY REDACTED'
         }
       ]
     </script>
@@ -33,7 +43,8 @@
       var xhr = new XMLHttpRequest();
       xhr.open("POST", "/text-plain");
       xhr.setRequestHeader("Content-Type", "text/plain");
-      xhr.send("just some plain text");
+      xhr.send("just some plain text with SSN 123-45-6789 and card 4532015112830366");
+
 
       // readable 200 xml
       var xhr = new XMLHttpRequest();

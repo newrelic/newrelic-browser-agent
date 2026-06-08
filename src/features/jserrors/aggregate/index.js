@@ -17,11 +17,12 @@ import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { now } from '../../../common/timing/now'
-import { applyFnToProps } from '../../../common/util/traverse'
+import { Obfuscator } from '../../../common/util/obfuscate'
 import { evaluateInternalError } from './internal-errors'
 import { getRegisteredTargetsFromFilename, getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
 import { buildCauseString } from './cause-string'
 import { ShortCircuit } from '../../../common/util/short-circuit'
+import { EVENT_TYPES } from '../../../common/constants/events'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -39,6 +40,10 @@ export class Aggregate extends AggregateBase {
     this.pageviewReported = {}
     this.errorOnPage = false
 
+    // Create obfuscators for each event type this feature handles
+    this.errorObfuscator = new Obfuscator(agentRef, EVENT_TYPES.JSE)
+    this.xhrObfuscator = new Obfuscator(agentRef, EVENT_TYPES.AJAX)
+
     register('err', this.processError.bind(this), this.featureName, this.ee)
     register('ierr', this.processError.bind(this), this.featureName, this.ee)
     register('returnJserror', (jsErrorEvent, softNavAttrs) => this.#storeJserrorForHarvest(jsErrorEvent, softNavAttrs), this.featureName, this.ee)
@@ -55,7 +60,11 @@ export class Aggregate extends AggregateBase {
   }
 
   serializer (aggregatorTypeToBucketsMap) {
-    return applyFnToProps(aggregatorTypeToBucketsMap, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
+    return {
+      err: this.errorObfuscator.traverseAndObfuscateEvents(aggregatorTypeToBucketsMap.err),
+      ierr: this.errorObfuscator.traverseAndObfuscateEvents(aggregatorTypeToBucketsMap.ierr),
+      xhr: this.xhrObfuscator.traverseAndObfuscateEvents(aggregatorTypeToBucketsMap.xhr)
+    }
   }
 
   queryStringsBuilder (aggregatorTakeReturnedData) {

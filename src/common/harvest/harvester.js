@@ -8,6 +8,7 @@ import { handle } from '../event-emitter/handle'
 import { subscribeToEOL } from '../unload/eol'
 import { getSubmitMethod, xhr as xhrMethod } from '../util/submit-data'
 import { send } from './send'
+import { Obfuscator } from '../util/obfuscate'
 
 const RETRY = 'Harvester/Retry/'
 const RETRY_ATTEMPTED = RETRY + 'Attempted/'
@@ -20,6 +21,10 @@ export class Harvester {
 
   constructor (agentRef) {
     this.agentRef = agentRef
+
+    // Create obfuscator for harvest metadata (referrer URL, etc.)
+    // No event type specified - applies to all harvests regardless of feature
+    this.obfuscator = new Obfuscator(agentRef)
 
     subscribeToEOL(() => { // do one last harvest round or check
       this.initializedAggregates.forEach(aggregateInst => { // let all features wrap up things needed to do before ANY harvest in case there's last minute cross-feature data dependencies
@@ -65,6 +70,7 @@ export class Harvester {
       payload: output.payload,
       localOpts,
       submitMethod,
+      harvesterObfuscator: this.obfuscator,
       cbFinished,
       raw: aggregateInst.harvestOpts.raw,
       featureName: aggregateInst.featureName,

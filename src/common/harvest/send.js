@@ -27,7 +27,7 @@ const warnings = {}
  * @param {NetworkSendSpec} spec Specification for sending data
  * @returns {boolean} True if a network call was made. Note that this does not mean or guarantee that it was successful.
  */
-export function send (agentRef, { endpoint, payload, localOpts = {}, submitMethod, cbFinished, raw, featureName, endpointVersion = 1 }) {
+export function send (agentRef, { endpoint, payload, localOpts = {}, submitMethod, cbFinished, raw, featureName, endpointVersion = 1, harvesterObfuscator }) {
   if (!agentRef.info.errorBeacon) return false
 
   let { body, qs } = cleanPayload(payload)
@@ -42,7 +42,7 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
   const url = raw
     ? `${protocol}://${perceivedBeacon}/${endpoint}`
     : `${protocol}://${perceivedBeacon}${endpoint !== RUM ? '/' + endpoint : ''}/${endpointVersion}/${agentRef.info.licenseKey}`
-  const baseParams = !raw ? baseQueryString(agentRef, qs, endpoint) : ''
+  const baseParams = !raw ? baseQueryString(agentRef, qs, endpoint, harvesterObfuscator) : ''
   let payloadParams = obj(qs, agentRef.runtime.maxBytes)
   if (baseParams === '' && payloadParams.startsWith('&')) {
     payloadParams = payloadParams.substring(1)
@@ -175,8 +175,9 @@ function cleanPayload (payload = {}) {
 }
 
 // The stuff that gets sent every time.
-function baseQueryString (agentRef, qs, endpoint) {
-  const ref = agentRef.runtime.obfuscator.obfuscateString(cleanURL('' + globalScope.location))
+function baseQueryString (agentRef, qs, endpoint, harvesterObfuscator) {
+  const cleanedURL = cleanURL('' + globalScope.location)
+  const ref = harvesterObfuscator?.obfuscateString(cleanedURL) ?? cleanedURL
   const session = agentRef.runtime.session
   const hr = !!session?.state.sessionReplaySentFirstChunk && session?.state.sessionReplayMode === 1 && endpoint !== JSERRORS
   const ht = !!session?.state.traceHarvestStarted && session?.state.sessionTraceMode === 1 && ![LOGS, BLOBS].includes(endpoint)

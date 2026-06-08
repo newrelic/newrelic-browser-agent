@@ -1,6 +1,6 @@
-import { LOGGING_MODE } from '../../src/features/logging/constants'
-import { rumFlags } from '../../tools/testing-server/constants'
-import { testAjaxEventsRequest, testBlobTraceRequest, testErrorsRequest, testInsRequest, testInteractionEventsRequest, testLogsRequest, testRumRequest, testTimingEventsRequest } from '../../tools/testing-server/utils/expect-tests'
+import { LOGGING_MODE } from '../../../src/features/logging/constants'
+import { rumFlags } from '../../../tools/testing-server/constants'
+import { testAjaxEventsRequest, testBlobTraceRequest, testErrorsRequest, testInsRequest, testInteractionEventsRequest, testLogsRequest, testRumRequest, testTimingEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 const config = {
   init: {

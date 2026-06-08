@@ -19,9 +19,11 @@ import { stringify } from '../../../common/util/stringify'
 import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
 import { now } from '../../../common/timing/now'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
+import { EVENT_TYPES } from '../../../common/constants/events'
 import { cleanURL } from '../../../common/url/clean-url'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
 import { PAUSE_REPLAY } from '../../../loaders/api/constants'
+import { Obfuscator } from '../../../common/util/obfuscate'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -30,6 +32,10 @@ export class Aggregate extends AggregateBase {
   // pass the recorder into the aggregator
   constructor (agentRef, args) {
     super(agentRef, FEATURE_NAME)
+
+    // Create obfuscator for session replay query params
+    this.obfuscator = new Obfuscator(agentRef, EVENT_TYPES.SR)
+
     /** Set once the recorder has fully initialized after flag checks and sampling */
     this.initialized = false
     /** Set once the feature has been "aborted" to prevent other side-effects from continuing */
@@ -306,7 +312,7 @@ export class Aggregate extends AggregateBase {
     return {
       qs: {
         browser_monitoring_key: this.agentRef.info.licenseKey,
-        type: 'SessionReplay',
+        type: EVENT_TYPES.SR,
         app_id: this.agentRef.info.applicationID,
         protocol_version: '0',
         timestamp: firstTimestamp,

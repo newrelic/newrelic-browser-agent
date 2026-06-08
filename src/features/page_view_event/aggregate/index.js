@@ -15,12 +15,13 @@ import { firstPaint } from '../../../common/vitals/first-paint'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { now } from '../../../common/timing/now'
 import { TimeKeeper } from '../../../common/timing/time-keeper'
-import { applyFnToProps } from '../../../common/util/traverse'
 import { send } from '../../../common/harvest/send'
+import { canEnableSessionTracking } from '../../utils/feature-gates'
+import { Obfuscator } from '../../../common/util/obfuscate'
 import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { getSubmitMethod } from '../../../common/util/submit-data'
 import { webdriverDetected } from '../../../common/util/webdriver-detection'
-import { canEnableSessionTracking } from '../../utils/feature-gates'
+import { EVENT_TYPES } from '../../../common/constants/events'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -35,6 +36,9 @@ export class Aggregate extends AggregateBase {
     this.firstByteToWindowLoad = 0 // our "frontend" duration
     this.firstByteToDomContent = 0 // our "dom processing" duration
     this.retries = 0
+
+    // Create obfuscator for page view events
+    this.obfuscator = new Obfuscator(agentRef, EVENT_TYPES.PVE)
 
     agentRef.runtime.timeKeeper = new TimeKeeper(agentRef.runtime.session)
 
@@ -96,7 +100,7 @@ export class Aggregate extends AggregateBase {
 
     if (this.agentRef.runtime.session) queryParameters.fsh = Number(!this.agentRef.runtime.session.state.cachedRumResponse)
 
-    let body = applyFnToProps({ ja: { ...customAttributes, webdriverDetected } }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
+    let body = this.obfuscator.traverseAndObfuscateEvents({ ja: { ...customAttributes, webdriverDetected } })
 
     if (globalScope.performance) {
       const navTimingEntry = getNavigationEntry()

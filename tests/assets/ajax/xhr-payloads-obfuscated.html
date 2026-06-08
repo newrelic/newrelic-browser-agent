@@ -7,11 +7,13 @@
       NREUM.init.obfuscate = [
         {
           regex: /text\/plain/g,
-          replacement: 'HEADER REDACTED'
+          replacement: 'HEADER REDACTED',
+          eventFilter: ['AjaxRequest']
         },
         {
           regex: /plain text/g,
-          replacement: 'BODY REDACTED'
+          replacement: 'BODY REDACTED',
+          eventFilter: ['AjaxRequest']
         }
       ]
     </script>

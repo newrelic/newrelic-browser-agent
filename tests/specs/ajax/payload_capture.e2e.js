@@ -33,7 +33,7 @@ describe('capture_payloads', () => {
 
   const obfuscations = [
     false,
-    true
+    true // when true, uses obfuscation rules with eventFilter: ['AjaxRequest'] to validate event-specific obfuscation
   ]
 
   const expected_values = {

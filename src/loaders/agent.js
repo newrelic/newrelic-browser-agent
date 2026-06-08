@@ -97,10 +97,6 @@ export class Agent extends AgentBase {
       featuresToStart.sort((a, b) => featurePriority[a.featureName] - featurePriority[b.featureName])
       featuresToStart.forEach(InstrumentCtor => {
         if (!enabledFeatures[InstrumentCtor.featureName] && InstrumentCtor.featureName !== FEATURE_NAMES.pageViewEvent) return // PVE is required to run even if it's marked disabled
-        if (InstrumentCtor.featureName === FEATURE_NAMES.spa) {
-          warn(67)
-          return // Skip old SPA
-        }
 
         const dependencies = getFeatureDependencyNames(InstrumentCtor.featureName)
         const missingDependencies = dependencies.filter(featName => !(featName in this.features)) // any other feature(s) this depends on should've been initialized on prior iterations by priority order

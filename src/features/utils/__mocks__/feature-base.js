@@ -1,9 +1,9 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-export const FeatureBase = jest.fn(function (agentIdentifier, featureName) {
-  this.agentIdentifier = agentIdentifier
+export const FeatureBase = jest.fn(function (agentRef, featureName) {
+  this.agentRef = agentRef
   this.featureName = featureName
 
   this.ee = {

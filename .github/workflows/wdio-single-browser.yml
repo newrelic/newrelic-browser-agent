@@ -41,6 +41,9 @@ on:
       LAMBDA_ACCESS_KEY:
         required: true
 
+permissions:
+  contents: read
+
 jobs:
   wdio:
     name: WDIO ${{ contains(inputs.additional-flags, '--webview') && 'WebView' || '' }} Test - '${{ inputs.browser-target }}'

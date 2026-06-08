@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { gosNREUMOriginals } from '../../../common/window/nreum'
@@ -60,8 +60,8 @@ export class Instrument extends InstrumentBase {
       // do nothing
     }
 
-    wrapFetch(this.ee)
-    wrapXhr(this.ee)
+    wrapFetch(this.ee, agentRef)
+    wrapXhr(this.ee, agentRef)
     subscribeToEvents(agentRef, this.ee, this.handler, this.dt)
     this.importAggregator(agentRef, () => import(/* webpackChunkName: "ajax-aggregate" */ '../aggregate/index.js'))
   }
@@ -325,14 +325,11 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     this.startTime = now()
     this.dt = dtPayload
 
-    if (fetchArguments.length >= 1) this.target = fetchArguments[0]
-    if (fetchArguments.length >= 2) this.opts = fetchArguments[1]
+    let [target, opts = {}] = fetchArguments
 
-    var opts = this.opts || {}
-    var target = this.target
     addUrl(this, extractUrl(target))
 
-    var method = ('' + ((target && target instanceof origRequest && target.method) ||
+    const method = ('' + ((target && target instanceof origRequest && target.method) ||
       opts.method || 'GET')).toUpperCase()
     this.params.method = method
 
@@ -382,7 +379,8 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
         duration: now() - this.startTime
       }
 
-      handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax)
+      const payload = [this.params, metrics, this.startTime, this.endTime, 'fetch']
+      this.targets.forEach(target => reportToAgg(payload, this, target))
     }
 
     /** Since accessing fetch bodies is an async process, these are
@@ -444,7 +442,12 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
       ee.emit(INTERNAL_ERROR, [err])
     }
 
-    handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'], this, FEATURE_NAMES.ajax)
+    const payload = [params, metrics, this.startTime, this.endTime, 'xhr']
+    this.targets.forEach(target => reportToAgg(payload, this, target))
+  }
+
+  function reportToAgg (payload, context, target) {
+    handler('xhr', [...payload, target], context, FEATURE_NAMES.ajax)
   }
 
   function captureXhrData (ctx, xhr) {

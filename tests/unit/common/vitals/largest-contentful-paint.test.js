@@ -26,6 +26,14 @@ const getFreshLCPImport = async (codeToRun) => {
   codeToRun(largestContentfulPaint)
 }
 
+const getFreshLCPImportWithAttribution = async (attribution, codeToRun) => {
+  jest.doMock('web-vitals/attribution', () => ({
+    onLCP: jest.fn(cb => { triggeronLCPCallback = cb; cb({ value: 1, attribution }) })
+  }))
+  const { largestContentfulPaint } = await import('../../../../src/common/vitals/largest-contentful-paint')
+  codeToRun(largestContentfulPaint)
+}
+
 describe('lcp', () => {
   test('reports lcp from web-vitals', (done) => {
     getFreshLCPImport(metric => metric.subscribe(({ value, attrs }) => {
@@ -41,6 +49,28 @@ describe('lcp', () => {
         resourceLoadDuration: lcpAttribution.resourceLoadDuration,
         resourceLoadTime: lcpAttribution.resourceLoadDuration,
         elementRenderDelay: lcpAttribution.elementRenderDelay
+      })
+      done()
+    }))
+  })
+
+  test('reports LCP when lcpEntry is missing and uses provided default attribution values', (done) => {
+    const fallbackAttribution = {
+      // Mimic web-vitals fallback attribution when no lcp entry is available
+      timeToFirstByte: 0,
+      resourceLoadDelay: 0,
+      resourceLoadDuration: 0,
+      elementRenderDelay: 4
+    }
+
+    getFreshLCPImportWithAttribution(fallbackAttribution, metric => metric.subscribe(({ value, attrs }) => {
+      expect(value).toEqual(1)
+      expect(attrs).toStrictEqual({
+        timeToFirstByte: 0,
+        resourceLoadDelay: 0,
+        resourceLoadDuration: 0,
+        resourceLoadTime: 0,
+        elementRenderDelay: 4
       })
       done()
     }))

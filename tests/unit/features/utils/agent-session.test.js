@@ -18,6 +18,7 @@ beforeEach(() => {
     buffer: jest.fn(),
     emit: jest.fn()
   }
+  mockAgent.ee = mockEE
   agentSession = {
     state: {
       [faker.string.uuid()]: faker.lorem.sentence()
@@ -44,8 +45,8 @@ beforeEach(() => {
   }))
   jest.doMock('../../../../src/common/session/session-entity', () => ({
     __esModule: true,
-    SessionEntity: jest.fn().mockImplementation(({ agentIdentifier }) => ({
-      agentIdentifier,
+    SessionEntity: jest.fn().mockImplementation(({ agentRef }) => ({
+      agentIdentifier: agentRef?.agentIdentifier,
       state: agentSession.state,
       syncCustomAttribute: jest.fn(),
       reset: jest.fn()
@@ -72,7 +73,24 @@ test('should register handlers and drain the session feature', async () => {
   expect(registerHandler).toHaveBeenNthCalledWith(1, 'api-setCustomAttribute', expect.any(Function), 'session', mockEE)
   expect(registerHandler).toHaveBeenNthCalledWith(2, 'api-setUserId', expect.any(Function), 'session', mockEE)
   expect(registerHandler).toHaveBeenNthCalledWith(3, 'api-setUserIdAndResetSession', expect.any(Function), 'session', mockEE)
-  expect(drain).toHaveBeenCalledWith(mockAgent.agentIdentifier, 'session')
+  expect(drain).toHaveBeenCalledWith(mockAgent, 'session')
+})
+
+test('should initialize SessionEntity with an app-namespaced storage key', async () => {
+  mockAgent.info = {
+    licenseKey: faker.string.uuid(),
+    applicationID: faker.string.uuid()
+  }
+
+  const { getAppSessionHash } = await import('../../../../src/common/session/session-key')
+  const { setupAgentSession } = await import('../../../../src/features/utils/agent-session')
+  setupAgentSession(mockAgent)
+
+  const { SessionEntity } = await import('../../../../src/common/session/session-entity')
+  expect(SessionEntity).toHaveBeenCalledWith(expect.objectContaining({
+    agentRef: mockAgent,
+    key: getAppSessionHash(mockAgent.info.licenseKey, mockAgent.info.applicationID)
+  }))
 })
 
 test('multiple calls to setupAgentSession for same agent does not re-execute it', async () => {

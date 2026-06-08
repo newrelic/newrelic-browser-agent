@@ -10,11 +10,12 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
 import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { applyFnToProps } from '../../../common/util/traverse'
+import { Obfuscator } from '../../../common/util/obfuscate'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
-import { getVersion2Attributes } from '../../../common/util/v2'
+import { EVENT_TYPES } from '../../../common/constants/events'
+import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -23,6 +24,10 @@ export class Aggregate extends AggregateBase {
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
+
+    // Create generic obfuscator (no specific event types) since this feature handles multiple event types
+    // Will check each event's eventType property at runtime against obfuscation rules
+    this.obfuscator = new Obfuscator(agentRef)
 
     this.waitForFlags(['ins']).then(([ins]) => {
       if (!ins) {
@@ -46,7 +51,7 @@ export class Aggregate extends AggregateBase {
         registerHandler('api-addPageAction', (timestamp, name, attributes, target) => {
           this.addEvent({
             ...attributes,
-            eventType: 'PageAction',
+            eventType: EVENT_TYPES.PA,
             timestamp: this.#toEpoch(timestamp),
             timeSinceLoad: timestamp / 1000,
             actionName: name,
@@ -61,7 +66,7 @@ export class Aggregate extends AggregateBase {
 
       let addUserAction = () => { /** no-op */ }
       if (isBrowserScope && agentRef.init.user_actions.enabled) {
-        this.#userActionAggregator = new UserActionsAggregator()
+        this.#userActionAggregator = new UserActionsAggregator(this.agentRef)
         this.harvestOpts.beforeUnload = () => addUserAction?.(this.#userActionAggregator.aggregationEvent)
 
         addUserAction = (aggregatedUserAction) => {
@@ -70,50 +75,54 @@ export class Aggregate extends AggregateBase {
              * so we still need to validate that an event was given to this method before we try to add */
             if (aggregatedUserAction?.event) {
               const { target, timeStamp, type } = aggregatedUserAction.event
-              const userActionEvent = {
-                eventType: 'UserAction',
-                timestamp: this.#toEpoch(timeStamp),
-                action: type,
-                actionCount: aggregatedUserAction.count,
-                actionDuration: aggregatedUserAction.relativeMs[aggregatedUserAction.relativeMs.length - 1],
-                actionMs: aggregatedUserAction.relativeMs,
-                rageClick: aggregatedUserAction.rageClick,
-                target: aggregatedUserAction.selectorPath,
-                currentUrl: aggregatedUserAction.currentUrl,
-                ...(isIFrameWindow(window) && { iframe: true }),
-                ...(this.agentRef.init.user_actions.elementAttributes.reduce((acc, field) => {
-                  /** prevent us from capturing an obscenely long value */
-                  if (canTrustTargetAttribute(field)) acc[targetAttrName(field)] = String(target[field]).trim().slice(0, 128)
-                  return acc
-                }, {})),
-                ...aggregatedUserAction.nearestTargetFields,
-                ...(aggregatedUserAction.deadClick && { deadClick: true }),
-                ...(aggregatedUserAction.errorClick && { errorClick: true })
-              }
-              this.addEvent(userActionEvent)
-              this.#trackUserActionSM(userActionEvent)
 
-              /**
+              aggregatedUserAction.targets.forEach(mfeTarget => {
+                const userActionEvent = {
+                  eventType: EVENT_TYPES.UA,
+                  timestamp: this.#toEpoch(timeStamp),
+                  action: type,
+                  actionCount: aggregatedUserAction.count,
+                  actionDuration: aggregatedUserAction.relativeMs[aggregatedUserAction.relativeMs.length - 1],
+                  actionMs: aggregatedUserAction.relativeMs,
+                  rageClick: aggregatedUserAction.rageClick,
+                  target: aggregatedUserAction.selectorPath,
+                  currentUrl: aggregatedUserAction.currentUrl,
+                  ...(isIFrameWindow(window) && { iframe: true }),
+                  ...(this.agentRef.init.user_actions.elementAttributes.reduce((acc, field) => {
+                  /** prevent us from capturing an obscenely long value */
+                    if (canTrustTargetAttribute(field)) acc[targetAttrName(field)] = String(target[field]).trim().slice(0, 128)
+                    return acc
+                  }, {})),
+                  ...aggregatedUserAction.nearestTargetFields,
+                  ...(aggregatedUserAction.deadClick && { deadClick: true }),
+                  ...(aggregatedUserAction.errorClick && { errorClick: true })
+                }
+                this.addEvent(userActionEvent, mfeTarget)
+
+                this.#trackUserActionSM(userActionEvent)
+
+                /**
                * Returns the original target field name with `target` prepended and camelCased
                * @param {string} originalFieldName
                * @returns {string} the target field name
                */
-              function targetAttrName (originalFieldName) {
+                function targetAttrName (originalFieldName) {
                 /** preserve original renaming structure for pre-existing field maps */
-                if (originalFieldName === 'tagName') originalFieldName = 'tag'
-                if (originalFieldName === 'className') originalFieldName = 'class'
-                /** return the original field name, cap'd and prepended with target to match formatting */
-                return `target${originalFieldName.charAt(0).toUpperCase() + originalFieldName.slice(1)}`
-              }
+                  if (originalFieldName === 'tagName') originalFieldName = 'tag'
+                  if (originalFieldName === 'className') originalFieldName = 'class'
+                  /** return the original field name, cap'd and prepended with target to match formatting */
+                  return `target${originalFieldName.charAt(0).toUpperCase() + originalFieldName.slice(1)}`
+                }
 
-              /**
+                /**
                * Only trust attributes that exist on HTML element targets, which excludes the window and the document targets
                * @param {string} attribute The attribute to check for on the target element
                * @returns {boolean} Whether the target element has the attribute and can be trusted
                */
-              function canTrustTargetAttribute (attribute) {
-                return !!(aggregatedUserAction.selectorPath !== 'window' && aggregatedUserAction.selectorPath !== 'document' && target instanceof HTMLElement && target?.[attribute])
-              }
+                function canTrustTargetAttribute (attribute) {
+                  return !!(aggregatedUserAction.selectorPath !== 'window' && aggregatedUserAction.selectorPath !== 'document' && target instanceof HTMLElement && target?.[attribute])
+                }
+              })
             }
           } catch (e) {
             // do nothing for now
@@ -148,7 +157,7 @@ export class Aggregate extends AggregateBase {
                     const detailObj = agentRef.init.performance.capture_detail ? createDetailAttrs(entry.detail) : {}
                     this.addEvent({
                       ...detailObj,
-                      eventType: 'BrowserPerformance',
+                      eventType: EVENT_TYPES.BP,
                       timestamp: this.#toEpoch(entry.startTime),
                       entryName: entry.name,
                       entryDuration: entry.duration,
@@ -213,7 +222,7 @@ export class Aggregate extends AggregateBase {
             this.reportSupportabilityMetric('Generic/Performance/Resource/Seen')
             const event = {
               ...entryObject,
-              eventType: 'BrowserPerformance',
+              eventType: EVENT_TYPES.BP,
               timestamp: this.#toEpoch(entryObject.startTime),
               entryName: cleanURL(name),
               entryDuration: duration,
@@ -232,7 +241,7 @@ export class Aggregate extends AggregateBase {
 
         const event = {
           ...customAttributes,
-          eventType: 'BrowserPerformance',
+          eventType: EVENT_TYPES.BP,
           timestamp: this.#toEpoch(start),
           entryName: n,
           entryDuration: duration,
@@ -246,7 +255,7 @@ export class Aggregate extends AggregateBase {
         registerHandler('ws-complete', (nrData) => {
           const event = {
             ...nrData,
-            eventType: 'WebSocket',
+            eventType: EVENT_TYPES.WS,
             timestamp: this.#toEpoch(nrData.timestamp),
             openedAt: this.#toEpoch(nrData.openedAt),
             closedAt: this.#toEpoch(nrData.closedAt)
@@ -257,6 +266,25 @@ export class Aggregate extends AggregateBase {
           this.reportSupportabilityMetric('WebSocket/Completed/Bytes', stringify(event).length)
 
           this.addEvent(event)
+        }, this.featureName, this.ee)
+      }
+      if (!agentRef.init.feature_flags.includes('no_spv')) {
+        registerHandler('spv', (evt) => {
+          this.addEvent({
+            eventType: EVENT_TYPES.SPV,
+            timestamp: this.#toEpoch(evt.timeStamp),
+            blockedUri: evt.blockedURI,
+            documentUri: evt.documentURI,
+            effectiveDirective: evt.effectiveDirective,
+            originalPolicy: evt.originalPolicy,
+            sourceFile: evt.sourceFile,
+            statusCode: evt.statusCode,
+            lineNumber: evt.lineNumber,
+            columnNumber: evt.columnNumber,
+            disposition: evt.disposition,
+            sample: evt.sample,
+            referrer: evt.referrer
+          })
         }, this.featureName, this.ee)
       }
 
@@ -295,9 +323,7 @@ export class Aggregate extends AggregateBase {
       timestamp: this.#toEpoch(now()),
       /** all generic events require pageUrl(s) */
       pageUrl: cleanURL('' + initialLocation),
-      currentUrl: cleanURL('' + location),
-      /** Specific attributes only supplied if harvesting to endpoint version 2 */
-      ...(getVersion2Attributes(target, this))
+      currentUrl: cleanURL('' + location)
     }
 
     const eventAttributes = {
@@ -309,11 +335,12 @@ export class Aggregate extends AggregateBase {
       ...obj
     }
 
-    this.events.add(eventAttributes)
+    this.events.add({ ...eventAttributes, ...getVersion2Attributes(target, this) })
+    if (shouldDuplicate(target, this)) this.addEvent({ ...eventAttributes, ...getVersion2DuplicationAttributes(target, this) })
   }
 
   serializer (eventBuffer) {
-    return applyFnToProps({ ins: eventBuffer }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
+    return this.obfuscator.traverseAndObfuscateEvents({ ins: eventBuffer })
   }
 
   queryStringsBuilder () {

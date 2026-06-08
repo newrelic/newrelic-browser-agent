@@ -1,571 +1,435 @@
 /* globals RegisteredEntity */
 
-import { testMFEErrorsRequest, testMFEInsRequest, testLogsRequest, testRumRequest, testErrorsRequest, testInsRequest } from '../../../tools/testing-server/utils/expect-tests'
-
-let rumCapture, mfeErrorsCapture, mfeInsightsCapture, regularErrorsCapture, regularInsightsCapture, logsCapture
-describe('registered-entity', () => {
+/**
+ * RegisteredEntity should just be a wrapper around newrelic.register().
+ * This test suite validates that the NPM RegisteredEntity interface has the same shape and utility
+ * as calling newrelic.register(). It uses browser.execute to compare the client-side API surface,
+ * not backend behavior (which is tested in tests/specs/api/register/).
+ */
+describe('RegisteredEntity NPM Interface Parity', () => {
   beforeEach(async () => {
-    [rumCapture, mfeErrorsCapture, mfeInsightsCapture, regularErrorsCapture, regularInsightsCapture, logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-      { test: testRumRequest },
-      { test: testMFEErrorsRequest },
-      { test: testMFEInsRequest },
-      { test: testErrorsRequest },
-      { test: testInsRequest },
-      { test: testLogsRequest }
-    ])
+    await browser.enableLogging()
   })
 
-  const featureFlags = [
-    [],
-    ['register'],
-    ['register', 'register.jserrors'],
-    ['register', 'register.generic_events'],
-    ['register', 'register.jserrors', 'register.generic_events'],
-    ['register.jserrors', 'register.generic_events'],
-    ['register.jserrors'],
-    ['register.generic_events']
-  ]
-  featureFlags.forEach((testSet) => {
-    it(`RegisteredEntity -- ${testSet.join(' | ') || 'no flags'}`, async () => {
-      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: testSet } }))
+  it('should expose the same methods as newrelic.register()', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html'))
 
-      await browser.execute(function () {
-        window.agent1 = new RegisteredEntity({
-          id: 1,
-          name: 'agent1'
-        })
-        window.agent2 = new RegisteredEntity({
-          id: 2,
-          name: 'agent2'
-        })
+    const comparison = await browser.execute(function () {
+      // Create registered entities using both approaches
+      const viaRegister = newrelic.register({ id: 'via-register', name: 'Via Register' })
+      const viaConstructor = new RegisteredEntity({ id: 'via-constructor', name: 'Via Constructor' })
 
-        // each payload in this test is decorated with data that matches its appId for ease of testing
-        window.newrelic.setCustomAttribute('customAttr', '42') // container agent
-        window.agent1.setCustomAttribute('customAttr', '1') // micro agent (agent1)
-        window.agent2.setCustomAttribute('customAttr', '2') // micro agent (agent2)
+      // List of all public API methods that should be exposed by both interfaces
+      // We want to ensure that a RegisteredEntity instances expose the same public API as newrelic.register()
+      const expectedMethods = [
+        'addPageAction',
+        'noticeError',
+        'setCustomAttribute',
+        'setUserId',
+        'setApplicationVersion',
+        'deregister',
+        'log',
+        'measure',
+        'recordCustomEvent'
+      ]
 
-        // each payload in this test is decorated with data that matches its appId for ease of testing
-        window.newrelic.noticeError('42')
-        window.agent1.noticeError('1')
-        window.agent2.noticeError('2')
-
-        // each payload in this test is decorated with data that matches its appId for ease of testing
-        window.newrelic.addPageAction('42', { val: 42 })
-        window.agent1.addPageAction('1', { val: 1 })
-        window.agent2.addPageAction('2', { val: 2 })
-
-        // each payload in this test is decorated with data that matches its appId for ease of testing
-        window.newrelic.log('42')
-        window.agent1.log('1', { level: 'error' })
-        window.agent2.log('2', { level: 'error' })
-
-        // each payload in this test is decorated with data that matches its appId for ease of testing
-        window.newrelic.recordCustomEvent('CustomEvent', { val: 42 })
-        window.agent1.recordCustomEvent('CustomEvent', { val: 1 })
-        window.agent2.recordCustomEvent('CustomEvent', { val: 2 })
-
-        // each payload in this test is decorated with data that matches its appId for ease of testing
-        window.newrelic.measure('42')
-        window.agent1.measure('1')
-        window.agent2.measure('2')
-      })
-      const [rumHarvests, errorsHarvests, insightsHarvests, logsHarvest] = await Promise.all([
-        rumCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
-        ((testSet.includes('register') && testSet.includes('register.jserrors')) ? mfeErrorsCapture : regularErrorsCapture).waitForResult({ totalCount: 1, timeout: 10000 }),
-        ((testSet.includes('register') && testSet.includes('register.generic_events')) ? mfeInsightsCapture : regularInsightsCapture).waitForResult({ totalCount: 1, timeout: 10000 }),
-        logsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
-      ])
-
-      const containerAgentEntityGuid = await browser.execute(function () {
-        return Object.values(newrelic.initializedAgents)[0].runtime.appMetadata.agents[0].entityGuid
-      })
-
-      // these props will get set to true once a test has matched it
-      // if it gets tried again, the test will fail, since these should all
-      // only have one distinct matching payload
-      const tests = {
-        42: { rum: false, err: false, pa: false, log: false, rce: false, measure: false }, // container agent defaults to appId 42
-        1: { err: false, pa: false, log: false, rce: false, measure: false }, // agent1 instance
-        2: { err: false, pa: false, log: false, rce: false, measure: false } // agent2 instance
-      }
-
-      expect(rumHarvests).toHaveLength(1)
-      expect(errorsHarvests.length).toBeGreaterThanOrEqual(1)
-      expect(insightsHarvests.length).toBeGreaterThanOrEqual(1)
-      expect(logsHarvest.length).toBeGreaterThanOrEqual(1)
-
-      // each type of test should check that:
-      // each payload exists once per appId
-      // each payload should have internal attributes matching it to the right appId
-      rumHarvests.forEach(({ request: { query, body } }) => {
-        countRuns(query.a, 'rum')
-        expect(ranOnce(query.a, 'rum')).toEqual(true)
-      })
-
-      errorsHarvests.forEach(({ request: { query, body } }) => {
-        const data = body.err
-        data.forEach((err, idx) => {
-          const id = err.custom['source.id'] || query.a // MFEs use source.id, regular agents use appId
-          if (Number(id) !== 42 && testSet.includes('register.jserrors')) {
-            expect(err.custom['source.name']).toEqual('agent' + id)
-            expect(err.custom['source.type']).toEqual('MFE')
-            expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid)
-            expect(err.custom['parent.type']).toEqual('BA') // parent is container (Browser Agent)
-          } else {
-            if (testSet.includes('register') && testSet.includes('register.jserrors')) {
-              expect(err.custom.appId).toEqual(42)
-            }
-          }
-          countRuns(id, 'err')
-          if (testSet.includes('register.jserrors')) {
-            expect(ranOnce(id, 'err')).toEqual(true)
-            expect(Number(id)).toEqual(Number(err.params.message))
-          } else {
-            expect(tests[id].err).toEqual(idx + 1) // each error gets lumped together under the same id without the feature flags
-            expect(Number(id)).toEqual(42)
-          }
-        })
-      })
-
-      insightsHarvests.forEach(({ request: { query, body } }) => {
-        const data = body.ins
-        data.forEach((ins, idx) => {
-          if (ins.eventType === 'PageAction' || ins.eventType === 'CustomEvent' || (ins.eventType === 'BrowserPerformance' && ins.entryType === 'measure')) {
-            const id = ins['source.id'] || query.a // MFEs use source.id, regular agents use appId
-            if (Number(id) !== 42 && testSet.includes('register.generic_events')) {
-              expect(ins['source.name']).toEqual('agent' + id)
-              expect(ins['source.type']).toEqual('MFE')
-              expect(ins['parent.id']).toEqual(containerAgentEntityGuid)
-              expect(ins['parent.type']).toEqual('BA') // parent is container (Browser Agent)
-            } else {
-              if (testSet.includes('register') && testSet.includes('register.generic_events')) {
-                expect(ins.appId).toEqual(42)
-              }
-            }
-            let countType
-            if (ins.eventType === 'PageAction') {
-              countType = 'pa'
-            } else if (ins.eventType === 'CustomEvent') {
-              countType = 'rce'
-            } else if (ins.eventType === 'BrowserPerformance') {
-              countType = 'measure'
-            }
-            countRuns(id, countType)
-          }
-        })
-      })
-
-      if (!testSet.includes('register.generic_events')) {
-        // each item gets lumped together under the same id without the feature flags
-        expect(tests['42'].pa).toEqual(testSet.includes('register') ? 3 : 1)
-        expect(tests['42'].rce).toEqual(testSet.includes('register') ? 3 : 1)
-        expect(tests['42'].measure).toEqual(testSet.includes('register') ? 3 : 1)
-      } else {
-        if (testSet.includes('register')) {
-          expect(ranOnce('42', 'pa')).toEqual(true)
-          expect(ranOnce('42', 'rce')).toEqual(true)
-          expect(ranOnce('42', 'measure')).toEqual(true)
-          expect(ranOnce('1', 'pa')).toEqual(true)
-          expect(ranOnce('1', 'rce')).toEqual(true)
-          expect(ranOnce('1', 'measure')).toEqual(true)
-          expect(ranOnce('2', 'pa')).toEqual(true)
-          expect(ranOnce('2', 'rce')).toEqual(true)
-          expect(ranOnce('2', 'measure')).toEqual(true)
-        }
-      }
-
-      logsHarvest.forEach(({ request: { query, body } }) => {
-        const data = JSON.parse(body)[0]
-        data.logs.forEach(log => {
-          const id = log.attributes['source.id'] || 42 // MFEs use source.id, regular agents supply entity guid so just force it to 42 here if source id is not present
-          if (Number(id) !== 42 && testSet.includes('register')) {
-            expect(log.attributes['source.name']).toEqual('agent' + id)
-            expect(log.attributes['source.type']).toEqual('MFE')
-            expect(log.attributes['parent.id']).toEqual(containerAgentEntityGuid)
-            expect(log.attributes['parent.type']).toEqual('BA') // parent is container (Browser Agent)
-          } else {
-            if (testSet.includes('register')) {
-              expect(log.attributes.appId).toEqual(42)
-            }
-          }
-          countRuns(id, 'log')
-          expect(ranOnce(id, 'log')).toEqual(true)
-          expect(Number(id)).toEqual(Number(log.message))
-        })
-      })
-
-      function ranOnce (appId, type) {
-        return tests[appId][type] === 1
-      }
-
-      function countRuns (appId, type) {
-        tests[appId][type] ??= 0
-        tests[appId][type]++
-      }
-    })
-  })
-
-  it('should still harvest scoped data after deregistering', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
-
-    await browser.execute(function () {
-      window.agent1 = new RegisteredEntity({
-        id: 1,
-        name: 'agent1'
-      })
-      window.agent1.noticeError('1')
-      window.agent1.deregister()
-    })
-
-    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
-
-    // should still get a harvest even tho the MFE was deregistered
-    expect(errorsHarvests.length).toEqual(1)
-
-    // should not get future data now that the MFE was deregistered
-    await browser.execute(function () {
-      window.agent1.noticeError('2')
-    })
-
-    const errorsHarvests2 = await mfeErrorsCapture.waitForResult({ timeout: 10000 })
-
-    // should not have gotten more data
-    expect(errorsHarvests2.length).toEqual(errorsHarvests.length)
-  })
-
-  it('should allow multiple registers with same id', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
-
-    await browser.execute(function () {
-      window.agent1 = new RegisteredEntity({
-        id: 1,
-        name: 'agent1'
-      })
-      window.agent2 = new RegisteredEntity({
-        id: 1,
-        name: 'agent2'
-      })
-      // should get data as "agent2"
-      window.agent1.noticeError('1')
-      window.agent2.noticeError('2')
-    })
-
-    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
-
-    errorsHarvests.forEach(({ request: { query, body } }) => {
-      const data = body.err
-      data.forEach((err, idx) => {
-        expect(Number(err.params.message)).toEqual(idx + 1)
-        expect(err.custom['source.name']).toEqual('agent' + (idx + 1))
-      })
-    })
-  })
-
-  it('should allow to share a registration', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
-
-    await browser.execute(function () {
-      window.agent1 = new RegisteredEntity({
-        id: 1,
-        name: 'my agent',
-        isolated: false
-      })
-      window.agent2 = new RegisteredEntity({
-        id: 1,
-        isolated: false
-      })
-      // should get data as "agent2"
-      window.agent1.setCustomAttribute('sharedAttr', 'shared for both instances')
-      window.agent1.noticeError('1')
-      window.agent2.noticeError('2')
-    })
-
-    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
-
-    errorsHarvests.forEach(({ request: { query, body } }) => {
-      const data = body.err
-      data.forEach((err, idx) => {
-        expect(Number(err.params.message)).toEqual(idx + 1)
-        expect(err.custom['source.id']).toEqual(1)
-        expect(err.custom['source.name']).toEqual('my agent')
-        expect(err.custom.sharedAttr).toEqual('shared for both instances')
-      })
-    })
-  })
-
-  it('should allow a nested register', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
-
-    await browser.execute(function () {
-      window.agent1 = new RegisteredEntity({
-        id: 1,
-        name: 'agent1'
-      })
-      window.agent2 = window.agent1.register({
-        id: 2,
-        name: 'agent2'
-      })
-      window.agent3 = window.agent2.register({
-        id: 3,
-        name: 'agent3'
-      })
-      // should get data as "agent2"
-      window.agent1.noticeError('1')
-      window.agent2.noticeError('2')
-      window.agent3.noticeError('3')
-    })
-
-    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
-
-    const containerAgentEntityGuid = await browser.execute(function () {
-      return Object.values(newrelic.initializedAgents)[0].runtime.appMetadata.agents[0].entityGuid
-    })
-
-    // should get ALL data as "agent2" since it replaced the name of agent 1 of the same id
-    errorsHarvests.forEach(({ request: { query, body } }) => {
-      const data = body.err
-      data.forEach((err, idx) => {
-        expect(err.custom['source.name']).toEqual('agent' + (idx + 1))
-        if (idx === 0) {
-          expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid) // first app should have container as its parent
-          expect(err.custom['parent.type']).toEqual('BA') // parent is container (Browser Agent)
-        }
-        if (idx === 1) {
-          expect(err.custom['parent.id']).toEqual(1) // second app should have first app as its parent
-          expect(err.custom['parent.type']).toEqual('MFE') // parent is a registered MFE
-        }
-        if (idx === 2) {
-          expect(err.custom['parent.id']).toEqual(2) // third app should have second app as its parent
-          expect(err.custom['parent.type']).toEqual('MFE') // parent is a registered MFE
+      const methodsComparison = {}
+      expectedMethods.forEach(method => {
+        methodsComparison[method] = {
+          viaRegisterExists: typeof viaRegister[method] === 'function',
+          viaConstructorExists: typeof viaConstructor[method] === 'function',
+          sameType: typeof viaRegister[method] === typeof viaConstructor[method]
         }
       })
+
+      return {
+        methodsComparison,
+        registerType: typeof viaRegister,
+        constructorType: typeof viaConstructor
+      }
+    })
+
+    // Validate that both interfaces expose the same API methods
+    // This is the core of interface parity - same methods, same types
+    Object.keys(comparison.methodsComparison).forEach(method => {
+      const { viaRegisterExists, viaConstructorExists, sameType } = comparison.methodsComparison[method]
+      expect(viaRegisterExists).toBe(true)
+      expect(viaConstructorExists).toBe(true)
+      expect(sameType).toBe(true)
+    })
+
+    // Both should be plain objects (not primitives or null)
+    expect(comparison.registerType).toEqual('object')
+    expect(comparison.constructorType).toEqual('object')
+  })
+
+  it('should have the same method signatures', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html'))
+
+    const comparison = await browser.execute(function () {
+      const viaRegister = newrelic.register({ id: 1, name: 'Via Register' })
+      const viaConstructor = new RegisteredEntity({ id: 2, name: 'Via Constructor' })
+
+      // Check that each method has the same signature (parameter count and name)
+      // This ensures both interfaces accept the same arguments
+      const methodsToCheck = [
+        'addPageAction',
+        'noticeError',
+        'setCustomAttribute',
+        'setUserId',
+        'setApplicationVersion',
+        'deregister',
+        'log',
+        'measure',
+        'recordCustomEvent'
+      ]
+
+      const signatures = {}
+      methodsToCheck.forEach(method => {
+        signatures[method] = {
+          registerLength: viaRegister[method] ? viaRegister[method].length : undefined,
+          constructorLength: viaConstructor[method] ? viaConstructor[method].length : undefined,
+          registerName: viaRegister[method] ? viaRegister[method].name : undefined,
+          constructorName: viaConstructor[method] ? viaConstructor[method].name : undefined
+        }
+      })
+
+      return { signatures }
+    })
+
+    // Verify parameter counts and method names match exactly
+    // This validates that calling conventions are identical between both interfaces
+    Object.keys(comparison.signatures).forEach(method => {
+      const { registerLength, constructorLength, registerName, constructorName } = comparison.signatures[method]
+      expect(registerLength).toEqual(constructorLength)
+      expect(registerName).toEqual(constructorName)
     })
   })
 
-  it('should include tags as source attributes', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+  it('should not have nested .register() method', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html'))
 
-    await browser.execute(function () {
-      window.agent1 = new RegisteredEntity({
-        id: 1,
-        name: 'frontend-agent',
-        tags: ['checkout', 'payment']
-      })
+    const comparison = await browser.execute(function () {
+      // Test that the register method is not present on registered entities
+      const viaRegister = newrelic.register({ id: 1, name: 'parent-via-register' })
+      const viaConstructor = new RegisteredEntity({ id: 3, name: 'parent-via-constructor' })
 
-      window.agent2 = new RegisteredEntity({
-        id: 2,
-        name: 'backend-agent',
-        tags: ['api', 'graphql']
-      })
-
-      window.agent1.noticeError('error1')
-      window.agent2.noticeError('error2')
+      return {
+        viaRegisterHasRegister: typeof viaRegister.register === 'function',
+        viaConstructorHasRegister: typeof viaConstructor.register === 'function',
+        viaRegisterHasNoticeError: typeof viaRegister.noticeError === 'function',
+        viaConstructorHasNoticeError: typeof viaConstructor.noticeError === 'function'
+      }
     })
 
-    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
-
-    errorsHarvests.forEach(({ request: { query, body } }) => {
-      const data = body.err
-      expect(data).toHaveLength(2)
-
-      const error1 = data.find(err => err.params.message === 'error1')
-      const error2 = data.find(err => err.params.message === 'error2')
-
-      expect(error1.custom['source.checkout']).toEqual(true)
-      expect(error1.custom['source.payment']).toEqual(true)
-      expect(error1.custom['source.name']).toEqual('frontend-agent')
-
-      expect(error2.custom['source.api']).toEqual(true)
-      expect(error2.custom['source.graphql']).toEqual(true)
-      expect(error2.custom['source.name']).toEqual('backend-agent')
-    })
+    // Registered entities should NOT have the register method
+    expect(comparison.viaRegisterHasRegister).toBe(false)
+    expect(comparison.viaConstructorHasRegister).toBe(false)
+    // But they should still have full API capabilities
+    expect(comparison.viaRegisterHasNoticeError).toBe(true)
+    expect(comparison.viaConstructorHasNoticeError).toBe(true)
   })
 
-  it('should handle empty tags array', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+  it('should both support deregister() and behave identically', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html'))
 
-    await browser.execute(function () {
-      window.agent1 = new RegisteredEntity({
-        id: 1234,
-        name: 'test-agent',
-        tags: []
-      })
+    const comparison = await browser.execute(function () {
+      const viaRegister = newrelic.register({ id: 1, name: 'Via Register' })
+      const viaConstructor = new RegisteredEntity({ id: 2, name: 'Via Constructor' })
 
-      window.agent1.noticeError('error1')
+      // Verify deregister method exists and has the same signature on both interfaces
+      // deregister() is used to mark the end of an MFE's lifecycle
+      const registerDeregisterType = typeof viaRegister.deregister
+      const constructorDeregisterType = typeof viaConstructor.deregister
+      const registerDeregisterLength = viaRegister.deregister.length
+      const constructorDeregisterLength = viaConstructor.deregister.length
+
+      // Call deregister and check that both return the same type
+      // Ensures the API contract is identical
+      const registerReturn = viaRegister.deregister()
+      const constructorReturn = viaConstructor.deregister()
+
+      return {
+        registerDeregisterType,
+        constructorDeregisterType,
+        registerDeregisterLength,
+        constructorDeregisterLength,
+        registerReturnType: typeof registerReturn,
+        constructorReturnType: typeof constructorReturn
+      }
     })
 
-    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
-
-    errorsHarvests.forEach(({ request: { query, body } }) => {
-      const data = body.err
-      expect(data).toHaveLength(1)
-
-      const error1 = data[0]
-      expect(error1.custom['source.name']).toEqual('test-agent')
-
-      // Should not have any source.* attributes except source.name, source.id, source.type
-      const sourceKeys = Object.keys(error1.custom).filter(k => k.startsWith('source.'))
-      expect(sourceKeys).toEqual(expect.arrayContaining(['source.name', 'source.id', 'source.type']))
-      expect(sourceKeys.length).toBe(3)
-    })
+    expect(comparison.registerDeregisterType).toEqual('function')
+    expect(comparison.constructorDeregisterType).toEqual('function')
+    expect(comparison.registerDeregisterLength).toEqual(comparison.constructorDeregisterLength)
+    expect(comparison.registerReturnType).toEqual(comparison.constructorReturnType)
   })
 
-  it('should combine tags with custom attributes', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+  it('should both support setCustomAttribute() with same signature', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html'))
 
-    await browser.execute(function () {
-      window.agent1 = new RegisteredEntity({
-        id: 1234,
-        name: 'test-agent',
-        tags: ['module1', 'frontend']
-      })
+    const comparison = await browser.execute(function () {
+      const viaRegister = newrelic.register({ id: 1, name: 'Via Register' })
+      const viaConstructor = new RegisteredEntity({ id: 2, name: 'Via Constructor' })
 
-      window.agent1.setCustomAttribute('customAttr', 'customValue')
-      window.agent1.setApplicationVersion('1.0.0')
-      window.agent1.noticeError('error1')
+      // Test setCustomAttribute with same inputs to verify identical behavior
+      const registerReturn = viaRegister.setCustomAttribute('key', 'value')
+      const constructorReturn = viaConstructor.setCustomAttribute('key', 'value')
+
+      return {
+        registerHasMethod: typeof viaRegister.setCustomAttribute === 'function',
+        constructorHasMethod: typeof viaConstructor.setCustomAttribute === 'function',
+        registerLength: viaRegister.setCustomAttribute.length,
+        constructorLength: viaConstructor.setCustomAttribute.length,
+        registerReturnType: typeof registerReturn,
+        constructorReturnType: typeof constructorReturn
+      }
     })
 
-    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
-
-    errorsHarvests.forEach(({ request: { query, body } }) => {
-      const data = body.err
-      expect(data).toHaveLength(1)
-
-      const error1 = data[0]
-      expect(error1.custom['source.module1']).toEqual(true)
-      expect(error1.custom['source.frontend']).toEqual(true)
-      expect(error1.custom.customAttr).toEqual('customValue')
-      expect(error1.custom['application.version']).toEqual('1.0.0')
-    })
+    expect(comparison.registerHasMethod).toBe(true)
+    expect(comparison.constructorHasMethod).toBe(true)
+    // Parameter count should match (expects 2 params: name, value)
+    expect(comparison.registerLength).toEqual(comparison.constructorLength)
+    // Both should return the same type (likely undefined/void)
+    expect(comparison.registerReturnType).toEqual(comparison.constructorReturnType)
   })
 
-  it('should exclude protected "name" and "id" keys from tags', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+  it('should both support noticeError() with same signature', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html'))
 
-    await browser.execute(function () {
-      window.agent1 = new RegisteredEntity({
-        id: 1234,
-        name: 'test-agent',
-        tags: ['name', 'id', 'valid-tag']
-      })
+    const comparison = await browser.execute(function () {
+      const viaRegister = newrelic.register({ id: 1, name: 'Via Register' })
+      const viaConstructor = new RegisteredEntity({ id: 2, name: 'Via Constructor' })
 
-      window.agent1.noticeError('error1')
+      // Test noticeError with multiple input types to verify it handles all cases identically
+      // Test with Error object
+      const registerReturn1 = viaRegister.noticeError(new Error('test1'))
+      const constructorReturn1 = viaConstructor.noticeError(new Error('test2'))
+
+      // Test with string
+      const registerReturn2 = viaRegister.noticeError('error string 1')
+      const constructorReturn2 = viaConstructor.noticeError('error string 2')
+
+      // Test with custom attributes
+      const registerReturn3 = viaRegister.noticeError(new Error('test3'), { attr: 1 })
+      const constructorReturn3 = viaConstructor.noticeError(new Error('test4'), { attr: 2 })
+
+      return {
+        registerHasMethod: typeof viaRegister.noticeError === 'function',
+        constructorHasMethod: typeof viaConstructor.noticeError === 'function',
+        registerLength: viaRegister.noticeError.length,
+        constructorLength: viaConstructor.noticeError.length,
+        allReturnsSame: [
+          typeof registerReturn1,
+          typeof constructorReturn1,
+          typeof registerReturn2,
+          typeof constructorReturn2,
+          typeof registerReturn3,
+          typeof constructorReturn3
+        ]
+      }
     })
 
-    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
-
-    errorsHarvests.forEach(({ request: { query, body } }) => {
-      const data = body.err
-      expect(data).toHaveLength(1)
-
-      const error1 = data[0]
-
-      // Should only have source.valid-tag, not source.name or source.id from tags
-      expect(error1.custom['source.valid-tag']).toEqual(true)
-      expect(error1.custom['source.name']).toEqual('test-agent') // This comes from the name property
-      expect(error1.custom['source.id']).toEqual(1234) // This comes from the id property
-
-      // Verify there are no duplicate or conflicting attributes
-      const sourceNameKeys = Object.keys(error1.custom).filter(k => k === 'source.name')
-      const sourceIdKeys = Object.keys(error1.custom).filter(k => k === 'source.id')
-      expect(sourceNameKeys.length).toBe(1)
-      expect(sourceIdKeys.length).toBe(1)
-    })
+    expect(comparison.registerHasMethod).toBe(true)
+    expect(comparison.constructorHasMethod).toBe(true)
+    expect(comparison.registerLength).toEqual(comparison.constructorLength)
+    // All noticeError calls should return the same type regardless of input
+    // This validates both interfaces handle Error objects, strings, and custom attributes identically
+    expect(new Set(comparison.allReturnsSame).size).toEqual(1)
   })
 
-  it('should handle tags with only protected keys', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+  it('should both support addPageAction() with same signature', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html'))
 
-    await browser.execute(function () {
-      window.agent1 = new RegisteredEntity({
-        id: 1234,
-        name: 'test-agent',
-        tags: ['name', 'id']
-      })
+    const comparison = await browser.execute(function () {
+      const viaRegister = newrelic.register({ id: 1, name: 'Via Register' })
+      const viaConstructor = new RegisteredEntity({ id: 2, name: 'Via Constructor' })
 
-      window.agent1.noticeError('error1')
+      // Call addPageAction with same arguments to verify identical behavior
+      const registerReturn = viaRegister.addPageAction('action1', { val: 1 })
+      const constructorReturn = viaConstructor.addPageAction('action2', { val: 2 })
+
+      return {
+        registerHasMethod: typeof viaRegister.addPageAction === 'function',
+        constructorHasMethod: typeof viaConstructor.addPageAction === 'function',
+        registerLength: viaRegister.addPageAction.length,
+        constructorLength: viaConstructor.addPageAction.length,
+        registerReturnType: typeof registerReturn,
+        constructorReturnType: typeof constructorReturn
+      }
     })
 
-    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
-
-    errorsHarvests.forEach(({ request: { query, body } }) => {
-      const data = body.err
-      expect(data).toHaveLength(1)
-
-      const error1 = data[0]
-
-      // Should have source.name and source.id from properties, not from tags
-      expect(error1.custom['source.name']).toEqual('test-agent')
-      expect(error1.custom['source.id']).toEqual(1234)
-
-      // Should not have any other source.* attributes from tags
-      const sourceKeys = Object.keys(error1.custom).filter(k => k.startsWith('source.'))
-      expect(sourceKeys).toEqual(expect.arrayContaining(['source.name', 'source.id', 'source.type']))
-      expect(sourceKeys.length).toBe(3)
-    })
+    expect(comparison.registerHasMethod).toBe(true)
+    expect(comparison.constructorHasMethod).toBe(true)
+    expect(comparison.registerLength).toEqual(comparison.constructorLength)
+    expect(comparison.registerReturnType).toEqual(comparison.constructorReturnType)
   })
 
-  it('should not throw errors when parent is blocked; children still record data', async () => {
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors', 'register.generic_events'] } }))
+  it('should both return the same type when calling all methods', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html'))
 
-    const { hasErrors } = await browser.execute(function () {
-      let hasErrors = false
+    const comparison = await browser.execute(function () {
+      const viaRegister = newrelic.register({ id: 1, name: 'Via Register' })
+      const viaConstructor = new RegisteredEntity({ id: 2, name: 'Via Constructor' })
+
+      // Comprehensive test: call all methods and verify return types match
+      // This ensures complete behavioral parity across the entire API surface
+      const results = {}
+
+      // Methods that can be called without args
+      const noArgMethods = ['deregister']
+      noArgMethods.forEach(method => {
+        try {
+          const registerReturn = viaRegister[method]()
+          const constructorReturn = viaConstructor[method]()
+          results[method] = {
+            registerReturnType: typeof registerReturn,
+            constructorReturnType: typeof constructorReturn,
+            match: typeof registerReturn === typeof constructorReturn
+          }
+        } catch (e) {
+          results[method] = { error: e.message }
+        }
+      })
+
+      // Methods that need at least one arg
+      const oneArgMethods = [
+        { name: 'addPageAction', arg: 'testAction' },
+        { name: 'noticeError', arg: new Error('test') },
+        { name: 'setUserId', arg: 'testUser' },
+        { name: 'setApplicationVersion', arg: '1.0.0' },
+        { name: 'log', arg: 'test message' },
+        { name: 'measure', arg: 'testMeasure' },
+        { name: 'recordCustomEvent', arg: 'testEvent' }
+      ]
+      oneArgMethods.forEach(({ name, arg }) => {
+        try {
+          const registerReturn = viaRegister[name](arg)
+          const constructorReturn = viaConstructor[name](arg)
+          results[name] = {
+            registerReturnType: typeof registerReturn,
+            constructorReturnType: typeof constructorReturn,
+            match: typeof registerReturn === typeof constructorReturn
+          }
+        } catch (e) {
+          results[name] = { error: e.message }
+        }
+      })
+
+      // setCustomAttribute needs two args
       try {
-        // Blocked parent (invalid id)
-        window.blockedParent = new RegisteredEntity({ id: '', name: 'blocked-parent' })
-
-        // Parent API calls should not throw but should NOT be recorded
-        window.blockedParent.noticeError('PARENT_SHOULD_NOT_RECORD')
-        window.blockedParent.addPageAction('PARENT_SHOULD_NOT_RECORD')
-        window.blockedParent.log('PARENT_SHOULD_NOT_RECORD', { level: 'error' })
-        window.blockedParent.recordCustomEvent('CustomEvent', { val: 'PARENT_SHOULD_NOT_RECORD' })
-
-        // Children should be allowed and record data
-        window.child = window.blockedParent.register({ id: 101, name: 'child' })
-        window.grandchild = window.child.register({ id: 102, name: 'grandchild' })
-
-        window.child.noticeError('CHILD_SHOULD_RECORD')
-        window.child.addPageAction('CHILD_SHOULD_RECORD')
-        window.child.log('CHILD_SHOULD_RECORD', { level: 'error' })
-        window.child.recordCustomEvent('CustomEvent', { val: 'CHILD_SHOULD_RECORD' })
-
-        window.grandchild.noticeError('GRANDCHILD_SHOULD_RECORD')
-        window.grandchild.addPageAction('GRANDCHILD_SHOULD_RECORD')
-        window.grandchild.log('GRANDCHILD_SHOULD_RECORD', { level: 'error' })
-        window.grandchild.recordCustomEvent('CustomEvent', { val: 'GRANDCHILD_SHOULD_RECORD' })
-      } catch (err) {
-        hasErrors = true
+        const registerReturn = viaRegister.setCustomAttribute('key', 'value')
+        const constructorReturn = viaConstructor.setCustomAttribute('key', 'value')
+        results.setCustomAttribute = {
+          registerReturnType: typeof registerReturn,
+          constructorReturnType: typeof constructorReturn,
+          match: typeof registerReturn === typeof constructorReturn
+        }
+      } catch (e) {
+        results.setCustomAttribute = { error: e.message }
       }
-      return { hasErrors }
+
+      return results
     })
 
-    // No errors thrown creating/using blocked parent and children
-    expect(hasErrors).toBe(false)
-
-    // Errors: children recorded, parent not recorded
-    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
-    const errorData = errorsHarvests.flatMap(h => h.request.body.err || [])
-    const messages = errorData.map(err => String(err.params.message || ''))
-    expect(messages.some(m => m.includes('PARENT_SHOULD_NOT_RECORD'))).toBe(false)
-    expect(messages.some(m => m.includes('CHILD_SHOULD_RECORD'))).toBe(true)
-    expect(messages.some(m => m.includes('GRANDCHILD_SHOULD_RECORD'))).toBe(true)
-
-    // Insights (PageAction/CustomEvent/Measures): children recorded, parent not recorded
-    const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
-    const insightsData = insightsHarvests.flatMap(h => h.request.body.ins || [])
-    const insightValues = insightsData.map(ins => (ins.val || ins.actionName || ''))
-    expect(insightValues.some(v => v.includes('PARENT_SHOULD_NOT_RECORD'))).toBe(false)
-    expect(insightValues.some(v => v.includes('CHILD_SHOULD_RECORD'))).toBe(true)
-    expect(insightValues.some(v => v.includes('GRANDCHILD_SHOULD_RECORD'))).toBe(true)
-
-    // Logs: children recorded, parent not recorded
-    const logsHarvests = await logsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
-    const logsData = logsHarvests.flatMap(h => {
-      try { return JSON.parse(h.request.body)[0]?.logs || [] } catch { return [] }
+    // Verify that every method returns the same type from both interfaces
+    // This is the ultimate validation that the APIs are functionally equivalent
+    Object.keys(comparison).forEach(method => {
+      if (comparison[method].match !== undefined) {
+        expect(comparison[method].match).toBe(true)
+      }
     })
-    const logMessages = logsData.map(l => l.message || '')
-    expect(logMessages.some(m => m.includes('PARENT_SHOULD_NOT_RECORD'))).toBe(false)
-    expect(logMessages.some(m => m.includes('CHILD_SHOULD_RECORD'))).toBe(true)
-    expect(logMessages.some(m => m.includes('GRANDCHILD_SHOULD_RECORD'))).toBe(true)
+  })
+
+  it('should gracefully handle when newrelic agent does not exist', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html'))
+
+    const result = await browser.execute(function () {
+      // Test graceful degradation: RegisteredEntity should still work if agent isn't loaded
+      // Delete the newrelic global to simulate agent not loaded
+      delete window.newrelic
+
+      // Create a RegisteredEntity without the agent - should not throw
+      const entity = new RegisteredEntity({ id: 1, name: 'No Agent Entity' })
+
+      // All API methods should still exist as stub functions (for graceful degradation)
+      // This prevents errors if RegisteredEntity is used before agent loads
+      const expectedMethods = [
+        'addPageAction',
+        'noticeError',
+        'setCustomAttribute',
+        'setUserId',
+        'setApplicationVersion',
+        'deregister',
+        'log',
+        'measure',
+        'recordCustomEvent'
+      ]
+
+      const methodsExist = {}
+      expectedMethods.forEach(method => {
+        methodsExist[method] = typeof entity[method] === 'function'
+      })
+
+      // Verify stub methods can be called without throwing errors
+      // They should log warnings instead of crashing
+      let callErrors = {}
+      try {
+        entity.addPageAction('test')
+        callErrors.addPageAction = false
+      } catch (e) {
+        callErrors.addPageAction = true
+      }
+
+      try {
+        entity.noticeError('test error')
+        callErrors.noticeError = false
+      } catch (e) {
+        callErrors.noticeError = true
+      }
+
+      try {
+        entity.setCustomAttribute('key', 'value')
+        callErrors.setCustomAttribute = false
+      } catch (e) {
+        callErrors.setCustomAttribute = true
+      }
+
+      try {
+        entity.deregister()
+        callErrors.deregister = false
+      } catch (e) {
+        callErrors.deregister = true
+      }
+
+      return {
+        entityType: typeof entity,
+        methodsExist,
+        callErrors,
+        // eslint-disable-next-line no-prototype-builtins
+        hasMetadata: entity.hasOwnProperty('metadata'),
+        metadataType: typeof entity.metadata
+      }
+    })
+
+    // Validate graceful degradation: entity should exist and be usable even without agent
+    expect(result.entityType).toEqual('object')
+
+    // All stub methods should exist as functions (no missing API surface)
+    Object.keys(result.methodsExist).forEach(method => {
+      expect(result.methodsExist[method]).toBe(true)
+    })
+
+    // Calling stub methods should not throw errors - they warn instead of crashing
+    // This ensures apps using RegisteredEntity won't break if agent fails to load
+    expect(result.callErrors.addPageAction).toBe(false)
+    expect(result.callErrors.noticeError).toBe(false)
+    expect(result.callErrors.setCustomAttribute).toBe(false)
+    expect(result.callErrors.deregister).toBe(false)
+
+    // Metadata property should still exist (defined in class constructor)
+    // This allows the entity to be properly initialized even without the agent
+    expect(result.hasMetadata).toBe(true)
+    expect(result.metadataType).toEqual('object')
   })
 })

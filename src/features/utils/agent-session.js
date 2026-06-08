@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { drain } from '../../common/drain/drain'
-import { ee } from '../../common/event-emitter/contextual-ee'
 import { registerHandler } from '../../common/event-emitter/register-handler'
 import { SessionEntity } from '../../common/session/session-entity'
 import { LocalStorage } from '../../common/storage/local-storage.js'
-import { DEFAULT_KEY } from '../../common/session/constants'
+import { getAppSessionHash } from '../../common/session/session-key'
 import { mergeInfo } from '../../common/config/info'
 import { trackObjectAttributeSize } from '../../common/util/attribute-size'
 import { handle } from '../../common/event-emitter/handle'
@@ -20,10 +19,11 @@ export function setupAgentSession (agentRef) {
   if (agentRef.runtime.session) return agentRef.runtime.session // already setup
 
   const sessionInit = agentRef.init.session
+  const namespacedKey = getAppSessionHash(agentRef.info.licenseKey, agentRef.info.applicationID)
 
   agentRef.runtime.session = new SessionEntity({
-    agentIdentifier: agentRef.agentIdentifier,
-    key: DEFAULT_KEY,
+    agentRef,
+    key: namespacedKey,
     storage: new LocalStorage(),
     expiresMs: sessionInit?.expiresMs,
     inactiveMs: sessionInit?.inactiveMs
@@ -45,7 +45,7 @@ export function setupAgentSession (agentRef) {
   /** track changes to the jsAttributes field over time for aiding with harvest mechanics */
   agentRef.runtime.jsAttributesMetadata = trackObjectAttributeSize(agentRef.info, 'jsAttributes')
 
-  const sharedEE = ee.get(agentRef.agentIdentifier)
+  const sharedEE = agentRef.ee
 
   // any calls to newrelic.setCustomAttribute(<persisted>) will need to be added to:
   // local info.jsAttributes {}
@@ -71,7 +71,7 @@ export function setupAgentSession (agentRef) {
     agentRef.runtime.session.write({ consent: accept === undefined ? true : accept })
   }, 'session', sharedEE)
 
-  drain(agentRef.agentIdentifier, 'session')
+  drain(agentRef, 'session')
 
   return agentRef.runtime.session
 }

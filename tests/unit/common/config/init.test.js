@@ -4,7 +4,7 @@ jest.mock('../../../../src/common/util/console.js')
 
 test('init props exist and return expected defaults', () => {
   const config = mergeInit({})
-  expect(Object.keys(config).length).toEqual(24)
+  expect(Object.keys(config).length).toEqual(23)
   expect(config.ajax).toEqual({
     autoStart: true,
     block_internal: true,
@@ -13,8 +13,10 @@ test('init props exist and return expected defaults', () => {
     capture_payloads: 'off'
   })
   expect(config.api).toEqual({
-    allow_registered_children: false,
-    duplicate_registered_data: false
+    register: {
+      enabled: false,
+      duplicate_data_to_container: false
+    }
   })
   expect(config.distributed_tracing).toEqual({
     allowed_origins: undefined,
@@ -120,10 +122,6 @@ test('init props exist and return expected defaults', () => {
     enabled: true
   })
   expect(config.soft_navigations).toEqual({
-    autoStart: true,
-    enabled: true
-  })
-  expect(config.spa).toEqual({
     autoStart: true,
     enabled: true
   })

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -17,7 +17,6 @@ export function warn (code, secondary) {
   if (typeof console.debug !== 'function') return
   console.debug(`New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#${code}`, secondary)
   dispatchGlobalEvent({
-    agentIdentifier: null,
     drained: null,
     type: 'data',
     name: 'warn',

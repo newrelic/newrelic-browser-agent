@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 export { Agent } from './loaders/agent'
@@ -16,4 +16,4 @@ export { PageViewEvent } from './features/page_view_event'
 export { PageViewTiming } from './features/page_view_timing'
 export { SessionTrace } from './features/session_trace'
 export { SessionReplay } from './features/session_replay'
-export { Spa } from './features/spa'
+export { SoftNav } from './features/soft_navigations'

@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { testSupportMetricsRequest } from '../../tools/testing-server/utils/expect-tests'
+import { testInsRequest, testSupportMetricsRequest } from '../../tools/testing-server/utils/expect-tests'
 
 describe('Content Security Policy', () => {
   afterEach(async () => {
@@ -68,5 +68,37 @@ describe('Content Security Policy', () => {
     foundIntegrityValues.forEach(hash =>
       expect(hash).toMatch(/^sha512-[a-zA-Z0-9=/+]+$/)
     )
+  })
+
+  it('should send SecurityPolicyViolation event from csp-violation page', async () => {
+    const insightsCapture = await browser.testHandle.createNetworkCaptures('bamServer', {
+      test: testInsRequest
+    })
+    const testUrl = await browser.testHandle.assetURL('csp-violation.html')
+
+    await browser.url(testUrl).then(() => browser.waitForAgentLoad())
+
+    const [insHarvests] = await insightsCapture.waitForResult({ totalCount: 1 })
+    const spvEvent = insHarvests.request.body.ins.find(evt => evt.eventType === 'SecurityPolicyViolation')
+
+    const CSP_HTML_PATH = '/tests/assets/csp-violation.html'
+    const expectedSpv = {
+      eventType: 'SecurityPolicyViolation',
+      blockedUri: 'https://example.com/',
+      columnNumber: expect.any(Number),
+      currentUrl: expect.stringContaining(CSP_HTML_PATH),
+      disposition: 'enforce',
+      documentUri: expect.stringContaining(CSP_HTML_PATH),
+      effectiveDirective: 'script-src-elem',
+      lineNumber: 18,
+      originalPolicy: expect.stringMatching(/^default-src 'self' 'unsafe-inline'; connect-src \*;?$/),
+      pageUrl: expect.stringContaining(CSP_HTML_PATH),
+      referrer: expect.any(String),
+      sample: expect.any(String),
+      sourceFile: expect.stringContaining(CSP_HTML_PATH),
+      statusCode: 200,
+      timestamp: expect.any(Number)
+    }
+    expect(spvEvent).toEqual(expect.objectContaining(expectedSpv))
   })
 })

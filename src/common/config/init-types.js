@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  */
@@ -12,8 +12,9 @@
  * @property {boolean} [ajax.enabled] - Turn on/off the ajax feature (on by default).
  * @property {boolean} [ajax.autoStart] - If true, the agent will automatically start the ajax feature. Otherwise, it will be in a deferred state until the `start` API method is called.
  * @property {Object} [api]
- * @property {boolean} [api.allow_registered_children] - If true, the agent will allow registered children to be sent to the server.
- * @property {boolean} [api.duplicate_registered_data] - If true, the agent will capture registered child data to the main agent as well as the registered child.
+ * @property {Object} [api.register]
+ * @property {boolean} [api.register.enabled] - If true, the agent will allow registered children to be sent to the server.
+ * @property {boolean} [api.register.duplicate_data_to_container] - If true, the agent will capture registered child data to the main agent as well as the registered child.
  * @property {Object} [distributed_tracing]
  * @property {boolean} [distributed_tracing.enabled] - If true, distributed tracing headers will be added to outgoing requests. Requires ajax feature to be running.
  * @property {boolean} [distributed_tracing.exclude_newrelic_header]
@@ -80,9 +81,6 @@
  * @property {Object} [soft_navigations]
  * @property {boolean} [soft_navigations.enabled] - Turn on/off the soft navigations feature (on by default).
  * @property {boolean} [soft_navigations.autoStart] - If true, the agent will automatically start the soft navigations feature. Otherwise, it will be in a deferred state until the `start` API method is called.
- * @property {Object} [spa]
- * @property {boolean} [spa.enabled] - Turn on/off the single page application feature (on by default). NOTE: the SPA feature is deprecated and under removal procedure.
- * @property {boolean} [spa.autoStart] - If true, the agent will automatically start the single page application feature. Otherwise, it will be in a deferred state until the `start` API method is called.
  * @property {boolean} [ssl] - If explicitly false, the agent will use HTTP instead of HTTPS. This setting should NOT be used.
  * @property {Object} [browser_consent_mode]
  * @property {boolean} [browser_consent_mode.enabled] - If true, the agent will use consent mode for whether to allow or disallow data harvest.

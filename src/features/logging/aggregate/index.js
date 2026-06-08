@@ -9,11 +9,12 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME, LOGGING_EVENT_EMITTER_CHANNEL, LOG_LEVELS, LOGGING_MODE } from '../constants'
 import { Log } from '../shared/log'
 import { isValidLogLevel } from '../shared/utils'
-import { applyFnToProps } from '../../../common/util/traverse'
+import { Obfuscator } from '../../../common/util/obfuscate'
 import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../../../common/session/constants'
 import { ABORT_REASONS } from '../../session_replay/constants'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
-import { getVersion2Attributes } from '../../../common/util/v2'
+import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
+import { EVENT_TYPES } from '../../../common/constants/events'
 
 const LOGGING_EVENT = 'Logging/Event/'
 
@@ -30,6 +31,9 @@ export class Aggregate extends AggregateBase {
     /** set up agg-level behaviors specific to this feature */
     this.harvestOpts.raw = true
     super.customAttributesAreSeparate = true
+
+    // Create obfuscator for log entries
+    this.obfuscator = new Obfuscator(agentRef, EVENT_TYPES.LOG)
 
     // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
     this.ee.on(SESSION_EVENTS.RESET, () => {
@@ -73,12 +77,6 @@ export class Aggregate extends AggregateBase {
 
     if (!attributes || typeof attributes !== 'object') attributes = {}
 
-    attributes = {
-      ...attributes,
-      /** Specific attributes only supplied if harvesting to endpoint version 2 */
-      ...(getVersion2Attributes(target, this))
-    }
-
     if (typeof level === 'string') level = level.toUpperCase()
     if (!isValidLogLevel(level)) return warn(30, level)
     if (modeForThisLog < (LOGGING_MODE[level] || Infinity)) {
@@ -104,14 +102,19 @@ export class Aggregate extends AggregateBase {
     }
     if (typeof message !== 'string' || !message) return warn(32)
 
-    const log = new Log(
-      Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp)),
-      message,
-      attributes,
-      level
-    )
+    const addEvent = (attributes) => {
+      const log = new Log(
+        Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp)),
+        message,
+        attributes,
+        level
+      )
 
-    if (this.events.add(log)) this.reportSupportabilityMetric(LOGGING_EVENT + (autoCaptured ? 'Auto' : 'API') + '/Added')
+      if (this.events.add(log)) this.reportSupportabilityMetric(LOGGING_EVENT + (autoCaptured ? 'Auto' : 'API') + '/Added')
+    }
+
+    addEvent({ ...attributes, ...getVersion2Attributes(target, this) })
+    if (shouldDuplicate(target, this)) addEvent({ ...attributes, ...getVersion2DuplicationAttributes(target, this) })
   }
 
   serializer (eventBuffer) {
@@ -120,7 +123,7 @@ export class Aggregate extends AggregateBase {
       common: {
         /** Attributes in the `common` section are added to `all` logs generated in the payload */
         attributes: {
-          ...(applyFnToProps(this.agentRef.info.jsAttributes, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')),
+          ...(this.obfuscator.traverseAndObfuscateEvents(this.agentRef.info.jsAttributes)),
           ...(this.harvestEndpointVersion === 1 && {
             'entity.guid': this.agentRef.runtime.appMetadata.agents[0].entityGuid,
             appId: this.agentRef.info.applicationID
@@ -140,10 +143,7 @@ export class Aggregate extends AggregateBase {
         }
       },
       /** logs section contains individual unique log entries */
-      logs: applyFnToProps(
-        eventBuffer,
-        this.obfuscator.obfuscateString.bind(this.obfuscator), 'string'
-      )
+      logs: this.obfuscator.traverseAndObfuscateEvents(eventBuffer)
     }]
   }
 

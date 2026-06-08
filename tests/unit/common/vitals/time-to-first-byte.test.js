@@ -23,7 +23,7 @@ describe('ttfb', () => {
       __esModule: true,
       isiOS: false,
       isBrowserScope: true,
-      supportsNavTimingL2: () => typeof PerformanceNavigationTiming !== 'undefined' && mockPerformance?.getEntriesByType('navigation')?.[0]?.responseStart,
+      getNavigationEntry: () => mockPerformance?.getEntriesByType('navigation')?.[0],
       globalScope: {
         performance: mockPerformance
       }
@@ -39,7 +39,7 @@ describe('ttfb', () => {
     jest.doMock('../../../../src/common/constants/runtime', () => ({
       __esModule: true,
       isBrowserScope: false,
-      supportsNavTimingL2: () => false,
+      getNavigationEntry: () => undefined,
       globalScope: {}
     }))
 
@@ -62,7 +62,7 @@ describe('ttfb', () => {
       __esModule: true,
       isiOS: false,
       isBrowserScope: true,
-      supportsNavTimingL2: () => typeof PerformanceNavigationTiming !== 'undefined' && mockPerformance?.getEntriesByType('navigation')?.[0]?.responseStart,
+      getNavigationEntry: () => typeof PerformanceNavigationTiming !== 'undefined' ? mockPerformance?.getEntriesByType('navigation')?.[0] : undefined,
       globalScope: {
         performance: mockPerformance
       }
@@ -87,7 +87,7 @@ describe('ttfb', () => {
       __esModule: true,
       isiOS: true,
       isBrowserScope: true,
-      supportsNavTimingL2: () => typeof PerformanceNavigationTiming !== 'undefined' && mockPerformance?.getEntriesByType('navigation')?.[0]?.responseStart,
+      getNavigationEntry: () => mockPerformance?.getEntriesByType('navigation')?.[0],
       globalScope: {
         performance: mockPerformance
       }
@@ -117,7 +117,7 @@ describe('ttfb', () => {
       },
       originTime: 1,
       isBrowserScope: true,
-      supportsNavTimingL2: () => typeof PerformanceNavigationTiming !== 'undefined' && mockPerformance?.getEntriesByType?.('navigation')?.[0]?.responseStart
+      getNavigationEntry: () => mockPerformance?.getEntriesByType?.('navigation')?.[0]
     }))
 
     getFreshTTFBImport(metric => {
@@ -137,7 +137,7 @@ describe('ttfb', () => {
       __esModule: true,
       isBrowserScope: true,
       isiOS: false,
-      supportsNavTimingL2: () => typeof PerformanceNavigationTiming !== 'undefined' && mockPerformance?.getEntriesByType('navigation')?.[0]?.responseStart,
+      getNavigationEntry: () => mockPerformance?.getEntriesByType('navigation')?.[0],
       globalScope: {
         performance: mockPerformance
       }
@@ -172,7 +172,7 @@ describe('ttfb', () => {
       },
       originTime: 1,
       isBrowserScope: true,
-      supportsNavTimingL2: () => typeof PerformanceNavigationTiming !== 'undefined' && mockPerformance?.getEntriesByType('navigation')?.[0]?.responseStart
+      getNavigationEntry: () => mockPerformance?.getEntriesByType('navigation')?.[0]
     }))
     let triggered = 0
     getFreshTTFBImport(metric => {
@@ -203,7 +203,10 @@ describe('ttfb', () => {
         performance: mockPerformance
       },
       originTime: 100,
-      supportsNavTimingL2: () => typeof PerformanceNavigationTiming !== 'undefined' && mockPerformance?.getEntriesByType('navigation')?.[0]?.responseStart
+      getNavigationEntry: () => {
+        const entry = mockPerformance?.getEntriesByType('navigation')?.[0]
+        return (entry && entry.responseStart > 0) ? entry : undefined
+      }
     }))
 
     getFreshTTFBImport(metric => {
@@ -231,7 +234,10 @@ describe('ttfb', () => {
         performance: mockPerformance
       },
       originTime: 200,
-      supportsNavTimingL2: () => typeof PerformanceNavigationTiming !== 'undefined' && mockPerformance?.getEntriesByType('navigation')?.[0]?.responseStart
+      getNavigationEntry: () => {
+        const entry = mockPerformance?.getEntriesByType('navigation')?.[0]
+        return (entry && entry.responseStart > 0) ? entry : undefined
+      }
     }))
 
     getFreshTTFBImport(metric => {
@@ -259,7 +265,10 @@ describe('ttfb', () => {
         performance: mockPerformance
       },
       originTime: 300,
-      supportsNavTimingL2: () => typeof PerformanceNavigationTiming !== 'undefined' && mockPerformance?.getEntriesByType('navigation')?.[0]?.responseStart
+      getNavigationEntry: () => {
+        const entry = mockPerformance?.getEntriesByType('navigation')?.[0]
+        return (entry && entry.responseStart > 0) ? entry : undefined
+      }
     }))
 
     getFreshTTFBImport(metric => {
@@ -287,7 +296,7 @@ describe('ttfb', () => {
         performance: mockPerformance
       },
       originTime: 400,
-      supportsNavTimingL2: () => typeof PerformanceNavigationTiming !== 'undefined' && mockPerformance?.getEntriesByType('navigation')?.[0]?.responseStart
+      getNavigationEntry: () => mockPerformance?.getEntriesByType('navigation')?.[0]
     }))
 
     getFreshTTFBImport(metric => {
@@ -317,11 +326,11 @@ describe('ttfb', () => {
         performance: mockPerformance
       },
       originTime: 500,
-      supportsNavTimingL2: () => {
+      getNavigationEntry: () => {
         try {
-          return typeof PerformanceNavigationTiming !== 'undefined' && mockPerformance?.getEntriesByType('navigation')?.[0]?.responseStart
+          return mockPerformance?.getEntriesByType('navigation')?.[0]
         } catch (e) {
-          return false
+          return undefined
         }
       }
     }))

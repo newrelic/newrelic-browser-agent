@@ -18,17 +18,19 @@ import { warn } from '../common/util/console'
  * An interface for registering an external caller to report through the base agent to a different target than the base agent.
  */
 export class RegisteredEntity {
-  /** @type {RegisterAPIMetadata} */
-  metadata = {
-    target: {},
-    customAttributes: {}
-  }
-
   /**
    *
    * @param {RegisterAPIConstructor} opts The options for setting up the registered entity.
    */
   constructor (opts) {
+    // Initialize metadata as an own property to ensure it exists even when agent is missing
+    /** @type {RegisterAPIMetadata} */
+    this.metadata = {
+      target: /** @type {import('../loaders/api/register-api-types').RegisterAPITarget} */ ({}),
+      timings: /** @type {import('../loaders/api/register-api-types').RegisterAPITimings} */ ({}),
+      customAttributes: {}
+    }
+
     try {
       if (!window?.newrelic) return warn(51)
       Object.assign(this, window?.newrelic?.register(opts) || {})
@@ -46,19 +48,6 @@ export class RegisteredEntity {
   addPageAction (name, attributes) {
     /** this method will be overset once register is successful */
     warn(35, 'addPageAction')
-  }
-
-  /**
-   * @experimental
-   * IMPORTANT: This feature is being developed for use internally and is not in a public-facing production-ready state.
-   * It is not recommended for use in production environments and will not receive support for issues.
-   *
-   * Registers an external caller to report through the base agent to a different target than the base agent. Will be related to this registered entity when called through this access point.
-   * @param {import('../loaders/api/register-api-types').RegisterAPIConstructor} target the target object to report data to
-    @returns {import('../loaders/api/register-api-types').RegisterAPI} Returns an object that contains the available API methods and configurations to use with the external caller. See loaders/api/api.js for more information.
-   */
-  register (target) {
-    warn(35, 'register')
   }
 
   /**
@@ -87,7 +76,7 @@ export class RegisteredEntity {
    * Measures a task that is recorded as a BrowserPerformance event.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/measure/}
    * @param {string} name The name of the task
-   * @param {{start: number, end: number, duration: number, customAttributes: object}} [options] An object used to control the way the measure API operates
+   * @param {{start?: number|PerformanceMark, end?: number|PerformanceMark, customAttributes?: object}} [options] An object used to control the way the measure API operates
    * @returns {{start: number, end: number, duration: number, customAttributes: object}} Measurement details
    */
   measure (name, options) {

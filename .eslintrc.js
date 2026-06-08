@@ -1,10 +1,10 @@
 module.exports = {
   ignorePatterns: [
-    'dist/**/*',
+    '**/dist/**/*',
     'temp/**/*',
     'build/**/*',
     'coverage/**/*',
-    'node_modules/**/*',
+    '**/node_modules/**/*',
     'tests/assets/frameworks/**/*',
     'tests/assets/js/internal/**/*',
     'tests/assets/js/vendor/**/*',

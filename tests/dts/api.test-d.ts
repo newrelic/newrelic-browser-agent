@@ -26,7 +26,7 @@ expectType<MicroAgent>(microAgent)
     type?: string;
   }) => any>(agent.addToTrace)
   expectType<(name: string) => any>(agent.setCurrentRouteName)
-  expectType<(opts?: { waitForEnd?: boolean }) => InteractionInstance>(agent.interaction)
+  expectType<(opts?: { waitForEnd?: boolean, targetPageLoad?: boolean }) => InteractionInstance>(agent.interaction)
 
   // Base Agent APIs
   expectType<(name: string, attributes?: object) => any>(agent.addPageAction)
@@ -39,7 +39,7 @@ expectType<MicroAgent>(microAgent)
   expectType<(timeStamp?: number) => any>(agent.finished)
   expectType<(name: string, id: string) => any>(agent.addRelease)
   expectType<(eventType: string, attributes?: Object) => any>(agent.recordCustomEvent)
-  expectType<(name: string, options?: {start: number, end: number, duration: number, customAttributes: object}) => ({start: number, end: number, duration: number, customAttributes: object})>(agent.measure)
+  expectType<(name: string, options?: {start?: number | PerformanceMark, end?: number | PerformanceMark, customAttributes?: object}) => ({start: number, end: number, duration: number, customAttributes: object})>(agent.measure)
   /** micro agent has a different implementation of start api we are stuck with until that entry point is removed */
   expectType<(() => any) | ((featureNames?: string | string[] | undefined) => boolean)>(agent.start)
   expectType<() => any>(agent.recordReplay)
@@ -49,7 +49,7 @@ expectType<MicroAgent>(microAgent)
   expectType<(accept: boolean | null) => any>(agent.consent)
 
   // SPA APIs
-  expectType<(opts?: { waitForEnd?: boolean }) => InteractionInstance>(agent.interaction)
+  expectType<(opts?: { waitForEnd?: boolean, targetPageLoad?: boolean }) => InteractionInstance>(agent.interaction)
   expectType<(value: string) => InteractionInstance>(agent.interaction().actionText)
   expectType<(name: string, callback?: ((...args: any[]) => any)) => (...args: any) => any>(agent.interaction().createTracer)
   expectType<() => InteractionInstance>(agent.interaction().end)
@@ -60,8 +60,8 @@ expectType<MicroAgent>(microAgent)
   expectType<(name: string, trigger?: string) => InteractionInstance>(agent.interaction().setName)
 
   // register APIs
-  expectType<(target: {id: string|number, name: string, parentId?: string, isolated?: boolean}) => RegisterAPI>(agent.register)
-  const registeredEntity = agent.register({ id: 123, name: 'hello' })
+  expectType<(target: RegisterAPIConstructor) => RegisterAPI>(agent.register)
+  const registeredEntity = agent.register({ id: '123', name: 'hello' })
   expectType<(name: string, attributes?: object) => void>(registeredEntity.addPageAction)
   expectType<(message: string, options?: { customAttributes?: object, level?: 'ERROR' | 'TRACE' | 'DEBUG' | 'INFO' | 'WARN'}) => void>(registeredEntity.log)
   expectType<(error: Error | string, customAttributes?: object) => void>(registeredEntity.noticeError)
@@ -69,7 +69,6 @@ expectType<MicroAgent>(microAgent)
   expectType<(value: string | null) => void>(registeredEntity.setApplicationVersion)
   expectType<(name: string, value: string | number | boolean | null, persist?: boolean) => void>(registeredEntity.setCustomAttribute)
   expectType<(value: string | null, resetSession?: boolean) => void>(registeredEntity.setUserId)
-  expectType<(target: RegisterAPIConstructor) => RegisterAPI>(registeredEntity.register)
   expectType<RegisterAPIMetadata>(registeredEntity.metadata)
 })
 

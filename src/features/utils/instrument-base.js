@@ -1,12 +1,12 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 /**
  * @file Defines `InstrumentBase` to be used as the super of the Instrument classes implemented by each feature.
- * Inherits and executes the `checkConfiguration` method from [FeatureBase]{@link ./feature-base}, which also
- * exposes the `blocked` property.
+ * Validates and loads feature aggregates, including a one-time late configuration check before import.
+ * Inherits `blocked` behavior from [FeatureBase]{@link ./feature-base}.
  */
 
 import { drain, registerDrain } from '../../common/drain/drain'
@@ -14,12 +14,17 @@ import { FeatureBase } from './feature-base'
 import { onWindowLoad } from '../../common/window/load'
 import { isBrowserScope } from '../../common/constants/runtime'
 import { warn } from '../../common/util/console'
+import { isValid } from '../../common/config/info'
+import { configure } from '../../loaders/configure/configure'
+import { gosCDN } from '../../common/window/nreum'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { hasReplayPrerequisite } from '../session_replay/shared/utils'
 import { canEnableSessionTracking } from './feature-gates'
 import { single } from '../../common/util/invoke'
 import { SESSION_ERROR } from '../../common/constants/agent-constants'
 import { handle } from '../../common/event-emitter/handle'
+
+const checkedAgents = new WeakSet()
 
 /**
  * Base class for instrumenting a feature.
@@ -28,13 +33,11 @@ import { handle } from '../../common/event-emitter/handle'
 export class InstrumentBase extends FeatureBase {
   /**
    * Instantiate InstrumentBase.
-   * @param {string} agentIdentifier - The unique ID of the instantiated agent (relative to global scope).
+   * @param {Object} agentRef - The agent reference object.
    * @param {string} featureName - The name of the feature module (used to construct file path).
    */
   constructor (agentRef, featureName) {
-    super(agentRef.agentIdentifier, featureName)
-
-    this.agentRef = agentRef
+    super(agentRef, featureName)
 
     /** @type {Function | undefined} This should be set by any derived Instrument class if it has things to do when feature fails or is killed. */
     this.abortHandler = undefined
@@ -65,13 +68,13 @@ export class InstrumentBase extends FeatureBase {
         this.ee.on('manual-start-all', single(() => {
         // register the feature to drain only once the API has been called, it will drain when importAggregator finishes for all the features
         // called by the api in that cycle
-          registerDrain(agentRef.agentIdentifier, this.featureName)
+          registerDrain(agentRef, this.featureName)
           resolve()
         }))
       })
     } else {
       /** if the feature requires opt-in (!auto-start), it will get registered once the api has been called */
-      registerDrain(agentRef.agentIdentifier, featureName)
+      registerDrain(agentRef, featureName)
     }
   }
 
@@ -92,6 +95,14 @@ export class InstrumentBase extends FeatureBase {
       // or otherwise when the manual-start-all event is emitted by the start API
       await this.deferred
 
+      this.#checkConfiguration(agentRef) // check for late-appearing 'info' config on the page
+      if (!isValid(agentRef.info)) { // if there still isn't valid info, then we can't proceed with session setup or importing the aggregates
+        warn(43)
+        agentRef.ee.abort()
+        this.loadedSuccessfully(false)
+        return
+      }
+
       let session
       try {
         if (canEnableSessionTracking(agentRef.init)) { // would require some setup before certain features start
@@ -110,7 +121,7 @@ export class InstrumentBase extends FeatureBase {
        */
       try {
         if (!this.#shouldImportAgg(this.featureName, session, agentRef.init)) {
-          drain(this.agentIdentifier, this.featureName)
+          drain(this.agentRef, this.featureName)
           this.loadedSuccessfully(false) // aggregate module isn't loaded at all
           return
         }
@@ -123,7 +134,7 @@ export class InstrumentBase extends FeatureBase {
         warn(34, e)
         this.abortHandler?.() // undo any important alterations made to the page
         // not supported yet but nice to do: "abort" this agent's EE for this feature specifically
-        drain(this.agentIdentifier, this.featureName, true)
+        drain(this.agentRef, this.featureName, true)
         this.loadedSuccessfully(false)
         if (this.ee) this.ee.abort()
       }
@@ -150,6 +161,36 @@ export class InstrumentBase extends FeatureBase {
         return !!session
       default:
         return true
+    }
+  }
+
+  /**
+   * Checks for additional `jsAttributes` items to support backward compatibility with implementations of the agent where
+   * loader configurations may appear after the loader code is executed.
+   */
+  #checkConfiguration (existingAgent) {
+    if (checkedAgents.has(existingAgent)) return
+    checkedAgents.add(existingAgent)
+    // NOTE: This check has to happen at load time
+    if (!isValid(existingAgent.info)) {
+      const cdn = gosCDN()
+      let jsAttributes = { ...cdn.info?.jsAttributes }
+      try {
+        jsAttributes = {
+          ...jsAttributes,
+          ...existingAgent.info?.jsAttributes
+        }
+      } catch (err) {
+        // do nothing
+      }
+      configure(existingAgent, {
+        ...cdn,
+        info: {
+          ...cdn.info,
+          jsAttributes
+        },
+        runtime: existingAgent.runtime
+      }, existingAgent.runtime.loaderType)
     }
   }
 }

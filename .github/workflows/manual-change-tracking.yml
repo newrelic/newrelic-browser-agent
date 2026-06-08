@@ -1,0 +1,175 @@
+name: Create Change Tracking Event
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      accountId:
+        description: 'New Relic Account ID'
+        required: true
+        type: choice
+        options:
+          - '1067061'
+          - '550352'
+      application:
+        description: 'New Relic Application'
+        required: true
+        type: choice
+        options:
+          - 'New Relic One - Staging'
+          - 'New Relic One - JP Production'
+          - 'New Relic One - EU Production'
+          - 'New Relic One - Production'
+      version:
+        description: 'Version being deployed (required for Deployment category)'
+        required: true
+        type: string
+      category:
+        description: 'Event Category'
+        required: true
+        type: choice
+        default: 'Deployment'
+        options:
+          - 'Deployment'
+          - 'Feature Flag'
+      type:
+        description: 'Deployment Type'
+        required: true
+        type: choice
+        default: 'Basic'
+        options:
+          - 'Basic'
+          - 'Rolling'
+          - 'Other'
+          - 'Blue Green'
+          - 'Canary'
+          - 'Shadow'
+      featureFlagId:
+        description: 'Feature Flag ID (required when category is Feature Flag)'
+        required: false
+        type: string
+      description:
+        description: 'Description of the event'
+        required: true
+        type: string
+      shortDescription:
+        description: 'Short description for the event'
+        required: true
+        type: string
+      changelog:
+        description: 'Changelog for the deployment (URL or text)'
+        required: false
+        type: string
+      deepLink:
+        description: 'Deep link URL for the deployment'
+        required: false
+        type: string
+      groupId:
+        description: 'String to correlate two or more events'
+        required: false
+        type: string
+
+jobs:
+  create-change-tracking-event:
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 5
+    environment: change-tracking
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Determine Entity GUID and API Key
+        id: entity-config
+        run: |
+          ACCOUNT_ID="${{ inputs.accountId }}"
+          APPLICATION="${{ inputs.application }}"
+          
+          # Note: All API calls go to staging-api.newrelic.com
+          # The application parameter determines which entity GUID to use
+          
+          # Determine API key based on account ID
+          if [ "$ACCOUNT_ID" = "1067061" ]; then
+            echo "apiKey=${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}" >> $GITHUB_OUTPUT
+          elif [ "$ACCOUNT_ID" = "550352" ]; then
+            echo "apiKey=${{ secrets.NR_CHANGE_TRACKING_API_KEY_BROWSER }}" >> $GITHUB_OUTPUT
+          else
+            echo "Error: Unknown account ID: $ACCOUNT_ID"
+            exit 1
+          fi
+          
+          # Determine entity GUID based on account ID and application
+          if [ "$ACCOUNT_ID" = "550352" ]; then
+            case "$APPLICATION" in
+              "New Relic One - Staging")
+                echo "entityGuid=${{ secrets.NR_ENTITY_GUID_BROWSER_STAGING }}" >> $GITHUB_OUTPUT
+                ;;
+              "New Relic One - JP Production"|"New Relic One - EU Production"|"New Relic One - Production")
+                echo "Error: Account 550352 only supports 'New Relic One - Staging' application"
+                exit 1
+                ;;
+              *)
+                echo "Error: Unknown application: $APPLICATION"
+                exit 1
+                ;;
+            esac
+          elif [ "$ACCOUNT_ID" = "1067061" ]; then
+            case "$APPLICATION" in
+              "New Relic One - Production")
+                echo "entityGuid=${{ secrets.NR_ENTITY_GUID_NR1_US_PROD }}" >> $GITHUB_OUTPUT
+                ;;
+              "New Relic One - EU Production")
+                echo "entityGuid=${{ secrets.NR_ENTITY_GUID_NR1_EU_PROD }}" >> $GITHUB_OUTPUT
+                ;;
+              "New Relic One - JP Production")
+                echo "entityGuid=${{ secrets.NR_ENTITY_GUID_NR1_JP_PROD }}" >> $GITHUB_OUTPUT
+                ;;
+              "New Relic One - Staging")
+                echo "entityGuid=${{ secrets.NR_ENTITY_GUID_NR1_STAGING }}" >> $GITHUB_OUTPUT
+                ;;
+              *)
+                echo "Error: Unknown application: $APPLICATION"
+                exit 1
+                ;;
+            esac
+          fi
+      
+      - name: Create Change Tracking Event
+        uses: ./.github/actions/change-tracking
+        with:
+          accountId: ${{ inputs.accountId }}
+          entityGuid: ${{ steps.entity-config.outputs.entityGuid }}
+          apiKey: ${{ steps.entity-config.outputs.apiKey }}
+          application: ${{ inputs.application }}
+          version: ${{ inputs.version }}
+          category: ${{ inputs.category }}
+          type: ${{ inputs.type }}
+          featureFlagId: ${{ inputs.featureFlagId }}
+          description: ${{ inputs.description }}
+          shortDescription: ${{ inputs.shortDescription }}
+          changelog: ${{ inputs.changelog }}
+          commit: ${{ github.sha }}
+          deepLink: ${{ inputs.deepLink }}
+          user: ${{ github.actor }}
+          groupId: ${{ inputs.groupId }}
+      
+      - name: Summary
+        run: |
+          echo "## Change Tracking Event Created! :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Category:** ${{ inputs.category }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Type:** ${{ inputs.type }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Account ID:** ${{ inputs.accountId }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Application:** ${{ inputs.application }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ inputs.featureFlagId }}" ]; then
+            echo "**Feature Flag ID:** ${{ inputs.featureFlagId }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -n "${{ inputs.description }}" ]; then
+            echo "**Description:** ${{ inputs.description }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**User:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY

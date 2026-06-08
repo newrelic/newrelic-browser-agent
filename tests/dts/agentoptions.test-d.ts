@@ -112,10 +112,6 @@ const validOptions: AgentOptions = {
       enabled: true,
       autoStart: false
     },
-    spa: {
-      enabled: true,
-      autoStart: false
-    },
     ssl: true,
     browser_consent_mode: { enabled: false },
     user_actions: {

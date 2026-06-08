@@ -1,9 +1,12 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { originTime } from '../constants/runtime'
 import { isNative } from '../util/monkey-patched'
+import { handle } from '../event-emitter/handle'
+import { FEATURE_NAMES } from '../../loaders/features/features'
 
 /**
  * Class used to adjust the timestamp of harvested data to New Relic server time. This
@@ -37,10 +40,41 @@ export class TimeKeeper {
    */
   #ready = false
 
+  /**
+   * The total measured drift in milliseconds. Represents how much performance.now()
+   * has fallen behind Date.now(), which is used to correct timestamp conversions.
+   * @type {number}
+   */
+  #measuredDrift = 0
+
   constructor (sessionObj) {
     this.#session = sessionObj
     this.processStoredDiff()
     isNative(performance.now, Date.now) // will warn the user if these are not native functions.  We need these to be native for time in the agent to be accurate in general.
+  }
+
+  #detectDrift () {
+    try {
+      // Drift detection: measures if performance.now() and Date.now() have become desynchronized
+      // This can happen when a machine sleeps and the performance timer freezes while Date continues
+      // this can also happen when a user sets their clock forward during the page lifecycle,
+      // but we have no way of distinguishing that from actual clock drift so we will just treat it as drift.
+      // In either case, the performance timestamps would be inaccurate at that point so we want to detect and report a count of it.
+      // We only detect positive drift (performance clock falling behind Date clock)
+      // Note: localTimeDiff (server time offset) is NOT part of drift - that's a legitimate offset
+      const drift = (Date.now() - originTime) - performance.now()
+      if (drift > 1000) {
+        // Check if this is new drift (increase of >1000ms from last measurement)
+        const newDrift = drift - this.#measuredDrift
+        if (newDrift > 1000) {
+          // Update measured drift and report it
+          this.#measuredDrift = drift
+          if (this.#session) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/TimeKeeper/ClockDrift/Detected', drift], undefined, FEATURE_NAMES.metrics, this.#session.agentRef.ee)
+        }
+      }
+    } catch (err) {
+      // Silently ignore drift detection errors to avoid breaking normal operation
+    }
   }
 
   get ready () {
@@ -90,7 +124,9 @@ export class TimeKeeper {
    * @returns {number} Corrected unix/epoch timestamp
    */
   convertRelativeTimestamp (relativeTime) {
-    return originTime + relativeTime
+    this.#detectDrift()
+    // Add measured drift to compensate for performance.now() falling behind
+    return originTime + relativeTime + this.#measuredDrift
   }
 
   /**
@@ -100,7 +136,9 @@ export class TimeKeeper {
    * @returns {number}
    */
   convertAbsoluteTimestamp (timestamp) {
-    return timestamp - originTime
+    this.#detectDrift()
+    // Subtract measured drift since we're converting from absolute to relative
+    return timestamp - originTime - this.#measuredDrift
   }
 
   /**
@@ -109,6 +147,7 @@ export class TimeKeeper {
    * @return {number} Corrected unix/epoch timestamp
    */
   correctAbsoluteTimestamp (timestamp) {
+    this.#detectDrift()
     return timestamp - this.#localTimeDiff
   }
 
@@ -118,6 +157,7 @@ export class TimeKeeper {
    * @returns {number}
    */
   correctRelativeTimestamp (relativeTime) {
+    this.#detectDrift()
     return this.correctAbsoluteTimestamp(this.convertRelativeTimestamp(relativeTime))
   }
 

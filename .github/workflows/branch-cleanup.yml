@@ -4,6 +4,10 @@ name: Branch Cleanup
 
 on: delete
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   branch-delete:
     if: github.event.ref_type == 'branch'

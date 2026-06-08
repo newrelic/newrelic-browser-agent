@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    <script>
+      window.test = {
+        agentLogCount: 0
+      }
+      console.debug = function (...args) {
+        if (args[0] === "New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#69") window.test.agentLogCount += 1;
+      };
+    </script>
+    {init} {config} {loader} {loader} {loader}
+  </head>
+  <body>This page has multiple Browser agents running on it</body>
+</html>

@@ -27,12 +27,12 @@ test('should subscribe to wrap-logger events and buffer them', async () => {
     myTestLogger: jest.fn()
   }
   const customAttributes = { args: faker.string.uuid() }
-  wrapLogger(loggingInstrument.ee, myLoggerSuite, 'myTestLogger', { customAttributes, level: 'error' })
+  wrapLogger(loggingInstrument.ee, myLoggerSuite, 'myTestLogger', { customAttributes, level: 'error' }, undefined, mainAgent)
   expect(loggingUtilsModule.bufferLog).toHaveBeenCalledTimes(0)
 
   const message = faker.string.uuid()
   myLoggerSuite.myTestLogger(message)
-  expect(loggingUtilsModule.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, message, customAttributes, 'error', true)
+  expect(loggingUtilsModule.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, message, customAttributes, 'error', true, undefined)
 })
 
 test('wrapLogger should not re-wrap or overwrite context if called more than once', async () => {
@@ -40,16 +40,16 @@ test('wrapLogger should not re-wrap or overwrite context if called more than onc
     myTestLogger: jest.fn()
   }
   const customAttributes = { args: faker.string.uuid() }
-  wrapLogger(loggingInstrument.ee, myLoggerSuite, 'myTestLogger', { customAttributes, level: 'error' })
+  wrapLogger(loggingInstrument.ee, myLoggerSuite, 'myTestLogger', { customAttributes, level: 'error' }, undefined, mainAgent)
 
   let message = faker.string.uuid()
   myLoggerSuite.myTestLogger(message)
-  expect(loggingUtilsModule.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, message, customAttributes, 'error', true) // ignores args: 2
+  expect(loggingUtilsModule.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, message, customAttributes, 'error', true, undefined) // undefined target
 
   const newCustomAttributes = { args: faker.string.uuid() }
   /** re-wrap the logger with a NEW context, new events should NOT get that context because the wrapper should early-exit */
-  wrapLogger(loggingInstrument.ee, myLoggerSuite, 'myTestLogger', { customAttributes: newCustomAttributes, level: 'info' })
+  wrapLogger(loggingInstrument.ee, myLoggerSuite, 'myTestLogger', { customAttributes: newCustomAttributes, level: 'info' }, undefined, mainAgent)
   message = faker.string.uuid()
   myLoggerSuite.myTestLogger(message)
-  expect(loggingUtilsModule.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, message, newCustomAttributes, 'info', true)
+  expect(loggingUtilsModule.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, message, newCustomAttributes, 'info', true, undefined) // undefined target
 })

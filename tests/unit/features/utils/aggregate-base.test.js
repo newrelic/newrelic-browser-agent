@@ -7,6 +7,7 @@ import { FEATURE_NAMES } from '../../../../src/loaders/features/features'
 import { EventBuffer } from '../../../../src/features/utils/event-buffer'
 import { EventAggregator } from '../../../../src/common/aggregate/event-aggregator'
 import { Aggregate as PVEAggregate } from '../../../../src/features/page_view_event/aggregate/index'
+import { ee } from '../../../../src/common/event-emitter/contextual-ee'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/aggregate-base')
@@ -35,23 +36,9 @@ jest.mock('../../../../src/common/util/console', () => ({
   __esModule: true,
   warn: jest.fn()
 }))
-jest.mock('../../../../src/common/util/feature-flags', () => ({
-  __esModule: true,
-  activatedFeatures: {
-    abcd: {
-      abc: 0,
-      def: 1,
-      ghi: 2,
-      'not-expected0': 0,
-      'not-expected1': 1,
-      'not-expected2': 2
-    }
-  }
-}))
 
 jest.mock('../../../../src/common/constants/runtime', () => ({
   ...jest.requireActual('../../../../src/common/constants/runtime'),
-  supportsNavTimingL2: () => true,
   isiOS: false,
   isBrowserScope: true,
   globalScope: {
@@ -70,6 +57,7 @@ beforeEach(() => {
   featureName = faker.string.uuid()
   mainAgent = {
     agentIdentifier,
+    ee: ee.get(agentIdentifier),
     runtime: { [faker.string.uuid()]: faker.lorem.sentence(), appMetadata: { agents: [{ entityGuid: '12345' }] } },
     // TODO CHECK THAT THIS STILL WORKS WITH NEW SYSTEM
     info: { licenseKey: faker.string.uuid(), applicationID: faker.string.uuid(), entityGuid: faker.string.uuid() }
@@ -80,46 +68,10 @@ afterEach(() => {
   jest.clearAllMocks()
 })
 
-test('should merge info, jsattributes, and runtime objects', () => {
-  const mockInfo1 = {
-    [faker.string.uuid()]: faker.lorem.sentence(),
-    jsAttributes: {
-      [faker.string.uuid()]: faker.lorem.sentence()
-    },
-    licenseKey: faker.string.uuid(),
-    applicationID: faker.string.uuid()
-  }
-  jest.mocked(gosCDN).mockReturnValue({ info: mockInfo1 })
-
-  const mockInfo2 = {
-    jsAttributes: {
-      [faker.string.uuid()]: faker.lorem.sentence()
-    }
-  }
-  mainAgent.info = mockInfo2
-
+test('should not perform late configuration checks in AggregateBase', () => {
   new AggregateBase(mainAgent, featureName)
 
-  expect(isValid).toHaveBeenCalledWith(mockInfo2)
-  expect(gosCDN).toHaveBeenCalledTimes(1)
-  expect(configure).toHaveBeenCalledWith(mainAgent, {
-    info: {
-      ...mockInfo1,
-      jsAttributes: {
-        ...mockInfo1.jsAttributes,
-        ...mockInfo2.jsAttributes
-      }
-    },
-    runtime: mainAgent.runtime
-  }, mainAgent.runtime.loaderType)
-})
-
-test('should only configure the agent once', () => {
-  jest.mocked(isValid).mockReturnValue(true)
-
-  new AggregateBase(mainAgent, featureName)
-
-  expect(isValid).toHaveBeenCalledWith(mainAgent.info)
+  expect(isValid).not.toHaveBeenCalled()
   expect(gosCDN).not.toHaveBeenCalled()
   expect(configure).not.toHaveBeenCalled()
 })
@@ -156,6 +108,15 @@ test('should return empty array when flagNames is empty', async () => {
 
 test('should return activatedFeatures values when available', async () => {
   mainAgent.agentIdentifier = 'abcd' // 'abcd' matches the af mock at the top of this file
+  mainAgent.ee = ee.get('abcd') // Update ee to match the new agentIdentifier
+  mainAgent.runtime.activatedFeatures = {
+    abc: 0,
+    def: 1,
+    ghi: 2,
+    'not-expected0': 0,
+    'not-expected1': 1,
+    'not-expected2': 2
+  }
   const aggregateBase = new AggregateBase(mainAgent, featureName)
   const flagWait = aggregateBase.waitForFlags()
   await expect(flagWait).resolves.toEqual([])
@@ -201,9 +162,11 @@ test('handles events storage correctly across multiple features', async () => {
 })
 
 test('handles events storage correctly across multiple features - multiple agents', async () => {
+  const agentIdentifier2 = faker.string.uuid()
   const mainAgent2 = {
     ...mainAgent,
-    agentIdentifier: faker.string.uuid(),
+    agentIdentifier: agentIdentifier2,
+    ee: ee.get(agentIdentifier2),
     init: {
       [FEATURE_NAMES.pageViewEvent]: { autoStart: true }
     },

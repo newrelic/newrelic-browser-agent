@@ -14,7 +14,7 @@
       api: false,
     }
     window.addEventListener('newrelic', ({ detail }) => {
-      if (!detail || !detail.agentIdentifier) return
+      if (!detail) return
       const { name, drained, type, feature, loaded, timeStamp, data } = detail
 
       if (

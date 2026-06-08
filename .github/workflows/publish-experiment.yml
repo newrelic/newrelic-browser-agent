@@ -1,9 +1,12 @@
 # This workflow can be ran on any branch to build and publish
 # that branch as an internal experiment. Once published, the
-# dev and staging A/B scripts will be updated to include the
-# new experiment.
+# dev A/B script will be updated to include the new experiment.
+# Note: Staging no longer supports experiments (only loads 'released' asset).
 
 name: Publish Experiment
+
+permissions:
+  contents: read
 
 on:
   workflow_dispatch:
@@ -14,13 +17,17 @@ on:
         type: choice
         options:
           - dev
-          - staging
-          - standalone # Note: this option prevents the experiment from being added to dev or staging envs. See the `publish-dev` workflow and `build-ab` action.
+          - standalone # Note: this option prevents the experiment from being added to dev. Standalone experiments must be loaded manually.
       publish_ab_script:
         description: 'Flag that determines if the A/B script should be published to internal site'
         required: true
         type: boolean
         default: true
+      experiment_description:
+        description: 'Description of what this experiment does (used for change tracking)'
+        required: false
+        type: string
+        default: 'Experimental browser agent deployment'
 
 jobs:
   # Build and publish the branch to S3 experiments folder
@@ -48,15 +55,15 @@ jobs:
         run: |
           cat > $GITHUB_WORKSPACE/build/config.js << 'EOF'
           // Config for this experiment
-          window.NREUM.loader_config.agentID = '${{ inputs.nr_environment == 'dev' && secrets.INTERNAL_AB_DEV_APPLICATION_ID || secrets.INTERNAL_AB_STAGING_APPLICATION_ID }}'
-          window.NREUM.loader_config.applicationID = '${{ inputs.nr_environment == 'dev' && secrets.INTERNAL_AB_DEV_APPLICATION_ID || secrets.INTERNAL_AB_STAGING_APPLICATION_ID }}'
+          window.NREUM.loader_config.agentID = '${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}'
+          window.NREUM.loader_config.applicationID = '${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}'
           window.NREUM.loader_config.licenseKey = '${{ secrets.INTERNAL_AB_LICENSE_KEY }}'
-          window.NREUM.info.applicationID = '${{ inputs.nr_environment == 'dev' && secrets.INTERNAL_AB_DEV_APPLICATION_ID || secrets.INTERNAL_AB_STAGING_APPLICATION_ID }}'
+          window.NREUM.info.applicationID = '${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}'
           window.NREUM.info.licenseKey = '${{ secrets.INTERNAL_AB_LICENSE_KEY }}'
           window.NREUM.init.proxy = {} // Proxy won't work for experiments
           window.NREUM.init.session_replay.enabled = true
           window.NREUM.init.session_trace.enabled = true
-          window.NREUM.init.feature_flags = ['ajax_metrics_deny_list']
+          window.NREUM.init.feature_flags = ['ajax_metrics_deny_list', 'register']
           window.NREUM.init.user_actions = {elementAttributes: ['id', 'className', 'tagName', 'type', 'ariaLabel', 'alt', 'title']}
           window.NREUM.init.ajax.capture_payloads = 'failures'
           EOF
@@ -103,7 +110,7 @@ jobs:
     if: ${{ inputs.publish_ab_script == true }}
     needs: [publish-experiment-to-s3]
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 5
     defaults:
       run:
         shell: bash
@@ -118,9 +125,9 @@ jobs:
         uses: ./.github/actions/internal-ab
         with:
           nr_environment: ${{ inputs.nr_environment }}
-          nrba_app_id: ${{ inputs.nr_environment == 'dev' && secrets.INTERNAL_DEV_APPLICATION_ID || secrets.INTERNAL_STAGING_APPLICATION_ID }}
+          nrba_app_id: ${{ secrets.INTERNAL_DEV_APPLICATION_ID }}
           nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
-          nrba_ab_app_id: ${{ inputs.nr_environment == 'dev' && secrets.INTERNAL_AB_DEV_APPLICATION_ID || secrets.INTERNAL_AB_STAGING_APPLICATION_ID }}
+          nrba_ab_app_id: ${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}
           nrba_ab_license_key: ${{ secrets.INTERNAL_AB_LICENSE_KEY }}
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

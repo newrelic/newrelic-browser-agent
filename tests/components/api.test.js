@@ -23,10 +23,20 @@ import { setupConsentAPI } from '../../src/loaders/api/consent'
 import { setTopLevelCallers } from '../../src/loaders/api/topLevelCallers'
 import { gosCDN } from '../../src/common/window/nreum'
 import { now } from '../../src/common/timing/now'
+import { warnings } from '../../src/loaders/api/register'
+import { single } from '../../src/common/util/invoke'
+import { warn } from '../../src/common/util/console'
+
+// Mock script-tracker to avoid PerformanceObserver requirement
+jest.mock('../../src/common/v2/script-tracker', () => {
+  return {
+    findScriptTimings: jest.fn(() => ({ registeredAt: performance.now(), reportedAt: undefined, fetchStart: 0, fetchEnd: 0, scriptStart: 0, scriptEnd: 0, asset: undefined, type: 'unknown' }))
+  }
+})
 
 jest.retryTimes(0)
 
-let entityGuid, agent
+let agent
 describe('API tests', () => {
   describe('APIs', () => {
     beforeAll(() => {
@@ -35,7 +45,6 @@ describe('API tests', () => {
 
     beforeEach(async () => {
       console.debug = jest.fn()
-      entityGuid = faker.string.uuid()
       jest.spyOn(handleModule, 'handle')
       jest.spyOn(agent.ee, 'emit')
     })
@@ -624,13 +633,21 @@ describe('API tests', () => {
       })
 
       beforeEach(async () => {
-        agent.init.api.allow_registered_children = true
+        agent.init.api.register.enabled = true
         id = faker.string.uuid()
         name = faker.string.uuid()
+        // Reset warning state between tests
+        warnings.experimental = single(() => warn(54, 'newrelic.register'))
+        warnings.disabled = single(() => warn(55))
+        warnings.invalidTarget = single((target) => warn(48, target))
+        warnings.deregistered = single(() => warn(68))
       })
 
       test('should return api object', () => {
         const myApi = agent.register({ id, name })
+
+        // Verify experimental warning #54 fires
+        expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#54'))).toEqual(true)
 
         /** wait for entity guid to be assigned */
         expect(myApi).toMatchObject({
@@ -654,14 +671,17 @@ describe('API tests', () => {
           myApi.addPageAction()
           myApi.noticeError()
           myApi.log()
+          // Expects warning #48 (invalid target) and #54 (experimental API)
           expect(console.debug).toHaveBeenCalledTimes(2)
         })
       })
 
       test('should warn and not work if disabled', () => {
-        agent.init.api.allow_registered_children = false
+        agent.init.api.register.enabled = false
         let myApi = agent.register({ id, name })
+        // Expects warning #54 (experimental API) and #55 (disabled)
         expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#54'))).toEqual(true)
+        expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#55'))).toEqual(true)
         myApi.addPageAction()
         myApi.noticeError()
         myApi.log()
@@ -682,166 +702,6 @@ describe('API tests', () => {
 
         myApi.setUserId('userid')
         expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar2', 'application.version': 'appversion', 'enduser.id': 'userid' })
-      })
-
-      test('should duplicate data with config - true', () => {
-        agent.init.api.duplicate_registered_data = true
-        const target = { id, name }
-        const myApi = agent.register(target)
-
-        const customAttrs = { foo: 'bar' }
-
-        myApi.log('test', { customAttributes: customAttrs })
-
-        expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
-        expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
-        expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
-        expectHandle('log', 'test', 2)
-
-        agent.init.api.duplicate_registered_data = false
-      })
-
-      test('should add child.id and child.type to duplicated data - log', () => {
-        agent.init.api.duplicate_registered_data = true
-        const target = { id, name }
-        const myApi = agent.register(target)
-
-        const customAttrs = { foo: 'bar' }
-
-        myApi.log('test', { customAttributes: customAttrs })
-
-        // Find the handle calls for 'log'
-        const logCalls = handleModule.handle.mock.calls.filter(call => call[0] === 'log')
-        expect(logCalls.length).toBe(2)
-
-        // First call is the duplicate to container - should have child.id and child.type
-        const containerCall = logCalls[0]
-        expect(containerCall[1][2]).toEqual({ foo: 'bar', 'child.id': id, 'child.type': 'MFE' })
-
-        // Second call is to the registered entity target - should not have child.id or child.type
-        const targetCall = logCalls[1]
-        expect(targetCall[1][2]).toEqual({ foo: 'bar' })
-        expect(targetCall[1][2]).not.toHaveProperty('child.id')
-        expect(targetCall[1][2]).not.toHaveProperty('child.type')
-
-        agent.init.api.duplicate_registered_data = false
-      })
-
-      test('should add child.id and child.type to duplicated data - addPageAction', () => {
-        agent.init.api.duplicate_registered_data = true
-        const target = { id, name }
-        const myApi = agent.register(target)
-
-        const customAttrs = { foo: 'bar' }
-
-        myApi.addPageAction('test', customAttrs)
-
-        // Find the handle calls for 'api-addPageAction'
-        const pageActionCalls = handleModule.handle.mock.calls.filter(call => call[0] === 'api-addPageAction')
-        expect(pageActionCalls.length).toBe(2)
-
-        console.log('pageActionCalls:', pageActionCalls)
-
-        // First call is the duplicate to container - should have child.id and child.type
-        const containerCall = pageActionCalls[0]
-        expect(containerCall[1][2]).toEqual({ foo: 'bar', 'child.id': id, 'child.type': 'MFE' })
-
-        // Second call is to the registered entity target - should not have child.id or child.type
-        const targetCall = pageActionCalls[1]
-        expect(targetCall[1][2]).toEqual({ foo: 'bar' })
-        agent.init.api.duplicate_registered_data = false
-      })
-
-      test('should add child.id and child.type to duplicated data - noticeError', () => {
-        agent.init.api.duplicate_registered_data = true
-        const target = { id, name }
-        const myApi = agent.register(target)
-
-        const err = new Error('test')
-        const customAttrs = { foo: 'bar' }
-
-        myApi.noticeError(err, customAttrs)
-
-        // Find the handle calls for 'err'
-        const errorCalls = handleModule.handle.mock.calls.filter(call => call[0] === 'err')
-        expect(errorCalls.length).toBe(2)
-
-        // First call is the duplicate to container - should have child.id and child.type
-        const containerCall = errorCalls[0]
-        expect(containerCall[1][3]).toEqual({ foo: 'bar', 'child.id': id, 'child.type': 'MFE' })
-
-        // Second call is to the registered entity target - should not have child.id or child.type
-        const targetCall = errorCalls[1]
-        expect(targetCall[1][3]).toEqual({ foo: 'bar' })
-
-        agent.init.api.duplicate_registered_data = false
-      })
-
-      test('should add child.id and child.type to duplicated data - measure', () => {
-        agent.init.api.duplicate_registered_data = true
-        const target = { id, name }
-        const myApi = agent.register(target)
-
-        myApi.measure('test', { customAttributes: { foo: 'bar' } })
-
-        // Find the handle calls for 'api-measure'
-        const measureCalls = handleModule.handle.mock.calls.filter(call => call[0] === 'api-measure')
-        expect(measureCalls.length).toBe(2)
-
-        console.log('measureCalls:', measureCalls[0][1])
-
-        // First call is the duplicate to container - should have child.id and child.type in customAttributes
-        const containerCall = measureCalls[0]
-        expect(containerCall[1][0].customAttributes).toEqual({ foo: 'bar', 'child.id': id, 'child.type': 'MFE' })
-
-        // Second call is to the registered entity target - should not have child.id or child.type
-        const targetCall = measureCalls[1]
-        expect(targetCall[1][0].customAttributes).toEqual({ foo: 'bar' })
-
-        agent.init.api.duplicate_registered_data = false
-      })
-
-      test('should add child.id and child.type to duplicated data - recordCustomEvent', () => {
-        console.log('THE TEST IN QUESTION')
-        agent.init.api.duplicate_registered_data = true
-        const target = { id, name }
-        const myApi = agent.register(target)
-
-        const customAttrs = { foo: 'bar' }
-
-        myApi.recordCustomEvent('testEvent', customAttrs)
-
-        // Find the handle calls for 'api-recordCustomEvent'
-        const customEventCalls = handleModule.handle.mock.calls.filter(call => call[0] === 'api-recordCustomEvent')
-        expect(customEventCalls.length).toBe(2)
-
-        // First call is the duplicate to container - should have child.id and child.type
-        const containerCall = customEventCalls[0]
-        console.log('containerCall:', containerCall)
-        expect(containerCall[1][2]).toEqual({ foo: 'bar', 'child.id': id, 'child.type': 'MFE' })
-
-        // Second call is to the registered entity target - should not have child.id or child.type
-        const targetCall = customEventCalls[1]
-        expect(targetCall[1][2]).toEqual({ foo: 'bar' })
-
-        agent.init.api.duplicate_registered_data = false
-      })
-
-      test('should duplicate data with config - matching entity guid', async () => {
-        agent.init.api.duplicate_registered_data = [entityGuid]
-        const target = { id, name }
-        const myApi = agent.register(target)
-
-        const customAttrs = { foo: 'bar' }
-
-        myApi.log('test', { customAttributes: customAttrs })
-
-        expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
-        expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
-        expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
-        expectHandle('log', 'test', 2)
-
-        agent.init.api.duplicate_registered_data = false
       })
 
       describe('noticeError', () => {
@@ -892,18 +752,18 @@ describe('API tests', () => {
 
       describe('tags', () => {
         test('should add tags as source attributes', () => {
-          const target = { id, name, tags: ['tag1', 'tag2', 'tag3'] }
+          const target = { id, name, tags: { tag1: 'value1', tag2: 'value2', tag3: true } }
           const myApi = agent.register(target)
 
           expect(myApi.metadata.customAttributes).toEqual({
-            'source.tag1': true,
-            'source.tag2': true,
+            'source.tag1': 'value1',
+            'source.tag2': 'value2',
             'source.tag3': true
           })
         })
 
-        test('should handle empty tags array', () => {
-          const target = { id, name, tags: [] }
+        test('should handle empty tags object', () => {
+          const target = { id, name, tags: {} }
           const myApi = agent.register(target)
 
           expect(myApi.metadata.customAttributes).toEqual({})
@@ -916,15 +776,22 @@ describe('API tests', () => {
           expect(myApi.metadata.customAttributes).toEqual({})
         })
 
-        test('should handle non-array tags by defaulting to empty array', () => {
-          const target = { id, name, tags: 'not-an-array' }
+        test('should handle non-object tags by defaulting to empty object', () => {
+          const target = { id, name, tags: 'not-an-object' }
+          const myApi = agent.register(target)
+
+          expect(myApi.metadata.customAttributes).toEqual({})
+        })
+
+        test('should handle array tags by defaulting to empty object', () => {
+          const target = { id, name, tags: ['array', 'not', 'allowed'] }
           const myApi = agent.register(target)
 
           expect(myApi.metadata.customAttributes).toEqual({})
         })
 
         test('should include tags in reported data', () => {
-          const target = { id, name, tags: ['frontend', 'checkout'] }
+          const target = { id, name, tags: { frontend: true, checkout: true } }
           const myApi = agent.register(target)
 
           const err = new Error('test')
@@ -942,45 +809,255 @@ describe('API tests', () => {
         })
 
         test('should combine tags with other custom attributes', () => {
-          const target = { id, name, tags: ['module1'] }
+          const target = { id, name, tags: { module1: 'shopping-cart' } }
           const myApi = agent.register(target)
 
           myApi.setCustomAttribute('foo', 'bar')
           myApi.setApplicationVersion('1.0.0')
 
           expect(myApi.metadata.customAttributes).toEqual({
-            'source.module1': true,
+            'source.module1': 'shopping-cart',
             foo: 'bar',
             'application.version': '1.0.0'
           })
         })
 
         test('should exclude protected "name" and "id" keys from tags', () => {
-          const target = { id, name, tags: ['name', 'id', 'valid-tag', 'another-tag'] }
+          const target = { id, name, tags: { name: 'should-not-appear', id: 'also-not', type: 'ignored-too', validTag: 'yes', anotherTag: true } }
           const myApi = agent.register(target)
 
-          // Should only include valid-tag and another-tag, not name or id
+          // Should only include validTag and anotherTag, not name or id or type
           expect(myApi.metadata.customAttributes).toEqual({
-            'source.valid-tag': true,
-            'source.another-tag': true
+            'source.validTag': 'yes',
+            'source.anotherTag': true
           })
 
-          // Verify source.name and source.id are not created from tags
+          // Verify source.name, source.id, and source.type are not created from tags
           expect(myApi.metadata.customAttributes['source.name']).toBeUndefined()
           expect(myApi.metadata.customAttributes['source.id']).toBeUndefined()
+          expect(myApi.metadata.customAttributes['source.type']).toBeUndefined()
         })
 
-        test('should handle tags array with only protected keys', () => {
-          const target = { id, name, tags: ['name', 'id'] }
+        test('should handle tags object with only protected keys', () => {
+          const target = { id, name, tags: { name: 'ignored', id: 'also-ignored', type: 'ignored-too' } }
           const myApi = agent.register(target)
 
           // Should result in empty custom attributes since all tags are protected
           expect(myApi.metadata.customAttributes).toEqual({})
         })
+
+        test('should handle tags with various value types', () => {
+          const target = {
+            id,
+            name,
+            tags: {
+              environment: 'production',
+              version: '2.1.0',
+              critical: true,
+              count: 42,
+              nullable: null
+            }
+          }
+          const myApi = agent.register(target)
+
+          expect(myApi.metadata.customAttributes).toEqual({
+            'source.environment': 'production',
+            'source.version': '2.1.0',
+            'source.critical': true,
+            'source.count': 42,
+            'source.nullable': null
+          })
+        })
+
+        test('should handle tags with complex object structure', () => {
+          const target = {
+            id,
+            name,
+            tags: {
+              team: 'platform',
+              region: 'us-west-2',
+              staging: false
+            }
+          }
+          const myApi = agent.register(target)
+
+          expect(myApi.metadata.customAttributes).toEqual({
+            'source.team': 'platform',
+            'source.region': 'us-west-2',
+            'source.staging': false
+          })
+        })
+
+        test('should include tags with multiple value types in reported data', () => {
+          const target = {
+            id,
+            name,
+            tags: {
+              frontend: true,
+              environment: 'production',
+              version: '1.0.0'
+            }
+          }
+          const myApi = agent.register(target)
+
+          const err = new Error('test')
+          myApi.noticeError(err)
+
+          const calls = handleModule.handle.mock.calls.filter(call => call[0] === 'err')
+          expect(calls.length).toBeGreaterThan(0)
+
+          const errorCall = calls.find(call => call[1]?.[0] === err)
+          expect(errorCall).toBeDefined()
+          expect(errorCall[1][3]).toMatchObject({
+            'source.frontend': true,
+            'source.environment': 'production',
+            'source.version': '1.0.0'
+          })
+        })
+      })
+
+      describe('timing tracking', () => {
+        beforeEach(() => {
+          jest.useFakeTimers()
+        })
+        afterEach(() => {
+          jest.useRealTimers()
+        })
+
+        test('should record MicroFrontEndTiming event on deregister', () => {
+          const myApi = agent.register({ id, name })
+
+          // Simulate some work
+          jest.advanceTimersByTime(10)
+
+          myApi.deregister()
+
+          expectHandle('storeSupportabilityMetrics', 'API/register/called')
+          expectHandle('api-recordCustomEvent', 'MicroFrontEndTiming')
+        })
+
+        test('should include all timing attributes in MicroFrontEndTiming event', () => {
+          const myApi = agent.register({ id, name })
+
+          const deregisteredAt = now()
+          myApi.deregister()
+
+          const customEventCall = handleModule.handle.mock.calls.find(call =>
+            call[0] === 'api-recordCustomEvent' && call[1][1] === 'MicroFrontEndTiming'
+          )
+
+          expect(customEventCall).toBeDefined()
+          const [timestamp, eventType, attrs] = customEventCall[1]
+
+          expect(timestamp).toEqual(deregisteredAt)
+
+          expect(eventType).toBe('MicroFrontEndTiming')
+          expect(attrs).toHaveProperty('timeToLoad')
+          expect(attrs).toHaveProperty('timeToBeRequested')
+          expect(attrs).toHaveProperty('timeToFetch')
+          expect(attrs).toHaveProperty('timeToRegister')
+          expect(attrs).toHaveProperty('timeAlive')
+
+          // All values should be numbers
+          expect(typeof attrs.timeToLoad).toBe('number')
+          expect(typeof attrs.timeToBeRequested).toBe('number')
+          expect(typeof attrs.timeToFetch).toBe('number')
+          expect(typeof attrs.timeToRegister).toBe('number')
+          expect(typeof attrs.timeAlive).toBe('number')
+        })
+
+        test('should not report timing twice on multiple deregister calls', () => {
+          const myApi = agent.register({ id, name })
+
+          myApi.deregister()
+          myApi.deregister()
+          myApi.deregister()
+
+          const timingCalls = handleModule.handle.mock.calls.filter(call =>
+            call[0] === 'api-recordCustomEvent' && call[1][1] === 'MicroFrontEndTiming'
+          )
+
+          expect(timingCalls.length).toBe(1)
+        })
+
+        test('should calculate timeAlive correctly', () => {
+          const myApi = agent.register({ id, name })
+
+          // Do some work
+          jest.advanceTimersByTime(20)
+
+          myApi.deregister()
+
+          const customEventCall = handleModule.handle.mock.calls.find(call =>
+            call[0] === 'api-recordCustomEvent' && call[1][1] === 'MicroFrontEndTiming'
+          )
+
+          const attrs = customEventCall[1][2]
+
+          // timeAlive should be positive
+          expect(attrs.timeAlive).toBeGreaterThan(0)
+          // timeAlive should be exactly 20ms with fake timers
+          expect(attrs.timeAlive).toBe(20)
+        })
+
+        test('should handle nested MFE timings independently', () => {
+          const parent = agent.register({ id: 'parent-id', name: 'parent-mfe' })
+
+          // Wait a bit before creating child
+          jest.advanceTimersByTime(5)
+
+          const child = agent.register({ id: 'child-id', name: 'child-mfe' }, parent)
+          jest.advanceTimersByTime(5)
+
+          child.deregister()
+          parent.deregister()
+
+          const timingCalls = handleModule.handle.mock.calls.filter(call =>
+            call[0] === 'api-recordCustomEvent' && call[1][1] === 'MicroFrontEndTiming'
+          )
+
+          // Should get timing events for both parent and child
+          expect(timingCalls.length).toBe(2)
+
+          // Each should have positive timeAlive
+          // First call is for child (deregistered first), second is for parent
+          const childCall = timingCalls[0]
+          const parentCall = timingCalls[1]
+
+          const childAttrs = childCall[1][2]
+          expect(childAttrs.timeAlive).toBeGreaterThan(0)
+          expect(childAttrs.timeAlive).toBe(5) // child was alive for 5ms
+
+          const parentAttrs = parentCall[1][2]
+          expect(parentAttrs.timeAlive).toBeGreaterThan(0)
+          expect(parentAttrs.timeAlive).toBe(10) // parent was alive for 10ms
+        })
+
+        test('should report all timing metrics with non-negative values', () => {
+          const myApi = agent.register({ id, name })
+
+          myApi.deregister()
+
+          const customEventCall = handleModule.handle.mock.calls.find(call =>
+            call[0] === 'api-recordCustomEvent' && call[1][1] === 'MicroFrontEndTiming'
+          )
+
+          const attrs = customEventCall[1][2]
+
+          expect(attrs.timeToLoad).toBeGreaterThanOrEqual(0)
+          expect(attrs.timeToBeRequested).toBeGreaterThanOrEqual(0)
+          expect(attrs.timeToFetch).toBeGreaterThanOrEqual(0)
+          expect(attrs.timeToRegister).toBeGreaterThanOrEqual(0)
+          expect(attrs.timeAlive).toBeGreaterThanOrEqual(0)
+        })
       })
     })
 
     describe('logging', () => {
+      beforeAll(async () => {
+        await initializeFeature(Logging, agent)
+      })
+
       describe('wrapLogger', () => {
         test('should emit events for calls by wrapped function - defaults', () => {
           const myLoggerPackage = {
@@ -996,8 +1073,8 @@ describe('API tests', () => {
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'])
 
-          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), 'myObservedLogger'])
-          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined])
+          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), 'myObservedLogger', []])
+          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined, []])
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/logging/info/called'])
           expectHandled('log', [expect.any(Number), 'test1', {}, 'INFO', false, undefined])
@@ -1024,8 +1101,8 @@ describe('API tests', () => {
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'])
 
-          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName])
-          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined])
+          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName, []])
+          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined, []])
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/logging/warn/called'])
           expectHandled('log', [expect.any(Number), 'test1', {}, 'warn', false, undefined])
@@ -1045,8 +1122,8 @@ describe('API tests', () => {
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'])
 
-          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName])
-          expectEmitted('wrap-logger-end', [['test1', { test2: 2 }, ['test3'], true, 1], expect.any(Object), undefined])
+          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName, []])
+          expectEmitted('wrap-logger-end', [['test1', { test2: 2 }, ['test3'], true, 1], expect.any(Object), undefined, []])
         })
 
         test('wrapped function should still behave as intended', () => {
@@ -1100,6 +1177,15 @@ describe('API tests', () => {
         expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/interaction/called'])
         expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/get/called'])
         expectHandled('api-ixn-get', [expect.toBeNumber(), expect.any(Object)])
+      })
+
+      test('should forward interaction options to get handler', () => {
+        const opts = { waitForEnd: true, targetPageLoad: true }
+        agent.interaction(opts)
+
+        expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/interaction/called'])
+        expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/get/called'])
+        expectHandled('api-ixn-get', [expect.toBeNumber(), opts])
       })
 
       test('should return an object containing the SPA interaction API methods', () => {

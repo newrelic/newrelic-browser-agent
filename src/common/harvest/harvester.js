@@ -15,8 +15,8 @@ import { obj, param } from '../url/encode'
 import { warn } from '../util/console'
 import { stringify } from '../util/stringify'
 import { getSubmitMethod, xhr as xhrMethod, xhrFetch as fetchMethod } from '../util/submit-data'
-import { activatedFeatures } from '../util/feature-flags'
 import { dispatchGlobalEvent } from '../dispatch/global-event'
+import { Obfuscator } from '../util/obfuscate'
 
 const RETRY = 'Harvester/Retry/'
 const RETRY_ATTEMPTED = RETRY + 'Attempted/'
@@ -30,12 +30,16 @@ export class Harvester {
   constructor (agentRef) {
     this.agentRef = agentRef
 
+    // Create obfuscator for harvest metadata (referrer URL, etc.)
+    // No event type specified - applies to all harvests regardless of feature
+    this.obfuscator = new Obfuscator(agentRef)
+
     subscribeToEOL(() => { // do one last harvest round or check
       this.initializedAggregates.forEach(aggregateInst => { // let all features wrap up things needed to do before ANY harvest in case there's last minute cross-feature data dependencies
         if (typeof aggregateInst.harvestOpts.beforeUnload === 'function') aggregateInst.harvestOpts.beforeUnload()
       })
       this.initializedAggregates.forEach(aggregateInst => this.triggerHarvestFor(aggregateInst, { isFinalHarvest: true }))
-      /* This callback should run in bubble phase, so that that CWV api, like "onLCP", is called before the final harvest so that emitted timings are part of last outgoing. */
+      /* This callback should run in bubble phase, so that CWV api, like "onLCP", is called before the final harvest so that emitted timings are part of last outgoing. */
     }, false)
   }
 
@@ -74,6 +78,7 @@ export class Harvester {
       payload: output.payload,
       localOpts,
       submitMethod,
+      harvesterObfuscator: this.obfuscator,
       cbFinished,
       raw: aggregateInst.harvestOpts.raw,
       featureName: aggregateInst.featureName,
@@ -113,7 +118,7 @@ const warnings = {}
   * @param {NetworkSendSpec} param0 Specification for sending data
   * @returns {boolean} True if a network call was made. Note that this does not mean or guarantee that it was successful.
   */
-export function send (agentRef, { endpoint, payload, localOpts = {}, submitMethod, cbFinished, raw, featureName, endpointVersion = 1 }) {
+export function send (agentRef, { endpoint, payload, localOpts = {}, submitMethod, cbFinished, raw, featureName, endpointVersion = 1, harvesterObfuscator }) {
   if (!agentRef.info.errorBeacon) return false
 
   let { body, qs } = cleanPayload(payload)
@@ -128,7 +133,7 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
   const url = raw
     ? `${protocol}://${perceivedBeacon}/${endpoint}`
     : `${protocol}://${perceivedBeacon}${endpoint !== RUM ? '/' + endpoint : ''}/${endpointVersion}/${agentRef.info.licenseKey}`
-  const baseParams = !raw ? baseQueryString(agentRef, qs, endpoint) : ''
+  const baseParams = !raw ? baseQueryString(agentRef, qs, endpoint, harvesterObfuscator) : ''
   let payloadParams = obj(qs, agentRef.runtime.maxBytes)
   if (baseParams === '' && payloadParams.startsWith('&')) {
     payloadParams = payloadParams.substring(1)
@@ -198,8 +203,7 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
   }
 
   dispatchGlobalEvent({
-    agentIdentifier: agentRef.agentIdentifier,
-    drained: !!activatedFeatures?.[agentRef.agentIdentifier],
+    drained: !!agentRef.runtime?.activatedFeatures,
     type: 'data',
     name: 'harvest',
     feature: featureName,
@@ -262,8 +266,9 @@ function cleanPayload (payload = {}) {
 }
 
 // The stuff that gets sent every time.
-function baseQueryString (agentRef, qs, endpoint) {
-  const ref = agentRef.runtime.obfuscator.obfuscateString(cleanURL('' + globalScope.location))
+function baseQueryString (agentRef, qs, endpoint, harvesterObfuscator) {
+  const cleanedURL = cleanURL('' + globalScope.location)
+  const ref = harvesterObfuscator?.obfuscateString(cleanedURL) ?? cleanedURL
   const session = agentRef.runtime.session
   const hr = !!session?.state.sessionReplaySentFirstChunk && session?.state.sessionReplayMode === 1 && endpoint !== JSERRORS
   const ht = !!session?.state.traceHarvestStarted && session?.state.sessionTraceMode === 1 && ![LOGS, BLOBS].includes(endpoint)

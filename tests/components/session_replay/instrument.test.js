@@ -1,6 +1,8 @@
 import { resetAgent, setupAgent } from '../setup-agent'
 import { Instrument as SessionReplay } from '../../../src/features/session_replay/instrument'
 import * as nreumModule from '../../../src/common/window/nreum'
+import { getAppSessionHash } from '../../../src/common/session/session-key'
+import { SESSION_STORAGE_KEY_PREFIX } from '../../../src/common/session/constants'
 import { MODE } from '../../specs/util/helpers'
 
 let mainAgent, savedInitialSession
@@ -28,7 +30,7 @@ afterEach(() => {
     jest.mocked(nreumModule.gosNREUMOriginals).mockRestore()
   }
 
-  resetAgent(mainAgent.agentIdentifier)
+  resetAgent(mainAgent)
   jest.clearAllMocks()
 })
 
@@ -108,6 +110,19 @@ describe('Preload early records', () => {
   test('when replay already on in existing session, even if preload flag disabled', async () => {
     Object.assign(mainAgent.init.session_replay, { preload: false, enabled: true })
     mainAgent.runtime.session.write({ sessionReplayMode: MODE.FULL })
+
+    const sessionReplayInstrument = new SessionReplay(mainAgent)
+    await new Promise(process.nextTick)
+
+    expect(sessionReplayInstrument.recorder).toBeDefined()
+    expect(mainAgent.runtime.isRecording).toEqual(true)
+  })
+
+  test('when replay already on in namespaced localStorage session, even if preload flag disabled', async () => {
+    const namespacedKey = `${SESSION_STORAGE_KEY_PREFIX}${getAppSessionHash(mainAgent.info.licenseKey, mainAgent.info.applicationID)}`
+    localStorage.setItem(namespacedKey, JSON.stringify({ sessionReplayMode: MODE.FULL }))
+    mainAgent.runtime.session = undefined
+    Object.assign(mainAgent.init.session_replay, { preload: false, enabled: true })
 
     const sessionReplayInstrument = new SessionReplay(mainAgent)
     await new Promise(process.nextTick)

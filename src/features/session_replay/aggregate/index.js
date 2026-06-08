@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 /**
@@ -19,9 +19,11 @@ import { stringify } from '../../../common/util/stringify'
 import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
 import { now } from '../../../common/timing/now'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
+import { EVENT_TYPES } from '../../../common/constants/events'
 import { cleanURL } from '../../../common/url/clean-url'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
 import { PAUSE_REPLAY } from '../../../loaders/api/constants'
+import { Obfuscator } from '../../../common/util/obfuscate'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -30,6 +32,10 @@ export class Aggregate extends AggregateBase {
   // pass the recorder into the aggregator
   constructor (agentRef, args) {
     super(agentRef, FEATURE_NAME)
+
+    // Create obfuscator for session replay query params
+    this.obfuscator = new Obfuscator(agentRef, EVENT_TYPES.SR)
+
     /** Set once the recorder has fully initialized after flag checks and sampling */
     this.initialized = false
     /** Set once the feature has been "aborted" to prevent other side-effects from continuing */
@@ -209,6 +215,7 @@ export class Aggregate extends AggregateBase {
   }
 
   makeHarvestPayload () {
+    if (this.isRetrying) return this.recorder.retryPayload
     if (this.mode !== MODE.FULL || this.blocked) return // harvests should only be made in FULL mode, and not if the feature is blocked
     if (this.shouldCompress && !this.gzipper) return // if compression is enabled, but the libraries have not loaded, wait for them to load
     if (!this.recorder || !this.timeKeeper?.ready || !(this.recorder.hasSeenSnapshot && this.recorder.hasSeenMeta)) return // if the recorder or the timekeeper is not ready, or the recorder has not yet seen a snapshot, do not harvest
@@ -239,13 +246,14 @@ export class Aggregate extends AggregateBase {
       return
     }
 
-    // TODO -- Gracefully handle the buffer for retries.
     if (!this.agentRef.runtime.session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
     this.recorder.clearBuffer()
 
     if (!this.agentRef.runtime.session.state.traceHarvestStarted) {
       warn(59, JSON.stringify(this.agentRef.runtime.session.state))
     }
+
+    this.recorder.retryPayload = payload
 
     return payload
   }
@@ -301,7 +309,7 @@ export class Aggregate extends AggregateBase {
     return {
       qs: {
         browser_monitoring_key: this.agentRef.info.licenseKey,
-        type: 'SessionReplay',
+        type: EVENT_TYPES.SR,
         app_id: this.agentRef.info.applicationID,
         protocol_version: '0',
         timestamp: firstTimestamp,
@@ -338,9 +346,18 @@ export class Aggregate extends AggregateBase {
   }
 
   postHarvestCleanup (result) {
-    // The mutual decision for now is to stop recording and clear buffers if ingest is experiencing 429 rate limiting
-    if (result.status === 429) {
-      this.abort(ABORT_REASONS.TOO_MANY)
+    if (result.sent) {
+      if (result.retry) {
+        warn(70)
+        this.isRetrying = true
+        this.forceStop()
+      } else {
+        this.recorder.retryPayload = undefined
+        if (this.isRetrying) {
+          this.isRetrying = false
+          this.switchToFull()
+        }
+      }
     }
   }
 

@@ -2,12 +2,13 @@ import { faker } from '@faker-js/faker'
 import * as eventEmitterModule from '../../../../src/common/event-emitter/contextual-ee'
 import * as handleModule from '../../../../src/common/event-emitter/handle'
 import * as drainModule from '../../../../src/common/drain/drain'
-import { activateFeatures, activatedFeatures } from '../../../../src/common/util/feature-flags'
+import { activateFeatures } from '../../../../src/common/util/feature-flags'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/common/util/feature-flags')
 
 let agentIdentifier
+let agentRef
 
 beforeEach(() => {
   agentIdentifier = faker.string.uuid()
@@ -15,22 +16,22 @@ beforeEach(() => {
   eventEmitterModule.ee.get = jest.fn(() => ({
     emit: emitterFn
   }))
-})
-
-afterEach(() => {
-  Object.keys(activatedFeatures)
-    .forEach(key => delete activatedFeatures[agentIdentifier][key])
+  agentRef = {
+    agentIdentifier,
+    ee: eventEmitterModule.ee.get(agentIdentifier),
+    runtime: {}
+  }
 })
 
 test.each([
   null,
   undefined
 ])('should not do anything when flags is %s', (input) => {
-  activateFeatures(input, { agentIdentifier, ee: eventEmitterModule.ee.get(agentIdentifier) })
+  activateFeatures(input, agentRef)
 
   expect(handleModule.handle).not.toHaveBeenCalled()
   expect(drainModule.drain).not.toHaveBeenCalled()
-  expect(activatedFeatures[agentIdentifier]).toEqual({})
+  expect(agentRef.runtime.activatedFeatures).toBeUndefined()
 })
 
 test('emits the right events when feature flag = 1', () => {
@@ -41,14 +42,14 @@ test('emits the right events when feature flag = 1', () => {
     spa: 1,
     sr: 1
   }
-  activateFeatures(flags, { agentIdentifier, ee: eventEmitterModule.ee.get(agentIdentifier) })
+  activateFeatures(flags, agentRef)
 
-  const sharedEE = eventEmitterModule.ee.get(agentIdentifier).emit
+  const sharedEE = agentRef.ee.emit
 
   expect(sharedEE).toHaveBeenCalledTimes(1)
   expect(sharedEE).toHaveBeenLastCalledWith('rumresp', [flags])
 
-  expect(activatedFeatures[agentIdentifier]).toEqual(flags)
+  expect(agentRef.runtime.activatedFeatures).toEqual(flags)
 })
 
 test('emits the right events when feature flag = 0', () => {
@@ -59,24 +60,24 @@ test('emits the right events when feature flag = 0', () => {
     spa: 1,
     sr: 1
   }
-  activateFeatures(flags, { agentIdentifier, ee: eventEmitterModule.ee.get(agentIdentifier) })
+  activateFeatures(flags, agentRef)
 
-  const sharedEE = eventEmitterModule.ee.get(agentIdentifier).emit
+  const sharedEE = agentRef.ee.emit
 
   expect(sharedEE).toHaveBeenCalledTimes(1)
   expect(sharedEE).toHaveBeenLastCalledWith('rumresp', [flags])
 
-  expect(activatedFeatures[agentIdentifier]).toEqual(flags)
+  expect(agentRef.runtime.activatedFeatures).toEqual(flags)
 })
 
 test('only the first activate of the same feature is respected', () => {
-  activateFeatures({ st: 1 }, { agentIdentifier, ee: eventEmitterModule.ee.get(agentIdentifier) })
+  activateFeatures({ st: 1 }, agentRef)
 
-  const sharedEE = eventEmitterModule.ee.get(agentIdentifier).emit
+  const sharedEE = agentRef.ee.emit
 
   expect(sharedEE).toHaveBeenNthCalledWith(1, 'rumresp', [{ st: 1 }])
 
   sharedEE.mockClear()
-  activateFeatures({ st: 0 }, { agentIdentifier, ee: eventEmitterModule.ee.get(agentIdentifier) })
-  expect(activatedFeatures[agentIdentifier].st).toBeTruthy()
+  activateFeatures({ st: 0 }, agentRef)
+  expect(agentRef.runtime.activatedFeatures.st).toBeTruthy()
 })

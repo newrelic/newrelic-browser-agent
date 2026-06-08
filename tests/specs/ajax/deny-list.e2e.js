@@ -1,5 +1,5 @@
 import { extractAjaxEvents } from '../../util/xhr'
-import { testAjaxEventsRequest, testAjaxTimeSlicesRequest, testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testAjaxEventsRequest, testAjaxTimeSlicesRequest, testInteractionEventsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('xhr events deny list', () => {
   it('does not capture events when blocked', async () => {
@@ -10,7 +10,7 @@ describe('xhr events deny list', () => {
     const [ajaxEvents, interactionEvents] = await Promise.all([
       ajaxCapture.waitForResult({ timeout: 10000 }),
       spaCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('spa/ajax-deny-list.html', { init: { ajax: { block_internal: true } } }))
+      browser.url(await browser.testHandle.assetURL('nr-server-time/xhr-before-load.html', { init: { ajax: { block_internal: true } } }))
     ])
 
     expect(ajaxEvents.length).toEqual(0)
@@ -30,12 +30,39 @@ describe('xhr events deny list', () => {
     ]))
   })
 
+  ;[['before', 'preload'], ['after', 'postload']].forEach(([timing, file]) => {
+    it(`honors deny_list when set ${timing} agent initialization`, async () => {
+      const ajaxCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testAjaxEventsRequest })
+
+      const [ajaxEvents] = await Promise.all([
+        ajaxCapture.waitForResult({ totalCount: 1 }),
+        browser.url(await browser.testHandle.assetURL(`deny_list_${file}.html`, { loader: 'full', init: { ajax: { deny_list: ['bam-test-1.nr-local.net:*/json'], block_internal: false } } }))
+      ])
+
+      expect(ajaxEvents[0].request.body.length).toBeGreaterThan(0) // events should be captured and sent, just not the ones matching the deny list
+      expect(extractAjaxEvents(ajaxEvents[0].request.body)).not.toEqual(expect.arrayContaining([
+        expect.objectContaining({
+          domain: expect.stringContaining('bam-test-1.nr-local.net'),
+          path: '/json',
+          type: 'ajax',
+          requestedWith: 'XMLHttpRequest'
+        }),
+        expect.objectContaining({
+          domain: expect.stringContaining('bam-test-1.nr-local.net'),
+          path: '/json',
+          type: 'ajax',
+          requestedWith: 'fetch'
+        })
+      ]))
+    })
+  })
+
   it('captures events when not blocked', async () => {
     const interactionCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
 
     const [interactionEvents] = await Promise.all([
       interactionCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('spa/ajax-deny-list.html', { init: { ajax: { block_internal: false } } }))
+      browser.url(await browser.testHandle.assetURL('nr-server-time/xhr-before-load.html', { init: { ajax: { block_internal: false } } }))
     ])
 
     expect(extractAjaxEvents(interactionEvents[0].request.body)).toEqual(expect.arrayContaining([
@@ -59,7 +86,7 @@ describe('xhr events deny list', () => {
 
     const [ajaxMetrics] = await Promise.all([
       ajaxCapture.waitForResult({ timeout: 10000 }),
-      browser.url(await browser.testHandle.assetURL('spa/ajax-deny-list.html', { init: { ajax: { block_internal: true }, feature_flags: ['ajax_metrics_deny_list'] } }))
+      browser.url(await browser.testHandle.assetURL('nr-server-time/xhr-before-load.html', { init: { ajax: { block_internal: true }, feature_flags: ['ajax_metrics_deny_list'] } }))
     ])
 
     expect(ajaxMetrics.length).toEqual(0)
@@ -70,7 +97,7 @@ describe('xhr events deny list', () => {
 
     const [ajaxMetrics] = await Promise.all([
       ajaxCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('spa/ajax-deny-list.html', { init: { ajax: { block_internal: true } } }))
+      browser.url(await browser.testHandle.assetURL('nr-server-time/xhr-before-load.html', { init: { ajax: { block_internal: true } } }))
     ])
 
     expect(ajaxMetrics[0].request.body.xhr).toEqual(expect.arrayContaining([
@@ -110,5 +137,19 @@ describe('xhr events deny list', () => {
       .flatMap(harvest => harvest.xhr)
       .find(obj => obj.params.host.startsWith('undefined'))
     expect(undefinedHostMetric).toBeUndefined()
+  })
+
+  it('sends RUM request with unminified loader', async () => { // regression test for bug NR-528802
+    const rumCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testRumRequest })
+
+    await browser.url(
+      await browser.testHandle.assetURL('instrumented.html?minified=false')
+    ).then(() => browser.waitForAgentLoad())
+
+    const [rumRequests] = await Promise.all([ // if there was a syntax error in the unminified loader, the agent won't function and we won't see a RUM request
+      rumCapture.waitForResult({ timeout: 10000 })
+    ])
+
+    expect(rumRequests.length).toBeGreaterThan(0)
   })
 })

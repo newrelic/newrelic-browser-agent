@@ -17,6 +17,14 @@ const htmlTemplate = (script) => `<html>
 const multiAgentHtmlTemplate = `<html>
   <head>
     <title>RUM Unit Test</title>
+    <script>
+      window.test = {
+        agentLogCount: 0
+      }
+      console.debug = function (...args) {
+        if (args[0] === "New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#69") window.test.agentLogCount += 1;
+      };
+    </script>
     {init}
     {config}
     <script src="browser-agent.js"></script>
@@ -49,7 +57,7 @@ const registeredEntityHtmlTemplate = (script) => `<html>
       NREUM.init.page_view_timing.enabled = false
       NREUM.init.session_replay.enabled = false
       NREUM.init.session_trace.enabled = false
-      NREUM.init.spa.enabled = false
+      NREUM.init.soft_navigations.enabled = false
     </script>
     {loader}
     <script src="${script}.js"></script>

@@ -94,5 +94,5 @@ function convertToRegularExpression (filter, isPathname = false) {
   const newFilter = filter
     .replace(/[.+?^${}()|[\]\\]/g, (m) => '\\' + m) // use a replacer function to not break apm injection
     .replace(/\*/g, '.*?') // use lazy matching instead of greedy
-  return new RegExp((isPathname ? '^' : '') + newFilter + '$')
+  return new RegExp((isPathname ? '^' : '') + newFilter + '\x24') // x24 == $, but using a literal $ causes webpack to to break when building unminified
 }

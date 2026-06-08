@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { handle } from '../../../common/event-emitter/handle'
@@ -14,11 +14,11 @@ import { LOGGING_EVENT_EMITTER_CHANNEL, LOG_LEVELS } from '../constants'
    * @param {{[key: string]: *}} customAttributes - The log's custom attributes if any
    * @param {enum} level - the log level enum
    * @param {boolean} [autoCaptured=true] - True if log was captured from auto wrapping. False if it was captured from the API manual usage.
-   * @param {object=} target - the optional target provided by an api call
+   * @param {object=} targets - the optional targets found
    */
-export function bufferLog (ee, message, customAttributes = {}, level = LOG_LEVELS.INFO, autoCaptured = true, target, timestamp = now()) {
+export function bufferLog (ee, message, customAttributes = {}, level = LOG_LEVELS.INFO, autoCaptured = true, targets, timestamp = now()) {
   handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/logging/${level.toLowerCase()}/called`], undefined, FEATURE_NAMES.metrics, ee)
-  handle(LOGGING_EVENT_EMITTER_CHANNEL, [timestamp, message, customAttributes, level, autoCaptured, target], undefined, FEATURE_NAMES.logging, ee)
+  handle(LOGGING_EVENT_EMITTER_CHANNEL, [timestamp, message, customAttributes, level, autoCaptured, targets], undefined, FEATURE_NAMES.logging, ee)
 }
 
 /**

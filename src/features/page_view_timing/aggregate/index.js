@@ -9,6 +9,7 @@ import { handle } from '../../../common/event-emitter/handle'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { Obfuscator } from '../../../common/util/obfuscate'
 import { cumulativeLayoutShift } from '../../../common/vitals/cumulative-layout-shift'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
 import { firstPaint } from '../../../common/vitals/first-paint'
@@ -16,10 +17,12 @@ import { interactionToNextPaint } from '../../../common/vitals/interaction-to-ne
 import { largestContentfulPaint } from '../../../common/vitals/largest-contentful-paint'
 import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
 import { VITAL_NAMES } from '../../../common/vitals/constants'
-import { initiallyHidden } from '../../../common/constants/runtime'
+import { initiallyHidden, getNavigationEntry, initialLocation } from '../../../common/constants/runtime'
 import { eventOrigin } from '../../../common/util/event-origin'
 import { loadTime } from '../../../common/vitals/load-time'
 import { webdriverDetected } from '../../../common/util/webdriver-detection'
+import { cleanURL } from '../../../common/url/clean-url'
+import { EVENT_TYPES } from '../../../common/constants/events'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -34,6 +37,9 @@ export class Aggregate extends AggregateBase {
     this.firstIxnRecorded = false
 
     super.customAttributesAreSeparate = true
+
+    // Create obfuscator for page view timing events
+    this.obfuscator = new Obfuscator(agentRef, EVENT_TYPES.PVT)
 
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
     // Add the time of _window pagehide event_ firing to the next PVT harvest == NRDB windowUnload attr:
@@ -71,6 +77,8 @@ export class Aggregate extends AggregateBase {
 
   addTiming (name, value, attrs) {
     attrs = attrs || {}
+    attrs.pageUrl = cleanURL(getNavigationEntry()?.name || initialLocation)
+
     addConnectionAttributes(attrs) // network conditions may differ from the actual for VitalMetrics when they were captured
 
     // If cls was set to another value by `onCLS`, then it's supported and is attached onto any timing but is omitted until such time.
@@ -138,7 +146,7 @@ export class Aggregate extends AggregateBase {
   // serialize array of timing data
   serializer (eventBuffer) {
     if (!eventBuffer?.length) return ''
-    var addString = getAddStringContext(this.agentRef.runtime.obfuscator)
+    var addString = getAddStringContext(this.obfuscator)
 
     var payload = 'bel.6;'
 

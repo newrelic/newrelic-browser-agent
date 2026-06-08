@@ -1,7 +1,7 @@
 {
-  "chrome": 143,
-  "edge": 143,
-  "firefox": 146,
+  "chrome": 146,
+  "edge": 146,
+  "firefox": 148,
   "safari": 26,
-  "safari_min": 17
+  "safari_min": 18
 }

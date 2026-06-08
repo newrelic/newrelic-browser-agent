@@ -17,7 +17,7 @@ export default class CustomCommands {
     browser.addCommand('waitForAgentLoad', async function () {
       await browser.waitUntil(
         () => browser.execute(function () {
-          return window.NREUM && window.NREUM.activatedFeatures && Object.values(window.NREUM.activatedFeatures)[0] && !!Object.values(window.NREUM.activatedFeatures)[0].loaded
+          return Object.values(window.NREUM?.initializedAgents)[0]?.runtime?.activatedFeatures
         }),
         {
           timeout: 30000,
@@ -95,7 +95,10 @@ export default class CustomCommands {
       // WDIO converts empty objects from IE to null (as with default session.state.custom).
       // Waiting to parse the JSON string until it is returned preserves the value.
       const localStorageJSON = await browser.execute(function () {
-        return window.localStorage.getItem('NRBA_SESSION') || '{}'
+        const firstAgent = Object.values(newrelic.initializedAgents || {})[0]
+        const sessionStorageKey = firstAgent?.runtime?.session?.lookupKey
+
+        return (sessionStorageKey ? window.localStorage.getItem(sessionStorageKey) : null) || '{}'
       })
       const localStorage = JSON.parse(localStorageJSON)
       return { agentSessions, agentSessionInstances, localStorage }
@@ -116,17 +119,31 @@ export default class CustomCommands {
     })
 
     /**
-     * Sets a permanent scheduled reply for the rum call to include the log flag with sampling rate.
-     * Defaults to 100% sampling rate and log mode = 3/INFO.
+     * Sets a series of logging modes or set one permanent scheduled reply for the rum call to include the log flag with sampling rate.
+     * If secondLogMode is provided, please note all scheduled replies are non-permanent.
+     * Defaults to 100% sampling rate and log mode = 3/INFO (permanent).
      */
-    browser.addCommand('enableLogging', async function ({ sampling_rate = 100, logMode = 3 } = {}) {
+    browser.addCommand('enableLogging', async function ({ sampling_rate = 100, logMode = 3, secondLogMode = null } = {}) {
       const loggingMode = Math.random() * 100 < sampling_rate ? logMode : 0
       await browser.testHandle.clearScheduledReply('bamServer', { test: testRumRequest })
       await browser.testHandle.scheduleReply('bamServer', {
         test: testRumRequest,
-        permanent: true,
-        body: JSON.stringify(rumFlags({ log: loggingMode }))
+        permanent: false,
+        body: JSON.stringify(rumFlags({ log: loggingMode, logapi: loggingMode }))
       })
+      if (secondLogMode !== null) {
+        await browser.testHandle.scheduleReply('bamServer', {
+          test: testRumRequest,
+          permanent: false,
+          body: JSON.stringify(rumFlags({ log: secondLogMode, logapi: secondLogMode }))
+        })
+      } else {
+        await browser.testHandle.scheduleReply('bamServer', {
+          test: testRumRequest,
+          permanent: true,
+          body: JSON.stringify(rumFlags({ log: loggingMode, logapi: loggingMode }))
+        })
+      }
     })
 
     /**

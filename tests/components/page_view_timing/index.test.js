@@ -90,7 +90,7 @@ describe('pvt aggregate tests', () => {
   })
 
   afterEach(async () => {
-    resetAgent(mainAgent.agentIdentifier)
+    resetAgent(mainAgent)
   })
 
   test('LCP event with CLS attribute', () => {

@@ -1,8 +1,9 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
+import { AJAX_ID } from '../../ajax/constants'
 import { NODE_TYPE } from '../constants'
 import { BelNode } from './bel-node'
 
@@ -21,6 +22,8 @@ export class AjaxNode extends BelNode {
     this.traceId = ajaxEvent.traceId
     this.spanTimestamp = ajaxEvent.spanTimestamp
     this.gql = ajaxEvent.gql
+    this.targetAttributes = ajaxEvent.targetAttributes
+    this[AJAX_ID] = ajaxEvent[AJAX_ID] // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
 
     // optional payload metadata attributes
     this.requestBody = ajaxEvent.requestBody
@@ -37,8 +40,8 @@ export class AjaxNode extends BelNode {
     } else this.callbackEnd = this.end // if no long task was observed, callbackEnd is the same as end
   }
 
-  serialize (parentStartTimestamp, agentRef) {
-    const addString = getAddStringContext(agentRef.runtime.obfuscator)
+  serialize (parentStartTimestamp, agentRef, ajaxObfuscator) {
+    const addString = getAddStringContext(ajaxObfuscator)
     const nodeList = []
 
     // IMPORTANT: The order in which addString is called matters and correlates to the order in which string shows up in the harvest payload. Do not re-order the following code.
@@ -59,14 +62,16 @@ export class AjaxNode extends BelNode {
       addString(this.nodeId),
       nullable(this.spanId, addString, true) + nullable(this.traceId, addString, true) + nullable(this.spanTimestamp, numeric)
     ]
-    let allAttachedNodes = []
-
-    if (typeof this.gql === 'object') allAttachedNodes = addCustomAttributes(this.gql, addString)
-    if (this.requestBody) allAttachedNodes.push(addCustomAttributes({ requestBody: this.requestBody }, addString))
-    if (this.requestHeaders) allAttachedNodes.push(addCustomAttributes({ requestHeaders: this.requestHeaders }, addString))
-    if (this.requestQuery) allAttachedNodes.push(addCustomAttributes({ requestQuery: this.requestQuery }, addString))
-    if (this.responseBody) allAttachedNodes.push(addCustomAttributes({ responseBody: this.responseBody }, addString))
-    if (this.responseHeaders) allAttachedNodes.push(addCustomAttributes({ responseHeaders: this.responseHeaders }, addString))
+    let allAttachedNodes = addCustomAttributes({
+      ...(this.gql || {}),
+      ...(this.targetAttributes || {}),
+      ...(this.requestBody ? { requestBody: this.requestBody } : {}),
+      ...(this.requestHeaders ? { requestHeaders: this.requestHeaders } : {}),
+      ...(this.requestQuery ? { requestQuery: this.requestQuery } : {}),
+      ...(this.responseBody ? { responseBody: this.responseBody } : {}),
+      ...(this.responseHeaders ? { responseHeaders: this.responseHeaders } : {}),
+      [AJAX_ID]: this[AJAX_ID]
+    }, addString)
     this.children.forEach(node => allAttachedNodes.push(node.serialize())) // no children is expected under ajax nodes at this time
 
     fields[1] = numeric(allAttachedNodes.length)

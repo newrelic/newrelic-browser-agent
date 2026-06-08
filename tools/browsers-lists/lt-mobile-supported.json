@@ -2,13 +2,13 @@
   "ios": [
     {
       "device_name": "iPhone 17",
-      "version": "26.0",
+      "version": "26.2",
       "platformName": "ios",
       "browserName": "Safari"
     },
     {
-      "device_name": "iPhone 11",
-      "version": "17.0",
+      "device_name": "iPhone 13",
+      "version": "18.0",
       "platformName": "ios",
       "browserName": "Safari"
     }

@@ -16,6 +16,10 @@ on:
           - staging
           - standalone
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   delete-experiment-on-s3:
     runs-on: ubuntu-latest
@@ -48,3 +52,5 @@ jobs:
     needs: [delete-experiment-on-s3]
     uses: ./.github/workflows/publish-dev.yml
     secrets: inherit
+    with:
+      skip_publish_notification: true

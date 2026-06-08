@@ -5,6 +5,385 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "60ec5bf566d27d68e59c827f08dcd8dd73d8cd2c",
+          "message": "Use app-namespaced keys for session",
+          "issues": [
+            "1776"
+          ]
+        }
+      ],
+      "version": "1.316.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "19aaf3cf-3497-4553-9630-8b01ca1e865b",
+      "createTime": "2026-06-01T20:10:20.235Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "937553b208c2efcb66c696ec8d711306960dcba9",
+          "message": "Enhance SPA API to support targetPageLoad option",
+          "issues": [
+            "1762"
+          ]
+        }
+      ],
+      "version": "1.315.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "4355cf7b-49e0-48a0-a31e-d4562cf3a4fe",
+      "createTime": "2026-05-26T19:47:14.737Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "c8a345bc9cd22eb56f876c598677310a2da6be8f",
+          "message": "Add ajaxRequest.id attribute",
+          "issues": [
+            "1757"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "7ca2164771f5c88b0a053a5af9f07d607c0e1d29",
+          "message": "Improve PageViewTiming load timing capture",
+          "issues": [
+            "1764"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "412ef8b6ea80ddd13900cea5f379e12b4fafc007",
+          "message": "Adjust timestamps for clock skew due to machine sleep",
+          "issues": [
+            "1749"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "2c2024e3cbb4b2f6afc22e2bc1c6385b07335be5",
+          "message": "Automatically Detect MFE User Actions",
+          "issues": [
+            "1723"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "9874ac5d851653641ed33241ad5e96678a9b9fee",
+          "message": "Allow Session Replay to retry payloads",
+          "issues": [
+            "1666"
+          ]
+        }
+      ],
+      "version": "1.314.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "54577c1f-0e63-489f-9209-691ac87a609c",
+      "createTime": "2026-05-04T21:54:16.395Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "8442a5b0db01a929315dd7c7e3bd4817e6525200",
+          "message": "Fix method names for MFE methods",
+          "issues": [
+            "1758"
+          ]
+        }
+      ],
+      "version": "1.313.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "9e829e3f-b5cb-43fb-bf82-939befc073cd",
+      "createTime": "2026-04-21T01:00:29.936Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "281617a351459afe82c52e0ce657d3f7b1b5f19c",
+          "message": "Automatically Detect MFE Errors",
+          "issues": [
+            "1720"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "e84c292b9d17918de0e8e1542fe363e28fa67d33",
+          "message": "remove \"withCredentials\"",
+          "issues": [
+            "1747"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "a607ee1b34bb57fb800f0220074cd27d1f86a32d",
+          "message": "Bad `trace.lastTimestamp` in Safari + back nav edge case",
+          "issues": [
+            "1754"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "e59c60af34e8f2408ffa4835dc6db4fdcbf756ba",
+          "message": "Improve MicroFrontEndTiming heuristics",
+          "issues": [
+            "1735"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "65b5b988c6cb8d852ad952a3eee94a54864afcd2",
+          "message": "Report CSP violations as new events",
+          "issues": [
+            "1736"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "24199ee75c0e8d1e74d7d882526fd868b87a93ae",
+          "message": "Apply legal and compliance requirements to register API",
+          "issues": [
+            "1742"
+          ]
+        }
+      ],
+      "version": "1.313.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "82896abc-ceb8-4ef1-85d1-97dbc1e5a05d",
+      "createTime": "2026-04-14T21:43:25.716Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "a20856668b26fc3b2763112a8c78a8eb2cd3a25c",
+          "message": ".at causes issues in older browsers",
+          "issues": [
+            "1737"
+          ]
+        }
+      ],
+      "version": "1.312.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "1b26d1d4-5264-4d5f-a889-7f907b1bbeaa",
+      "createTime": "2026-04-02T23:33:57.759Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "8433d470192bdac69bcdbf5476496f733a8e96bf",
+          "message": "Session replays not working for Angular app running on Safari",
+          "issues": [
+            "1733"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "a82d9761e64d4b8b014c9c686756be052b5461b1",
+          "message": "Revert circular replacer",
+          "issues": [
+            "1732"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "c7558a04cd984640c5bbb9451d83b9eddc24cc78",
+          "message": "Automatically Detect MFE Logs",
+          "issues": [
+            "1721"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "ed8e90cb4e0c6a0749d615a91bec27b799475543",
+          "message": "Automatically Detect MFE AJAX",
+          "issues": [
+            "1722"
+          ]
+        }
+      ],
+      "version": "1.312.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "ed4c3af1-c6b5-4944-8434-da249314d8ee",
+      "createTime": "2026-03-30T21:16:27.664Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "d9f6711e4f1073b1e7713fe7966721fd6b31b864",
+          "message": "agentIdentifier removal",
+          "issues": [
+            "1712"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "847b6a72650a113fdf2f074a6a057ac601aafb02",
+          "message": "Attribute original page URL to all PageViewTiming nodes",
+          "issues": [
+            "1716"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "38fae0758645c5f0cd26f7067be973f7ee807819",
+          "message": "Enforce string IDs for new MFE registrations",
+          "issues": [
+            "1725"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "9a3ef06652a36a05b950f9154969a767fa3b731e",
+          "message": "improve MFE timing logic",
+          "issues": [
+            "1714"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "76024d0f3465db42ddaa297d0f87a9e21f2f9b03",
+          "message": "Circular replacer removed reused objects from harvests",
+          "issues": [
+            "1718"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "1a2408f15c8ae96396cf3597058a5d18fa5cb4fd",
+          "message": "Update RegExp to prevent un-minimized webpack build issue",
+          "issues": [
+            "1711"
+          ]
+        }
+      ],
+      "version": "1.311.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "671cd66a-480c-43ad-9874-517d2f9f3ec1",
+      "createTime": "2026-03-20T18:31:05.662Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "a21277667d7ff05642c9a01ea77a492ecb8c0522",
+          "message": "Enhance LCP entry with fallback attribution values",
+          "issues": [
+            "1701"
+          ]
+        }
+      ],
+      "version": "1.310.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "319dcab3-cbf1-42cd-a752-cc1a5928a4ba",
+      "createTime": "2026-02-19T14:30:11.075Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "92a83e522e39cd145b751728df8083cc63a5d162",
+          "message": "better MFE timing handling",
+          "issues": [
+            "1692"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "dd2951bd4786a96f5d1aea9c062da79d16b603ef",
+          "message": "Update measure API types",
+          "issues": [
+            "1694"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "81bfd8f686611b6443132d34e31fdb79b95808a1",
+          "message": "Removing old SPA feature & related wrappings entirely",
+          "issues": [
+            "1689"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "6824f1eaf002d8732ca948f0e5b4d6bd7802d199",
+          "message": "Capture MFE timings as MicroFrontEndTiming Events",
+          "issues": [
+            "1676"
+          ]
+        }
+      ],
+      "version": "1.310.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "17b5f3a6-6d82-4f2b-882a-14a83adc9e82",
+      "createTime": "2026-02-17T22:11:19.817Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "0deae4b1743b3dd7674e0abd729fc9c9aba6582c",
+          "message": "Warn when more than one agent is running",
+          "issues": [
+            "1686"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "73c0f4cd13b9ae894caefcc071b84a6d2d2ad7d6",
+          "message": "Improve MFE tag setting",
+          "issues": [
+            "1683"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "203aa303a939d9de67e62276d457f6ba6378e931",
+          "message": "Micro agent duplicate handlers",
+          "issues": [
+            "1658"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "cd70213f6ef9898d1e40678fad850fbf03150570",
+          "message": "Add WebDriver detection attribute to PageView & PageViewTiming",
+          "issues": [
+            "1679"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "f3880e41a638e68200572190ad0eb1af21f99ad4",
+          "message": "allow child registrations from blocked parents",
+          "issues": [
+            "1677"
+          ]
+        }
+      ],
+      "version": "1.309.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "e6df4c18-74e7-4a9a-8f6f-9b8b47eda664",
+      "createTime": "2026-02-03T20:18:42.712Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "8a835b39ea62389d5922d4fedb3b55b4479dd523",
           "message": "add support for mfe tags with the register API",
           "issues": [
@@ -3625,5 +4004,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-01-08T23:19:29.193Z"
+  "updateTime": "2026-06-01T20:10:20.235Z"
 }

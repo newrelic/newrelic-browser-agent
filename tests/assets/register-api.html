@@ -1,0 +1,35 @@
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {config}
+    <script>
+      localStorage.clear()
+      NREUM.init.page_view_timing.enabled = false
+      NREUM.init.session_replay.enabled = false
+      NREUM.init.session_trace.enabled = false
+    </script>
+    {loader}
+    <script>
+      // set up generic MFEs expected by tests
+      window.agent1 = newrelic.register({
+        id: '1',
+        name: 'agent1'
+      })
+      window.agent2 = newrelic.register({
+        id: '2',
+        name: 'agent2'
+      })
+
+      // preload ajax calls
+      const XHR = new XMLHttpRequest()
+      XHR.open('GET', '/mock/pre/xhr')
+      XHR.send()
+
+      fetch('/mock/pre/fetch')
+    </script>
+  </head>
+  <body>
+    <h1>This page has MFE apis set to window.agent1 and window.agent2</h1>
+  </body>
+</html>

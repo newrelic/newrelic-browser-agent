@@ -3,18 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { setTopLevelCallers } from '../api/topLevelCallers'
-import { addToNREUM, gosCDN } from '../../common/window/nreum'
+import { gosCDN } from '../../common/window/nreum'
 import { mergeInfo } from '../../common/config/info'
 import { mergeInit } from '../../common/config/init'
 import { mergeRuntime } from '../../common/config/runtime'
-import { activatedFeatures } from '../../common/util/feature-flags'
 import { isWorkerScope } from '../../common/constants/runtime'
 import { redefinePublicPath } from './public-path'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 import { mergeLoaderConfig } from '../../common/config/loader-config'
-
-const alreadySetOnce = new Set() // the configure() function can run multiple times in agent lifecycle for different agents
 
 /**
  * Sets or re-sets the agent's configuration values from global settings. This also attach those as properties to the agent instance.
@@ -42,41 +39,48 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   agent.info = mergeInfo(info)
 
   const updatedInit = agent.init
-  const internalTrafficList = [info.beacon, info.errorBeacon]
 
-  if (!alreadySetOnce.has(agent.agentIdentifier)) {
-    if (updatedInit.proxy.assets) {
-      redefinePublicPath(updatedInit.proxy.assets)
-      internalTrafficList.push(updatedInit.proxy.assets)
-    }
-    if (updatedInit.proxy.beacon) internalTrafficList.push(updatedInit.proxy.beacon)
-    agent.beacons = [...internalTrafficList]
+  agent.runtime ??= mergeRuntime(runtime)
 
-    setTopLevelCallers(agent) // no need to set global APIs on newrelic obj more than once
-    addToNREUM('activatedFeatures', activatedFeatures)
+  // Apply proxy settings whenever configure is called (supports late {init} setting)
+  if (updatedInit.proxy.assets) {
+    redefinePublicPath(updatedInit.proxy.assets)
   }
 
-  runtime.denyList = [
-    ...(updatedInit.ajax.deny_list || []),
-    ...(updatedInit.ajax.block_internal ? internalTrafficList : [])
-  ]
-  runtime.ptid = agent.agentIdentifier
-  runtime.loaderType = loaderType
-  agent.runtime = mergeRuntime(runtime)
+  if (!agent.runtime.configured) {
+    Object.defineProperty(agent, 'beacons', {
+      get () {
+        return [agent.info.beacon, agent.info.errorBeacon, agent.init.proxy.assets, agent.init.proxy.beacon].filter(Boolean)
+      }
+    })
 
-  if (!alreadySetOnce.has(agent.agentIdentifier)) {
+    Object.defineProperty(agent.runtime, 'denyList', {
+      get () {
+        // Compute the internal traffic list fresh each time to ensure beacons array is current
+        return [
+          ...(agent.init.ajax.deny_list || []),
+          ...(agent.init.ajax.block_internal ? agent.beacons : [])
+        ]
+      }
+    })
+    agent.runtime.ptid = agent.agentIdentifier
+
+    setTopLevelCallers(agent) // no need to set global APIs on newrelic obj more than once
+
+    agent.runtime.loaderType = loaderType
+
     agent.ee = ee.get(agent.agentIdentifier)
+
     agent.exposed = exposed
 
     dispatchGlobalEvent({
-      agentIdentifier: agent.agentIdentifier,
-      drained: !!activatedFeatures?.[agent.agentIdentifier],
+      drained: !!agent.runtime.activatedFeatures,
       type: 'lifecycle',
       name: 'initialize',
       feature: undefined,
       data: agent.config
     })
-  }
 
-  alreadySetOnce.add(agent.agentIdentifier)
+    agent.runtime.configured = true
+  }
 }

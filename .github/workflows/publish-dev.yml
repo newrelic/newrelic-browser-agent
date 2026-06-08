@@ -1,16 +1,27 @@
 # This workflow runs on push to the main branch. This is to execute checks
 # like jest, upload test coverage to keep codecov updates, and build and deploy
-# the main branch changes to our internal dev and stage environment. This workflow
+# the main branch changes to our internal dev environment and public CDN. This workflow
 # can be manually executed but only on the main branch.
+#
+# Note: Staging and production NR1 environments are deployed via the
+# 'internal-promotion' workflow to maintain controlled releases.
 
 name: Publish Dev
 
 on:
   workflow_call:
+    inputs:
+      skip_publish_notification:
+        description: 'Skip sending published agent Slack notification'
+        type: boolean
+        default: false
   workflow_dispatch:
   push:
     branches:
       - 'main'
+
+permissions:
+  contents: read
 
 # Only allow one instance of this workflow to run at a time
 concurrency:
@@ -85,7 +96,7 @@ jobs:
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
         # This step creates a new Change Tracking Marker
       - name: New Relic Application Deployment Marker
-        continue-on-error: true    
+        continue-on-error: true
         uses: newrelic/deployment-marker-action@v2.3.0
         with:
           apiKey: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -94,7 +105,7 @@ jobs:
           version: "${{ github.ref_name }}"
           user: "${{ github.actor }}"
       - name: Get local stats
-        continue-on-error: true    
+        continue-on-error: true
         id: get-stats
         shell: bash
         run: |
@@ -102,7 +113,7 @@ jobs:
           full=$(cat ./build/nr-full-standard.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;
           spa=$(cat ./build/nr-spa-standard.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
       - name: Report lite size to NR
-        continue-on-error: true    
+        continue-on-error: true
         uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -124,7 +135,7 @@ jobs:
           trigger: 'publish-dev'
           traverse: true
       - name: Report spa size to NR
-        continue-on-error: true    
+        continue-on-error: true
         uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -134,6 +145,77 @@ jobs:
           file-name-filter: '.min.js'
           trigger: 'publish-dev'
           traverse: true
+
+  # Publish dev a/b script to NR1 dev environment
+  publish-dev-ab:
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
+    needs: [publish-dev-to-s3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Publish dev a/b script
+        uses: ./.github/actions/internal-ab
+        with:
+          nr_environment: dev
+          nrba_app_id: ${{ secrets.INTERNAL_DEV_APPLICATION_ID }}
+          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
+          nrba_ab_app_id: ${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}
+          nrba_ab_license_key: ${{ secrets.INTERNAL_AB_LICENSE_KEY }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+
+  # Create change tracking events for dev environment
+  create-dev-change-tracking:
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
+    environment: change-tracking
+    needs: [publish-dev-ab]
+    continue-on-error: true
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 2
+      - name: Check if latest.js changed
+        id: check-latest
+        run: |
+          if git diff HEAD^ HEAD --name-only | grep -q ".github/actions/build-ab/templates/latest.js"; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Latest.js was changed in this commit"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "Latest.js was not changed in this commit"
+          fi
+      - name: New Relic Change Tracking Marker - Dev Latest
+        if: steps.check-latest.outputs.changed == 'true'
+        continue-on-error: true
+        uses: newrelic/deployment-marker-action@v2.3.0
+        with:
+          apiKey: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          region: US
+          accountId: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          applicationId: ${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}
+          revision: "${{ github.sha }}"
+          description: "Dev Latest Script Updated"
+          user: "${{ github.actor }}"
+          deploymentType: "BASIC"
+          groupId: "Dev Latest Update"
 
   # Publish dev to staging NRDB
   # publish-dev-nr:
@@ -174,8 +256,10 @@ jobs:
       - name: Build Agent2Query assets
         uses: ./.github/actions/build-agent2query
         with:
-          released_license_key: ${{ secrets.A2Q_RELEASED_LICENSE_KEY }}
-          latest_license_key: ${{ secrets.A2Q_LATEST_LICENSE_KEY }}
+          latest_staging_license_key: ${{ secrets.A2Q_LATEST_STAGING_LICENSE_KEY }}
+          latest_us_prod_license_key: ${{ secrets.A2Q_LATEST_US_PROD_LICENSE_KEY }}
+          released_staging_license_key: ${{ secrets.A2Q_RELEASED_STAGING_LICENSE_KEY }}
+          released_us_prod_license_key: ${{ secrets.A2Q_RELEASED_US_PROD_LICENSE_KEY }}
       - name: Upload Agent2Query assets to S3
         id: s3-upload-agent2query
         uses: ./.github/actions/s3-upload
@@ -213,63 +297,3 @@ jobs:
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: staging-js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.s3-upload-agent2query.outputs.results).*.Key, ' ') }}
-
-  # Rebuild and publish the dev environment A/B script
-  publish-dev-ab:
-    needs: [publish-dev-to-s3]
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
-      - name: Publish dev a/b script
-        uses: ./.github/actions/internal-ab
-        with:
-          nr_environment: dev
-          nrba_app_id: ${{ secrets.INTERNAL_DEV_APPLICATION_ID }}
-          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
-          nrba_ab_app_id: ${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}
-          nrba_ab_license_key: ${{ secrets.INTERNAL_AB_LICENSE_KEY }}
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-
-  # Rebuild and publish the staging environment A/B script
-  publish-staging-ab:
-    needs: [publish-dev-to-s3]
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
-      - name: Deploy staging a/b script
-        uses: ./.github/actions/internal-ab
-        with:
-          nr_environment: staging
-          nrba_app_id: ${{ secrets.INTERNAL_STAGING_APPLICATION_ID }}
-          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
-          nrba_ab_app_id: ${{ secrets.INTERNAL_AB_STAGING_APPLICATION_ID }}
-          nrba_ab_license_key: ${{ secrets.INTERNAL_AB_LICENSE_KEY }}
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-
-

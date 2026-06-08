@@ -23,9 +23,11 @@ async function getLoaderContent (loaderFilePath) {
 
 function getLoaderFilePath (request, testServer, webpath) {
   const loader = request.query.loader || testServer.config.loader
+  const minified = request.query.minified !== 'false'
+  const ext = minified ? '.min.js' : '.js'
   return path.join(
     webpath ? '/build/' : paths.builtAssetsDir,
-    `nr-loader-${loader}.min.js`
+    `nr-loader-${loader}${ext}`
   )
 }
 
@@ -57,7 +59,7 @@ async function getLoaderScript (scriptType, loaderFilePath, nonce, injectionDela
 
 /**
  * Transforms requests for HTML files that contain the \{loader\} string with the
- * built loader JS. By default, the full loader will be used but can be overriden
+ * built loader JS. By default, the full loader will be used but can be overridden
  * by passing the loader query param.
  */
 module.exports = function (request, reply, testServer) {

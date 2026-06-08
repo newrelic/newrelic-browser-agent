@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  SPDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Clock Drift Simulation</title>
+    <script>
+      // Save original performance.now and Date.now
+      var origPerformanceNow = performance.now.bind(performance);
+      var origDateNow = Date.now.bind(Date);
+      
+      // Capture the initial values at page load
+      var frozenPerformanceValue = null;
+      var mockDateOffset = 0;
+      
+      // Function to simulate clock drift by freezing performance.now() and advancing Date.now()
+      window.simulateClockFreeze = function(driftDurationMs) {
+        return new Promise(resolve => {
+          // Freeze performance.now() at current value on first call, or keep it frozen
+          if (frozenPerformanceValue === null) {
+            frozenPerformanceValue = origPerformanceNow();
+            
+            // Override performance.now to return frozen value
+            performance.now = function() {
+              return frozenPerformanceValue;
+            };
+            
+            console.log('Clock frozen at performance.now() =', frozenPerformanceValue);
+          }
+          
+          // Advance Date.now() by the drift amount (instant, no waiting)
+          mockDateOffset += driftDurationMs;
+          
+          Date.now = function() {
+            return origDateNow() + mockDateOffset;
+          };
+          
+          console.log('Date.now() advanced by', driftDurationMs, 'ms (total offset:', mockDateOffset, 'ms)');
+          console.log('Drift created:', mockDateOffset, 'ms');
+          
+          // Resolve immediately - no actual waiting
+          resolve(mockDateOffset);
+        });
+      };
+      
+      // Function to unfreeze (for cleanup between tests)
+      window.unfreezeClocks = function() {
+        if (frozenPerformanceValue !== null) {
+          performance.now = origPerformanceNow;
+          Date.now = origDateNow;
+          frozenPerformanceValue = null;
+          mockDateOffset = 0;
+          console.log('Clocks unfrozen');
+        }
+      };
+    </script>
+    {init} {config} {loader}
+  </head>
+  <body>
+    <h1>Clock Drift Simulation Test</h1>
+    <p>Use window.simulateClockFreeze(milliseconds) to create drift</p>
+  </body>
+</html>

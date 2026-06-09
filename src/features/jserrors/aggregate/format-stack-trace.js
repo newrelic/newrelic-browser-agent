@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -10,7 +10,7 @@ export function formatStackTrace (stackLines) {
   return truncateStackLines(stackLines).replace(stripNewlinesRegex, '')
 }
 
-// takes array of stack lines and returns string with top 50 and buttom 50 lines
+// takes array of stack lines and returns string with top 50 and bottom 50 lines
 function truncateStackLines (stackLines) {
   var stackString
   if (stackLines.length > 100) {
@@ -24,7 +24,12 @@ function truncateStackLines (stackLines) {
   return stackString
 }
 
+// returns true if the string can be truncated in size due to exceeding max stack trace length
+export function canBeTruncated (stackString) {
+  return stackString.length > MAX_STACK_TRACE_LENGTH
+}
+
 // truncates stack string to limit what is sent to backend
 export function truncateSize (stackString) {
-  return (stackString.length > MAX_STACK_TRACE_LENGTH) ? stackString.substr(0, MAX_STACK_TRACE_LENGTH) : stackString
+  return canBeTruncated(stackString) ? stackString.substr(0, MAX_STACK_TRACE_LENGTH) : stackString
 }

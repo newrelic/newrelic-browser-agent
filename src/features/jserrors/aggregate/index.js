@@ -6,7 +6,7 @@
 import { canonicalFunctionName } from './canonical-function-name'
 import { computeStackTrace } from './compute-stack-trace'
 import { stringHashCode } from './string-hash-code'
-import { truncateSize } from './format-stack-trace'
+import { canBeTruncated, truncateSize } from './format-stack-trace'
 
 import { registerHandler as register } from '../../../common/event-emitter/register-handler'
 import { stringify } from '../../../common/util/stringify'
@@ -267,7 +267,7 @@ export class Aggregate extends AggregateBase {
       params.stack_trace = truncateSize(stackInfo.stackString)
       this.observedAt[bucketHash] = Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(time))
     } else {
-      params.browser_stack_hash = stringHashCode(stackInfo.stackString)
+      params.browser_stack_hash = canBeTruncated(stackInfo.stackString) ? stringHashCode(truncateSize(stackInfo.stackString)) : stringHashCode(stackInfo.stackString)
     }
     params.releaseIds = stringify(this.agentRef.runtime.releaseIds)
 

@@ -12,12 +12,6 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
-    inputs:
-      force_full_workflow:
-        description: 'Force full workflow execution (test the release gate logic)'
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -38,14 +32,7 @@ jobs:
         with:
           node-version: 22.11.0
       
-      - name: Auto-pass for manual triggers
-        if: github.event_name == 'workflow_dispatch' && !inputs.force_full_workflow
-        run: |
-          echo "✅ Manual workflow trigger - gate passed automatically"
-          echo "This allows the workflow to be used in branch protection rules."
-      
       - name: Get PR details
-        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.force_full_workflow)
         id: pr-info
         env:
           GH_TOKEN: ${{ github.token }}
@@ -76,17 +63,16 @@ jobs:
           echo "🌿 Branch: $BRANCH_NAME"
       
       - name: Check if Release-Please PR
-        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.force_full_workflow)
         id: is-release-pr
         env:
           BRANCH_NAME: ${{ steps.pr-info.outputs.branch_name }}
         run: |
           BRANCH="$BRANCH_NAME"
           
-          # When forcing full workflow, treat any branch as a release PR for testing
-          if [[ "${{ inputs.force_full_workflow }}" == "true" ]]; then
+          # For manual dispatch, treat any branch as a release PR for testing
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "is_release_pr=true" >> "$GITHUB_OUTPUT"
-            echo "🧪 Force full workflow enabled - treating as Release-Please PR for testing"
+            echo "🧪 Manual workflow dispatch - treating as a release PR for testing"
           elif [[ "$BRANCH" == release-please--* ]]; then
             echo "is_release_pr=true" >> "$GITHUB_OUTPUT"
             echo "🎯 This is a Release-Please PR - promotion verification required"

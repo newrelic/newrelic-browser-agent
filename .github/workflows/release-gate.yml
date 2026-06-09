@@ -101,8 +101,8 @@ jobs:
             DEPLOYMENT=$(gh api \
               "repos/${{ github.repository }}/deployments" \
               -F environment="$ENV" \
-              -F per_page=50 \
-              --jq --arg commit_time "$COMMIT_TIMESTAMP" --arg branch "$BRANCH" \
+              -F per_page=50 | \
+              jq --arg commit_time "$COMMIT_TIMESTAMP" --arg branch "$BRANCH" \
                 'map(select(.created_at > $commit_time and .ref == $branch)) | sort_by(.created_at) | reverse | .[0]')
             
             if [[ -z "$DEPLOYMENT" || "$DEPLOYMENT" == "null" ]]; then

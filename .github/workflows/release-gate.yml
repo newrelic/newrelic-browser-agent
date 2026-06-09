@@ -83,7 +83,11 @@ jobs:
         run: |
           BRANCH="$BRANCH_NAME"
           
-          if [[ "$BRANCH" == release-please--* ]]; then
+          # When forcing full workflow, treat any branch as a release PR for testing
+          if [[ "${{ inputs.force_full_workflow }}" == "true" ]]; then
+            echo "is_release_pr=true" >> "$GITHUB_OUTPUT"
+            echo "🧪 Force full workflow enabled - treating as Release-Please PR for testing"
+          elif [[ "$BRANCH" == release-please--* ]]; then
             echo "is_release_pr=true" >> "$GITHUB_OUTPUT"
             echo "🎯 This is a Release-Please PR - promotion verification required"
           else

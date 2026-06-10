@@ -186,12 +186,13 @@ function register (agentRef, target) {
     vitals.disconnect()
     timings.fcp = vitals.fcp
     timings.lcp = vitals.lcp
-    timings.cls = vitals.cls !== null && !isNaN(vitals.cls) ? Number(vitals.cls.toFixed(3)) : null
+    timings.cls = vitals.cls
     timings.inp = vitals.inp
 
     const timeToFetch = timings.fetchEnd - timings.fetchStart // fetchStart to fetchEnd
     const timeToExecute = timings.scriptEnd - timings.scriptStart // scriptStart to scriptEnd
-    api.recordCustomEvent('MicroFrontEndTiming', {
+
+    const eventData = {
       assetUrl: timings.asset, // the url of the script that was registered, or undefined if it could not be determined (inline or no match)
       assetType: timings.type, // the type of asset that was associated with the timings, one of 'script', 'link' (if preloaded and found in the resource timing buffer), 'preload' (if preloaded but not found in the resource timing buffer), or "unknown" if it could not be determined
       timeAlive: timings.reportedAt - timings.registeredAt, // registeredAt to reportedAt
@@ -200,11 +201,13 @@ function register (agentRef, target) {
       timeToFetch, // fetchStart to fetchEnd
       timeToLoad: timeToFetch + timeToExecute, // fetch time and script time together
       timeToRegister: timings.registeredAt, // timestamp when register() was called
-      'nr.fcp': timings.fcp !== null ? timings.fcp - timings.scriptStart : null, // timestamp when script started executing to when FCP was observed for this MFE
-      'nr.lcp': timings.lcp !== null ? timings.lcp - timings.scriptStart : null, // timestamp when script started executing to when LCP was observed for this MFE
-      'nr.cls': timings.cls, // the CLS score observed for this MFE
-      'nr.inp': timings.inp // the worst interaction latency observed for this MFE
-    })
+      'nr.vitals.fcp': vitals.fcp || null, // FCP vital object with value and metadata
+      'nr.vitals.lcp': vitals.lcp || null, // LCP vital object with value and metadata
+      'nr.vitals.cls': vitals.cls || null, // CLS vital object with value and metadata
+      'nr.vitals.inp': vitals.inp || null // INP vital object with value and metadata
+    }
+
+    api.recordCustomEvent('MicroFrontEndTiming', eventData)
   }
 
   /**

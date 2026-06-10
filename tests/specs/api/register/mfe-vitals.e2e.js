@@ -31,44 +31,45 @@ function validateVitals (timingEvent, options = {}) {
   const { expectFCP = false, expectLCP = false, expectCLS = false, expectINP = false } = options
 
   if (expectFCP) {
-    expect(timingEvent.fcp).toBeDefined()
-    expect(timingEvent.fcp).toBeGreaterThan(0)
-    // FCP should be relative to scriptStart, so it should be a reasonable value
-    expect(timingEvent.fcp).toBeLessThan(10000) // Less than 10 seconds
-  } else if (timingEvent.fcp !== null && timingEvent.fcp !== undefined) {
+    expect(timingEvent['nr.vitals.fcp']).toBeDefined()
+    expect(timingEvent['nr.vitals.fcp']).not.toBeNull()
+    expect(timingEvent['nr.vitals.fcp'].value).toBeGreaterThan(0)
+    expect(timingEvent['nr.vitals.fcp'].value).toBeLessThan(10000) // Less than 10 seconds
+  } else if (timingEvent['nr.vitals.fcp'] !== null && timingEvent['nr.vitals.fcp'] !== undefined) {
     // If FCP is present (but not required), validate it's reasonable
-    expect(timingEvent.fcp).toBeGreaterThanOrEqual(0)
+    expect(timingEvent['nr.vitals.fcp'].value).toBeGreaterThanOrEqual(0)
   }
 
   if (expectLCP) {
-    expect(timingEvent.lcp).toBeDefined()
-    expect(timingEvent.lcp).toBeGreaterThan(0)
-    // LCP should be relative to scriptStart
-    expect(timingEvent.lcp).toBeLessThan(10000)
+    expect(timingEvent['nr.vitals.lcp']).toBeDefined()
+    expect(timingEvent['nr.vitals.lcp']).not.toBeNull()
+    expect(timingEvent['nr.vitals.lcp'].value).toBeGreaterThan(0)
+    expect(timingEvent['nr.vitals.lcp'].value).toBeLessThan(10000)
     // LCP should be >= FCP if both are present
-    if (timingEvent.fcp !== null && timingEvent.fcp !== undefined) {
-      expect(timingEvent.lcp).toBeGreaterThanOrEqual(timingEvent.fcp)
+    if (timingEvent['nr.vitals.fcp'] !== null && timingEvent['nr.vitals.fcp'] !== undefined) {
+      expect(timingEvent['nr.vitals.lcp'].value).toBeGreaterThanOrEqual(timingEvent['nr.vitals.fcp'].value)
     }
-  } else if (timingEvent.lcp !== null && timingEvent.lcp !== undefined) {
-    expect(timingEvent.lcp).toBeGreaterThanOrEqual(0)
+  } else if (timingEvent['nr.vitals.lcp'] !== null && timingEvent['nr.vitals.lcp'] !== undefined) {
+    expect(timingEvent['nr.vitals.lcp'].value).toBeGreaterThanOrEqual(0)
   }
 
   if (expectCLS) {
-    expect(timingEvent.cls).toBeDefined()
+    expect(timingEvent['nr.vitals.cls']).toBeDefined()
+    expect(timingEvent['nr.vitals.cls']).not.toBeNull()
     // CLS is a score, typically between 0 and some small number
-    expect(timingEvent.cls).toBeGreaterThanOrEqual(0)
-    expect(timingEvent.cls).toBeLessThan(10) // CLS scores are typically very small
-  } else if (timingEvent.cls !== null && timingEvent.cls !== undefined) {
-    expect(timingEvent.cls).toBeGreaterThanOrEqual(0)
+    expect(timingEvent['nr.vitals.cls'].value).toBeGreaterThanOrEqual(0)
+    expect(timingEvent['nr.vitals.cls'].value).toBeLessThan(10) // CLS scores are typically very small
+  } else if (timingEvent['nr.vitals.cls'] !== null && timingEvent['nr.vitals.cls'] !== undefined) {
+    expect(timingEvent['nr.vitals.cls'].value).toBeGreaterThanOrEqual(0)
   }
 
   if (expectINP) {
-    expect(timingEvent.inp).toBeDefined()
-    expect(timingEvent.inp).toBeGreaterThan(0)
-    // INP is in milliseconds
-    expect(timingEvent.inp).toBeLessThan(10000)
-  } else if (timingEvent.inp !== null && timingEvent.inp !== undefined) {
-    expect(timingEvent.inp).toBeGreaterThanOrEqual(0)
+    expect(timingEvent['nr.vitals.inp']).toBeDefined()
+    expect(timingEvent['nr.vitals.inp']).not.toBeNull()
+    expect(timingEvent['nr.vitals.inp'].value).toBeGreaterThan(0)
+    expect(timingEvent['nr.vitals.inp'].value).toBeLessThan(10000)
+  } else if (timingEvent['nr.vitals.inp'] !== null && timingEvent['nr.vitals.inp'] !== undefined) {
+    expect(timingEvent['nr.vitals.inp'].value).toBeGreaterThanOrEqual(0)
   }
 }
 
@@ -118,6 +119,14 @@ describe('Register API - MFE Vitals Tracking', () => {
     // Validate vitals - FCP and LCP should be captured
     // The vite-react-mfe has a root div with data-nr-mfe-id and an LCP component
     validateVitals(timing, { expectFCP: true, expectLCP: true })
+
+    // Validate FCP metadata
+    expect(timing['nr.vitals.fcp'].loadState).toBeDefined()
+    expect(['loading', 'interactive', 'complete']).toContain(timing['nr.vitals.fcp'].loadState)
+
+    // Validate LCP metadata
+    expect(timing['nr.vitals.lcp'].elTag).toBeDefined()
+    expect(timing['nr.vitals.lcp'].size).toBeGreaterThan(0)
   })
 
   it.withBrowsersMatching(supportsCumulativeLayoutShift)('should capture CLS when layout shifts occur within MFE', async () => {
@@ -148,7 +157,14 @@ describe('Register API - MFE Vitals Tracking', () => {
 
     // CLS should be captured and should be non-zero from the forced layout shift
     validateVitals(timing, { expectCLS: true })
-    expect(timing['nr.cls']).toBeGreaterThan(0)
+    expect(timing['nr.vitals.cls'].value).toBeGreaterThan(0)
+
+    // Validate CLS metadata
+    expect(timing['nr.vitals.cls'].largestShiftTarget).toBeDefined()
+    expect(timing['nr.vitals.cls'].largestShiftTime).toBeGreaterThanOrEqual(0)
+    expect(timing['nr.vitals.cls'].largestShiftValue).toBeGreaterThan(0)
+    expect(timing['nr.vitals.cls'].loadState).toBeDefined()
+    expect(['loading', 'interactive', 'complete']).toContain(timing['nr.vitals.cls'].loadState)
   })
 
   it.withBrowsersMatching(supportsInteractionToNextPaint)('should capture INP when user interacts with MFE content', async () => {
@@ -202,6 +218,25 @@ describe('Register API - MFE Vitals Tracking', () => {
 
     // INP should be captured from user interactions
     validateVitals(timing, { expectINP: true })
+
+    // Validate INP metadata
+    expect(timing['nr.vitals.inp'].interactionTarget).toBeDefined()
+    expect(timing['nr.vitals.inp'].interactionTime).toBeGreaterThanOrEqual(0)
+    expect(timing['nr.vitals.inp'].interactionType).toBeDefined()
+    expect(timing['nr.vitals.inp'].nextPaintTime).toBeGreaterThan(0)
+    expect(timing['nr.vitals.inp'].loadState).toBeDefined()
+    expect(['loading', 'interactive', 'complete']).toContain(timing['nr.vitals.inp'].loadState)
+
+    // These may be null if browser doesn't support detailed timing
+    if (timing['nr.vitals.inp'].inputDelay !== null) {
+      expect(timing['nr.vitals.inp'].inputDelay).toBeGreaterThanOrEqual(0)
+    }
+    if (timing['nr.vitals.inp'].processingDuration !== null) {
+      expect(timing['nr.vitals.inp'].processingDuration).toBeGreaterThanOrEqual(0)
+    }
+    if (timing['nr.vitals.inp'].presentationDelay !== null) {
+      expect(timing['nr.vitals.inp'].presentationDelay).toBeGreaterThanOrEqual(0)
+    }
   })
 
   it.withBrowsersMatching(supportsLargestContentfulPaint)('should track vitals independently for multiple MFEs', async () => {
@@ -254,8 +289,8 @@ describe('Register API - MFE Vitals Tracking', () => {
 
     // Vitals should be independent - not necessarily equal
     // Both should have FCP values but they can be different
-    expect(mainTiming['nr.fcp']).toBeGreaterThan(0)
-    expect(secondTiming['nr.fcp']).toBeGreaterThan(0)
+    expect(mainTiming['nr.vitals.fcp'].value).toBeGreaterThan(0)
+    expect(secondTiming['nr.vitals.fcp'].value).toBeGreaterThan(0)
   })
 
   it('should handle MFE with no visible content gracefully', async () => {
@@ -290,13 +325,13 @@ describe('Register API - MFE Vitals Tracking', () => {
 
     // Vitals should be null or 0 for MFE with no matching content
     // FCP should be null since no content was added within the MFE scope
-    expect(timing['nr.fcp']).toBeNull()
-    expect(timing['nr.lcp']).toBeNull()
-    // CLS might be null (unsupported) or 0 (supported but no shifts)
-    if (timing['nr.cls'] !== null) {
-      expect(timing['nr.cls']).toBe(0)
+    expect(timing['nr.vitals.fcp']).toBeNull()
+    expect(timing['nr.vitals.lcp']).toBeNull()
+    // CLS might be null (unsupported) or have value 0 (supported but no shifts)
+    if (timing['nr.vitals.cls'] !== null) {
+      expect(timing['nr.vitals.cls'].value).toBe(0)
     }
-    expect(timing['nr.inp']).toBeNull()
+    expect(timing['nr.vitals.inp']).toBeNull()
   })
 
   it('should stop tracking vitals after deregistration', async () => {
@@ -331,7 +366,6 @@ describe('Register API - MFE Vitals Tracking', () => {
     const firstHarvest = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
     const firstTimingEvents = getMFETimingEvents(firstHarvest, 'test-mfe')
     expect(firstTimingEvents.length).toBeGreaterThanOrEqual(1)
-    const firstFCP = firstTimingEvents[0].fcp
 
     // Add more content after deregistration - this should NOT update vitals
     await browser.execute(function () {
@@ -349,7 +383,7 @@ describe('Register API - MFE Vitals Tracking', () => {
     // The vitals should have been captured at deregistration and not changed
     // (We can't easily re-check since it's already been reported, but we verify the observers were disconnected)
     // This test primarily validates that deregistration stops tracking
-    expect(firstFCP).toBeDefined() // Vitals were captured
+    expect(firstTimingEvents[0]['nr.vitals.fcp']).toBeDefined() // Vitals were captured
   })
 
   it.withBrowsersMatching(supportsLargestContentfulPaint)('should include vitals in timing event structure', async () => {
@@ -391,13 +425,112 @@ describe('Register API - MFE Vitals Tracking', () => {
     expect(timing.timeToRegister).toBeGreaterThanOrEqual(0)
 
     // Vitals properties should exist (even if null)
-    expect(timing).toHaveProperty('nr.fcp')
-    expect(timing).toHaveProperty('nr.lcp')
-    expect(timing).toHaveProperty('nr.cls')
-    expect(timing).toHaveProperty('nr.inp')
+    expect(timing).toHaveProperty('nr.vitals.fcp')
+    expect(timing).toHaveProperty('nr.vitals.lcp')
+    expect(timing).toHaveProperty('nr.vitals.cls')
+    expect(timing).toHaveProperty('nr.vitals.inp')
 
     // At least FCP and LCP should have values for this test case
-    expect(timing['nr.fcp']).not.toBeNull()
-    expect(timing['nr.lcp']).not.toBeNull()
+    expect(timing['nr.vitals.fcp']).not.toBeNull()
+    expect(timing['nr.vitals.lcp']).not.toBeNull()
+  })
+
+  it('should capture comprehensive metadata for all vitals', async () => {
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+      init: { feature_flags: ['register'] }
+    }))
+      .then(() => browser.waitForAgentLoad())
+
+    // Create an MFE with elements that will trigger all vitals
+    await browser.execute(function () {
+      window.testMfe = newrelic.register({
+        id: 'metadata-test-mfe',
+        name: 'Metadata Test MFE'
+      })
+
+      // Add content for FCP
+      const textDiv = document.createElement('div')
+      textDiv.textContent = 'First content'
+      textDiv.dataset.nrMfeId = 'metadata-test-mfe'
+      document.body.appendChild(textDiv)
+
+      // Add larger content for LCP with ID and styles
+      setTimeout(() => {
+        const largeDiv = document.createElement('div')
+        largeDiv.id = 'hero-section'
+        largeDiv.className = 'hero main-content'
+        largeDiv.textContent = 'Large Hero Content'
+        largeDiv.dataset.nrMfeId = 'metadata-test-mfe'
+        largeDiv.style.width = '800px'
+        largeDiv.style.height = '600px'
+        largeDiv.style.backgroundColor = 'blue'
+        document.body.appendChild(largeDiv)
+
+        // Trigger a layout shift
+        setTimeout(() => {
+          largeDiv.style.position = 'relative'
+          largeDiv.style.top = '100px'
+        }, 100)
+      }, 100)
+    })
+
+    // Wait for content and shifts
+    await browser.pause(500)
+
+    // Trigger interactions
+    const body = await $('body')
+    if (await body.isExisting()) {
+      await body.click()
+      await browser.pause(100)
+      await body.click()
+      await browser.pause(100)
+    }
+
+    // Wait for all vitals to be measured
+    await browser.pause(1000)
+
+    // Deregister to capture vitals
+    await browser.execute(function () {
+      window.testMfe.deregister()
+    })
+
+    const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+    const timingEvents = getMFETimingEvents(insightsHarvests, 'metadata-test-mfe')
+
+    expect(timingEvents.length).toBeGreaterThanOrEqual(1)
+    const timing = timingEvents[0]
+
+    // Validate all metadata properties exist
+    expect(timing.eventType).toBe('MicroFrontEndTiming')
+    expect(timing['source.id']).toBe('metadata-test-mfe')
+
+    // FCP metadata
+    if (timing['nr.vitals.fcp'] !== null) {
+      expect(timing['nr.vitals.fcp'].loadState).toBeDefined()
+    }
+
+    // LCP metadata - should have element info
+    if (timing['nr.vitals.lcp'] !== null) {
+      expect(timing['nr.vitals.lcp'].elTag).toBe('DIV')
+      expect(timing['nr.vitals.lcp'].eid).toBe('hero-section')
+      expect(timing['nr.vitals.lcp'].size).toBe(480000) // 800 * 600
+    }
+
+    // CLS metadata - should have shift info if supported
+    if (timing['nr.vitals.cls'] !== null && timing['nr.vitals.cls'].value > 0) {
+      expect(timing['nr.vitals.cls'].largestShiftTarget).toBeDefined()
+      expect(timing['nr.vitals.cls'].largestShiftTime).toBeGreaterThanOrEqual(0)
+      expect(timing['nr.vitals.cls'].largestShiftValue).toBeGreaterThan(0)
+      expect(timing['nr.vitals.cls'].loadState).toBeDefined()
+    }
+
+    // INP metadata - should have interaction info if supported
+    if (timing['nr.vitals.inp'] !== null) {
+      expect(timing['nr.vitals.inp'].interactionTarget).toBeDefined()
+      expect(timing['nr.vitals.inp'].interactionTime).toBeGreaterThanOrEqual(0)
+      expect(timing['nr.vitals.inp'].interactionType).toBeDefined()
+      expect(timing['nr.vitals.inp'].nextPaintTime).toBeGreaterThan(0)
+      expect(timing['nr.vitals.inp'].loadState).toBeDefined()
+    }
   })
 })

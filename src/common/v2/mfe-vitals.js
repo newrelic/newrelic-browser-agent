@@ -5,10 +5,57 @@
 
 import { globalScope, isBrowserScope } from '../constants/runtime'
 import { now } from '../timing/now'
+import { cleanURL } from '../url/clean-url'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPITimings} RegisterAPITimings
  */
+
+/**
+ * Generate a simple CSS selector for an element
+ * @param {Element} elem - The element to generate selector for
+ * @returns {string|null} CSS selector or null if element is invalid
+ */
+const getElementSelector = (elem) => {
+  try {
+    if (!elem || !elem.tagName) return null
+
+    let selector = elem.tagName.toLowerCase()
+    if (elem.id) selector += `#${elem.id}`
+    else if (elem.className && typeof elem.className === 'string') {
+      const classes = elem.className.trim().split(/\s+/).slice(0, 2).join('.')
+      if (classes) selector += `.${classes}`
+    }
+    return selector
+  } catch (e) {
+    return null
+  }
+}
+
+/**
+ * Extract URL from an element (for images, videos, etc.)
+ * @param {Element} elem - The element to extract URL from
+ * @returns {string|null} Cleaned URL or null
+ */
+const getElementURL = (elem) => {
+  try {
+    if (!elem) return null
+
+    // For images and videos
+    if (elem.src) return cleanURL(elem.src)
+
+    // For elements with background images
+    const bgImage = globalScope.getComputedStyle?.(elem)?.backgroundImage
+    if (bgImage && bgImage !== 'none') {
+      const match = bgImage.match(/url\(['"]?([^'"]+)['"]?\)/)
+      if (match?.[1]) return cleanURL(match[1])
+    }
+
+    return null
+  } catch (e) {
+    return null
+  }
+}
 
 const isObservable = (node) => {
   try {
@@ -76,7 +123,7 @@ const observePerformance = (observers, config, onEntry) => {
 /**
  * Tracks all Core Web Vitals for a specific MFE.
  * @param {string} id - The MFE ID to track
- * @returns {{fcp: number|null, lcp: number|null, cls: number|null, inp: number|null, disconnect: Function}}
+ * @returns {{fcp: object|null, lcp: object|null, cls: object|null, inp: object|null, disconnect: Function}}
  */
 export function trackMFEVitals (id) {
   const vitals = {
@@ -93,8 +140,13 @@ export function trackMFEVitals (id) {
 
   // Track FCP - first contentful paint
   observeMutations(id, (node, obs) => {
-    vitals.fcp ??= now()
-    obs.disconnect()
+    if (vitals.fcp === null) {
+      vitals.fcp = {
+        value: now(),
+        loadState: globalScope.document?.readyState || null
+      }
+      obs.disconnect()
+    }
   })
 
   // Track LCP - largest contentful paint
@@ -107,7 +159,13 @@ export function trackMFEVitals (id) {
       const size = rect.width * rect.height
       if (size > largestSize) {
         largestSize = size
-        vitals.lcp = now()
+        vitals.lcp = {
+          value: now(),
+          size,
+          elTag: elem.tagName || null,
+          eid: elem.id || null,
+          elUrl: getElementURL(elem)
+        }
       }
     } catch (e) {
       // Element may be detached from DOM
@@ -116,24 +174,49 @@ export function trackMFEVitals (id) {
   observers.push(lcpObs)
 
   // Track CLS - cumulative layout shift
+  let clsValue = 0
   const clsObs = observePerformance(observers, { type: 'layout-shift', buffered: true }, (entry) => {
     if (entry.hadRecentInput) return
     (entry.sources || []).some(source => {
       if (isInMFE(source.node, id)) {
-        vitals.cls += entry.value
+        clsValue += entry.value
+
+        // Track largest shift
+        if (!vitals.cls || entry.value > vitals.cls.largestShiftValue) {
+          vitals.cls = {
+            value: clsValue,
+            largestShiftValue: entry.value,
+            largestShiftTime: entry.startTime,
+            largestShiftTarget: getElementSelector(source.node),
+            loadState: globalScope.document?.readyState || null
+          }
+        } else {
+          // Update cumulative value even if not the largest shift
+          vitals.cls.value = clsValue
+        }
         return true
       }
       return false
     })
   })
   // Initialize CLS to 0 if browser supports it (Chromium), leave as null if not (Firefox/Safari)
-  if (clsObs) vitals.cls = 0
+  if (clsObs) vitals.cls = { value: 0, largestShiftValue: null, largestShiftTime: null, largestShiftTarget: null, loadState: null }
 
   // Track INP - interaction to next paint
   observePerformance(observers, { type: 'event', buffered: true, durationThreshold: 16 }, (entry) => {
     if (!entry.interactionId || !entry.target || !isInMFE(entry.target, id)) return
-    if (vitals.inp === null || entry.duration > vitals.inp) {
-      vitals.inp = entry.duration
+    if (vitals.inp === null || entry.duration > vitals.inp.value) {
+      vitals.inp = {
+        value: entry.duration,
+        interactionTarget: getElementSelector(entry.target),
+        interactionTime: entry.startTime,
+        interactionType: entry.name,
+        inputDelay: entry.processingStart ? entry.processingStart - entry.startTime : null,
+        processingDuration: (entry.processingStart && entry.processingEnd) ? entry.processingEnd - entry.processingStart : null,
+        presentationDelay: (entry.processingEnd && entry.duration) ? entry.duration - (entry.processingEnd - entry.startTime) : null,
+        nextPaintTime: entry.startTime + entry.duration,
+        loadState: globalScope.document?.readyState || null
+      }
     }
   })
 

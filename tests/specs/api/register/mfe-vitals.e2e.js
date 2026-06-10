@@ -30,46 +30,52 @@ function getMFETimingEvents (harvests, mfeId) {
 function validateVitals (timingEvent, options = {}) {
   const { expectFCP = false, expectLCP = false, expectCLS = false, expectINP = false } = options
 
+  // Parse vitals from JSON strings
+  const fcp = timingEvent['nr.vitals.fcp'] ? JSON.parse(timingEvent['nr.vitals.fcp']) : null
+  const lcp = timingEvent['nr.vitals.lcp'] ? JSON.parse(timingEvent['nr.vitals.lcp']) : null
+  const cls = timingEvent['nr.vitals.cls'] ? JSON.parse(timingEvent['nr.vitals.cls']) : null
+  const inp = timingEvent['nr.vitals.inp'] ? JSON.parse(timingEvent['nr.vitals.inp']) : null
+
   if (expectFCP) {
-    expect(timingEvent['nr.vitals.fcp']).toBeDefined()
-    expect(timingEvent['nr.vitals.fcp']).not.toBeNull()
-    expect(timingEvent['nr.vitals.fcp'].value).toBeGreaterThan(0)
-    expect(timingEvent['nr.vitals.fcp'].value).toBeLessThan(10000) // Less than 10 seconds
-  } else if (timingEvent['nr.vitals.fcp'] !== null && timingEvent['nr.vitals.fcp'] !== undefined) {
+    expect(fcp).toBeDefined()
+    expect(fcp).not.toBeNull()
+    expect(fcp.value).toBeGreaterThan(0)
+    expect(fcp.value).toBeLessThan(10000) // Less than 10 seconds
+  } else if (fcp !== null && fcp !== undefined) {
     // If FCP is present (but not required), validate it's reasonable
-    expect(timingEvent['nr.vitals.fcp'].value).toBeGreaterThanOrEqual(0)
+    expect(fcp.value).toBeGreaterThanOrEqual(0)
   }
 
   if (expectLCP) {
-    expect(timingEvent['nr.vitals.lcp']).toBeDefined()
-    expect(timingEvent['nr.vitals.lcp']).not.toBeNull()
-    expect(timingEvent['nr.vitals.lcp'].value).toBeGreaterThan(0)
-    expect(timingEvent['nr.vitals.lcp'].value).toBeLessThan(10000)
+    expect(lcp).toBeDefined()
+    expect(lcp).not.toBeNull()
+    expect(lcp.value).toBeGreaterThan(0)
+    expect(lcp.value).toBeLessThan(10000)
     // LCP should be >= FCP if both are present
-    if (timingEvent['nr.vitals.fcp'] !== null && timingEvent['nr.vitals.fcp'] !== undefined) {
-      expect(timingEvent['nr.vitals.lcp'].value).toBeGreaterThanOrEqual(timingEvent['nr.vitals.fcp'].value)
+    if (fcp !== null && fcp !== undefined) {
+      expect(lcp.value).toBeGreaterThanOrEqual(fcp.value)
     }
-  } else if (timingEvent['nr.vitals.lcp'] !== null && timingEvent['nr.vitals.lcp'] !== undefined) {
-    expect(timingEvent['nr.vitals.lcp'].value).toBeGreaterThanOrEqual(0)
+  } else if (lcp !== null && lcp !== undefined) {
+    expect(lcp.value).toBeGreaterThanOrEqual(0)
   }
 
   if (expectCLS) {
-    expect(timingEvent['nr.vitals.cls']).toBeDefined()
-    expect(timingEvent['nr.vitals.cls']).not.toBeNull()
+    expect(cls).toBeDefined()
+    expect(cls).not.toBeNull()
     // CLS is a score, typically between 0 and some small number
-    expect(timingEvent['nr.vitals.cls'].value).toBeGreaterThanOrEqual(0)
-    expect(timingEvent['nr.vitals.cls'].value).toBeLessThan(10) // CLS scores are typically very small
-  } else if (timingEvent['nr.vitals.cls'] !== null && timingEvent['nr.vitals.cls'] !== undefined) {
-    expect(timingEvent['nr.vitals.cls'].value).toBeGreaterThanOrEqual(0)
+    expect(cls.value).toBeGreaterThanOrEqual(0)
+    expect(cls.value).toBeLessThan(10) // CLS scores are typically very small
+  } else if (cls !== null && cls !== undefined) {
+    expect(cls.value).toBeGreaterThanOrEqual(0)
   }
 
   if (expectINP) {
-    expect(timingEvent['nr.vitals.inp']).toBeDefined()
-    expect(timingEvent['nr.vitals.inp']).not.toBeNull()
-    expect(timingEvent['nr.vitals.inp'].value).toBeGreaterThan(0)
-    expect(timingEvent['nr.vitals.inp'].value).toBeLessThan(10000)
-  } else if (timingEvent['nr.vitals.inp'] !== null && timingEvent['nr.vitals.inp'] !== undefined) {
-    expect(timingEvent['nr.vitals.inp'].value).toBeGreaterThanOrEqual(0)
+    expect(inp).toBeDefined()
+    expect(inp).not.toBeNull()
+    expect(inp.value).toBeGreaterThan(0)
+    expect(inp.value).toBeLessThan(10000)
+  } else if (inp !== null && inp !== undefined) {
+    expect(inp.value).toBeGreaterThanOrEqual(0)
   }
 }
 
@@ -120,13 +126,17 @@ describe('Register API - MFE Vitals Tracking', () => {
     // The vite-react-mfe has a root div with data-nr-mfe-id and an LCP component
     validateVitals(timing, { expectFCP: true, expectLCP: true })
 
+    // Parse vitals for metadata validation
+    const fcp = JSON.parse(timing['nr.vitals.fcp'])
+    const lcp = JSON.parse(timing['nr.vitals.lcp'])
+
     // Validate FCP metadata
-    expect(timing['nr.vitals.fcp'].loadState).toBeDefined()
-    expect(['loading', 'interactive', 'complete']).toContain(timing['nr.vitals.fcp'].loadState)
+    expect(fcp.loadState).toBeDefined()
+    expect(['loading', 'interactive', 'complete']).toContain(fcp.loadState)
 
     // Validate LCP metadata
-    expect(timing['nr.vitals.lcp'].elTag).toBeDefined()
-    expect(timing['nr.vitals.lcp'].size).toBeGreaterThan(0)
+    expect(lcp.elTag).toBeDefined()
+    expect(lcp.size).toBeGreaterThan(0)
   })
 
   it.withBrowsersMatching(supportsCumulativeLayoutShift)('should capture CLS when layout shifts occur within MFE', async () => {
@@ -157,14 +167,17 @@ describe('Register API - MFE Vitals Tracking', () => {
 
     // CLS should be captured and should be non-zero from the forced layout shift
     validateVitals(timing, { expectCLS: true })
-    expect(timing['nr.vitals.cls'].value).toBeGreaterThan(0)
+
+    // Parse vitals for metadata validation
+    const cls = JSON.parse(timing['nr.vitals.cls'])
+    expect(cls.value).toBeGreaterThan(0)
 
     // Validate CLS metadata
-    expect(timing['nr.vitals.cls'].largestShiftTarget).toBeDefined()
-    expect(timing['nr.vitals.cls'].largestShiftTime).toBeGreaterThanOrEqual(0)
-    expect(timing['nr.vitals.cls'].largestShiftValue).toBeGreaterThan(0)
-    expect(timing['nr.vitals.cls'].loadState).toBeDefined()
-    expect(['loading', 'interactive', 'complete']).toContain(timing['nr.vitals.cls'].loadState)
+    expect(cls.largestShiftTarget).toBeDefined()
+    expect(cls.largestShiftTime).toBeGreaterThanOrEqual(0)
+    expect(cls.largestShiftValue).toBeGreaterThan(0)
+    expect(cls.loadState).toBeDefined()
+    expect(['loading', 'interactive', 'complete']).toContain(cls.loadState)
   })
 
   it.withBrowsersMatching(supportsInteractionToNextPaint)('should capture INP when user interacts with MFE content', async () => {
@@ -219,23 +232,26 @@ describe('Register API - MFE Vitals Tracking', () => {
     // INP should be captured from user interactions
     validateVitals(timing, { expectINP: true })
 
+    // Parse vitals for metadata validation
+    const inp = JSON.parse(timing['nr.vitals.inp'])
+
     // Validate INP metadata
-    expect(timing['nr.vitals.inp'].interactionTarget).toBeDefined()
-    expect(timing['nr.vitals.inp'].interactionTime).toBeGreaterThanOrEqual(0)
-    expect(timing['nr.vitals.inp'].interactionType).toBeDefined()
-    expect(timing['nr.vitals.inp'].nextPaintTime).toBeGreaterThan(0)
-    expect(timing['nr.vitals.inp'].loadState).toBeDefined()
-    expect(['loading', 'interactive', 'complete']).toContain(timing['nr.vitals.inp'].loadState)
+    expect(inp.interactionTarget).toBeDefined()
+    expect(inp.interactionTime).toBeGreaterThanOrEqual(0)
+    expect(inp.interactionType).toBeDefined()
+    expect(inp.nextPaintTime).toBeGreaterThan(0)
+    expect(inp.loadState).toBeDefined()
+    expect(['loading', 'interactive', 'complete']).toContain(inp.loadState)
 
     // These may be null if browser doesn't support detailed timing
-    if (timing['nr.vitals.inp'].inputDelay !== null) {
-      expect(timing['nr.vitals.inp'].inputDelay).toBeGreaterThanOrEqual(0)
+    if (inp.inputDelay !== null) {
+      expect(inp.inputDelay).toBeGreaterThanOrEqual(0)
     }
-    if (timing['nr.vitals.inp'].processingDuration !== null) {
-      expect(timing['nr.vitals.inp'].processingDuration).toBeGreaterThanOrEqual(0)
+    if (inp.processingDuration !== null) {
+      expect(inp.processingDuration).toBeGreaterThanOrEqual(0)
     }
-    if (timing['nr.vitals.inp'].presentationDelay !== null) {
-      expect(timing['nr.vitals.inp'].presentationDelay).toBeGreaterThanOrEqual(0)
+    if (inp.presentationDelay !== null) {
+      expect(inp.presentationDelay).toBeGreaterThanOrEqual(0)
     }
   })
 
@@ -289,8 +305,10 @@ describe('Register API - MFE Vitals Tracking', () => {
 
     // Vitals should be independent - not necessarily equal
     // Both should have FCP values but they can be different
-    expect(mainTiming['nr.vitals.fcp'].value).toBeGreaterThan(0)
-    expect(secondTiming['nr.vitals.fcp'].value).toBeGreaterThan(0)
+    const mainFcp = JSON.parse(mainTiming['nr.vitals.fcp'])
+    const secondFcp = JSON.parse(secondTiming['nr.vitals.fcp'])
+    expect(mainFcp.value).toBeGreaterThan(0)
+    expect(secondFcp.value).toBeGreaterThan(0)
   })
 
   it('should handle MFE with no visible content gracefully', async () => {
@@ -329,7 +347,8 @@ describe('Register API - MFE Vitals Tracking', () => {
     expect(timing['nr.vitals.lcp']).toBeNull()
     // CLS might be null (unsupported) or have value 0 (supported but no shifts)
     if (timing['nr.vitals.cls'] !== null) {
-      expect(timing['nr.vitals.cls'].value).toBe(0)
+      const cls = JSON.parse(timing['nr.vitals.cls'])
+      expect(cls.value).toBe(0)
     }
     expect(timing['nr.vitals.inp']).toBeNull()
   })
@@ -425,10 +444,10 @@ describe('Register API - MFE Vitals Tracking', () => {
     expect(timing.timeToRegister).toBeGreaterThanOrEqual(0)
 
     // Vitals properties should exist (even if null)
-    expect(timing).toHaveProperty('nr.vitals.fcp')
-    expect(timing).toHaveProperty('nr.vitals.lcp')
-    expect(timing).toHaveProperty('nr.vitals.cls')
-    expect(timing).toHaveProperty('nr.vitals.inp')
+    expect(timing).toHaveProperty(['nr.vitals.fcp'])
+    expect(timing).toHaveProperty(['nr.vitals.lcp'])
+    expect(timing).toHaveProperty(['nr.vitals.cls'])
+    expect(timing).toHaveProperty(['nr.vitals.inp'])
 
     // At least FCP and LCP should have values for this test case
     expect(timing['nr.vitals.fcp']).not.toBeNull()
@@ -506,31 +525,37 @@ describe('Register API - MFE Vitals Tracking', () => {
 
     // FCP metadata
     if (timing['nr.vitals.fcp'] !== null) {
-      expect(timing['nr.vitals.fcp'].loadState).toBeDefined()
+      const fcp = JSON.parse(timing['nr.vitals.fcp'])
+      expect(fcp.loadState).toBeDefined()
     }
 
     // LCP metadata - should have element info
     if (timing['nr.vitals.lcp'] !== null) {
-      expect(timing['nr.vitals.lcp'].elTag).toBe('DIV')
-      expect(timing['nr.vitals.lcp'].eid).toBe('hero-section')
-      expect(timing['nr.vitals.lcp'].size).toBe(480000) // 800 * 600
+      const lcp = JSON.parse(timing['nr.vitals.lcp'])
+      expect(lcp.elTag).toBe('DIV')
+      expect(lcp.eid).toBe('hero-section')
+      expect(lcp.size).toBe(480000) // 800 * 600
     }
 
     // CLS metadata - should have shift info if supported
-    if (timing['nr.vitals.cls'] !== null && timing['nr.vitals.cls'].value > 0) {
-      expect(timing['nr.vitals.cls'].largestShiftTarget).toBeDefined()
-      expect(timing['nr.vitals.cls'].largestShiftTime).toBeGreaterThanOrEqual(0)
-      expect(timing['nr.vitals.cls'].largestShiftValue).toBeGreaterThan(0)
-      expect(timing['nr.vitals.cls'].loadState).toBeDefined()
+    if (timing['nr.vitals.cls'] !== null) {
+      const cls = JSON.parse(timing['nr.vitals.cls'])
+      if (cls.value > 0) {
+        expect(cls.largestShiftTarget).toBeDefined()
+        expect(cls.largestShiftTime).toBeGreaterThanOrEqual(0)
+        expect(cls.largestShiftValue).toBeGreaterThan(0)
+        expect(cls.loadState).toBeDefined()
+      }
     }
 
     // INP metadata - should have interaction info if supported
     if (timing['nr.vitals.inp'] !== null) {
-      expect(timing['nr.vitals.inp'].interactionTarget).toBeDefined()
-      expect(timing['nr.vitals.inp'].interactionTime).toBeGreaterThanOrEqual(0)
-      expect(timing['nr.vitals.inp'].interactionType).toBeDefined()
-      expect(timing['nr.vitals.inp'].nextPaintTime).toBeGreaterThan(0)
-      expect(timing['nr.vitals.inp'].loadState).toBeDefined()
+      const inp = JSON.parse(timing['nr.vitals.inp'])
+      expect(inp.interactionTarget).toBeDefined()
+      expect(inp.interactionTime).toBeGreaterThanOrEqual(0)
+      expect(inp.interactionType).toBeDefined()
+      expect(inp.nextPaintTime).toBeGreaterThan(0)
+      expect(inp.loadState).toBeDefined()
     }
   })
 })

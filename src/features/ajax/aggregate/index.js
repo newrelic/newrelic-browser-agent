@@ -12,7 +12,9 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { parseGQL } from './gql'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { gosNREUMOriginals } from '../../../common/window/nreum'
+import { Obfuscator } from '../../../common/util/obfuscate'
 import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
+import { EVENT_TYPES } from '../../../common/constants/events'
 import { generateUuid } from '../../../common/ids/unique-id'
 
 export class Aggregate extends AggregateBase {
@@ -22,6 +24,9 @@ export class Aggregate extends AggregateBase {
     super(agentRef, FEATURE_NAME)
     setDenyList(agentRef.runtime.denyList)
     const classThis = this
+
+    // Create obfuscator for AJAX requests
+    this.obfuscator = new Obfuscator(agentRef, EVENT_TYPES.AJAX)
 
     if (!agentRef.init.ajax.block_internal) {
       // if the agent is tracking ITSELF, it can spawn endless ajax requests early if they are large from custom attributes, so we just disable early harvest for ajax in this case.
@@ -131,7 +136,7 @@ export class Aggregate extends AggregateBase {
 
   serializer (eventBuffer) {
     if (!eventBuffer.length) return
-    const addString = getAddStringContext(this.agentRef.runtime.obfuscator)
+    const addString = getAddStringContext(this.obfuscator)
     let payload = 'bel.7;'
 
     let firstTimestamp = 0

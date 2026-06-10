@@ -3,11 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { FeatureBase } from './feature-base'
-import { isValid } from '../../common/config/info'
-import { configure } from '../../loaders/configure/configure'
-import { gosCDN } from '../../common/window/nreum'
 import { drain } from '../../common/drain/drain'
-import { Obfuscator } from '../../common/util/obfuscate'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { Harvester } from '../../common/harvest/harvester'
 import { EventBuffer } from './event-buffer'
@@ -24,7 +20,6 @@ export class AggregateBase extends FeatureBase {
    */
   constructor (agentRef, featureName) {
     super(agentRef, featureName)
-    this.checkConfiguration(agentRef)
     this.doOnceForAllAggregate(agentRef)
 
     /** @type {Boolean} indicates if custom attributes are combined in each event payload for size estimation purposes. this is set to true in derived classes that need to evaluate custom attributes separately from the event payload */
@@ -182,40 +177,11 @@ export class AggregateBase extends FeatureBase {
   }
 
   /**
-   * Checks for additional `jsAttributes` items to support backward compatibility with implementations of the agent where
-   * loader configurations may appear after the loader code is executed.
-   */
-  checkConfiguration (existingAgent) {
-    // NOTE: This check has to happen at aggregator load time
-    if (!isValid(existingAgent.info)) {
-      const cdn = gosCDN()
-      let jsAttributes = { ...cdn.info?.jsAttributes }
-      try {
-        jsAttributes = {
-          ...jsAttributes,
-          ...existingAgent.info?.jsAttributes
-        }
-      } catch (err) {
-        // do nothing
-      }
-      configure(existingAgent, {
-        ...cdn,
-        info: {
-          ...cdn.info,
-          jsAttributes
-        },
-        runtime: existingAgent.runtime
-      }, existingAgent.runtime.loaderType)
-    }
-  }
-
-  /**
    * These are actions related to shared resources that should be initialized once by whichever feature Aggregate subclass loads first.
    * This method should run after checkConfiguration, which may reset the agent's info/runtime object that is used here.
    */
   doOnceForAllAggregate (agentRef) {
-    if (!agentRef.runtime.obfuscator) agentRef.runtime.obfuscator = new Obfuscator(agentRef)
-    this.obfuscator = agentRef.runtime.obfuscator
+    // Note: obfuscator is now created per-feature for their specific event types
 
     if (!agentRef.runtime.harvester) agentRef.runtime.harvester = new Harvester(agentRef)
   }

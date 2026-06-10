@@ -10,10 +10,11 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
 import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { applyFnToProps } from '../../../common/util/traverse'
+import { Obfuscator } from '../../../common/util/obfuscate'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
+import { EVENT_TYPES } from '../../../common/constants/events'
 import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
 
 export class Aggregate extends AggregateBase {
@@ -23,6 +24,10 @@ export class Aggregate extends AggregateBase {
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
+
+    // Create generic obfuscator (no specific event types) since this feature handles multiple event types
+    // Will check each event's eventType property at runtime against obfuscation rules
+    this.obfuscator = new Obfuscator(agentRef)
 
     this.waitForFlags(['ins']).then(([ins]) => {
       if (!ins) {
@@ -46,7 +51,7 @@ export class Aggregate extends AggregateBase {
         registerHandler('api-addPageAction', (timestamp, name, attributes, target) => {
           this.addEvent({
             ...attributes,
-            eventType: 'PageAction',
+            eventType: EVENT_TYPES.PA,
             timestamp: this.#toEpoch(timestamp),
             timeSinceLoad: timestamp / 1000,
             actionName: name,
@@ -73,7 +78,7 @@ export class Aggregate extends AggregateBase {
 
               aggregatedUserAction.targets.forEach(mfeTarget => {
                 const userActionEvent = {
-                  eventType: 'UserAction',
+                  eventType: EVENT_TYPES.UA,
                   timestamp: this.#toEpoch(timeStamp),
                   action: type,
                   actionCount: aggregatedUserAction.count,
@@ -152,7 +157,7 @@ export class Aggregate extends AggregateBase {
                     const detailObj = agentRef.init.performance.capture_detail ? createDetailAttrs(entry.detail) : {}
                     this.addEvent({
                       ...detailObj,
-                      eventType: 'BrowserPerformance',
+                      eventType: EVENT_TYPES.BP,
                       timestamp: this.#toEpoch(entry.startTime),
                       entryName: entry.name,
                       entryDuration: entry.duration,
@@ -217,7 +222,7 @@ export class Aggregate extends AggregateBase {
             this.reportSupportabilityMetric('Generic/Performance/Resource/Seen')
             const event = {
               ...entryObject,
-              eventType: 'BrowserPerformance',
+              eventType: EVENT_TYPES.BP,
               timestamp: this.#toEpoch(entryObject.startTime),
               entryName: cleanURL(name),
               entryDuration: duration,
@@ -236,7 +241,7 @@ export class Aggregate extends AggregateBase {
 
         const event = {
           ...customAttributes,
-          eventType: 'BrowserPerformance',
+          eventType: EVENT_TYPES.BP,
           timestamp: this.#toEpoch(start),
           entryName: n,
           entryDuration: duration,
@@ -250,7 +255,7 @@ export class Aggregate extends AggregateBase {
         registerHandler('ws-complete', (nrData) => {
           const event = {
             ...nrData,
-            eventType: 'WebSocket',
+            eventType: EVENT_TYPES.WS,
             timestamp: this.#toEpoch(nrData.timestamp),
             openedAt: this.#toEpoch(nrData.openedAt),
             closedAt: this.#toEpoch(nrData.closedAt)
@@ -266,7 +271,7 @@ export class Aggregate extends AggregateBase {
       if (!agentRef.init.feature_flags.includes('no_spv')) {
         registerHandler('spv', (evt) => {
           this.addEvent({
-            eventType: 'SecurityPolicyViolation',
+            eventType: EVENT_TYPES.SPV,
             timestamp: this.#toEpoch(evt.timeStamp),
             blockedUri: evt.blockedURI,
             documentUri: evt.documentURI,
@@ -335,7 +340,7 @@ export class Aggregate extends AggregateBase {
   }
 
   serializer (eventBuffer) {
-    return applyFnToProps({ ins: eventBuffer }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
+    return this.obfuscator.traverseAndObfuscateEvents({ ins: eventBuffer })
   }
 
   queryStringsBuilder () {

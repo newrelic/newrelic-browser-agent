@@ -83,7 +83,8 @@ jobs:
   # Step 1: Deploy to Staging
   deploy-staging:
     needs: [resolve-version]
-    runs-on: ubuntu-latest
+    # use the hosted runner with white-listed IPs to ensure we can access internal NR1 staging environment for asset publishing for copy/paste loader update.
+    runs-on: Browser-Agent-Assigned-IP-Linux
     environment: nr1-staging
     timeout-minutes: 30
     steps:
@@ -120,6 +121,21 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+      
+      - name: Update copy-paste loader in NRDB
+        if: needs.resolve-version.outputs.is_rc_mode == 'true'
+        env:
+          STAGE_API_KEY: ${{ secrets.NR_API_KEY_STAGING }}
+        run: |
+          LOADER_VERSION=$(jq -r '.version' package.json)
+          npm --prefix .github/actions install
+          node .github/actions/nr-upload/index.js \
+            --environment=stage \
+            --loader-version=$LOADER_VERSION \
+            --stage-api-key=$STAGE_API_KEY \
+            --local-dir=./build
+          node .github/actions/nr-verify/index.js \
+            --loader-version=$LOADER_VERSION
     
     outputs:
       version_label: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.version_label || needs.resolve-version.outputs.version_label }}

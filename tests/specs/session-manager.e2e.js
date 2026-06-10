@@ -28,6 +28,23 @@ describe('newrelic session ID', () => {
 
       expect(localStorage).toEqual(anySession())
     })
+
+    it('should store session data under app namespaced key', async () => {
+      await browser.url(await browser.testHandle.assetURL('session-entity.html', config))
+        .then(() => browser.waitForAgentLoad())
+
+      const namespacedStorage = await browser.execute(function () {
+        const agent = Object.values(newrelic.initializedAgents)[0]
+        const key = agent.runtime.session.lookupKey
+        return {
+          key,
+          value: JSON.parse(localStorage.getItem(key) || '{}')
+        }
+      })
+
+      expect(namespacedStorage.key).toEqual(expect.stringMatching(/^NRBA_SESSION::[a-f0-9]{8}$/))
+      expect(namespacedStorage.value).toEqual(anySession())
+    })
   })
 
   describe('persist across different navigation', () => {

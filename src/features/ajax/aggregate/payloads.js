@@ -45,7 +45,8 @@ export function parseQueryString (search) {
 
 /**
  * Determines if the given content type is likely to be human-readable (text-based).
- * @param {string} contentType - The content-type header value
+ * @param {Object} headers - The headers object containing content-type
+ * @param {*} data - The data to check
  * @returns {boolean} True if the content type is human-readable (text-based)
  */
 export function isLikelyHumanReadable (headers, data) {

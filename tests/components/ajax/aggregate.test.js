@@ -161,6 +161,72 @@ describe('prepareHarvest', () => {
     const serializedPayload = ajaxAggregate.makeHarvestPayload(false)
     expect(serializedPayload).toBeUndefined() // payload that are each too small for limit will be dropped
   })
+
+  test('obfuscation happens before truncation and result stays under 4KB', async () => {
+    // Ensure soft nav is NOT present so events buffer in ajaxEvents
+    delete getNREUMInitializedAgent(fakeAgent.agentIdentifier).features
+
+    // Save original config to restore later
+    const originalObfuscate = fakeAgent.init.obfuscate
+    const originalAjaxConfig = fakeAgent.init.ajax
+
+    // Create an obfuscation rule that EXPANDS the data
+    // Replace short pattern with much longer replacement (10x expansion)
+    fakeAgent.init.obfuscate = [{
+      regex: /X/g,
+      replacement: 'OBFUSCATED_VALUE_REPLACEMENT_TEXT', // 32 chars vs 1 char = 32x expansion
+      eventFilter: ['AjaxRequest'] // Must match EVENT_TYPES.AJAX value
+    }]
+
+    // Enable payload capture
+    fakeAgent.init.ajax = { capture_payloads: 'all' }
+
+    // Recreate ajaxAggregate with new config
+    const ajaxInstrumentWithObfuscation = new Ajax(fakeAgent)
+    await new Promise(process.nextTick)
+    const ajaxAggregateWithObfuscation = ajaxInstrumentWithObfuscation.featAggregate
+    ajaxAggregateWithObfuscation.ee.emit('rumresp', [])
+    ajaxAggregateWithObfuscation.drain()
+
+    // Create a large payload with many X characters that will expand significantly when obfuscated
+    // Using 200 X's per line for 25 lines = 5000 chars before obfuscation
+    // After obfuscation: 200 * 32 * 25 = 160,000 chars (way over 4KB)
+    const largePayloadWithPattern = Array(25).fill('X'.repeat(200)).join('\n')
+
+    // Set context with large request body that will expand during obfuscation
+    const testContext = new EventContext()
+    testContext.requestBody = largePayloadWithPattern
+    testContext.requestHeaders = { 'content-type': 'application/json' }
+
+    ajaxAggregateWithObfuscation.ee.emit('xhr', ajaxArguments, testContext)
+
+    const serializedPayload = ajaxAggregateWithObfuscation.makeHarvestPayload(false)
+    const decodedEvents = qp.decode(serializedPayload.body)
+
+    expect(decodedEvents.length).toBe(1)
+    const event = decodedEvents[0]
+
+    // Find the requestBody attribute in children
+    const requestBodyAttr = event.children.find(child => child.key === 'requestBody')
+    expect(requestBodyAttr).toBeDefined()
+
+    // Verify the value was obfuscated (contains the replacement text)
+    expect(requestBodyAttr.value).toContain('OBFUSCATED_VALUE_REPLACEMENT_TEXT')
+
+    // Verify the value was truncated - should end with ' ...'
+    expect(requestBodyAttr.value).toMatch(/ \.\.\.$/i)
+
+    // Verify the final byte size is under 4096 bytes (4092 + 4 for ' ...')
+    const byteLength = Buffer.byteLength(requestBodyAttr.value, 'utf8')
+    expect(byteLength).toBeLessThanOrEqual(4096)
+
+    // Verify it's close to the limit (was actually truncated, not just small)
+    expect(byteLength).toBeGreaterThan(4000)
+
+    // Restore original config
+    fakeAgent.init.obfuscate = originalObfuscate
+    fakeAgent.init.ajax = originalAjaxConfig
+  })
 })
 
 function validateCustomAttributeValues (expectedCustomAttributes, childrenNodes) {

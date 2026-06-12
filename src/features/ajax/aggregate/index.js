@@ -112,11 +112,12 @@ export class Aggregate extends AggregateBase {
     const canCapturePayload = capturePayloadSetting === CAPTURE_PAYLOAD_SETTINGS.ALL || (capturePayloadSetting === CAPTURE_PAYLOAD_SETTINGS.FAILURES && (params.status === 0 || params.status >= 400 || event.gql?.operationHasErrors === true))
 
     if (canCapturePayload) {
-      params.requestQuery = event.requestQuery = truncateAsString(parseQueryString(ctx.parsedOrigin?.search))
-      params.requestHeaders = event.requestHeaders = truncateAsString(ctx.requestHeaders)
-      params.responseHeaders = event.responseHeaders = truncateAsString(ctx.responseHeaders)
-      if (isLikelyHumanReadable(ctx.requestHeaders, ctx.requestBody)) params.requestBody = event.requestBody = truncateAsString(ctx.requestBody)
-      if (isLikelyHumanReadable(ctx.responseHeaders, ctx.responseBody)) params.responseBody = event.responseBody = truncateAsString(ctx.responseBody)
+      // Store raw data; obfuscation and truncation will happen in the serializer
+      params.requestQuery = event.requestQuery = parseQueryString(ctx.parsedOrigin?.search)
+      params.requestHeaders = event.requestHeaders = ctx.requestHeaders
+      params.responseHeaders = event.responseHeaders = ctx.responseHeaders
+      if (isLikelyHumanReadable(ctx.requestHeaders, ctx.requestBody)) params.requestBody = event.requestBody = ctx.requestBody
+      if (isLikelyHumanReadable(ctx.responseHeaders, ctx.responseBody)) params.responseBody = event.responseBody = ctx.responseBody
     }
 
     if (ctx.dt) {
@@ -150,6 +151,8 @@ export class Aggregate extends AggregateBase {
   serializer (eventBuffer) {
     if (!eventBuffer.length) return
     const addString = getAddStringContext(this.obfuscator)
+    // For payload attributes that may be large, apply truncation after obfuscation (per NR-496829)
+    const addStringWithTruncation = getAddStringContext(this.obfuscator, truncateAsString)
     let payload = 'bel.7;'
 
     let firstTimestamp = 0
@@ -183,20 +186,24 @@ export class Aggregate extends AggregateBase {
       // Since configuration objects (like info) are created new each time they are set, we have to grab the current pointer to the attr object here.
       const jsAttributes = this.agentRef.info.jsAttributes
 
-      // add custom attributes
-      // gql decorators are added as custom attributes to alleviate need for new BEL schema
-      // do these checks to avoid adding undefined values which serializer will translate into `"nullAttribute"` nodes and waste space
-      const attrParts = addCustomAttributes({
+      // For regular attributes, use normal addString (obfuscate only)
+      const regularAttrs = addCustomAttributes({
         ...(jsAttributes || {}),
         ...(event.gql || {}),
         ...(event.targetAttributes || {}), // used to supply the version 2 attributes, either MFE target or duplication attributes for the main agent app
+        [AJAX_ID]: event[AJAX_ID] // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
+      }, addString)
+
+      // For payload attributes that may be large, use obfuscation + truncation
+      const payloadAttrs = addCustomAttributes({
         ...(event.requestBody ? { requestBody: event.requestBody } : {}),
         ...(event.requestHeaders ? { requestHeaders: event.requestHeaders } : {}),
         ...(event.requestQuery ? { requestQuery: event.requestQuery } : {}),
         ...(event.responseBody ? { responseBody: event.responseBody } : {}),
-        ...(event.responseHeaders ? { responseHeaders: event.responseHeaders } : {}),
-        [AJAX_ID]: event[AJAX_ID] // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
-      }, addString)
+        ...(event.responseHeaders ? { responseHeaders: event.responseHeaders } : {})
+      }, addStringWithTruncation)
+
+      const attrParts = [...regularAttrs, ...payloadAttrs]
       fields.unshift(numeric(attrParts.length))
 
       insert += fields.join(',')

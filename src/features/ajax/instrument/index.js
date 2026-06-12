@@ -376,7 +376,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
       const metrics = {
         txSize: this.txSize,
         rxSize: responseSize,
-        duration: now() - this.startTime
+        duration: this.endTime - this.startTime
       }
 
       const payload = [this.params, metrics, this.startTime, this.endTime, 'fetch']
@@ -420,7 +420,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     if (params.aborted) return
     if (hasUndefinedHostname(params)) return // don't bother with XHR of url with no hostname
 
-    metrics.duration = now() - this.startTime
+    metrics.duration = this.endTime - this.startTime
     if (!this.loadCaptureCalled && xhr.readyState === 4) {
       captureXhrData(this, xhr)
     } else if (params.status == null) {

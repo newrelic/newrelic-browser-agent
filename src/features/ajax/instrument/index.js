@@ -430,16 +430,18 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     // Always send cbTime, even if no noticeable time was taken.
     metrics.cbTime = this.cbTime
 
-    try {
-      this.responseBody = xhr.responseText
-    } catch (e) {
-      this.responseBody = xhr.response
-    }
+    if (shouldInterceptPayloads) {
+      try {
+        this.responseBody = xhr.responseText
+      } catch (e) {
+        this.responseBody = xhr.response
+      }
 
-    try {
-      this.responseHeaders = parseResponseHeaders(xhr.getAllResponseHeaders())
-    } catch (err) {
-      ee.emit(INTERNAL_ERROR, [err])
+      try {
+        this.responseHeaders = parseResponseHeaders(xhr.getAllResponseHeaders())
+      } catch (err) {
+        ee.emit(INTERNAL_ERROR, [err])
+      }
     }
 
     const payload = [params, metrics, this.startTime, this.endTime, 'xhr']

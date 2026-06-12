@@ -6,12 +6,13 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { stringify } from '../../../common/util/stringify'
 import { handle } from '../../../common/event-emitter/handle'
 import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
-import { AJAX_ID, FEATURE_NAME } from '../constants'
+import { FEATURE_NAME, AJAX_ID } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { parseGQL } from './gql'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { gosNREUMOriginals } from '../../../common/window/nreum'
+import { hasGQLErrors, parseGQL } from './gql'
+import { canCapturePayload, isLikelyHumanReadable, parseQueryString, createStringAdders } from '../../../common/payloads/payloads'
 import { Obfuscator } from '../../../common/util/obfuscate'
 import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
 import { EVENT_TYPES } from '../../../common/constants/events'
@@ -101,6 +102,24 @@ export class Aggregate extends AggregateBase {
       [AJAX_ID]: generateUuid() // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
     }
 
+    event.gql = params.gql = parseGQL({
+      body: ctx.requestBody,
+      query: ctx.parsedOrigin?.search
+    })
+    if (event.gql) event.gql.operationHasErrors = params.gql.operationHasErrors = hasGQLErrors(ctx.responseBody)
+
+    const capturePayloadSetting = this.agentRef.init.ajax.capture_payloads
+    const shouldCapturePayload = canCapturePayload(capturePayloadSetting, params.status, event.gql?.operationHasErrors)
+
+    if (shouldCapturePayload) {
+      // Store raw data; obfuscation and truncation will happen in the serializer
+      params.requestQuery = event.requestQuery = parseQueryString(ctx.parsedOrigin?.search)
+      params.requestHeaders = event.requestHeaders = ctx.requestHeaders
+      params.responseHeaders = event.responseHeaders = ctx.responseHeaders
+      if (isLikelyHumanReadable(ctx.requestHeaders, ctx.requestBody)) params.requestBody = event.requestBody = ctx.requestBody
+      if (isLikelyHumanReadable(ctx.responseHeaders, ctx.responseBody)) params.responseBody = event.responseBody = ctx.responseBody
+    }
+
     if (ctx.dt) {
       event.spanId = ctx.dt.spanId
       event.traceId = ctx.dt.traceId
@@ -109,11 +128,6 @@ export class Aggregate extends AggregateBase {
       )
     }
 
-    // parsed from the AJAX body, looking for operationName param & parsing query for operationType
-    event.gql = params.gql = parseGQL({
-      body: ctx.body,
-      query: ctx.parsedOrigin?.search
-    })
     if (event.gql) this.reportSupportabilityMetric('Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length)
 
     /** make a copy of the event for the MFE target if it exists */
@@ -136,7 +150,9 @@ export class Aggregate extends AggregateBase {
 
   serializer (eventBuffer) {
     if (!eventBuffer.length) return
-    const addString = getAddStringContext(this.obfuscator)
+
+    const { addString, addStringWithTruncation } = createStringAdders(getAddStringContext, this.obfuscator)
+
     let payload = 'bel.7;'
 
     let firstTimestamp = 0
@@ -170,15 +186,24 @@ export class Aggregate extends AggregateBase {
       // Since configuration objects (like info) are created new each time they are set, we have to grab the current pointer to the attr object here.
       const jsAttributes = this.agentRef.info.jsAttributes
 
-      // add custom attributes
-      // gql decorators are added as custom attributes to alleviate need for new BEL schema
-      const attrParts = addCustomAttributes({
+      // Regular attributes: obfuscate only
+      const regularAttrs = addCustomAttributes({
         ...(jsAttributes || {}),
-        ...(event.gql || {}),
+        [AJAX_ID]: event[AJAX_ID], // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
         ...(event.targetAttributes || {}), // used to supply the version 2 attributes, either MFE target or duplication attributes for the main agent app
-        [AJAX_ID]: event[AJAX_ID] // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
+        ...(event.gql || {})
       }, addString)
 
+      // Payload attributes: obfuscate then truncate
+      const payloadAttrs = addCustomAttributes({
+        ...(event.requestBody ? { requestBody: event.requestBody } : {}),
+        ...(event.requestHeaders ? { requestHeaders: event.requestHeaders } : {}),
+        ...(event.requestQuery ? { requestQuery: event.requestQuery } : {}),
+        ...(event.responseBody ? { responseBody: event.responseBody } : {}),
+        ...(event.responseHeaders ? { responseHeaders: event.responseHeaders } : {})
+      }, addStringWithTruncation)
+
+      const attrParts = [...regularAttrs, ...payloadAttrs]
       fields.unshift(numeric(attrParts.length))
 
       insert += fields.join(',')

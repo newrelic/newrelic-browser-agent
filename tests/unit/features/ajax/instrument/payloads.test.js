@@ -185,4 +185,58 @@ describe('hasGQLErrors', () => {
     }
     expect(hasGQLErrors(partialErrorResponse)).toBe(true)
   })
+
+  test('returns true for batched GraphQL responses with at least one error', () => {
+    const batchedWithError = [
+      { data: { user: { name: 'John' } } },
+      {
+        errors: [{ message: 'User not found' }],
+        data: null
+      },
+      { data: { post: { title: 'Hello' } } }
+    ]
+    expect(hasGQLErrors(batchedWithError)).toBe(true)
+    expect(hasGQLErrors(JSON.stringify(batchedWithError))).toBe(true)
+  })
+
+  test('returns false for batched GraphQL responses with all successes', () => {
+    const batchedSuccess = [
+      { data: { user: { name: 'John' } } },
+      { data: { post: { title: 'Hello' } } },
+      { data: { comment: { text: 'Great!' } } }
+    ]
+    expect(hasGQLErrors(batchedSuccess)).toBe(false)
+    expect(hasGQLErrors(JSON.stringify(batchedSuccess))).toBe(false)
+  })
+
+  test('returns true for batched GraphQL responses with multiple errors', () => {
+    const batchedMultipleErrors = [
+      {
+        errors: [{ message: 'Error 1' }],
+        data: null
+      },
+      { data: { user: { name: 'John' } } },
+      {
+        errors: [{ message: 'Error 2' }],
+        data: null
+      }
+    ]
+    expect(hasGQLErrors(batchedMultipleErrors)).toBe(true)
+    expect(hasGQLErrors(JSON.stringify(batchedMultipleErrors))).toBe(true)
+  })
+
+  test('returns false for batched responses with invalid error structure', () => {
+    const batchedInvalidErrors = [
+      { data: { user: { name: 'John' } } },
+      {
+        errors: [{ code: 'ERR1' }], // No message property
+        data: null
+      }
+    ]
+    expect(hasGQLErrors(batchedInvalidErrors)).toBe(false)
+  })
+
+  test('returns false for empty batched response array', () => {
+    expect(hasGQLErrors([])).toBe(false)
+  })
 })

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { isPureObject } from '../../../common/util/type-check'
@@ -99,9 +99,22 @@ function validateGQLObject (obj) {
 }
 
 /**
+ * Checks if a response object has valid GraphQL errors.
+ * @param {object} response - A single GraphQL response object
+ * @returns {boolean} True if the response has valid errors
+ */
+function hasValidGQLErrors (response) {
+  return Array.isArray(response?.errors) &&
+    response.errors.some(err =>
+      err && typeof err === 'object' && typeof err.message === 'string'
+    )
+}
+
+/**
  * Checks if a response body contains GraphQL errors according to the GraphQL spec.
  * A valid GraphQL error response contains an "errors" array with at least one error object.
- * @param {string|object} [responseBody] The response body to check
+ * Supports both single and batched GraphQL responses.
+ * @param {string|object|array} [responseBody] The response body to check
  * @returns {boolean} True if the response contains GraphQL errors
  */
 export function hasGQLErrors (responseBody) {
@@ -114,16 +127,13 @@ export function hasGQLErrors (responseBody) {
       parsed = JSON.parse(responseBody)
     }
 
-    // Check if it's a valid GraphQL error response
-    // Per spec: { "errors": [...], "data": null/partial }
-    if (parsed && Array.isArray(parsed.errors) && parsed.errors.length > 0) {
-      // Verify at least one error has the standard GraphQL error structure
-      return parsed.errors.some(err =>
-        err && typeof err === 'object' && typeof err.message === 'string'
-      )
+    // Handle batched GraphQL responses (array of response objects)
+    if (Array.isArray(parsed)) {
+      return parsed.some(hasValidGQLErrors)
     }
 
-    return false
+    // Handle single GraphQL response
+    return hasValidGQLErrors(parsed)
   } catch (err) {
     return false
   }

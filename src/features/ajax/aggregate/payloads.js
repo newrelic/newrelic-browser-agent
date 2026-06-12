@@ -1,9 +1,26 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { stringify } from '../../../common/util/stringify'
+import { CAPTURE_PAYLOAD_SETTINGS } from '../constants'
+
+/**
+ * Determines whether payload data should be captured based on the capture mode setting,
+ * HTTP status code, and GraphQL error status.
+ * @param {string} captureMode - The capture mode setting ('off', 'all', or 'failures')
+ * @param {number} statusCode - The HTTP status code
+ * @param {boolean} hasGQLErrors - Whether the response contains GraphQL errors
+ * @returns {boolean} True if payload should be captured
+ */
+export function canCapturePayload (captureMode, statusCode, hasGQLErrors) {
+  if (captureMode === CAPTURE_PAYLOAD_SETTINGS.ALL) return true
+  if (!captureMode || captureMode === CAPTURE_PAYLOAD_SETTINGS.OFF) return false
+
+  // Default "failures" mode
+  return statusCode === 0 || statusCode >= 400 || hasGQLErrors === true
+}
 
 /**
  * Parses a query string into an object of key-value pairs.

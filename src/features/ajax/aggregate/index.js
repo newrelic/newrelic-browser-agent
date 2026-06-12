@@ -6,13 +6,13 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { stringify } from '../../../common/util/stringify'
 import { handle } from '../../../common/event-emitter/handle'
 import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
-import { CAPTURE_PAYLOAD_SETTINGS, FEATURE_NAME, AJAX_ID } from '../constants'
+import { FEATURE_NAME, AJAX_ID } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { gosNREUMOriginals } from '../../../common/window/nreum'
 import { hasGQLErrors, parseGQL } from './gql'
-import { isLikelyHumanReadable, parseQueryString, truncateAsString } from './payloads'
+import { canCapturePayload, isLikelyHumanReadable, parseQueryString, truncateAsString } from './payloads'
 import { Obfuscator } from '../../../common/util/obfuscate'
 import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
 import { EVENT_TYPES } from '../../../common/constants/events'
@@ -109,9 +109,9 @@ export class Aggregate extends AggregateBase {
     if (event.gql) event.gql.operationHasErrors = params.gql.operationHasErrors = hasGQLErrors(ctx.responseBody)
 
     const capturePayloadSetting = this.agentRef.init.ajax.capture_payloads
-    const canCapturePayload = capturePayloadSetting === CAPTURE_PAYLOAD_SETTINGS.ALL || (capturePayloadSetting === CAPTURE_PAYLOAD_SETTINGS.FAILURES && (params.status === 0 || params.status >= 400 || event.gql?.operationHasErrors === true))
+    const shouldCapturePayload = canCapturePayload(capturePayloadSetting, params.status, event.gql?.operationHasErrors)
 
-    if (canCapturePayload) {
+    if (shouldCapturePayload) {
       // Store raw data; obfuscation and truncation will happen in the serializer
       params.requestQuery = event.requestQuery = parseQueryString(ctx.parsedOrigin?.search)
       params.requestHeaders = event.requestHeaders = ctx.requestHeaders

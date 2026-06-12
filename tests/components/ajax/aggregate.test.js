@@ -162,7 +162,7 @@ describe('prepareHarvest', () => {
     expect(serializedPayload).toBeUndefined() // payload that are each too small for limit will be dropped
   })
 
-  test('obfuscation happens before truncation and result stays under 4KB', async () => {
+  test.each(['POST', 'PUT', 'PATCH', 'DELETE'])('obfuscation happens before truncation and result stays under 4KB for %s requests', async (method) => {
     // Ensure soft nav is NOT present so events buffer in ajaxEvents
     delete getNREUMInitializedAgent(fakeAgent.agentIdentifier).features
 
@@ -198,13 +198,22 @@ describe('prepareHarvest', () => {
     testContext.requestBody = largePayloadWithPattern
     testContext.requestHeaders = { 'content-type': 'application/json' }
 
-    ajaxAggregateWithObfuscation.ee.emit('xhr', ajaxArguments, testContext)
+    // Create ajax arguments with the specific HTTP method being tested
+    const testAjaxArguments = [
+      { ...ajaxArguments[0], method },
+      ...ajaxArguments.slice(1)
+    ]
+
+    ajaxAggregateWithObfuscation.ee.emit('xhr', testAjaxArguments, testContext)
 
     const serializedPayload = ajaxAggregateWithObfuscation.makeHarvestPayload(false)
     const decodedEvents = qp.decode(serializedPayload.body)
 
     expect(decodedEvents.length).toBe(1)
     const event = decodedEvents[0]
+
+    // Verify the method was captured correctly
+    expect(event.method).toBe(method)
 
     // Find the requestBody attribute in children
     const requestBodyAttr = event.children.find(child => child.key === 'requestBody')

@@ -333,11 +333,11 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
       opts.method || 'GET')).toUpperCase()
     this.params.method = method
 
-    this.txSize = dataSize(opts.body) || 0
+    this.txSize = dataSize(opts.body || (target?.body)) || 0
 
     // Capture request headers
     try {
-      var headers = opts.headers || (target && target.headers)
+      var headers = opts.headers || (target?.headers)
       if (shouldInterceptPayloads && headers) {
         this.requestHeaders ??= {}
         if (headers instanceof Headers) {
@@ -354,7 +354,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
       // Silently fail if we can't access headers
     }
 
-    this.requestBody = opts.body
+    this.requestBody = opts.body || (target?.body)
   }
 
   // we capture failed call as status 0, the actual error is ignored

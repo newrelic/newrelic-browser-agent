@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { stringify } from '../../../common/util/stringify'
-import { CAPTURE_PAYLOAD_SETTINGS } from '../constants'
+import { stringify } from '../util/stringify'
+import { CAPTURE_PAYLOAD_SETTINGS } from '../../features/ajax/constants'
 
 /**
  * Determines whether payload data should be captured based on the capture mode setting,

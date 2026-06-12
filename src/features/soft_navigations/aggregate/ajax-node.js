@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
-import { truncateAsString } from '../../ajax/aggregate/payloads'
+import { createStringAdders } from '../../../common/payloads/payloads'
 import { AJAX_ID } from '../../ajax/constants'
 import { NODE_TYPE } from '../constants'
 import { BelNode } from './bel-node'
@@ -42,9 +42,8 @@ export class AjaxNode extends BelNode {
   }
 
   serialize (parentStartTimestamp, agentRef, ajaxObfuscator) {
-    const addString = getAddStringContext(ajaxObfuscator)
-    // For payload attributes that may be large, apply truncation after obfuscation (per NR-496829)
-    const addStringWithTruncation = getAddStringContext(ajaxObfuscator, truncateAsString)
+    const { addString, addStringWithTruncation } = createStringAdders(getAddStringContext, ajaxObfuscator)
+
     const nodeList = []
 
     // IMPORTANT: The order in which addString is called matters and correlates to the order in which string shows up in the harvest payload. Do not re-order the following code.
@@ -65,13 +64,14 @@ export class AjaxNode extends BelNode {
       addString(this.nodeId),
       nullable(this.spanId, addString, true) + nullable(this.traceId, addString, true) + nullable(this.spanTimestamp, numeric)
     ]
-    // For regular attributes, use normal addString (obfuscate only)
+    // Regular attributes: obfuscate only
     const regularAttrs = addCustomAttributes({
       [AJAX_ID]: this[AJAX_ID],
       ...(this.targetAttributes || {}),
       ...(this.gql || {})
     }, addString)
-    // For payload attributes that may be large, use obfuscation + truncation
+
+    // Payload attributes: obfuscate then truncate
     const payloadAttrs = addCustomAttributes({
       ...(this.requestBody ? { requestBody: this.requestBody } : {}),
       ...(this.requestHeaders ? { requestHeaders: this.requestHeaders } : {}),
@@ -79,6 +79,7 @@ export class AjaxNode extends BelNode {
       ...(this.responseBody ? { responseBody: this.responseBody } : {}),
       ...(this.responseHeaders ? { responseHeaders: this.responseHeaders } : {})
     }, addStringWithTruncation)
+
     let allAttachedNodes = [...regularAttrs, ...payloadAttrs]
     this.children.forEach(node => allAttachedNodes.push(node.serialize())) // no children is expected under ajax nodes at this time
 

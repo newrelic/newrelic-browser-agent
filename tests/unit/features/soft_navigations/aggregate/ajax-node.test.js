@@ -6,7 +6,7 @@ jest.unmock('../../../../../src/features/soft_navigations/aggregate/ajax-node')
 jest.unmock('../../../../../src/features/soft_navigations/aggregate/bel-node')
 jest.unmock('../../../../../src/common/serialize/bel-serializer')
 jest.unmock('../../../../../src/common/util/obfuscate')
-jest.unmock('../../../../../src/features/ajax/aggregate/payloads')
+jest.unmock('../../../../../src/common/payloads/payloads')
 
 const someAgent = {
   agentIdentifier: 'abcd',

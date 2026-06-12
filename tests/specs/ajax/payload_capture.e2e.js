@@ -151,6 +151,12 @@ describe('capture_payloads', () => {
       expect(responseHeaders).toBeUndefined()
       return
     }
+    // Debug logging
+    if (!responseHeaders) {
+      console.log('DEBUG: event.path =', event.path)
+      console.log('DEBUG: event.children keys =', event.children.map(x => x.key))
+      console.log('DEBUG: full event =', JSON.stringify(event, null, 2))
+    }
     expectBytes(responseHeaders)
     if (typeof responseHeaders === 'string') {
       responseHeaders = JSON.parse(responseHeaders)

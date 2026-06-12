@@ -12,7 +12,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { gosNREUMOriginals } from '../../../common/window/nreum'
 import { hasGQLErrors, parseGQL } from './gql'
-import { canCapturePayload, isLikelyHumanReadable, parseQueryString, truncateAsString } from './payloads'
+import { canCapturePayload, isLikelyHumanReadable, parseQueryString, createStringAdders } from '../../../common/payloads/payloads'
 import { Obfuscator } from '../../../common/util/obfuscate'
 import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
 import { EVENT_TYPES } from '../../../common/constants/events'
@@ -150,9 +150,9 @@ export class Aggregate extends AggregateBase {
 
   serializer (eventBuffer) {
     if (!eventBuffer.length) return
-    const addString = getAddStringContext(this.obfuscator)
-    // For payload attributes that may be large, apply truncation after obfuscation (per NR-496829)
-    const addStringWithTruncation = getAddStringContext(this.obfuscator, truncateAsString)
+
+    const { addString, addStringWithTruncation } = createStringAdders(getAddStringContext, this.obfuscator)
+
     let payload = 'bel.7;'
 
     let firstTimestamp = 0
@@ -186,7 +186,7 @@ export class Aggregate extends AggregateBase {
       // Since configuration objects (like info) are created new each time they are set, we have to grab the current pointer to the attr object here.
       const jsAttributes = this.agentRef.info.jsAttributes
 
-      // For regular attributes, use normal addString (obfuscate only)
+      // Regular attributes: obfuscate only
       const regularAttrs = addCustomAttributes({
         ...(jsAttributes || {}),
         [AJAX_ID]: event[AJAX_ID], // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
@@ -194,7 +194,7 @@ export class Aggregate extends AggregateBase {
         ...(event.gql || {})
       }, addString)
 
-      // For payload attributes that may be large, use obfuscation + truncation
+      // Payload attributes: obfuscate then truncate
       const payloadAttrs = addCustomAttributes({
         ...(event.requestBody ? { requestBody: event.requestBody } : {}),
         ...(event.requestHeaders ? { requestHeaders: event.requestHeaders } : {}),

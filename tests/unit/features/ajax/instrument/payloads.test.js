@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { parseQueryString, isLikelyHumanReadable } from '../../../../../src/features/ajax/aggregate/payloads'
+import { parseQueryString, isLikelyHumanReadable } from '../../../../../src/common/payloads/payloads'
 import { hasGQLErrors } from '../../../../../src/features/ajax/aggregate/gql'
 
 describe('parseQueryString', () => {

@@ -189,9 +189,9 @@ export class Aggregate extends AggregateBase {
       // For regular attributes, use normal addString (obfuscate only)
       const regularAttrs = addCustomAttributes({
         ...(jsAttributes || {}),
-        ...(event.gql || {}),
+        [AJAX_ID]: event[AJAX_ID], // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
         ...(event.targetAttributes || {}), // used to supply the version 2 attributes, either MFE target or duplication attributes for the main agent app
-        [AJAX_ID]: event[AJAX_ID] // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
+        ...(event.gql || {})
       }, addString)
 
       // For payload attributes that may be large, use obfuscation + truncation

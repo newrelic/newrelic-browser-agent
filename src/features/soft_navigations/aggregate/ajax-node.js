@@ -63,14 +63,14 @@ export class AjaxNode extends BelNode {
       nullable(this.spanId, addString, true) + nullable(this.traceId, addString, true) + nullable(this.spanTimestamp, numeric)
     ]
     let allAttachedNodes = addCustomAttributes({
-      ...(this.gql || {}),
+      [AJAX_ID]: this[AJAX_ID],
       ...(this.targetAttributes || {}),
+      ...(this.gql || {}),
       ...(this.requestBody ? { requestBody: this.requestBody } : {}),
       ...(this.requestHeaders ? { requestHeaders: this.requestHeaders } : {}),
       ...(this.requestQuery ? { requestQuery: this.requestQuery } : {}),
       ...(this.responseBody ? { responseBody: this.responseBody } : {}),
-      ...(this.responseHeaders ? { responseHeaders: this.responseHeaders } : {}),
-      [AJAX_ID]: this[AJAX_ID]
+      ...(this.responseHeaders ? { responseHeaders: this.responseHeaders } : {})
     }, addString)
     this.children.forEach(node => allAttachedNodes.push(node.serialize())) // no children is expected under ajax nodes at this time
 

@@ -393,6 +393,10 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     // Clone the response to read the body without consuming the original
     res.clone().text().then((text) => {
       this.responseBody = text
+      // Use captured payload size as fallback if content-length header was missing
+      if (!this.rxSize && text !== undefined) {
+        this.rxSize = dataSize(text)
+      }
       if (res?.headers) {
         this.responseHeaders = {}
         res.headers.forEach(function (value, key) {
@@ -435,6 +439,12 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
         this.responseBody = xhr.responseText
       } catch (e) {
         this.responseBody = xhr.response
+      }
+
+      // Use captured payload size as fallback if not already determined
+      if (!metrics.rxSize && this.responseBody !== undefined) {
+        const size = dataSize(this.responseBody)
+        if (size !== undefined) metrics.rxSize = size
       }
 
       try {

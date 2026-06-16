@@ -377,4 +377,114 @@ describe('Fetch Ajax', () => {
     expect(ajaxMetric.metrics.rxSize.t).toBeUndefined()
     expect(ajaxMetric.metrics.rxSize.c).toEqual(1)
   })
+
+  describe('response size fallback from payload capture', () => {
+    it('uses captured payload size when content-length header is missing', async () => {
+      await browser.url(await browser.testHandle.assetURL('ajax/fetch-no-content-length.html', {
+        init: { ajax: { capture_payloads: 'all' } },
+        loader: 'full'
+      }))
+        .then(() => browser.waitForAgentLoad())
+        .then(() => browser.execute(function () {
+          window.disableAjaxHashChange = true
+        }))
+
+      const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
+        ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+        ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
+        $('#sendAjax').click()
+      ])
+
+      ajaxEventsHarvest.forEach(harvest =>
+        checkAjaxEvents(harvest.request, { specificPath: '/json-no-content-length' })
+      )
+      ajaxMetricsHarvest.forEach(harvest =>
+        checkAjaxMetrics(harvest.request, { specificPath: '/json-no-content-length', isFetch: true })
+      )
+
+      const ajaxEvent = ajaxEventsHarvest
+        .flatMap(harvest => harvest.request.body)
+        .find(event => event.path === '/json-no-content-length')
+      expect(ajaxEvent.responseBodySize).toBeGreaterThan(0)
+
+      const ajaxMetric = ajaxMetricsHarvest
+        .flatMap(harvest => harvest.request.body.xhr)
+        .find(metric => metric.params.pathname === '/json-no-content-length')
+      expect(ajaxMetric.metrics.rxSize.t).toBeGreaterThan(0)
+      // Verify the size matches the expected JSON response body
+      expect(ajaxMetric.metrics.rxSize.t).toEqual(JSON.stringify({ text: 'response without content-length header' }).length)
+    })
+
+    it('uses captured payload size when content-length is 0 with actual body', async () => {
+      await browser.url(await browser.testHandle.assetURL('ajax/fetch-zero-content-length.html', {
+        init: { ajax: { capture_payloads: 'all' } },
+        loader: 'full'
+      }))
+        .then(() => browser.waitForAgentLoad())
+        .then(() => browser.execute(function () {
+          window.disableAjaxHashChange = true
+        }))
+
+      const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
+        ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+        ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
+        $('#sendAjax').click()
+      ])
+
+      ajaxEventsHarvest.forEach(harvest =>
+        checkAjaxEvents(harvest.request, { specificPath: '/json-zero-content-length' })
+      )
+      ajaxMetricsHarvest.forEach(harvest =>
+        checkAjaxMetrics(harvest.request, { specificPath: '/json-zero-content-length', isFetch: true })
+      )
+
+      const ajaxEvent = ajaxEventsHarvest
+        .flatMap(harvest => harvest.request.body)
+        .find(event => event.path === '/json-zero-content-length')
+      expect(ajaxEvent.responseBodySize).toBeGreaterThan(0)
+
+      const ajaxMetric = ajaxMetricsHarvest
+        .flatMap(harvest => harvest.request.body.xhr)
+        .find(metric => metric.params.pathname === '/json-zero-content-length')
+      expect(ajaxMetric.metrics.rxSize.t).toBeGreaterThan(0)
+      // Verify the size matches the expected JSON response body
+      expect(ajaxMetric.metrics.rxSize.t).toEqual(JSON.stringify({ text: 'content-length says 0 but body exists' }).length)
+    })
+
+    it('reports rxSize as 0 for empty 204 No Content response', async () => {
+      await browser.url(await browser.testHandle.assetURL('ajax/fetch-empty-204.html', {
+        init: { ajax: { capture_payloads: 'all' } },
+        loader: 'full'
+      }))
+        .then(() => browser.waitForAgentLoad())
+        .then(() => browser.execute(function () {
+          window.disableAjaxHashChange = true
+        }))
+
+      const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
+        ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+        ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
+        $('#sendAjax').click()
+      ])
+
+      ajaxEventsHarvest.forEach(harvest =>
+        checkAjaxEvents(harvest.request, { specificPath: '/empty-204' })
+      )
+      ajaxMetricsHarvest.forEach(harvest =>
+        checkAjaxMetrics(harvest.request, { specificPath: '/empty-204', isFetch: true })
+      )
+
+      const ajaxEvent = ajaxEventsHarvest
+        .flatMap(harvest => harvest.request.body)
+        .find(event => event.path === '/empty-204')
+      expect(ajaxEvent.responseBodySize).toEqual(0)
+      expect(ajaxEvent.status).toEqual(204)
+
+      const ajaxMetric = ajaxMetricsHarvest
+        .flatMap(harvest => harvest.request.body.xhr)
+        .find(metric => metric.params.pathname === '/empty-204')
+      expect(ajaxMetric.metrics.rxSize.t).toEqual(0)
+      expect(ajaxMetric.params.status).toEqual(204)
+    })
+  })
 })

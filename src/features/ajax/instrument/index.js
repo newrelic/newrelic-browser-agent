@@ -367,11 +367,9 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     this.params.status = res ? res.status : 0
 
     const finishAndReport = () => {
-      // convert rxSize to a number
-      let responseSize
-      if (typeof this.rxSize === 'string' && this.rxSize.length > 0) {
-        responseSize = +this.rxSize
-      }
+      // convert rxSize to a number - handle both string (from content-length header) and number (from fallback)
+      const num = +this.rxSize
+      const responseSize = this.rxSize != null && !isNaN(num) ? num : undefined
 
       const metrics = {
         txSize: this.txSize,
@@ -393,8 +391,8 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     // Clone the response to read the body without consuming the original
     res.clone().text().then((text) => {
       this.responseBody = text
-      // Use captured payload size as fallback if content-length header was missing
-      if (!this.rxSize && text !== undefined) {
+      // Use captured payload size as fallback if content-length header was missing or is 0 with a body
+      if ((!this.rxSize || this.rxSize === '0' || this.rxSize === 0) && text !== undefined) {
         this.rxSize = dataSize(text)
       }
       if (res?.headers) {
@@ -441,8 +439,8 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
         this.responseBody = xhr.response
       }
 
-      // Use captured payload size as fallback if not already determined
-      if (!metrics.rxSize && this.responseBody !== undefined) {
+      // Use captured payload size as fallback if not already determined or is 0 with a body
+      if ((!metrics.rxSize || metrics.rxSize === 0) && this.responseBody !== undefined) {
         const size = dataSize(this.responseBody)
         if (size !== undefined) metrics.rxSize = size
       }
@@ -466,7 +464,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     ctx.params.status = xhr.status
 
     var size = responseSizeFromXhr(xhr, ctx.lastSize)
-    if (size) ctx.metrics.rxSize = size
+    if (size !== undefined) ctx.metrics.rxSize = size
 
     if (ctx.sameOrigin && xhr.getAllResponseHeaders().indexOf(NR_CAT_HEADER) >= 0) {
       var header = xhr.getResponseHeader(NR_CAT_HEADER)

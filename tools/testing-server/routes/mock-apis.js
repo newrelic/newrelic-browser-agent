@@ -416,4 +416,31 @@ module.exports = fp(async function (fastify, testServer) {
       socket.send(message, { binary: isBinary })
     })
   })
+
+  // Response size fallback test endpoints
+  fastify.get('/json-no-content-length', {
+    compress: false
+  }, (request, reply) => {
+    const responseBody = JSON.stringify({ text: 'response without content-length header' })
+    reply
+      .removeHeader('content-length')
+      .type('application/json')
+      .send(responseBody)
+  })
+
+  fastify.get('/json-zero-content-length', {
+    compress: false
+  }, (request, reply) => {
+    const responseBody = JSON.stringify({ text: 'content-length says 0 but body exists' })
+    reply
+      .header('content-length', '0')
+      .type('application/json')
+      .send(responseBody)
+  })
+
+  fastify.get('/empty-204', {
+    compress: false
+  }, (request, reply) => {
+    reply.code(204).send()
+  })
 })

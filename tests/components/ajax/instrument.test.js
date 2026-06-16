@@ -229,21 +229,6 @@ describe('payload capture configuration', () => {
 })
 
 describe('response size fallback from payload capture', () => {
-  describe('fetch', () => {
-    // Note: fetch tests are integration tests in tests/specs/ajax/fetch.e2e.js
-    // These unit tests verify the logic is correct
-    test('verifies fallback logic exists in source code', () => {
-      const fs = require('fs')
-      const path = require('path')
-      const instrumentPath = path.join(__dirname, '../../../src/features/ajax/instrument/index.js')
-      const instrumentCode = fs.readFileSync(instrumentPath, 'utf8')
-
-      // Verify the fetch fallback logic exists
-      expect(instrumentCode).toContain('if (!this.rxSize && text !== undefined)')
-      expect(instrumentCode).toContain('this.rxSize = dataSize(text)')
-    })
-  })
-
   describe('xhr', () => {
     test('uses captured payload size when content-length header is missing', done => {
       const responseBody = '<html><body>Test Response</body></html>'
@@ -361,8 +346,8 @@ describe('response size fallback from payload capture', () => {
       const instrumentPath = path.join(__dirname, '../../../src/features/ajax/instrument/index.js')
       const instrumentCode = fs.readFileSync(instrumentPath, 'utf8')
 
-      // Verify the XHR fallback logic exists
-      expect(instrumentCode).toContain('if (!metrics.rxSize && this.responseBody !== undefined)')
+      // Verify the XHR fallback logic exists and handles missing or zero rxSize
+      expect(instrumentCode).toContain('if ((!metrics.rxSize || metrics.rxSize === 0) && this.responseBody !== undefined)')
       expect(instrumentCode).toContain('const size = dataSize(this.responseBody)')
       expect(instrumentCode).toContain('if (size !== undefined) metrics.rxSize = size')
     })

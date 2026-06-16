@@ -124,6 +124,7 @@ jobs:
       
       - name: Update copy-paste loader in NRDB
         if: needs.resolve-version.outputs.is_rc_mode == 'true'
+        continue-on-error: true # Don't fail the deployment if this step fails
         env:
           STAGE_API_KEY: ${{ secrets.NR_API_KEY_STAGING }}
         run: |

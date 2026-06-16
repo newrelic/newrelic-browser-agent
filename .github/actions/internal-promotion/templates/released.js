@@ -11,7 +11,8 @@ window.NREUM={
         'bam.nr-data.net',
         'staging-bam.nr-data.net',
         'bam-cell.nr-data.net'
-      ]
+      ],
+      capture_payloads: 'all'
     },
     session_replay: {
       enabled: true,

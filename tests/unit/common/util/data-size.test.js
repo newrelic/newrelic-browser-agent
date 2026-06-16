@@ -10,11 +10,14 @@ describe('dataSize', () => {
     expect(dataSize(str)).toBe(str.length)
   })
 
-  test('returns undefined for non-object, number, or empty string', () => {
+  test('returns undefined for non-object or number', () => {
     expect(dataSize(Infinity)).toBeUndefined()
     expect(dataSize(NaN)).toBeUndefined()
     expect(dataSize(12345)).toBeUndefined()
-    expect(dataSize('')).toBeUndefined()
+  })
+
+  test('returns 0 for empty string', () => {
+    expect(dataSize('')).toBe(0)
   })
 
   test('returns byte length of ArrayBuffer object', () => {

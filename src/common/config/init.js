@@ -48,7 +48,7 @@ const InitModelFn = () => {
     }
   }
   return {
-    ajax: { deny_list: undefined, block_internal: true, enabled: true, autoStart: true, capture_payloads: CAPTURE_PAYLOAD_SETTINGS.OFF },
+    ajax: { deny_list: undefined, block_internal: true, enabled: true, autoStart: true, capture_payloads: CAPTURE_PAYLOAD_SETTINGS.NONE },
     api: {
       register: {
         get enabled () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.REGISTER) || hiddenState.experimental.register },

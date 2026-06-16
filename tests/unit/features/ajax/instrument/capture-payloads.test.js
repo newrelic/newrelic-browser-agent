@@ -7,16 +7,16 @@ import { canCapturePayload } from '../../../../../src/common/payloads/payloads'
 import { hasGQLErrors } from '../../../../../src/features/ajax/aggregate/gql'
 
 describe('canCapturePayload logic', () => {
-  describe('off mode', () => {
+  describe('none mode', () => {
     test('never captures payloads', () => {
-      expect(canCapturePayload('off', 200, false)).toBe(false)
-      expect(canCapturePayload('off', 404, false)).toBe(false)
-      expect(canCapturePayload('off', 500, false)).toBe(false)
-      expect(canCapturePayload('off', 0, false)).toBe(false)
-      expect(canCapturePayload('off', 200, true)).toBe(false)
+      expect(canCapturePayload('none', 200, false)).toBe(false)
+      expect(canCapturePayload('none', 404, false)).toBe(false)
+      expect(canCapturePayload('none', 500, false)).toBe(false)
+      expect(canCapturePayload('none', 0, false)).toBe(false)
+      expect(canCapturePayload('none', 200, true)).toBe(false)
     })
 
-    test('treats null/undefined as off', () => {
+    test('treats null/undefined as none', () => {
       expect(canCapturePayload(null, 200, false)).toBe(false)
       expect(canCapturePayload(undefined, 200, false)).toBe(false)
     })

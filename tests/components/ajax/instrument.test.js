@@ -222,7 +222,7 @@ describe('payload capture configuration', () => {
   // These tests just verify that the configuration constants are properly defined
 
   test('CAPTURE_PAYLOAD_SETTINGS constants are defined', () => {
-    expect(CAPTURE_PAYLOAD_SETTINGS.OFF).toEqual('off')
+    expect(CAPTURE_PAYLOAD_SETTINGS.NONE).toEqual('none')
     expect(CAPTURE_PAYLOAD_SETTINGS.ALL).toEqual('all')
     expect(CAPTURE_PAYLOAD_SETTINGS.FAILURES).toEqual('failures')
   })

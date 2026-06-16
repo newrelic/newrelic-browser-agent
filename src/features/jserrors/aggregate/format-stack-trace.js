@@ -24,12 +24,7 @@ function truncateStackLines (stackLines) {
   return stackString
 }
 
-// returns true if the string can be truncated in size due to exceeding max stack trace length
-export function canBeTruncated (stackString) {
-  return stackString.length > MAX_STACK_TRACE_LENGTH
-}
-
 // truncates stack string to limit what is sent to backend
 export function truncateSize (stackString) {
-  return canBeTruncated(stackString) ? stackString.substr(0, MAX_STACK_TRACE_LENGTH) : stackString
+  return stackString.length > MAX_STACK_TRACE_LENGTH ? stackString.substr(0, MAX_STACK_TRACE_LENGTH) : stackString
 }

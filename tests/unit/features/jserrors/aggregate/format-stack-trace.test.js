@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { formatStackTrace, canBeTruncated, truncateSize } from '../../../../../src/features/jserrors/aggregate/format-stack-trace'
+import { formatStackTrace, truncateSize } from '../../../../../src/features/jserrors/aggregate/format-stack-trace'
 
 describe('formatStackTrace', () => {
   test.each([
@@ -24,26 +24,6 @@ describe('formatStackTrace', () => {
     const result = formatStackTrace(input)
 
     expect(result).toEqual(expected)
-  })
-})
-
-describe('canBeTruncated', () => {
-  test('should return true if stack string exceeds max limit', () => {
-    const maxSize = 65530
-    const input = faker.string.sample(maxSize + 1)
-
-    const result = canBeTruncated(input)
-
-    expect(result).toEqual(true)
-  })
-
-  test('should return false if stack string does not exceed max limit', () => {
-    const maxSize = 65530
-    const input = faker.string.sample(maxSize)
-
-    const result = canBeTruncated(input)
-
-    expect(result).toEqual(false)
   })
 })
 

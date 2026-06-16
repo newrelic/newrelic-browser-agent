@@ -6,7 +6,7 @@ import { FEATURE_NAMES } from '../../loaders/features/features'
 
 export const FEATURE_NAME = FEATURE_NAMES.ajax
 export const CAPTURE_PAYLOAD_SETTINGS = {
-  OFF: 'off',
+  NONE: 'none',
   FAILURES: 'failures',
   ALL: 'all'
 }

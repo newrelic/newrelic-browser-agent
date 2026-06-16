@@ -10,7 +10,7 @@ test('init props exist and return expected defaults', () => {
     block_internal: true,
     deny_list: undefined,
     enabled: true,
-    capture_payloads: 'off'
+    capture_payloads: 'none'
   })
   expect(config.api).toEqual({
     register: {

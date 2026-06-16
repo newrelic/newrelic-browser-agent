@@ -88,7 +88,7 @@ module.exports.defaultInitBlock = {
   ajax: {
     deny_list: [],
     block_internal: false,
-    capture_payloads: 'off', // off by default to not break existing ajax/spa tests. payload tests are conducted separately and explicitly.
+    capture_payloads: 'none', // none by default to not break existing ajax/spa tests. payload tests are conducted separately and explicitly.
     ...enabledFeature
   },
   api: {

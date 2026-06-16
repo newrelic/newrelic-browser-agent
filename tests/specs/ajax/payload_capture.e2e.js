@@ -11,7 +11,7 @@ describe('capture_payloads', () => {
   })
 
   const modes = [
-    'off',
+    'none',
     'failures',
     'all'
   ]

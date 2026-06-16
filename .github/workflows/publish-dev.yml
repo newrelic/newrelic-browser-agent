@@ -10,17 +10,7 @@ name: Publish Dev
 
 on:
   workflow_call:
-    inputs:
-      skip_publish_notification:
-        description: 'Skip sending published agent Slack notification'
-        type: boolean
-        default: false
   workflow_dispatch:
-    inputs:
-      skip_publish_notification:
-        description: 'Skip sending published agent Slack notification'
-        type: boolean
-        default: false
   push:
     branches:
       - 'main'

@@ -392,7 +392,8 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     res.clone().text().then((text) => {
       this.responseBody = text
       // Use captured payload size as fallback if content-length header was missing or is 0 with a body
-      if ((!this.rxSize || this.rxSize === '0' || this.rxSize === 0) && text !== undefined) {
+      // Only apply fallback for non-network-error responses (status !== 0)
+      if ((!this.rxSize || this.rxSize === '0' || this.rxSize === 0) && text !== undefined && this.params.status !== 0) {
         this.rxSize = dataSize(text)
       }
       if (res?.headers) {
@@ -440,7 +441,8 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
       }
 
       // Use captured payload size as fallback if not already determined or is 0 with a body
-      if ((!metrics.rxSize || metrics.rxSize === 0) && this.responseBody !== undefined) {
+      // Only apply fallback for non-network-error responses (status !== 0)
+      if ((!metrics.rxSize || metrics.rxSize === 0) && this.responseBody !== undefined && params.status !== 0) {
         const size = dataSize(this.responseBody)
         if (size !== undefined) metrics.rxSize = size
       }
@@ -464,7 +466,8 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     ctx.params.status = xhr.status
 
     var size = responseSizeFromXhr(xhr, ctx.lastSize)
-    if (size !== undefined) ctx.metrics.rxSize = size
+    // Don't set rxSize for network errors (status 0)
+    if (size !== undefined && xhr.status !== 0) ctx.metrics.rxSize = size
 
     if (ctx.sameOrigin && xhr.getAllResponseHeaders().indexOf(NR_CAT_HEADER) >= 0) {
       var header = xhr.getResponseHeader(NR_CAT_HEADER)

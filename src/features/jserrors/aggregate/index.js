@@ -267,7 +267,7 @@ export class Aggregate extends AggregateBase {
       params.stack_trace = truncateSize(stackInfo.stackString)
       this.observedAt[bucketHash] = Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(time))
     } else {
-      params.browser_stack_hash = stringHashCode(stackInfo.stackString)
+      params.browser_stack_hash = stringHashCode(truncateSize(stackInfo.stackString))
     }
     params.releaseIds = stringify(this.agentRef.runtime.releaseIds)
 

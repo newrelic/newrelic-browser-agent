@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
+import { createStringAdders } from '../../../common/payloads/payloads'
 import { AJAX_ID } from '../../ajax/constants'
 import { NODE_TYPE } from '../constants'
 import { BelNode } from './bel-node'
@@ -25,6 +26,13 @@ export class AjaxNode extends BelNode {
     this.targetAttributes = ajaxEvent.targetAttributes
     this[AJAX_ID] = ajaxEvent[AJAX_ID] // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
 
+    // optional payload metadata attributes
+    this.requestBody = ajaxEvent.requestBody
+    this.requestHeaders = ajaxEvent.requestHeaders
+    this.requestQuery = ajaxEvent.requestQuery
+    this.responseBody = ajaxEvent.responseBody
+    this.responseHeaders = ajaxEvent.responseHeaders
+
     this.start = ajaxEvent.startTime
     this.end = ajaxEvent.endTime
     if (ajaxContext?.latestLongtaskEnd) {
@@ -34,7 +42,8 @@ export class AjaxNode extends BelNode {
   }
 
   serialize (parentStartTimestamp, agentRef, ajaxObfuscator) {
-    const addString = getAddStringContext(ajaxObfuscator)
+    const { addString, addStringWithTruncation } = createStringAdders(getAddStringContext, ajaxObfuscator)
+
     const nodeList = []
 
     // IMPORTANT: The order in which addString is called matters and correlates to the order in which string shows up in the harvest payload. Do not re-order the following code.
@@ -55,11 +64,23 @@ export class AjaxNode extends BelNode {
       addString(this.nodeId),
       nullable(this.spanId, addString, true) + nullable(this.traceId, addString, true) + nullable(this.spanTimestamp, numeric)
     ]
-    let allAttachedNodes = addCustomAttributes({
-      ...(this.gql || {}),
+    // Regular attributes: obfuscate only
+    const regularAttrs = addCustomAttributes({
+      [AJAX_ID]: this[AJAX_ID],
       ...(this.targetAttributes || {}),
-      [AJAX_ID]: this[AJAX_ID]
+      ...(this.gql || {})
     }, addString)
+
+    // Payload attributes: obfuscate then truncate
+    const payloadAttrs = addCustomAttributes({
+      ...(this.requestBody ? { requestBody: this.requestBody } : {}),
+      ...(this.requestHeaders ? { requestHeaders: this.requestHeaders } : {}),
+      ...(this.requestQuery ? { requestQuery: this.requestQuery } : {}),
+      ...(this.responseBody ? { responseBody: this.responseBody } : {}),
+      ...(this.responseHeaders ? { responseHeaders: this.responseHeaders } : {})
+    }, addStringWithTruncation)
+
+    let allAttachedNodes = [...regularAttrs, ...payloadAttrs]
     this.children.forEach(node => allAttachedNodes.push(node.serialize())) // no children is expected under ajax nodes at this time
 
     fields[1] = numeric(allAttachedNodes.length)

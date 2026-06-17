@@ -106,6 +106,21 @@ jobs:
         with:
           node-version: 22.11.0
       
+      # Determine branch name for webpack version suffix
+      - name: Determine branch name for version
+        id: branch-name
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BRANCH="${{ github.head_ref }}"
+          else
+            BRANCH="${{ github.ref_name }}"
+          fi
+          
+          # Clean branch name for version suffix (lowercase, replace special chars with hyphens)
+          CLEAN_BRANCH=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
+          echo "branch_name=${CLEAN_BRANCH}" >> $GITHUB_OUTPUT
+          echo "🏷️  Using branch-specific version suffix: ${CLEAN_BRANCH}"
+      
       # Build and deploy RC assets
       - name: Deploy RC assets for dev
         if: needs.resolve-version.outputs.is_rc_mode == 'true'
@@ -115,6 +130,7 @@ jobs:
           environment: dev
           bucket_dir: dev/
           cdn_service: staging-js-agent.newrelic.com
+          branch_name: ${{ steps.branch-name.outputs.branch_name }}
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_role: ${{ secrets.AWS_ROLE_ARN }}

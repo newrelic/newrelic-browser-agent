@@ -31,7 +31,12 @@ export default async (env) => {
       PATH_VERSION = ''
       SUBVERSION = 'DEV'
       PUBLIC_PATH = 'https://js-agent.newrelic.com/dev/'
-      VERSION = `${VERSION}-dev`
+      // Use branch name suffix if provided, otherwise use -dev
+      if (env.branchName) {
+        VERSION = `${VERSION}-${env.branchName.toLowerCase()}`
+      } else {
+        VERSION = `${VERSION}-dev`
+      }
       break
     case 'staging':
       PATH_VERSION = ''

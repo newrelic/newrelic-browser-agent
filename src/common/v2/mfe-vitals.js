@@ -174,33 +174,39 @@ export function trackMFEVitals (id) {
   observers.push(lcpObs)
 
   // Track CLS - cumulative layout shift
+  // Initialize CLS to 0 if browser supports it AND the MFE container exists in the DOM
   let clsValue = 0
   const clsObs = observePerformance(observers, { type: 'layout-shift', buffered: true }, (entry) => {
-    if (entry.hadRecentInput) return
+    if (entry.hadRecentInput || !vitals.cls) return
     (entry.sources || []).some(source => {
       if (isInMFE(source.node, id)) {
         clsValue += entry.value
+        vitals.cls ??= { value: 0, largestShiftValue: null, largestShiftTime: null, largestShiftTarget: null, loadState: null }
+        vitals.cls.value = clsValue
 
         // Track largest shift
-        if (!vitals.cls || entry.value > vitals.cls.largestShiftValue) {
-          vitals.cls = {
-            value: clsValue,
-            largestShiftValue: entry.value,
-            largestShiftTime: entry.startTime,
-            largestShiftTarget: getElementSelector(source.node),
-            loadState: globalScope.document?.readyState || null
-          }
-        } else {
-          // Update cumulative value even if not the largest shift
-          vitals.cls.value = clsValue
+        if (entry.value > (vitals.cls.largestShiftValue || 0)) {
+          vitals.cls.largestShiftValue = entry.value
+          vitals.cls.largestShiftTime = entry.startTime
+          vitals.cls.largestShiftTarget = getElementSelector(source.node)
+          vitals.cls.loadState = globalScope.document?.readyState || null
         }
         return true
       }
       return false
     })
   })
-  // Initialize CLS to 0 if browser supports it (Chromium), leave as null if not (Firefox/Safari)
-  if (clsObs) vitals.cls = { value: 0, largestShiftValue: null, largestShiftTime: null, largestShiftTarget: null, loadState: null }
+
+  if (clsObs) {
+    try {
+      const mfeContainer = globalScope.document?.querySelector(`[data-nr-mfe-id="${id}"]`)
+      if (mfeContainer) {
+        vitals.cls ??= { value: 0, largestShiftValue: null, largestShiftTime: null, largestShiftTarget: null, loadState: null }
+      }
+    } catch (e) {
+      // querySelector may fail, leave CLS as null
+    }
+  }
 
   // Track INP - interaction to next paint
   observePerformance(observers, { type: 'event', buffered: true, durationThreshold: 16 }, (entry) => {

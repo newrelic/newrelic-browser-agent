@@ -36,7 +36,14 @@ describe('trackMFEVitals', () => {
     })
 
     mockDocument = {
-      readyState: 'complete'
+      readyState: 'complete',
+      querySelector: jest.fn((selector) => {
+        // By default, simulate that MFE container exists
+        if (selector.includes('data-nr-mfe-id')) {
+          return { dataset: { nrMfeId: 'test-mfe' } }
+        }
+        return null
+      })
     }
 
     // Mock globalScope
@@ -342,8 +349,19 @@ describe('trackMFEVitals', () => {
         ]
       })
 
+      // CLS should remain at initial value of 0 since input-related shifts are ignored
       expect(vitals.cls.value).toBe(0)
       expect(vitals.cls.largestShiftValue).toBeNull()
+    })
+
+    it('should be null when MFE container is not found in DOM', () => {
+      // Override querySelector to return null (MFE not in DOM)
+      const mockGlobalScope = require('../../../../src/common/constants/runtime').globalScope
+      mockGlobalScope.document.querySelector = jest.fn(() => null)
+
+      const vitals = trackMFEVitals('missing-mfe')
+
+      expect(vitals.cls).toBeNull()
     })
   })
 

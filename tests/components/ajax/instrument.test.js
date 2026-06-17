@@ -229,21 +229,6 @@ describe('payload capture configuration', () => {
 })
 
 describe('response size fallback from payload capture', () => {
-  describe('fetch', () => {
-    // Note: fetch tests are integration tests in tests/specs/ajax/fetch.e2e.js
-    // These unit tests verify the logic is correct
-    test('verifies fallback logic exists in source code', () => {
-      const fs = require('fs')
-      const path = require('path')
-      const instrumentPath = path.join(__dirname, '../../../src/features/ajax/instrument/index.js')
-      const instrumentCode = fs.readFileSync(instrumentPath, 'utf8')
-
-      // Verify the fetch fallback logic exists
-      expect(instrumentCode).toContain('if (!this.rxSize && text !== undefined)')
-      expect(instrumentCode).toContain('this.rxSize = dataSize(text)')
-    })
-  })
-
   describe('xhr', () => {
     test('uses captured payload size when content-length header is missing', done => {
       const responseBody = '<html><body>Test Response</body></html>'
@@ -355,14 +340,44 @@ describe('response size fallback from payload capture', () => {
       }, 10)
     })
 
+    test('does not apply fallback for network errors', done => {
+      const xhr = new XMLHttpRequest()
+      xhr.open('GET', 'http://example.com/api/network-error')
+
+      Object.defineProperty(xhr, 'status', { get: () => 0, configurable: true })
+      Object.defineProperty(xhr, 'readyState', { get: () => 4, configurable: true })
+      Object.defineProperty(xhr, 'responseType', { get: () => '', configurable: true })
+      Object.defineProperty(xhr, 'responseText', { get: () => '', configurable: true })
+
+      xhr.getAllResponseHeaders = jest.fn().mockReturnValue('')
+      xhr.send()
+
+      setTimeout(() => {
+        const loadEvent = new Event('load')
+        xhr.dispatchEvent(loadEvent)
+
+        setTimeout(() => {
+          const handleCalls = jest.mocked(handleModule.handle).mock.calls
+            .filter(call => call[0] === 'xhr')
+          const lastCall = handleCalls[handleCalls.length - 1]
+          const [, [params, metrics]] = lastCall
+
+          // Network errors (status 0) should not have rxSize set from fallback
+          expect(params.status).toEqual(0)
+          expect(metrics.rxSize).toBeUndefined()
+          done()
+        }, 50)
+      }, 10)
+    })
+
     test('verifies fallback logic exists in source code', () => {
       const fs = require('fs')
       const path = require('path')
       const instrumentPath = path.join(__dirname, '../../../src/features/ajax/instrument/index.js')
       const instrumentCode = fs.readFileSync(instrumentPath, 'utf8')
 
-      // Verify the XHR fallback logic exists
-      expect(instrumentCode).toContain('if (!metrics.rxSize && this.responseBody !== undefined)')
+      // Verify the XHR fallback logic exists and handles missing or zero rxSize, excluding network errors
+      expect(instrumentCode).toContain('if ((!metrics.rxSize || metrics.rxSize === 0) && this.responseBody !== undefined && params.status !== 0)')
       expect(instrumentCode).toContain('const size = dataSize(this.responseBody)')
       expect(instrumentCode).toContain('if (size !== undefined) metrics.rxSize = size')
     })

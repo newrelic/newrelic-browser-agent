@@ -1,7 +1,7 @@
 # This workflow runs on push to the main branch. This is to execute checks
 # like jest, upload test coverage to keep codecov updates, and build and deploy
 # the main branch changes to our internal dev environment and public CDN. This workflow
-# can be manually executed but only on the main branch.
+# can be manually executed from any branch to test branch-specific builds.
 #
 # Note: Staging and production NR1 environments are deployed via the
 # 'internal-promotion' workflow to maintain controlled releases.
@@ -10,11 +10,6 @@ name: Publish Dev
 
 on:
   workflow_call:
-    inputs:
-      skip_publish_notification:
-        description: 'Skip sending published agent Slack notification'
-        type: boolean
-        default: false
   workflow_dispatch:
   push:
     branches:
@@ -30,14 +25,15 @@ concurrency:
 
 jobs:
   jest-tests:
-    if: github.ref == 'refs/heads/main' && github.event_name != 'workflow_call'
+    # Run tests for main branch pushes, or skip for manual triggers (assumed already tested)
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch')
     name: Jest tests
     uses: ./.github/workflows/jest.yml
     secrets: inherit
     with:
       coverage: true
 
-  # Build and publish the latest code from the main branch
+  # Build and publish the code from the triggered branch
   publish-dev-to-s3:
     if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     needs: [jest-tests]
@@ -48,8 +44,6 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: main
       - uses: actions/setup-node@v4
         with:
           node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.

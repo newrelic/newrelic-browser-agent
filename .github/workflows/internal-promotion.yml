@@ -122,6 +122,12 @@ jobs:
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
       
+      - name: Build prod loaders for NRDB
+        if: needs.resolve-version.outputs.is_rc_mode == 'true'
+        run: |
+          echo "🔨 Building prod loaders with versioned filenames for NRDB upload"
+          npm run cdn:webpack -- --env mode=prod
+      
       - name: Update copy-paste loader in NRDB
         if: needs.resolve-version.outputs.is_rc_mode == 'true'
         continue-on-error: true # Don't fail the deployment if this step fails

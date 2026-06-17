@@ -1,7 +1,7 @@
 # This workflow is used to manually deploy a specific Browser Agent version
 # to NR1 environments by updating the "released" asset that NR1 pages load.
 # This workflow enforces a strict sequential promotion path:
-# staging -> jp-prod -> eu-prod -> prod
+# dev -> staging -> jp-prod -> eu-prod -> us-prod
 # Each environment requires manual approval via GitHub Environment protection rules.
 #
 # Two deployment modes:
@@ -19,14 +19,27 @@ on:
         required: false
         type: string
         default: 'release candidate'
+  pull_request:
+    types: [opened, synchronize]
+    branches:
+      - main
 
 permissions:
   contents: read
   id-token: write
 
+# Cancel previous dev deployments when PR is updated
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('dev-deploy-{0}', github.event.pull_request.number) || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   # Determine deployment mode and resolve version for non-RC deployments
   resolve-version:
+    # Only run for manual dispatch or release-please PRs
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      (github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please--'))
     runs-on: ubuntu-latest
     outputs:
       is_rc_mode: ${{ steps.determine-mode.outputs.is_rc_mode }}
@@ -80,9 +93,79 @@ jobs:
           echo "✅ Resolved CDN path: $SCRIPT_URL"
           echo "📋 Version label: $VERSION_LABEL"
 
-  # Step 1: Deploy to Staging
-  deploy-staging:
+  # Step 1: Deploy to Dev (runs first)
+  deploy-dev:
     needs: [resolve-version]
+    runs-on: ubuntu-latest
+    environment: nr1-dev
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0
+      
+      # Build and deploy RC assets
+      - name: Deploy RC assets for dev
+        if: needs.resolve-version.outputs.is_rc_mode == 'true'
+        id: deploy-rc
+        uses: ./.github/actions/deploy-rc-assets
+        with:
+          environment: dev
+          bucket_dir: dev/
+          cdn_service: staging-js-agent.newrelic.com
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+      
+      - name: Promote agent to Dev
+        uses: ./.github/actions/internal-promotion
+        with:
+          nr_environment: dev
+          nrba_released_script_url: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.script_url || needs.resolve-version.outputs.script_url }}
+          nrba_app_id: ${{ secrets.INTERNAL_DEV_APPLICATION_ID }}
+          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+    
+    outputs:
+      version_label: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.version_label || needs.resolve-version.outputs.version_label }}
+
+  # Create change tracking event for dev
+  create-dev-change-tracking:
+    needs: [deploy-dev]
+    environment: change-tracking
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create dev change tracking event (Account 1067061)
+        uses: ./.github/actions/change-tracking
+        with:
+          accountId: '1067061'
+          entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_DEV }}
+          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          region: 'Dev'
+          version: ${{ needs.deploy-dev.outputs.version_label }}
+          type: 'Basic'
+          description: 'Dev promoted to ${{ needs.deploy-dev.outputs.version_label }}'
+          shortDescription: 'Dev: ${{ needs.deploy-dev.outputs.version_label }}'
+          deepLink: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+          commit: ${{ github.sha }}
+          user: ${{ github.actor }}
+          groupId: '${{ github.run_id }}-${{ github.sha }}'
+
+  # Step 2: Deploy to Staging
+  deploy-staging:
+    # Skip staging and production when triggered by PR (dev-only deployment)
+    if: github.event_name != 'pull_request'
+    needs: [resolve-version, deploy-dev]
     # use the hosted runner with white-listed IPs to ensure we can access internal NR1 staging environment for asset publishing for copy/paste loader update.
     runs-on: Browser-Agent-Assigned-IP-Linux
     environment: nr1-staging
@@ -185,7 +268,7 @@ jobs:
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
           message: ":rocket: New Browser Agent version promoted to \\`staging\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
 
-  # Step 2: Deploy to Japan Production
+  # Step 3: Deploy to Japan Production
   deploy-jp-prod:
     needs: [resolve-version, deploy-staging]
     runs-on: ubuntu-latest
@@ -267,7 +350,7 @@ jobs:
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
           message: ":rocket: New Browser Agent version promoted to \\`jp-prod\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
 
-  # Step 3: Deploy to EU Production
+  # Step 4: Deploy to EU Production
   deploy-eu-prod:
     needs: [resolve-version, deploy-jp-prod]
     runs-on: ubuntu-latest
@@ -349,7 +432,7 @@ jobs:
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
           message: ":rocket: New Browser Agent version promoted to \\`eu-prod\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
 
-  # Step 4: Deploy to US Production
+  # Step 5: Deploy to US Production
   deploy-us-prod:
     needs: [resolve-version, deploy-eu-prod]
     runs-on: ubuntu-latest

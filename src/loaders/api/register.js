@@ -153,7 +153,8 @@ function register (agentRef, target) {
     metadata: {
       get customAttributes () { return attrs },
       target,
-      timings
+      timings,
+      vitals
     }
   }
 

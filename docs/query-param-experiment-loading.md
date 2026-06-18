@@ -2,7 +2,7 @@
 
 ## Overview
 
-Enable conditional loading of experimental browser agent loaders via query parameter on NR1 pages, replacing the current automatic inclusion model.
+Enable conditional loading of experimental browser agent loaders via query parameter on NR1 pages, replacing the current automatic inclusion model. Additionally, automate experiment publishing for all PRs so any branch can be instantly tested via query parameter.
 
 ## Current State
 
@@ -16,7 +16,11 @@ Enable conditional loading of experimental browser agent loaders via query param
   4. `postamble.js` - Resets config back to released app, performs SR entitlements check
 - **Publishing**: `publish-experiment.yml` workflow uploads experiment builds to S3 at `experiments/dev/{branch-name}/nr-loader-spa.min.js`
 - **Environments**: Experiments only deployed to dev environment
-- **Problem**: All experiments automatically load on every page load, even when not needed
+- **Current Trigger**: Manual `workflow_dispatch` only - must manually run workflow to publish experiment
+- **Problems**: 
+  - All experiments automatically load on every page load, even when not needed
+  - Must manually trigger workflow to publish experiment for testing
+  - No automatic experiment builds for PRs
 
 ### S3 Storage Structure
 
@@ -37,9 +41,10 @@ experiments/
 
 1. **Default Behavior**: Load only released loader by default (no experiments or latest)
 2. **Opt-In Experiments**: Enable experiment loading via query parameter on NR1 pages
-3. **No Build Changes**: Foundation-level implementation; existing GitHub Actions unchanged initially
-4. **Clean Separation**: Clear delineation between production and experimental code paths
-5. **Idempotent Config**: Experiment loading sets complete config (not mutative overwrites)
+3. **Auto-Publish on PR**: Every PR automatically builds and publishes experiment to CDN
+4. **Instant Testing**: Any PR can be tested immediately with `?nrbaExperiment={branch-name}`
+5. **Clean Separation**: Clear delineation between production and experimental code paths
+6. **Idempotent Config**: Experiment loading sets complete config (not mutative overwrites)
 
 ## Requirements
 
@@ -62,8 +67,25 @@ experiments/
 
 ### Architecture: Smart Router Pattern
 
-Modify the released loader template ([.github/actions/internal-promotion/templates/released.js](.github/actions/internal-promotion/templates/released.js)) to act as a "smart router":
+Modify the released loader template ([.github/actions/internal-promotion/templates/released.js](.github/actions/internal-promotion/templates/released.js)) to act as a "smart router" that detects query params and loads experiment config + loader.
 
+**Key Principle: Two-file experiment approach**
+- Each experiment build creates two files:
+  1. **config.js** - Sets complete window.NREUM configuration (A/B account credentials)
+  2. **nr-loader-spa.min.js** - The actual browser agent loader code
+- The released.js router loads both files sequentially when experiment param present
+- Clean separation: publish-experiment owns experiment config, internal-promotion just routes
+
+**Flow:**
+1. User visits NR1 page with `?nrbaExperiment={branch-name}`
+2. released.js detects query param
+3. released.js loads `experiments/dev/{branch}/config.js` (sets window.NREUM)
+4. After config loads, released.js loads `experiments/dev/{branch}/nr-loader-spa.min.js`
+5. Experiment runs with A/B account config
+
+### Implementation Code Examples
+
+**released.js Smart Router:**
 ```javascript
 (function() {
   // ===== EXPERIMENT DETECTION & ROUTING =====
@@ -72,132 +94,190 @@ Modify the released loader template ([.github/actions/internal-promotion/templat
     var experiment = urlParams.get('nrbaExperiment');
     
     if (experiment) {
-      // Configure NREUM for dev A/B account (idempotent, not mutative)
-      window.NREUM = window.NREUM || {};
-      window.NREUM.init = {
-        distributed_tracing: { enabled: true },
-        privacy: { cookies_enabled: true },
-        ajax: { deny_list: ['bam.nr-data.net'] }
-      };
-      window.NREUM.loader_config = {
-        accountID: '{{{nrba_ab_account_id}}}',
-        trustKey: '{{{nrba_ab_account_id}}}',
-        agentID: '{{{nrba_ab_app_id}}}',
-        licenseKey: '{{{nrba_ab_license_key}}}',
-        applicationID: '{{{nrba_ab_app_id}}}'
-      };
+      console.log('NRBA: Loading experiment "' + experiment + '"');
       
-      // Inject experiment loader script asynchronously
-      var script = document.createElement('script');
-      script.type = 'text/javascript';
-      script.src = 'https://js-agent.newrelic.com/experiments/dev/' + 
-                   encodeURIComponent(experiment) + '/nr-loader-spa.min.js';
-      script.async = true;
-      script.onerror = function() {
-        console.warn('NRBA: Failed to load experiment "' + experiment + '", using released loader');
-        // Fall back to released loader if experiment fails
-        window.__nrbaExperimentFailed = true;
-      };
-      document.head.appendChild(script);
+      var baseUrl = 'https://js-agent.newrelic.com/experiments/dev/' + 
+                    encodeURIComponent(experiment) + '/';
       
-      // Short-circuit: Don't execute released loader below
-      return;
+      // Step 1: Load config.js (sets window.NREUM)
+      var configScript = document.createElement('script');
+      configScript.src = baseUrl + 'config.js';
+      configScript.onload = function() {
+        // Step 2: After config loads, load the agent
+        var loaderScript = document.createElement('script');
+        loaderScript.src = baseUrl + 'nr-loader-spa.min.js';
+        loaderScript.onload = function() {
+          console.log('NRBA: Experiment loaded successfully');
+        };
+        document.head.appendChild(loaderScript);
+      };
+      document.head.appendChild(configScript);
+      return; // Short-circuit
     }
   } catch (e) {
-    // Query param detection failed, fall through to released loader
     console.warn('NRBA: Experiment detection failed, using released loader', e);
   }
   
-  // ===== NORMAL RELEASED LOADER (existing code continues here) =====
-  window.NREUM = window.NREUM || {};
-  window.NREUM.init = {
-    // ... existing released.js template content ...
-  };
-  // ... rest of released loader ...
+  // ===== NORMAL RELEASED LOADER =====
+  window.NREUM = { /* ... released config ... */ };
+  // ... released loader code ...
 })();
+```
+
+**config.js (created by publish-experiment.yml):**
+```javascript
+// Comprehensive experiment configuration (not mutative)
+window.NREUM = window.NREUM || {};
+window.NREUM.init = {
+  feature_flags: ['ajax_metrics_deny_list', 'register'],
+  distributed_tracing: { enabled: true },
+  ajax: {
+    deny_list: ['nr-data.net', 'bam.nr-data.net', 'staging-bam.nr-data.net'],
+    capture_payloads: 'failures'
+  },
+  session_replay: {
+    enabled: true,
+    mask_all_inputs: false,
+    mask_text_selector: null
+  },
+  // ... full config ...
+};
+window.NREUM.loader_config = {
+  accountID: '1',
+  agentID: 'INTERNAL_AB_DEV_APPLICATION_ID',
+  licenseKey: 'INTERNAL_AB_LICENSE_KEY',
+  applicationID: 'INTERNAL_AB_DEV_APPLICATION_ID'
+};
+window.NREUM.info = {
+  beacon: 'staging-bam.nr-data.net',
+  errorBeacon: 'staging-bam.nr-data.net',
+  licenseKey: 'INTERNAL_AB_LICENSE_KEY',
+  applicationID: 'INTERNAL_AB_DEV_APPLICATION_ID',
+  sa: 1
+};
 ```
 
 ### Configuration Flow
 
-**Query Parameter Present** (`?nrbaExperiment=mfe-fcp-poc`):
-1. Released loader detects param
-2. Sets idempotent NREUM config for dev A/B account
-3. Injects experiment script tag pointing to `experiments/dev/mfe-fcp-poc/nr-loader-spa.min.js`
-4. Returns early (released loader code never executes)
-5. Experiment loader runs in dev A/B account context
+**Query Parameter Present** (`?nrbaExperiment=my-feature-branch`):
+1. Released.js detects param
+2. Injects script tag for config.js
+3. config.js loads and sets window.NREUM with A/B account credentials
+4. In onload callback, injects script tag for nr-loader-spa.min.js
+5. Agent loader executes and reads window.NREUM
+6. Agent reports to dev A/B account
 
 **Query Parameter Absent** (default):
-1. Released loader detects no param
+1. Released.js detects no param
 2. Executes normal released loader configuration
 3. Reports to production account
 4. No experiment code loaded
 
 ### Error Handling
 
-- **Invalid experiment name**: Script onerror handler logs warning, could optionally fall back to released
-- **Network failure**: Script onerror handler catches load failures
+- **Invalid experiment name**: Script onerror handler logs warning, falls back to released
+- **Network failure loading config**: Script onerror handler catches, falls back to released
+- **Network failure loading agent**: Script onerror handler logs warning
 - **Query param parsing failure**: Try/catch wrapper falls through to released loader
-- **Missing secrets**: Template variables fail at build time (loud failure during deployment)
+- **Build-time errors**: Missing A/B secrets fail during publish-experiment workflow (loud failure)
+
+### Clean Separation of Concerns
+
+| Component | Responsibility | Files Created/Loaded |
+|-----------|---------------|---------------------|
+| **publish-experiment.yml** | Build experiment and create config | config.js + nr-loader-spa.min.js |
+| **config.js** | Set window.NREUM with A/B credentials | Loaded first by released.js |
+| **nr-loader-spa.min.js** | Browser agent loader code | Loaded second by released.js |
+| **released.js** | Smart router - detect query param & load files | No config needed |
+| **internal-promotion** | Deploy released.js to NR1 environments | No A/B config needed |
 
 ## Technical Implementation
 
 ### Modified Files
 
-#### 1. `.github/actions/internal-promotion/templates/released.js`
+#### 1. `.github/workflows/publish-experiment.yml`
+
+**Changes**:
+- Added `pull_request` trigger for automatic experiment builds on PR open/sync
+- Added concurrency control to cancel previous builds when PR is updated
+- Creates comprehensive config.js with A/B account configuration (not mutative overwrites)
+- Environment detection: PRs always use `dev`, manual dispatch uses input
+- Removed `publish_ab_script` input and `publish-ab` job (obsolete with query-param approach)
+
+**Files uploaded to S3**:
+- `experiments/dev/{branch}/config.js` - Complete window.NREUM configuration
+- `experiments/dev/{branch}/nr-loader-spa.min.js` - Browser agent loader
+
+**Result**: Every PR automatically gets testable experiment files (no A/B script rebuild)
+
+#### 2. `.github/actions/internal-promotion/templates/released.js`
 
 **Changes**:
 - Add experiment detection wrapper at top of IIFE
-- Add NREUM configuration for dev A/B account (using template variables)
-- Add dynamic script injection logic
-- Add error handling and fallback mechanism
-- Preserve existing released loader code in else path
+- Add URLSearchParams query param parsing
+- Add sequential script injection for config.js then nr-loader-spa.min.js
+- Add error handling and console logging
+- Preserve existing released loader code in fallback path
 
-**Template Variables Needed** (must be passed to internal-promotion action):
-- `{{{nrba_ab_account_id}}}` - Dev A/B account ID
-- `{{{nrba_ab_app_id}}}` - Dev A/B application ID  
-- `{{{nrba_ab_license_key}}}` - Dev A/B license key
+**No A/B credentials needed** - config.js is created by publish-experiment workflow
 
-#### 2. `.github/actions/internal-promotion/action.yml`
+#### 3. `.github/workflows/internal-promotion.yml`
 
-**Changes**:
-- Add new optional inputs:
-  - `nrba_ab_account_id`
-  - `nrba_ab_app_id`
-  - `nrba_ab_license_key`
-- Pass these to index.js for template rendering
+**Changes**: None needed - A/B credentials removed, config.js created by publish-experiment
 
-#### 3. `.github/actions/internal-promotion/index.js`
+### Workflow Structure
 
-**Changes**:
-- Accept new A/B account parameters from action inputs
-- Pass A/B credentials to Handlebars template context when rendering `released.js`
-- Maintain backward compatibility (if params missing, template variables render as empty strings)
+**Automatic PR Workflow** (no manual steps!):
+1. Create PR or push to existing PR branch
+2. `publish-experiment.yml` runs automatically
+3. Wait ~30 seconds for build to complete
+4. Test immediately: `https://one.newrelic.com/some-page?nrbaExperiment={your-branch-name}`
 
-#### 4. `.github/workflows/internal-promotion.yml`
+**Example - Testing PR #1234 for branch `fix-memory-leak`**:
+```
+https://one.newrelic.com/launcher/nr1-core.home?nrbaExperiment=fix-memory-leak
+```
 
-**Changes**:
-- Add secrets to `deploy-dev` job's internal-promotion step:
-  - `nrba_ab_account_id: ${{ secrets.INTERNAL_AB_ACCOUNT_ID }}`
-  - `nrba_ab_app_id: ${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}`
-  - `nrba_ab_license_key: ${{ secrets.INTERNAL_AB_LICENSE_KEY }}`
-- Repeat for other environment jobs if experiments should work in staging/prod
+**Auto-Publish on PR** (publish-experiment.yml):
+```yaml
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches: [main]
+  workflow_dispatch:
+    # Manual trigger still available
 
-**Note**: `INTERNAL_AB_ACCOUNT_ID` secret may need to be created (currently only have `INTERNAL_AB_DEV_APPLICATION_ID` and `INTERNAL_AB_LICENSE_KEY`)
+concurrency:
+  group: experiment-{PR_number} # Cancel previous builds
+  cancel-in-progress: true
 
-### No Changes Required
+jobs:
+  publish-experiment-to-s3:
+    steps:
+      - Build experiment: npm run cdn:build:experiment
+      - Create config.js with comprehensive window.NREUM setup
+      - Upload to S3: experiments/dev/{branch}/
+      - Purge CDN cache
+```
 
-- ✅ `.github/actions/build-ab/` - Continues building experiments as today
-- ✅ `.github/workflows/publish-experiment.yml` - Continues publishing to S3
-- ✅ NR1 application code - No script tag changes needed
-- ✅ Fastly CDN configuration - No new purge paths
+**Files Created**:
+- `config.js` - Complete window.NREUM configuration (not mutative)
+- `nr-loader-spa.min.js` - Standard experiment build
+
+**Benefits**:
+- Every PR → two experiment files automatically published
+- Available at `experiments/dev/{branch}/config.js` and `.../nr-loader-spa.min.js`
+- Previous builds cancelled on PR update
+- Config separate from loader (clean separation)
+- No A/B script rebuild needed (query-param approach replaces random selection)
 
 ## Usage
 
 ### For Developers
 
-**Test an experiment on NR1 dev**:
+**Test your PR on NR1 dev**:
 ```
-https://one.newrelic.com/some-page?nrbaExperiment=mfe-fcp-poc
+https://one.newrelic.com/some-page?nrbaExperiment=my-feature-branch
 ```
 
 **Use released loader (default)**:
@@ -207,74 +287,82 @@ https://one.newrelic.com/some-page
 
 **Switch between experiments**:
 ```
-https://one.newrelic.com/some-page?nrbaExperiment=another-branch
+# Test your PR
+https://one.newrelic.com/some-page?nrbaExperiment=my-feature-branch
+
+# Test someone else's PR
+https://one.newrelic.com/some-page?nrbaExperiment=their-feature-branch
+
+# Back to production
+https://one.newrelic.com/some-page
 ```
 
-### For Publishing Experiments
+### For Manual Experiment Publishing
 
-Existing workflow unchanged:
-1. Merge code to experiment branch
-2. `publish-experiment.yml` runs automatically
-3. Experiment available at `experiments/dev/{branch-name}/nr-loader-spa.min.js`
-4. Add query param to NR1 page to test
+Manual workflow still available for standalone experiments:
+1. Go to Actions → Publish Experiment
+2. Click "Run workflow"
+3. Select environment (dev/standalone)
+4. Experiment files available at:
+   - `experiments/{env}/{branch-name}/config.js`
+   - `experiments/{env}/{branch-name}/nr-loader-spa.min.js`
 
-## Migration Path
+**Note**: Manual builds no longer rebuild A/B script - query-param approach replaces random selection system.
 
-### Phase 1: Foundation (This Design)
-- Implement smart router in released.js template
-- Add A/B account credentials to internal-promotion action
-- Update internal-promotion workflow to pass secrets
-- Deploy to dev environment
-- Verify with manual testing
+## Testing & Validation
 
-### Phase 2: Validation
-- Test with existing experiments (e.g., mfe-fcp-poc)
-- Validate A/B account telemetry
-- Confirm released loader unaffected (no query param)
-- Document usage for developers
+### Test Plan
 
-### Phase 3: Cleanup (Future)
-- Remove experiments/latest from build-ab (optional)
-- Remove postamble reset logic (optional)
-- Update internal-ab workflow to skip experiments (optional)
-- Archive old A/B testing scripts (optional)
+**Phase 1: Auto-Publish**
+1. Create new PR → verify experiment publishes to S3
+2. Update PR → verify previous build cancelled
+3. Check CDN cache cleared
+4. Verify both config.js and nr-loader-spa.min.js created
 
-## Testing Strategy
+**Phase 2: Query-Param Loading**
+1. Load NR1 page with `?nrbaExperiment={branch}`
+2. Verify config.js loads first (check Network tab)
+3. Verify nr-loader-spa.min.js loads second (check Network tab)
+4. Check telemetry goes to dev A/B account
+5. Confirm released loader doesn't execute when param present
+6. Load without param → verify released loader works
 
-### Manual Testing
+**Phase 3: Validation**
+1. Test multiple PRs concurrently
+2. Switch between experiments via query param
+3. Validate comprehensive config.js works correctly
+4. Check error handling (invalid branch names)
 
-1. **Released loader (no param)**:
-   - Load NR1 page without query param
-   - Verify released loader executes
-   - Check telemetry goes to production account
-   - Confirm no experiment script loaded
+### Manual Testing Checklist
 
-2. **Experiment loader (with param)**:
-   - Load NR1 page with `?nrbaExperiment=mfe-fcp-poc`
-   - Verify experiment script injected
-   - Check telemetry goes to dev A/B account
-   - Confirm released loader does NOT execute
+**Released Loader (no param)**:
+- ✅ Load NR1 page without query param
+- ✅ Verify released loader executes
+- ✅ Check telemetry goes to production account
+- ✅ Confirm no experiment script loaded
 
-3. **Invalid experiment**:
-   - Load with `?nrbaExperiment=nonexistent-branch`
-   - Verify error logged to console
-   - Check fallback behavior (released loader or graceful failure)
+**Experiment Loader (with param)**:
+- ✅ Load NR1 page with `?nrbaExperiment={pr-branch-name}`
+- ✅ Verify config.js loads first from experiments/dev/{branch}/config.js
+- ✅ Verify nr-loader-spa.min.js loads second from experiments/dev/{branch}/nr-loader-spa.min.js
+- ✅ Check telemetry goes to dev A/B account
+- ✅ Confirm released loader does NOT execute
+- ✅ Check browser console for version/logs
 
-4. **Network failure**:
-   - Block CDN in browser DevTools
-   - Load with valid experiment param
-   - Verify onerror handler fires
+**Error Cases**:
+- ✅ Invalid experiment name → graceful failure, falls back to released
+- ✅ Network failure loading config → onerror handler fires, falls back to released
+- ✅ Network failure loading agent → onerror handler fires
+- ✅ CDN cache miss → 404, falls back to released
 
-### Automated Testing
+## Future Enhancements
 
-**E2E Tests** (add to existing test suite):
-- Browser test: Parse query param correctly
-- Browser test: Inject script tag with correct URL
-- Browser test: Released loader executes when param absent
-- Browser test: Released loader does NOT execute when param present
-
-**Unit Tests** (JavaScript):
-- URLSearchParams parsing
+1. **PR Comment Bot**: Auto-comment on PRs with testing URL
+   - `🔬 Experiment published! Test at: https://one.newrelic.com/?nrbaExperiment={branch-name}`
+2. **Multi-environment**: Support `?nrbaExperiment=staging/branch-name` for staging
+3. **Experiment catalog**: UI to browse available experiments
+4. **Cleanup automation**: Delete S3 experiments when PR closed/merged
+5. **PR Status Integration**: Show experiment build status in GitHub PR
 - URL encoding of experiment names
 - Template variable substitution
 
@@ -311,10 +399,11 @@ Existing workflow unchanged:
 
 ## References
 
-- Current A/B script: `https://js-agent.newrelic.com/internal/dev-experiments.js`
-- Example experiment: `https://js-agent.newrelic.com/experiments/dev/mfe-fcp-poc/nr-loader-spa.min.js`
-- Related workflows: `publish-experiment.yml`, `internal-promotion.yml`, `publish-dev.yml`
-- Related actions: `build-ab`, `internal-ab`, `internal-promotion`
+- Experiment example: `https://js-agent.newrelic.com/experiments/dev/my-branch/config.js`
+- Experiment loader: `https://js-agent.newrelic.com/experiments/dev/my-branch/nr-loader-spa.min.js`
+- Related workflows: `publish-experiment.yml`, `internal-promotion.yml`
+- Related actions: `deploy-rc-assets`, `internal-promotion`, `s3-upload`, `fastly-purge`
+- Legacy (obsolete): `build-ab`, `internal-ab`, `publish-dev.yml` (replaced by query-param approach)
 
 ---
 

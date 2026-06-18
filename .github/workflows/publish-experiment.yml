@@ -37,6 +37,7 @@ jobs:
   # Build and publish the branch to S3 experiments folder
   publish-experiment-to-s3:
     runs-on: ubuntu-latest
+    environment: nr1-experiments
     timeout-minutes: 30
     defaults:
       run:

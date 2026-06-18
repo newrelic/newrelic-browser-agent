@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.317.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.316.0...v1.317.0) (2026-06-18)
+
+
+### Features
+
+* Detect and report AJAX payloads ([#1651](https://github.com/newrelic/newrelic-browser-agent/issues/1651)) ([08394db](https://github.com/newrelic/newrelic-browser-agent/commit/08394db8a5a9f2b6fd627e9eee76022977cb433c))
+* Enhance obfuscation to support event filter ([#1782](https://github.com/newrelic/newrelic-browser-agent/issues/1782)) ([c97aaf9](https://github.com/newrelic/newrelic-browser-agent/commit/c97aaf9773cfb0b62a810eb07b37e6f5b96d5ab5))
+
+
+### Bug Fixes
+
+* Calculate browser_stack_hash from truncated stack trace ([#1789](https://github.com/newrelic/newrelic-browser-agent/issues/1789)) ([f7df627](https://github.com/newrelic/newrelic-browser-agent/commit/f7df627b14e3e5e8fa4a8d94433ea76e9a9902bb))
+* Get responseBodySize from body if content-length is missing ([#1793](https://github.com/newrelic/newrelic-browser-agent/issues/1793)) ([58663ec](https://github.com/newrelic/newrelic-browser-agent/commit/58663ec19dc99ec94e34c17a5dfaa20a07038dba))
+* Patch handling of inlining images for Session Replay ([#1765](https://github.com/newrelic/newrelic-browser-agent/issues/1765)) ([b330f8e](https://github.com/newrelic/newrelic-browser-agent/commit/b330f8e3e35f2fda076967092bcb70e792de6eeb))
+
 ## [1.316.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.315.0...v1.316.0) (2026-06-01)
 
 

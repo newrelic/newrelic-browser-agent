@@ -5,7 +5,7 @@
 # Each environment requires manual approval via GitHub Environment protection rules.
 #
 # Two deployment modes:
-# 1. Release Candidate (default on release-please branches): Builds fresh RC assets
+# 1. Release Candidate (default when no input provided): Builds fresh RC assets
 #    from current branch and uploads to environment-specific CDN paths
 # 2. Existing Version: Promotes an already-published CDN version (for rollbacks)
 
@@ -15,10 +15,10 @@ on:
   workflow_dispatch:
     inputs:
       deployment_source:
-        description: '"release candidate" (new build), version number or CDN URL'
+        description: 'Leave empty to build from current branch, or provide version number/CDN URL'
         required: false
         type: string
-        default: 'release candidate'
+        default: ''
   pull_request:
     types: [opened, synchronize]
     branches:
@@ -51,7 +51,7 @@ jobs:
         run: |
           CDN_PATH="${{ inputs.deployment_source }}"
           
-          if [[ "$CDN_PATH" == "release candidate" ]]; then
+          if [[ -z "$CDN_PATH" ]]; then
             echo "is_rc_mode=true" >> $GITHUB_OUTPUT
             echo "🚀 Release Candidate mode: Will build fresh from current branch for each environment"
           else
@@ -81,7 +81,7 @@ jobs:
             echo "❌ Invalid deployment_source format: $CDN_PATH"
             echo ""
             echo "Valid formats:"
-            echo "  - 'release candidate' (default - builds from current branch)"
+            echo "  - (empty) - builds from current branch (default)"
             echo "  - Released version: 1.314.0 (for rollbacks)"
             echo "  - RC version: 1.314.0-rc.1 (for re-promotion of specific RC)"
             echo "  - Full URL: https://js-agent.newrelic.com/nr-loader-spa-1.314.0.min.js"

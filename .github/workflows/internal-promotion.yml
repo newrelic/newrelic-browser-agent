@@ -179,8 +179,10 @@ jobs:
 
   # Step 2: Deploy to Staging
   deploy-staging:
-    # Skip staging and production when triggered by PR (dev-only deployment)
-    if: github.event_name != 'pull_request'
+    # Only run for workflow_dispatch on main or release-please branches
+    if: |
+      github.event_name == 'workflow_dispatch' && 
+      (github.ref_name == 'main' || startsWith(github.ref_name, 'release-please--'))
     needs: [resolve-version, deploy-dev]
     # use the hosted runner with white-listed IPs to ensure we can access internal NR1 staging environment for asset publishing for copy/paste loader update.
     runs-on: Browser-Agent-Assigned-IP-Linux

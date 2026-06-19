@@ -537,15 +537,19 @@ jobs:
   # until full production promotion completes, while allowing normal PRs to pass through
   verify-promotion:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: always() && github.event_name == 'pull_request'
     needs: [deploy-us-prod]
-    # For release-please PRs: depends on deploy-us-prod (waits for full promotion)
-    # For normal PRs: deploy-us-prod is skipped, so this completes immediately
     timeout-minutes: 5
     steps:
       - name: Verify promotion complete
         run: |
           if [[ "${{ github.head_ref }}" =~ ^release-please-- ]]; then
+            # For release-please PRs, require successful promotion to production
+            if [[ "${{ needs.deploy-us-prod.result }}" != "success" ]]; then
+              echo "❌ Release-please PR: Production promotion did not complete successfully"
+              echo "Deploy status: ${{ needs.deploy-us-prod.result }}"
+              exit 1
+            fi
             echo "✅ Release-please PR: Full production promotion completed successfully"
           else
             echo "✅ Normal PR: No promotion required"

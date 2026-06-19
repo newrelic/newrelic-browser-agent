@@ -532,77 +532,22 @@ jobs:
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
           message: ":rocket: New Browser Agent version promoted to \\`us-prod\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
 
-  # Re-trigger Release Gate check for Release-Please PRs
-  retrigger-release-gate:
-    needs: [deploy-us-prod]
+  # Verify promotion status for PR gating
+  # This job can be used as a required status check to block release-please PR merges
+  # until full production promotion completes, while allowing normal PRs to pass through
+  verify-promotion:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-      checks: write
+    if: github.event_name == 'pull_request'
+    needs: [deploy-us-prod]
+    # For release-please PRs: depends on deploy-us-prod (waits for full promotion)
+    # For normal PRs: deploy-us-prod is skipped, so this completes immediately
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Find Release-Please PR for this branch
-        id: find-pr
-        env:
-          GH_TOKEN: ${{ github.token }}
-          BRANCH: ${{ github.ref_name }}
+      - name: Verify promotion complete
         run: |
-          # Check if this is a release-please branch
-          if [[ ! "$BRANCH" =~ ^release-please-- ]]; then
-            echo "Not a release-please branch, skipping"
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          
-          echo "🔍 Looking for Release-Please PR for branch: $BRANCH"
-          
-          # Find the PR for this branch
-          PR_NUMBER=$(gh pr list \
-            --head "$BRANCH" \
-            --state open \
-            --json number \
-            --jq '.[0].number')
-          
-          if [[ -z "$PR_NUMBER" || "$PR_NUMBER" == "null" ]]; then
-            echo "No open PR found for branch $BRANCH"
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          
-          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
-          echo "skip=false" >> "$GITHUB_OUTPUT"
-          echo "✅ Found PR #$PR_NUMBER"
-      
-      - name: Re-request Release Gate check
-        if: steps.find-pr.outputs.skip != 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ steps.find-pr.outputs.pr_number }}
-        run: |
-          echo "🔄 Re-requesting checks for PR #$PR_NUMBER to unblock merge"
-          
-          # Get the latest commit SHA for the PR
-          HEAD_SHA=$(gh pr view "$PR_NUMBER" --json headRefOid --jq '.headRefOid')
-          
-          echo "📌 HEAD SHA: $HEAD_SHA"
-          
-          # Find the Release Gate check suite for this commit
-          CHECK_SUITE_ID=$(gh api \
-            "repos/${{ github.repository }}/commits/$HEAD_SHA/check-suites" \
-            --jq '.check_suites[] | select(.app.slug == "github-actions" and .conclusion != null and any(.check_runs[]?; .name == "Verify Internal Promotion")) | .id' \
-            | head -1)
-          
-          if [[ -n "$CHECK_SUITE_ID" ]]; then
-            echo "🔄 Requesting re-run of check suite $CHECK_SUITE_ID"
-            gh api -X POST "repos/${{ github.repository }}/check-suites/$CHECK_SUITE_ID/rerequest"
-            echo "✅ Check re-requested successfully"
+          if [[ "${{ github.head_ref }}" =~ ^release-please-- ]]; then
+            echo "✅ Release-please PR: Full production promotion completed successfully"
           else
-            echo "⚠️  Could not find Release Gate check suite, it may run automatically"
+            echo "✅ Normal PR: No promotion required"
           fi
-          
-          echo ""
-          echo "🎉 Internal Promotion complete! PR #$PR_NUMBER should now be unblocked."
 

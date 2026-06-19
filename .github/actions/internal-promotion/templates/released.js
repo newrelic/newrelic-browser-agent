@@ -59,7 +59,7 @@
           'staging-bam.nr-data.net',
           'bam-cell.nr-data.net'
         ],
-        capture_payloads: 'all'
+        capture_payloads: 'failures'
       },
       session_replay: {
         enabled: true,

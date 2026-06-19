@@ -2058,7 +2058,7 @@ SOFTWARE.
 
 ### form-data
 
-This product includes source derived from [form-data](https://github.com/form-data/form-data) ([v4.0.4](https://github.com/form-data/form-data/tree/v4.0.4)), distributed under the [MIT License](https://github.com/form-data/form-data/blob/v4.0.4/License):
+This product includes source derived from [form-data](https://github.com/form-data/form-data) ([v4.0.5](https://github.com/form-data/form-data/tree/v4.0.5)), distributed under the [MIT License](https://github.com/form-data/form-data/blob/v4.0.5/License):
 
 ```
 Copyright (c) 2012 Felix Geisendörfer (felix@debuggable.com) and contributors
@@ -2108,30 +2108,78 @@ OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHE
 
 ### glob
 
-This product includes source derived from [glob](https://github.com/isaacs/node-glob) ([v11.0.3](https://github.com/isaacs/node-glob/tree/v11.0.3)), distributed under the [ISC License](https://github.com/isaacs/node-glob/blob/v11.0.3/LICENSE):
+This product includes source derived from [glob](https://github.com/isaacs/node-glob) ([v11.1.0](https://github.com/isaacs/node-glob/tree/v11.1.0)), distributed under the [BlueOak-1.0.0 License](https://github.com/isaacs/node-glob/blob/v11.1.0/LICENSE.md):
 
 ```
-The ISC License
+All packages under `src/` are licensed according to the terms in
+their respective `LICENSE` or `LICENSE.md` files.
 
-Copyright (c) 2009-2023 Isaac Z. Schlueter and Contributors
+The remainder of this project is licensed under the Blue Oak
+Model License, as follows:
 
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted, provided that the above
-copyright notice and this permission notice appear in all copies.
+-----
 
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
-IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+# Blue Oak Model License
+
+Version 1.0.0
+
+## Purpose
+
+This license gives everyone as much permission to work with
+this software as possible, while protecting contributors
+from liability.
+
+## Acceptance
+
+In order to receive this license, you must agree to its
+rules.  The rules of this license are both obligations
+under that agreement and conditions to your license.
+You must not do anything with this software that triggers
+a rule that you cannot or will not follow.
+
+## Copyright
+
+Each contributor licenses you to do everything with this
+software that would otherwise infringe that contributor's
+copyright in it.
+
+## Notices
+
+You must ensure that everyone who gets a copy of
+any part of this software from you, with or without
+changes, also gets the text of this license or a link to
+<https://blueoakcouncil.org/license/1.0.0>.
+
+## Excuse
+
+If anyone notifies you in writing that you have not
+complied with [Notices](#notices), you can keep your
+license by taking all practical steps to comply within 30
+days after the notice.  If you do not do so, your license
+ends immediately.
+
+## Patent
+
+Each contributor licenses you to do everything with this
+software that would otherwise infringe any patent claims
+they can license or become able to license.
+
+## Reliability
+
+No contributor can revoke this license.
+
+## No Liability
+
+***As far as the law allows, this software comes as is,
+without any warranty or condition, and no contributor
+will be liable to anyone for any damages related to this
+software or this license, under any kind of legal claim.***
 
 ```
 
 ### html-webpack-plugin
 
-This product includes source derived from [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) ([v5.6.4](https://github.com/jantimon/html-webpack-plugin/tree/v5.6.4)), distributed under the [MIT License](https://github.com/jantimon/html-webpack-plugin/blob/v5.6.4/LICENSE):
+This product includes source derived from [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) ([v5.6.5](https://github.com/jantimon/html-webpack-plugin/tree/v5.6.5)), distributed under the [MIT License](https://github.com/jantimon/html-webpack-plugin/blob/v5.6.5/LICENSE):
 
 ```
 Copyright JS Foundation and other contributors
@@ -2419,7 +2467,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### terser-webpack-plugin
 
-This product includes source derived from [terser-webpack-plugin](https://github.com/webpack-contrib/terser-webpack-plugin) ([v5.3.14](https://github.com/webpack-contrib/terser-webpack-plugin/tree/v5.3.14)), distributed under the [MIT License](https://github.com/webpack-contrib/terser-webpack-plugin/blob/v5.3.14/LICENSE):
+This product includes source derived from [terser-webpack-plugin](https://github.com/webpack/terser-webpack-plugin) ([v5.3.16](https://github.com/webpack/terser-webpack-plugin/tree/v5.3.16)), distributed under the [MIT License](https://github.com/webpack/terser-webpack-plugin/blob/v5.3.16/LICENSE):
 
 ```
 Copyright JS Foundation and other contributors
@@ -2821,7 +2869,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### webpack
 
-This product includes source derived from [webpack](https://github.com/webpack/webpack) ([v5.102.1](https://github.com/webpack/webpack/tree/v5.102.1)), distributed under the [MIT License](https://github.com/webpack/webpack/blob/v5.102.1/LICENSE):
+This product includes source derived from [webpack](https://github.com/webpack/webpack) ([v5.104.0](https://github.com/webpack/webpack/tree/v5.104.0)), distributed under the [MIT License](https://github.com/webpack/webpack/blob/v5.104.0/LICENSE):
 
 ```
 Copyright JS Foundation and other contributors

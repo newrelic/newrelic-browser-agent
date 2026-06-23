@@ -14,14 +14,27 @@ const fileList = []
 // Ensure the output directory exists
 await fs.promises.mkdir(outputDir, { recursive: true })
 
-// 1. Fetch and create the released script
-const releasedScriptRequest = await fetchRetry(`${args.released}?_nocache=${uuidv4()}`, { retry: 3 })
+// 1. Get the loader script content (from local build or CDN)
+let releasedScript
 
-if (!releasedScriptRequest.ok || typeof releasedScriptRequest.text !== 'function') {
-  throw new Error(`Could not retrieve the loader script from ${args.released}`)
+// Try to use local build first (faster, more reliable, exact version we just built)
+const localBuildPath = path.resolve(__dirname, '../../../build/nr-loader-spa.min.js')
+if (fs.existsSync(localBuildPath)) {
+  console.log(`Using local build from ${localBuildPath}`)
+  releasedScript = (await fs.promises.readFile(localBuildPath, 'utf-8')).replace(/\/\/# sourceMappingURL=.*?\.map/, '')
+} else {
+  // Fall back to fetching from CDN (for specific version deployments)
+  console.log(`Fetching loader from CDN: ${args.released}`)
+  const releasedScriptRequest = await fetchRetry(`${args.released}?_nocache=${uuidv4()}`, { retry: 3 })
+
+  if (!releasedScriptRequest.ok || typeof releasedScriptRequest.text !== 'function') {
+    throw new Error(`Could not retrieve the loader script from ${args.released}`)
+  }
+
+  releasedScript = (await releasedScriptRequest.text()).replace(/\/\/# sourceMappingURL=.*?\.map/, '')
 }
 
-const releasedScript = (await releasedScriptRequest.text()).replace(/\/\/# sourceMappingURL=.*?\.map/, '')
+// 2. Create the released script
 const releasedScriptOutput = path.join(outputDir, `${args.environment}-released.js`)
 const releasedScriptTemplate = Handlebars.compile(await fs.promises.readFile(path.resolve(__dirname, './templates/released.js'), 'utf-8'))
 

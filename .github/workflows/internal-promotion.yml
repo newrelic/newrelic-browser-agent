@@ -1,11 +1,11 @@
 # This workflow is used to manually deploy a specific Browser Agent version
 # to NR1 environments by updating the "released" asset that NR1 pages load.
 # This workflow enforces a strict sequential promotion path:
-# staging -> jp-prod -> eu-prod -> prod
+# dev -> staging -> jp-prod -> eu-prod -> us-prod
 # Each environment requires manual approval via GitHub Environment protection rules.
 #
 # Two deployment modes:
-# 1. Release Candidate (default on release-please branches): Builds fresh RC assets
+# 1. Release Candidate (default when no input provided): Builds fresh RC assets
 #    from current branch and uploads to environment-specific CDN paths
 # 2. Existing Version: Promotes an already-published CDN version (for rollbacks)
 
@@ -15,18 +15,31 @@ on:
   workflow_dispatch:
     inputs:
       deployment_source:
-        description: '"release candidate" (new build), version number or CDN URL'
+        description: 'Leave empty to build from current branch, or provide version number/CDN URL'
         required: false
         type: string
-        default: 'release candidate'
+        default: ''
+  pull_request:
+    types: [opened, synchronize]
+    branches:
+      - main
 
 permissions:
   contents: read
   id-token: write
 
+# Cancel previous dev deployments when PR is updated
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('dev-deploy-{0}', github.event.pull_request.number) || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   # Determine deployment mode and resolve version for non-RC deployments
   resolve-version:
+    # Only run for manual dispatch or release-please PRs
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      (github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please--'))
     runs-on: ubuntu-latest
     outputs:
       is_rc_mode: ${{ steps.determine-mode.outputs.is_rc_mode }}
@@ -38,7 +51,7 @@ jobs:
         run: |
           CDN_PATH="${{ inputs.deployment_source }}"
           
-          if [[ "$CDN_PATH" == "release candidate" ]]; then
+          if [[ -z "$CDN_PATH" ]]; then
             echo "is_rc_mode=true" >> $GITHUB_OUTPUT
             echo "🚀 Release Candidate mode: Will build fresh from current branch for each environment"
           else
@@ -68,7 +81,7 @@ jobs:
             echo "❌ Invalid deployment_source format: $CDN_PATH"
             echo ""
             echo "Valid formats:"
-            echo "  - 'release candidate' (default - builds from current branch)"
+            echo "  - (empty) - builds from current branch (default)"
             echo "  - Released version: 1.314.0 (for rollbacks)"
             echo "  - RC version: 1.314.0-rc.1 (for re-promotion of specific RC)"
             echo "  - Full URL: https://js-agent.newrelic.com/nr-loader-spa-1.314.0.min.js"
@@ -80,9 +93,97 @@ jobs:
           echo "✅ Resolved CDN path: $SCRIPT_URL"
           echo "📋 Version label: $VERSION_LABEL"
 
-  # Step 1: Deploy to Staging
-  deploy-staging:
+  # Step 1: Deploy to Dev (runs first)
+  deploy-dev:
     needs: [resolve-version]
+    runs-on: ubuntu-latest
+    environment: nr1-dev
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0
+      
+      # Determine branch name for webpack version suffix
+      - name: Determine branch name for version
+        id: branch-name
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BRANCH="${{ github.head_ref }}"
+          else
+            BRANCH="${{ github.ref_name }}"
+          fi
+          
+          # Clean branch name for version suffix (lowercase, replace special chars with hyphens)
+          CLEAN_BRANCH=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
+          echo "branch_name=${CLEAN_BRANCH}" >> $GITHUB_OUTPUT
+          echo "🏷️  Using branch-specific version suffix: ${CLEAN_BRANCH}"
+      
+      # Build and deploy RC assets
+      - name: Deploy RC assets for dev
+        if: needs.resolve-version.outputs.is_rc_mode == 'true'
+        id: deploy-rc
+        uses: ./.github/actions/deploy-rc-assets
+        with:
+          environment: dev
+          bucket_dir: dev/
+          cdn_service: js-agent.newrelic.com
+          branch_name: ${{ steps.branch-name.outputs.branch_name }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+      
+      - name: Promote agent to Dev
+        uses: ./.github/actions/internal-promotion
+        with:
+          nr_environment: dev
+          nrba_released_script_url: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.script_url || needs.resolve-version.outputs.script_url }}
+          nrba_app_id: ${{ secrets.INTERNAL_DEV_APPLICATION_ID }}
+          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+    
+    outputs:
+      version_label: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.version_label || needs.resolve-version.outputs.version_label }}
+
+  # Create change tracking event for dev
+  create-dev-change-tracking:
+    needs: [deploy-dev]
+    environment: change-tracking
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create dev change tracking event (Account 1067061)
+        uses: ./.github/actions/change-tracking
+        with:
+          accountId: '1067061'
+          entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_DEV }}
+          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          region: 'Dev'
+          version: ${{ needs.deploy-dev.outputs.version_label }}
+          type: 'Basic'
+          description: 'Dev promoted to ${{ needs.deploy-dev.outputs.version_label }}'
+          shortDescription: 'Dev: ${{ needs.deploy-dev.outputs.version_label }}'
+          deepLink: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+          commit: ${{ github.sha }}
+          user: ${{ github.actor }}
+          groupId: '${{ github.run_id }}-${{ github.sha }}'
+
+  # Step 2: Deploy to Staging
+  deploy-staging:
+    # Only run for workflow_dispatch on main or release-please branches
+    if: |
+      github.event_name == 'workflow_dispatch' && 
+      (github.ref_name == 'main' || startsWith(github.ref_name, 'release-please--'))
+    needs: [resolve-version, deploy-dev]
     # use the hosted runner with white-listed IPs to ensure we can access internal NR1 staging environment for asset publishing for copy/paste loader update.
     runs-on: Browser-Agent-Assigned-IP-Linux
     environment: nr1-staging
@@ -102,7 +203,7 @@ jobs:
         with:
           environment: staging
           bucket_dir: staging/
-          cdn_service: staging-js-agent.newrelic.com
+          cdn_service: js-agent.newrelic.com
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
@@ -121,6 +222,12 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+      
+      - name: Build versioned loaders for NRDB copy+paste
+        if: needs.resolve-version.outputs.is_rc_mode == 'true'
+        run: |
+          echo "🔨 Building prod loaders with versioned filenames for NRDB upload"
+          npm run cdn:webpack -- --env mode=prod
       
       - name: Update copy-paste loader in NRDB
         if: needs.resolve-version.outputs.is_rc_mode == 'true'
@@ -179,7 +286,7 @@ jobs:
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
           message: ":rocket: New Browser Agent version promoted to \\`staging\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
 
-  # Step 2: Deploy to Japan Production
+  # Step 3: Deploy to Japan Production
   deploy-jp-prod:
     needs: [resolve-version, deploy-staging]
     runs-on: ubuntu-latest
@@ -261,7 +368,7 @@ jobs:
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
           message: ":rocket: New Browser Agent version promoted to \\`jp-prod\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
 
-  # Step 3: Deploy to EU Production
+  # Step 4: Deploy to EU Production
   deploy-eu-prod:
     needs: [resolve-version, deploy-jp-prod]
     runs-on: ubuntu-latest
@@ -343,7 +450,7 @@ jobs:
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
           message: ":rocket: New Browser Agent version promoted to \\`eu-prod\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
 
-  # Step 4: Deploy to US Production
+  # Step 5: Deploy to US Production
   deploy-us-prod:
     needs: [resolve-version, deploy-eu-prod]
     runs-on: ubuntu-latest
@@ -425,77 +532,26 @@ jobs:
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
           message: ":rocket: New Browser Agent version promoted to \\`us-prod\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
 
-  # Re-trigger Release Gate check for Release-Please PRs
-  retrigger-release-gate:
-    needs: [deploy-us-prod]
+  # Verify promotion status for PR gating
+  # This job can be used as a required status check to block release-please PR merges
+  # until full production promotion completes, while allowing normal PRs to pass through
+  verify-promotion:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-      checks: write
+    if: always() && github.event_name == 'pull_request'
+    needs: [deploy-us-prod]
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Find Release-Please PR for this branch
-        id: find-pr
-        env:
-          GH_TOKEN: ${{ github.token }}
-          BRANCH: ${{ github.ref_name }}
+      - name: Verify promotion complete
         run: |
-          # Check if this is a release-please branch
-          if [[ ! "$BRANCH" =~ ^release-please-- ]]; then
-            echo "Not a release-please branch, skipping"
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          
-          echo "🔍 Looking for Release-Please PR for branch: $BRANCH"
-          
-          # Find the PR for this branch
-          PR_NUMBER=$(gh pr list \
-            --head "$BRANCH" \
-            --state open \
-            --json number \
-            --jq '.[0].number')
-          
-          if [[ -z "$PR_NUMBER" || "$PR_NUMBER" == "null" ]]; then
-            echo "No open PR found for branch $BRANCH"
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          
-          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
-          echo "skip=false" >> "$GITHUB_OUTPUT"
-          echo "✅ Found PR #$PR_NUMBER"
-      
-      - name: Re-request Release Gate check
-        if: steps.find-pr.outputs.skip != 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ steps.find-pr.outputs.pr_number }}
-        run: |
-          echo "🔄 Re-requesting checks for PR #$PR_NUMBER to unblock merge"
-          
-          # Get the latest commit SHA for the PR
-          HEAD_SHA=$(gh pr view "$PR_NUMBER" --json headRefOid --jq '.headRefOid')
-          
-          echo "📌 HEAD SHA: $HEAD_SHA"
-          
-          # Find the Release Gate check suite for this commit
-          CHECK_SUITE_ID=$(gh api \
-            "repos/${{ github.repository }}/commits/$HEAD_SHA/check-suites" \
-            --jq '.check_suites[] | select(.app.slug == "github-actions" and .conclusion != null and any(.check_runs[]?; .name == "Verify Internal Promotion")) | .id' \
-            | head -1)
-          
-          if [[ -n "$CHECK_SUITE_ID" ]]; then
-            echo "🔄 Requesting re-run of check suite $CHECK_SUITE_ID"
-            gh api -X POST "repos/${{ github.repository }}/check-suites/$CHECK_SUITE_ID/rerequest"
-            echo "✅ Check re-requested successfully"
+          if [[ "${{ github.head_ref }}" =~ ^release-please-- ]]; then
+            # For release-please PRs, require successful promotion to production
+            if [[ "${{ needs.deploy-us-prod.result }}" != "success" ]]; then
+              echo "❌ Release-please PR: Production promotion did not complete successfully"
+              echo "Deploy status: ${{ needs.deploy-us-prod.result }}"
+              exit 1
+            fi
+            echo "✅ Release-please PR: Full production promotion completed successfully"
           else
-            echo "⚠️  Could not find Release Gate check suite, it may run automatically"
+            echo "✅ Normal PR: No promotion required"
           fi
-          
-          echo ""
-          echo "🎉 Internal Promotion complete! PR #$PR_NUMBER should now be unblocked."
 

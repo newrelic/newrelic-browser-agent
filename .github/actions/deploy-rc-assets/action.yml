@@ -12,6 +12,10 @@ inputs:
   cdn_service:
     description: 'Fastly CDN service name (staging-js-agent.newrelic.com or js-agent.newrelic.com)'
     required: true
+  branch_name:
+    description: 'Branch name for version suffix (optional, for dev builds from feature branches)'
+    required: false
+    default: ''
   aws_access_key_id:
     description: 'AWS access key id'
     required: true
@@ -47,7 +51,12 @@ runs:
       run: |
         echo "🔨 Building fresh assets from current branch for ${{ inputs.environment }} environment"
         npm ci
-        npm run cdn:webpack -- --env mode=${{ inputs.environment }}
+        if [[ -n "${{ inputs.branch_name }}" ]]; then
+          echo "🏷️  Using branch-specific version suffix: ${{ inputs.branch_name }}"
+          npm run cdn:webpack -- --env mode=${{ inputs.environment }} --env branchName=${{ inputs.branch_name }}
+        else
+          npm run cdn:webpack -- --env mode=${{ inputs.environment }}
+        fi
         echo "📤 Preparing upload to /${{ inputs.bucket_dir }}"
     
     - name: Upload RC assets to S3

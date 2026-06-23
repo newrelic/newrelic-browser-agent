@@ -129,7 +129,7 @@ jobs:
         with:
           environment: dev
           bucket_dir: dev/
-          cdn_service: staging-js-agent.newrelic.com
+          cdn_service: js-agent.newrelic.com
           branch_name: ${{ steps.branch-name.outputs.branch_name }}
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -203,7 +203,7 @@ jobs:
         with:
           environment: staging
           bucket_dir: staging/
-          cdn_service: staging-js-agent.newrelic.com
+          cdn_service: js-agent.newrelic.com
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_role: ${{ secrets.AWS_ROLE_ARN }}

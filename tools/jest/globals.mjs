@@ -11,5 +11,3 @@ if (typeof console !== 'undefined') {
   console.error = jest.fn()
   console.debug = jest.fn()
 }
-
-jest.retryTimes(3)

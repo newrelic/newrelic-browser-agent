@@ -2,7 +2,7 @@ import { SESSION_STORAGE_KEY_PREFIX } from '../../src/common/session/constants'
 import { SessionEntity } from '../../src/common/session/session-entity'
 import { LocalMemory, model } from './session-helpers'
 import * as runtimeModule from '../../src/common/constants/runtime'
-import { buildExpectedSessionState } from '../specs/util/helpers'
+import { getDefaultExpectedSessionState } from '../specs/util/helpers'
 import { ee } from '../../src/common/event-emitter/contextual-ee'
 
 jest.useFakeTimers()
@@ -19,6 +19,10 @@ beforeEach(() => {
   storage = new LocalMemory()
   agentRef = {
     agentIdentifier,
+    info: {
+      applicationID: '123',
+      licenseKey: 'abc'
+    },
     ee: ee.get(agentIdentifier)
   }
 })
@@ -40,13 +44,13 @@ describe('constructor', () => {
       inactiveTimer: expect.any(Object),
       isNew: expect.any(Boolean),
       storage: expect.any(Object),
-      state: expect.objectContaining(buildExpectedSessionState())
+      state: expect.objectContaining(getDefaultExpectedSessionState())
     })
   })
 
   test('can use sane defaults', () => {
     const session = new SessionEntity({ agentRef, key, storage })
-    expect(session.state).toEqual(expect.objectContaining(buildExpectedSessionState()))
+    expect(session.state).toEqual(expect.objectContaining(getDefaultExpectedSessionState()))
   })
 
   test('expiresAt is the correct future timestamp - new session', () => {
@@ -102,7 +106,7 @@ describe('constructor', () => {
     // missing required fields
     const storage = new LocalMemory({ [`${SESSION_STORAGE_KEY_PREFIX}${key}`]: { invalid_fields: true } })
     const session = new SessionEntity({ agentRef, key, storage })
-    expect(session.state).toEqual(expect.objectContaining(buildExpectedSessionState()))
+    expect(session.state).toEqual(expect.objectContaining(getDefaultExpectedSessionState()))
   })
 
   test('expired expiresAt value in storage sets new defaults', () => {
@@ -110,7 +114,7 @@ describe('constructor', () => {
     jest.setSystemTime(now)
     const storage = new LocalMemory({ [`${SESSION_STORAGE_KEY_PREFIX}${key}`]: { value, expiresAt: now - 100, inactiveAt: Infinity } })
     const session = new SessionEntity({ agentRef, key, storage })
-    expect(session.state).toEqual(expect.objectContaining(buildExpectedSessionState()))
+    expect(session.state).toEqual(expect.objectContaining(getDefaultExpectedSessionState()))
   })
 
   test('expired inactiveAt value in storage sets new defaults', () => {
@@ -118,7 +122,7 @@ describe('constructor', () => {
     jest.setSystemTime(now)
     const storage = new LocalMemory({ [`${SESSION_STORAGE_KEY_PREFIX}${key}`]: { value, inactiveAt: now - 100, expiresAt: Infinity } })
     const session = new SessionEntity({ agentRef, key, storage })
-    expect(session.state).toEqual(expect.objectContaining(buildExpectedSessionState()))
+    expect(session.state).toEqual(expect.objectContaining(getDefaultExpectedSessionState()))
   })
 })
 
@@ -140,12 +144,31 @@ describe('reset()', () => {
     const session = new SessionEntity({ agentRef, key, storage, expiresMs: 10 })
     session.syncCustomAttribute('test', 123)
     expect(session.state.custom.test).toEqual(123)
-    expect(session.read().custom.test).toEqual(123)
+    expect(session.read().custom?.test).toEqual(123)
 
     // simulate a timer expiring
     session.reset()
     expect(session.state.custom?.test).toEqual(undefined)
     expect(session.read()?.custom?.test).toEqual(undefined)
+  })
+
+  test('cached RUM response should be wiped on reset', () => {
+    const now = Date.now()
+    jest.setSystemTime(now)
+    const app = {
+      agents: [{ entityGuid: 'test-guid' }],
+      nrServerTime: 1234567890
+    }
+    const featFlags = { err: 1, ins: 1, log: 1, logapi: 1, spa: 1, sr: 1, srs: 1, st: 1, sts: 1 }
+    const session = new SessionEntity({ agentRef, key, storage, expiresMs: 10 })
+    session.write({ cachedRumResponse: { app, ...featFlags } })
+    expect(session.state.cachedRumResponse).toEqual({ app, ...featFlags })
+    expect(session.read().cachedRumResponse).toEqual({ app, ...featFlags })
+
+    // simulate a timer expiring
+    session.reset()
+    expect(session.state.cachedRumResponse).toBe(null)
+    expect(session.read().cachedRumResponse).toBe(null)
   })
 
   test('should increment numOfResets', () => {
@@ -199,7 +222,7 @@ describe('read()', () => {
     const newSession = new SessionEntity({ agentRef, key, storage, expiresMs: 10 })
     expect(newSession.isNew).toBeTruthy()
 
-    expect(newSession.read()).toEqual(expect.objectContaining(buildExpectedSessionState()))
+    expect(newSession.read()).toEqual(expect.objectContaining(getDefaultExpectedSessionState()))
   })
 
   test('"pre-existing" sessions get data from read()', () => {

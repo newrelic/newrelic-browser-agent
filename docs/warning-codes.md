@@ -141,3 +141,5 @@
 `More than one Browser agent is running on the page`
 ### 70
 `A session replay payload failed to send and is being retried. Recording is paused during the retry period, and will resume when a successful harvest is made. Some replay activity may be missed during retry phases.`
+### 71
+`An invalid feature mode was detected and set to "off".`

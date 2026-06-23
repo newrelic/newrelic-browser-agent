@@ -4,7 +4,7 @@ import { testErrorsRequest, testInsRequest, testLogsRequest, testRumRequest } fr
 import { LOGGING_MODE } from '../../../src/features/logging/constants'
 
 describe('micro-agent', () => {
-  it('all agents correctly shuts down logging if first agent receives LOGGING_MODE.OFF', async () => {
+  it('each agent operates separately and logging is NOT turned off for second agent if first agent receives LOGGING_MODE.OFF', async () => {
     await browser.enableLogging({
       logMode: LOGGING_MODE.OFF,
       secondLogMode: LOGGING_MODE.DEBUG
@@ -16,7 +16,8 @@ describe('micro-agent', () => {
       { test: testInsRequest },
       { test: testLogsRequest }
     ])
-    // Note: this tests when micro-agents are created around the same time
+    // Note: must test micro-agents using staggered creation.
+    // Otherwise, which agent is "first" to send RUM is undeterministic (network-layer) and would cause the mocked response order to not match.
     await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/micro-agent.html'))
       .then(() => browser.waitForAgentLoad())
 
@@ -42,6 +43,7 @@ describe('micro-agent', () => {
         }
       }
     })
+
     const [rumHarvests, errorsHarvests, insightsHarvests, logsHarvest] = await Promise.all([
       rumCapture.waitForResult({ totalCount: 2, timeout: 10000 }),
       errorsCapture.waitForResult({ totalCount: 2, timeout: 10000 }),
@@ -84,8 +86,14 @@ describe('micro-agent', () => {
     // check to ensure both agents have the appropriate logging mode (separate session)
     expect(result.agent1.loggingMode).toEqual({ auto: LOGGING_MODE.OFF, api: LOGGING_MODE.OFF })
     expect(result.agent2.loggingMode).toEqual({ auto: LOGGING_MODE.DEBUG, api: LOGGING_MODE.DEBUG })
+    logsHarvest.forEach(({ request: { query, body } }) => {
+      const data = JSON.parse(body)[0]
+      expect(data.logs.length).toEqual(1) // ensure only one log per appId
+      expect(ranOnce(data.common.attributes.appId, 'log')).toEqual(true)
+      expect(payloadMatchesAppId(data.common.attributes.appId, data.logs[0].message)).toEqual(true)
+    })
     expect(tests[1]).toEqual({ rum: true, err: true, pa: true, log: false })
-    expect(tests[2]).toEqual({ rum: true, err: true, pa: true, log: false })
+    expect(tests[2]).toEqual({ rum: true, err: true, pa: true, log: true })
   })
 
   it('Smoke Test - Can send distinct payloads of all relevant data types to 2 distinct app IDs', async () => {
@@ -100,7 +108,8 @@ describe('micro-agent', () => {
       { test: testInsRequest },
       { test: testLogsRequest }
     ])
-    // Note: this tests when micro-agents are created around the same time
+    // Note: must test micro-agents using staggered creation.
+    // Otherwise, which agent is "first" to send RUM is undeterministic (network-layer) and would cause the mocked response order to not match.
     await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/micro-agent.html'))
       .then(() => browser.waitForAgentLoad())
 

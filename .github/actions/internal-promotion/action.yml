@@ -76,38 +76,20 @@ runs:
       run: echo "results=$(echo '${{ steps.s3-upload.outputs.results }}' | jq -j '.[].Key | select(. | test(".*?\\.js$")) + " "')" >> $GITHUB_OUTPUT
       shell: bash
 
-    - run: echo '=========================== Purging Prod Fastly Cache ==========================='
+    - run: echo '=========================== Purging Fastly Cache ==========================='
       shell: bash
-    - name: Purge production cdn cache
+    - name: Purge CDN cache
       uses: ./.github/actions/fastly-purge
       with:
         fastly_key: ${{ inputs.fastly_key }}
         fastly_service: js-agent.newrelic.com
         purge_path: ${{ steps.purge-paths.outputs.results }}
 
-    - run: echo '=========================== Purging Staging Fastly Cache ==========================='
+    - run: echo '=========================== Verifying CDN Assets ==========================='
       shell: bash
-    - name: Purge staging cdn cache
-      uses: ./.github/actions/fastly-purge
-      with:
-        fastly_key: ${{ inputs.fastly_key }}
-        fastly_service: staging-js-agent.newrelic.com
-        purge_path: ${{ steps.purge-paths.outputs.results }}
-
-    - run: echo '=========================== Verifying Assets - Prod Fastly ==========================='
-      shell: bash
-    - name: Verify production cdn assets
+    - name: Verify CDN assets
       uses: ./.github/actions/fastly-verify
       with:
         fastly_key: ${{ inputs.fastly_key }}
         fastly_service: js-agent.newrelic.com
-        asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
-
-    - run: echo '=========================== Verifying Assets - Staging Fastly ==========================='
-      shell: bash
-    - name: Verify staging cdn assets
-      uses: ./.github/actions/fastly-verify
-      with:
-        fastly_key: ${{ inputs.fastly_key }}
-        fastly_service: staging-js-agent.newrelic.com
         asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}

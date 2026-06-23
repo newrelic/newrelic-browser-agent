@@ -11,6 +11,7 @@ import { handle } from '../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../metrics/constants'
 import { EventAggregator } from '../../common/aggregate/event-aggregator'
 import { MAX_PAYLOAD_SIZE, IDEAL_PAYLOAD_SIZE, SUPPORTS_REGISTERED_ENTITIES } from '../../common/constants/agent-constants'
+import { warn } from '../../common/util/console'
 
 export class AggregateBase extends FeatureBase {
   /**
@@ -114,6 +115,7 @@ export class AggregateBase extends FeatureBase {
       }
       function buildOutput (ref) {
         return flagNames.map(flag => {
+          if (ref[flag] === undefined || ref[flag] === null) warn(71, flag)
           if (!ref[flag]) return 0
           return ref[flag]
         })

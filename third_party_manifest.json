@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Tue Jun 09 2026 14:17:56 GMT+0000 (Coordinated Universal Time)",
+  "lastUpdated": "Fri Jun 19 2026 02:15:53 GMT+0000 (Coordinated Universal Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -478,15 +478,15 @@
       "publisher": "Matteo Collina",
       "email": "hello@matteocollina.com"
     },
-    "form-data@4.0.4": {
+    "form-data@4.0.5": {
       "name": "form-data",
-      "version": "4.0.4",
+      "version": "4.0.5",
       "range": "^4.0.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/form-data/form-data",
-      "versionedRepoUrl": "https://github.com/form-data/form-data/tree/v4.0.4",
+      "versionedRepoUrl": "https://github.com/form-data/form-data/tree/v4.0.5",
       "licenseFile": "node_modules/form-data/License",
-      "licenseUrl": "https://github.com/form-data/form-data/blob/v4.0.4/License",
+      "licenseUrl": "https://github.com/form-data/form-data/blob/v4.0.5/License",
       "licenseTextSource": "file",
       "publisher": "Felix Geisendörfer",
       "email": "felix@debuggable.com",
@@ -505,29 +505,29 @@
       "publisher": "JP Richardson",
       "email": "jprichardson@gmail.com"
     },
-    "glob@11.0.3": {
+    "glob@11.1.0": {
       "name": "glob",
-      "version": "11.0.3",
+      "version": "11.1.0",
       "range": "^11.0.0",
-      "licenses": "ISC",
+      "licenses": "BlueOak-1.0.0",
       "repoUrl": "https://github.com/isaacs/node-glob",
-      "versionedRepoUrl": "https://github.com/isaacs/node-glob/tree/v11.0.3",
-      "licenseFile": "node_modules/glob/LICENSE",
-      "licenseUrl": "https://github.com/isaacs/node-glob/blob/v11.0.3/LICENSE",
+      "versionedRepoUrl": "https://github.com/isaacs/node-glob/tree/v11.1.0",
+      "licenseFile": "node_modules/glob/LICENSE.md",
+      "licenseUrl": "https://github.com/isaacs/node-glob/blob/v11.1.0/LICENSE.md",
       "licenseTextSource": "file",
       "publisher": "Isaac Z. Schlueter",
       "email": "i@izs.me",
       "url": "https://blog.izs.me/"
     },
-    "html-webpack-plugin@5.6.4": {
+    "html-webpack-plugin@5.6.5": {
       "name": "html-webpack-plugin",
-      "version": "5.6.4",
+      "version": "5.6.5",
       "range": "^5.6.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/jantimon/html-webpack-plugin",
-      "versionedRepoUrl": "https://github.com/jantimon/html-webpack-plugin/tree/v5.6.4",
+      "versionedRepoUrl": "https://github.com/jantimon/html-webpack-plugin/tree/v5.6.5",
       "licenseFile": "node_modules/html-webpack-plugin/LICENSE",
-      "licenseUrl": "https://github.com/jantimon/html-webpack-plugin/blob/v5.6.4/LICENSE",
+      "licenseUrl": "https://github.com/jantimon/html-webpack-plugin/blob/v5.6.5/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Jan Nicklas",
       "email": "j.nicklas@me.com",
@@ -642,15 +642,15 @@
       "licenseTextSource": "spdx",
       "publisher": "Terry Morse"
     },
-    "terser-webpack-plugin@5.3.14": {
+    "terser-webpack-plugin@5.3.16": {
       "name": "terser-webpack-plugin",
-      "version": "5.3.14",
+      "version": "5.3.16",
       "range": "^5.3.10",
       "licenses": "MIT",
-      "repoUrl": "https://github.com/webpack-contrib/terser-webpack-plugin",
-      "versionedRepoUrl": "https://github.com/webpack-contrib/terser-webpack-plugin/tree/v5.3.14",
+      "repoUrl": "https://github.com/webpack/terser-webpack-plugin",
+      "versionedRepoUrl": "https://github.com/webpack/terser-webpack-plugin/tree/v5.3.16",
       "licenseFile": "node_modules/terser-webpack-plugin/LICENSE",
-      "licenseUrl": "https://github.com/webpack-contrib/terser-webpack-plugin/blob/v5.3.14/LICENSE",
+      "licenseUrl": "https://github.com/webpack/terser-webpack-plugin/blob/v5.3.16/LICENSE",
       "licenseTextSource": "file",
       "publisher": "webpack Contrib Team"
     },
@@ -741,15 +741,15 @@
       "licenseUrl": "https://github.com/webpack/webpack-cli/blob/v6.0.1/LICENSE",
       "licenseTextSource": "file"
     },
-    "webpack@5.102.1": {
+    "webpack@5.104.0": {
       "name": "webpack",
-      "version": "5.102.1",
+      "version": "5.104.0",
       "range": "^5.89.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webpack/webpack",
-      "versionedRepoUrl": "https://github.com/webpack/webpack/tree/v5.102.1",
+      "versionedRepoUrl": "https://github.com/webpack/webpack/tree/v5.104.0",
       "licenseFile": "node_modules/webpack/LICENSE",
-      "licenseUrl": "https://github.com/webpack/webpack/blob/v5.102.1/LICENSE",
+      "licenseUrl": "https://github.com/webpack/webpack/blob/v5.104.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Tobias Koppers @sokra"
     },

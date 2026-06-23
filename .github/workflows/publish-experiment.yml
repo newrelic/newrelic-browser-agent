@@ -1,6 +1,6 @@
-# This workflow can be ran on any branch to build and publish
-# that branch as an internal experiment. Once published, the
-# dev A/B script will be updated to include the new experiment.
+# This workflow publishes experiment builds for testing via query parameters.
+# PRs automatically publish to experiments/dev/{branch}/ for testing with ?nrbaExperiment={branch}
+# Manual runs can publish to dev or standalone environments.
 # Note: Staging no longer supports experiments (only loads 'released' asset).
 
 name: Publish Experiment
@@ -17,22 +17,27 @@ on:
         type: choice
         options:
           - dev
-          - standalone # Note: this option prevents the experiment from being added to dev. Standalone experiments must be loaded manually.
-      publish_ab_script:
-        description: 'Flag that determines if the A/B script should be published to internal site'
-        required: true
-        type: boolean
-        default: true
+          - standalone # Note: standalone experiments are isolated, not auto-loaded
       experiment_description:
         description: 'Description of what this experiment does (used for change tracking)'
         required: false
         type: string
         default: 'Experimental browser agent deployment'
+  pull_request:
+    types: [opened, synchronize]
+    branches:
+      - main
+
+# Cancel previous experiment builds when PR is updated
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('experiment-{0}', github.event.pull_request.number) || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # Build and publish the branch to S3 experiments folder
   publish-experiment-to-s3:
     runs-on: ubuntu-latest
+    environment: nr1-experiments
     timeout-minutes: 30
     defaults:
       run:
@@ -44,28 +49,87 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      
+      # Determine environment and branch based on trigger type
+      - name: Determine experiment configuration
+        id: config
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "environment=dev" >> $GITHUB_OUTPUT
+            echo "branch=${{ github.head_ref }}" >> $GITHUB_OUTPUT
+            echo "🔧 PR build: environment=dev, branch=${{ github.head_ref }}"
+          else
+            echo "environment=${{ inputs.nr_environment }}" >> $GITHUB_OUTPUT
+            echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            echo "🔧 Manual build: environment=${{ inputs.nr_environment }}, branch=${{ github.ref_name }}"
+          fi
+      
       - name: Install project dependencies
         run: npm ci
       - name: Clean branch name
         id: clean-branch-name
-        run: echo "results=$(echo '${{ github.ref }}' | sed 's/refs\/heads\///g' | sed 's/[^[:alnum:].-]/-/g')" >> $GITHUB_OUTPUT
+        run: echo "results=$(echo '${{ steps.config.outputs.branch }}' | sed 's/[^[:alnum:].-]/-/g')" >> $GITHUB_OUTPUT
       - name: Build experiment
-        run: npm run cdn:build:experiment -- --env branchName='${{ inputs.nr_environment }}/${{ steps.clean-branch-name.outputs.results }}'
+        run: npm run cdn:build:experiment -- --env branchName='${{ steps.config.outputs.environment }}/${{ steps.clean-branch-name.outputs.results }}'
+      
+      # Create comprehensive config.js with A/B account configuration
       - name: Create experiment config file
         run: |
           cat > $GITHUB_WORKSPACE/build/config.js << 'EOF'
-          // Config for this experiment
-          window.NREUM.loader_config.agentID = '${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}'
-          window.NREUM.loader_config.applicationID = '${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}'
-          window.NREUM.loader_config.licenseKey = '${{ secrets.INTERNAL_AB_LICENSE_KEY }}'
-          window.NREUM.info.applicationID = '${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}'
-          window.NREUM.info.licenseKey = '${{ secrets.INTERNAL_AB_LICENSE_KEY }}'
-          window.NREUM.init.proxy = {} // Proxy won't work for experiments
-          window.NREUM.init.session_replay.enabled = true
-          window.NREUM.init.session_trace.enabled = true
-          window.NREUM.init.feature_flags = ['ajax_metrics_deny_list', 'register']
-          window.NREUM.init.user_actions = {elementAttributes: ['id', 'className', 'tagName', 'type', 'ariaLabel', 'alt', 'title']}
+          // Comprehensive experiment configuration for dev A/B account
+          window.NREUM = window.NREUM || {};
+          window.NREUM.init = {
+            feature_flags: ['ajax_metrics_deny_list', 'register'],
+            distributed_tracing: {
+              enabled: true
+            },
+            ajax: {
+              deny_list: [
+                'nr-data.net',
+                'bam.nr-data.net',
+                'staging-bam.nr-data.net',
+                'bam-cell.nr-data.net'
+              ],
+              capture_payloads: 'failures'
+            },
+            session_replay: {
+              enabled: true,
+              fix_stylesheets: false,
+              mask_all_inputs: false,
+              mask_text_selector: null
+            },
+            session_trace: {
+              enabled: true
+            },
+            performance: {
+              capture_marks: false,
+              capture_measures: true,
+              capture_detail: true,
+              resources: {
+                enabled: true,
+                ignore_newrelic: false,
+                first_party_domains: ['dev-one.nr-assets.net', 'staging-one.nr-assets.net', 'one.nr-assets.net', 'nr-assets.net']
+              }
+            },
+            proxy: {},
+            user_actions: {elementAttributes: ['id', 'className', 'tagName', 'type', 'ariaLabel', 'alt', 'title']}
+          };
+          window.NREUM.loader_config = {
+            accountID: '1',
+            trustKey: '1',
+            agentID: '${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}',
+            licenseKey: '${{ secrets.INTERNAL_AB_LICENSE_KEY }}',
+            applicationID: '${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}'
+          };
+          window.NREUM.info = {
+            beacon: 'staging-bam.nr-data.net',
+            errorBeacon: 'staging-bam.nr-data.net',
+            licenseKey: '${{ secrets.INTERNAL_AB_LICENSE_KEY }}',
+            applicationID: '${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}',
+            sa: 1
+          };
           EOF
+      
       - name: Upload experiment
         id: s3-upload
         uses: ./.github/actions/s3-upload
@@ -75,7 +139,7 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           local_dir: $GITHUB_WORKSPACE/build
-          bucket_dir: experiments/${{ inputs.nr_environment }}/${{ steps.clean-branch-name.outputs.results }}
+          bucket_dir: experiments/${{ steps.config.outputs.environment }}/${{ steps.clean-branch-name.outputs.results }}
       - name: Gather purge paths
         id: purge-paths
         run: echo "results=$(echo '${{ steps.s3-upload.outputs.results }}' | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
@@ -103,33 +167,3 @@ jobs:
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: staging-js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
-
-  # Rebuild and publish the environment A/B script
-  publish-ab:
-    if: ${{ inputs.publish_ab_script == true }}
-    needs: [publish-experiment-to-s3]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v4
-        with:
-            ref: ${{ github.ref }}
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
-      - name: Publish a/b script
-        uses: ./.github/actions/internal-ab
-        with:
-          nr_environment: ${{ inputs.nr_environment }}
-          nrba_app_id: ${{ secrets.INTERNAL_DEV_APPLICATION_ID }}
-          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
-          nrba_ab_app_id: ${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}
-          nrba_ab_license_key: ${{ secrets.INTERNAL_AB_LICENSE_KEY }}
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}

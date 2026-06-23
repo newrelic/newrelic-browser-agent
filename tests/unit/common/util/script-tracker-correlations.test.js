@@ -33,6 +33,10 @@ class MockError extends OriginalError {
   }
 }
 
+let originalPerformance = global.performance
+let originalPerformanceObserver = global.window.PerformanceObserver
+let originalMutationObserver = global.window.MutationObserver
+
 beforeEach(async () => {
   jest.resetModules()
   jest.clearAllMocks()
@@ -94,6 +98,10 @@ afterEach(() => {
   global.Error = OriginalError
   createdScripts.forEach(script => script.remove())
   createdScripts = []
+
+  global.performance = originalPerformance
+  global.window.PerformanceObserver = originalPerformanceObserver
+  global.window.MutationObserver = originalMutationObserver
 })
 
 describe('script-tracker correlations', () => {
@@ -311,8 +319,13 @@ describe('script-tracker correlations', () => {
   })
 
   describe('findScriptTimings with correlations', () => {
+    let originalGetEntriesByType = globalThis.performance.getEntriesByType
     beforeEach(async () => {
       scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
+      globalThis.performance.getEntriesByType = jest.fn()
+    })
+    afterEach(() => {
+      globalThis.performance.getEntriesByType = originalGetEntriesByType
     })
 
     test('calculates script start as max(dom.start, performance.end)', () => {
@@ -519,6 +532,11 @@ describe('script-tracker correlations', () => {
   })
 
   describe('Timing calculations for different loading methods', () => {
+    let originalGetEntriesByType = globalThis.performance.getEntriesByType
+
+    afterEach(() => {
+      globalThis.performance.getEntriesByType = originalGetEntriesByType
+    })
     test('dynamic script injection: full capture with all timings', () => {
       const scriptUrl = 'https://cdn.example.com/dynamic.js'
       mockNavigationEntry = { name: 'https://example.com/' }
@@ -689,6 +707,10 @@ describe('script-tracker correlations', () => {
     at main (https://example.com/page.html:20:5)`
 
       currentTime = 100
+      globalThis.performance.getEntriesByType = jest.fn((type) => {
+        if (type === 'navigation') return mockNavigationEntry ? [mockNavigationEntry] : []
+        return []
+      })
       const timings = scriptTrackerModule.findScriptTimings()
 
       expect(timings.type).toBe('inline')
@@ -916,6 +938,12 @@ describe('script-tracker correlations', () => {
   })
 
   describe('Edge cases', () => {
+    let originalGetEntriesByType = globalThis.performance.getEntriesByType
+
+    afterEach(() => {
+      globalThis.performance.getEntriesByType = originalGetEntriesByType
+    })
+
     test('handles script element without src attribute', () => {
       currentTime = 100
       const inlineScript = document.createElement('script')

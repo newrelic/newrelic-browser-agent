@@ -179,10 +179,11 @@ jobs:
 
   # Step 2: Deploy to Staging
   deploy-staging:
-    # Only run for workflow_dispatch on main or release-please branches
+    # Only run for workflow_dispatch (on main or release-please branches) or release-please PRs
     if: |
-      github.event_name == 'workflow_dispatch' && 
-      (github.ref_name == 'main' || startsWith(github.ref_name, 'release-please--'))
+      (github.event_name == 'workflow_dispatch' && (github.ref_name == 'main' || startsWith(github.ref_name, 'release-please--'))) ||
+      (github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please--'))
+    # Requires manual approval via environment protection rules
     needs: [resolve-version, deploy-dev]
     # use the hosted runner with white-listed IPs to ensure we can access internal NR1 staging environment for asset publishing for copy/paste loader update.
     runs-on: Browser-Agent-Assigned-IP-Linux
@@ -286,8 +287,13 @@ jobs:
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
           message: ":rocket: New Browser Agent version promoted to \\`staging\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
 
-  # Step 3: Deploy to Japan Production
+  # Step 3: Deploy to JP Production
   deploy-jp-prod:
+    # Only run for workflow_dispatch (on main or release-please branches) or release-please PRs
+    if: |
+      (github.event_name == 'workflow_dispatch' && (github.ref_name == 'main' || startsWith(github.ref_name, 'release-please--'))) ||
+      (github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please--'))
+    # Requires manual approval via environment protection rules
     needs: [resolve-version, deploy-staging]
     runs-on: ubuntu-latest
     environment: nr1-jp-prod
@@ -370,6 +376,11 @@ jobs:
 
   # Step 4: Deploy to EU Production
   deploy-eu-prod:
+    # Only run for workflow_dispatch (on main or release-please branches) or release-please PRs
+    if: |
+      (github.event_name == 'workflow_dispatch' && (github.ref_name == 'main' || startsWith(github.ref_name, 'release-please--'))) ||
+      (github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please--'))
+    # Requires manual approval via environment protection rules
     needs: [resolve-version, deploy-jp-prod]
     runs-on: ubuntu-latest
     environment: nr1-eu-prod
@@ -452,6 +463,11 @@ jobs:
 
   # Step 5: Deploy to US Production
   deploy-us-prod:
+    # Only run for workflow_dispatch (on main or release-please branches) or release-please PRs
+    if: |
+      (github.event_name == 'workflow_dispatch' && (github.ref_name == 'main' || startsWith(github.ref_name, 'release-please--'))) ||
+      (github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please--'))
+    # Requires manual approval via environment protection rules
     needs: [resolve-version, deploy-eu-prod]
     runs-on: ubuntu-latest
     environment: nr1-us-prod

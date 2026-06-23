@@ -27,7 +27,7 @@ import { Obfuscator } from '../../../common/util/obfuscate'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  mode = MODE.OFF
+  mode = null
 
   // pass the recorder into the aggregator
   constructor (agentRef, args) {
@@ -74,7 +74,7 @@ export class Aggregate extends AggregateBase {
       if (!this.recorder) return
       // if the mode changed on a different tab, it needs to update this instance to match
       this.mode = agentRef.runtime.session.state.sessionReplayMode
-      if (!this.initialized || this.mode === MODE.OFF) return
+      if (!this.initialized || this.mode === MODE.OFF || !this.mode) return
       this.recorder?.startRecording(TRIGGERS.RESUME, this.mode)
     })
 
@@ -97,6 +97,8 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(['srs', 'sr']).then(([srMode, entitled]) => {
       this.entitled = !!entitled
       if (!this.entitled) {
+        this.mode = MODE.OFF
+        this.#writeToStorage({ sessionReplayMode: this.mode })
         this.deregisterDrain()
         if (this.agentRef.runtime.isRecording) {
           this.abort(ABORT_REASONS.ENTITLEMENTS)
@@ -106,7 +108,7 @@ export class Aggregate extends AggregateBase {
       }
       this.initializeRecording(srMode).then(() => { this.drain() })
     }).then(() => {
-      if (this.mode === MODE.OFF) {
+      if (!this.mode) {
         this.recorder?.stopRecording() // stop any conservative preload recording launched by instrument
         while (this.recorder?.getEvents().events.length) this.recorder?.clearBuffer?.()
       }
@@ -143,7 +145,7 @@ export class Aggregate extends AggregateBase {
     // if the error was noticed AFTER the recorder was already imported....
     if (this.recorder && this.initialized) {
       if (!this.agentRef.runtime.isRecording) this.recorder.startRecording(TRIGGERS.SWITCH_TO_FULL, this.mode) // off --> full
-      this.syncWithSessionManager({ sessionReplayMode: this.mode })
+      this.#writeToStorage({ sessionReplayMode: this.mode })
     } else {
       this.initializeRecording(MODE.FULL, true, TRIGGERS.SWITCH_TO_FULL)
     }
@@ -171,35 +173,36 @@ export class Aggregate extends AggregateBase {
 
     if (this.recorder?.trigger === TRIGGERS.API && this.agentRef.runtime.isRecording) {
       this.mode = MODE.FULL
-    } else if (!session.isNew && !ignoreSession) { // inherit the mode of the existing session
+    } else if (session.state.sessionReplayMode !== null && !ignoreSession) { // inherit the mode of the existing session
       this.mode = session.state.sessionReplayMode
     } else {
       // The session is new... determine the mode the new session should start in
       this.mode = srMode
     }
-    // If off, then don't record (early return)
-    if (this.mode === MODE.OFF) return
 
-    try {
-      /** will return a recorder instance if already imported, otherwise, will fetch the recorder and initialize it */
-      this.recorder ??= await this.instrumentClass.importRecorder()
-    } catch (err) {
-      /** if the recorder fails to import, abort the feature */
-      return this.abort(ABORT_REASONS.IMPORT, err)
+    if (this.mode !== MODE.OFF) {
+      try {
+        /** will return a recorder instance if already imported, otherwise, will fetch the recorder and initialize it */
+        this.recorder ??= await this.instrumentClass.importRecorder()
+      } catch (err) {
+        /** if the recorder fails to import, abort the feature */
+        return this.abort(ABORT_REASONS.IMPORT, err)
+      }
+
+      // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
+      if (this.mode === MODE.ERROR && this.instrumentClass.errorNoticed) {
+        this.mode = MODE.FULL
+      }
+
+      // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
+      // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
+      // The makeHarvestPayload should ensure that no payload is returned if we're not in FULL mode...
+
+      await this.prepUtils()
+
+      if (!this.agentRef.runtime.isRecording) this.recorder.startRecording(trigger, this.mode)
     }
-
-    // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
-    if (this.mode === MODE.ERROR && this.instrumentClass.errorNoticed) { this.mode = MODE.FULL }
-
-    // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
-    // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
-    // The makeHarvestPayload should ensure that no payload is returned if we're not in FULL mode...
-
-    await this.prepUtils()
-
-    if (!this.agentRef.runtime.isRecording) this.recorder.startRecording(trigger, this.mode)
-
-    this.syncWithSessionManager({ sessionReplayMode: this.mode })
+    this.#writeToStorage({ sessionReplayMode: this.mode })
   }
 
   async prepUtils () {
@@ -246,7 +249,7 @@ export class Aggregate extends AggregateBase {
       return
     }
 
-    if (!this.agentRef.runtime.session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
+    if (!this.agentRef.runtime.session.state.sessionReplaySentFirstChunk) this.#writeToStorage({ sessionReplaySentFirstChunk: true })
     this.recorder.clearBuffer()
 
     if (!this.agentRef.runtime.session.state.traceHarvestStarted) {
@@ -370,7 +373,7 @@ export class Aggregate extends AggregateBase {
     if (forceHarvest) this.agentRef.runtime.harvester.triggerHarvestFor(this)
     this.mode = MODE.OFF
     this.recorder?.stopRecording?.()
-    this.syncWithSessionManager({ sessionReplayMode: this.mode })
+    this.#writeToStorage({ sessionReplayMode: this.mode })
   }
 
   /** Abort the feature, once aborted it will not resume */
@@ -380,12 +383,12 @@ export class Aggregate extends AggregateBase {
     this.blocked = true
     this.mode = MODE.OFF
     this.recorder?.stopRecording?.()
-    this.syncWithSessionManager({ sessionReplayMode: this.mode })
+    this.#writeToStorage({ sessionReplayMode: this.mode })
     this.recorder?.clearTimestamps?.()
     while (this.recorder?.getEvents().events.length) this.recorder?.clearBuffer?.()
   }
 
-  syncWithSessionManager (state = {}) {
+  #writeToStorage (state = {}) {
     if (this.isSessionTrackingEnabled) {
       this.agentRef.runtime.session.write(state)
     }

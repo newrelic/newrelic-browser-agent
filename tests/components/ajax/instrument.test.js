@@ -66,6 +66,7 @@ describe('request header capture', () => {
       'content-type': 'application/json',
       'x-custom-header': 'test-value'
     })
+    xhr.abort()
   })
 })
 
@@ -80,6 +81,7 @@ describe('request body capture', () => {
       .find(call => call[0] === 'new-xhr' && call[1][0] === xhr)[2]
 
     expect(xhrContext.requestBody).toEqual('{"key":"value"}')
+    xhr.abort()
   })
 
   test('XMLHttpRequest captures human-readable text/plain body', () => {
@@ -92,6 +94,7 @@ describe('request body capture', () => {
       .find(call => call[0] === 'new-xhr' && call[1][0] === xhr)[2]
 
     expect(xhrContext.requestBody).toEqual('plain text message')
+    xhr.abort()
   })
 
   test('XMLHttpRequest captures human-readable XML body', () => {
@@ -104,6 +107,7 @@ describe('request body capture', () => {
       .find(call => call[0] === 'new-xhr' && call[1][0] === xhr)[2]
 
     expect(xhrContext.requestBody).toEqual('<root><item>value</item></root>')
+    xhr.abort()
   })
 
   test('XMLHttpRequest captures all request bodies during instrumentation', () => {
@@ -117,6 +121,7 @@ describe('request body capture', () => {
 
     // Body is captured during instrumentation; filtering for human-readable happens in aggregate phase
     expect(xhrContext.requestBody).toEqual('binary data')
+    xhr.abort()
   })
 })
 
@@ -130,6 +135,7 @@ describe('query string extraction', () => {
       .find(call => call[0] === 'new-xhr' && call[1][0] === xhr)[2]
 
     expect(xhrContext.parsedOrigin.search).toEqual('?param1=value1&param2=value2')
+    xhr.abort()
   })
 })
 
@@ -149,6 +155,7 @@ describe('GQL metadata extraction', () => {
     // GQL parsing happens in aggregate phase, so just check that request body was captured
     expect(xhrContext.requestBody).toContain('query GetUser')
     expect(xhrContext.requestBody).toContain('GetUser')
+    xhr.abort()
   })
 })
 

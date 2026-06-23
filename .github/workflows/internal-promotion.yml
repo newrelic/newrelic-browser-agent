@@ -287,7 +287,7 @@ jobs:
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
           message: ":rocket: New Browser Agent version promoted to \\`staging\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
 
-  # Step 3: Deploy to JP Production
+  # Step 3: Deploy to Japan Production
   deploy-jp-prod:
     # Only run for workflow_dispatch (on main or release-please branches) or release-please PRs
     if: |

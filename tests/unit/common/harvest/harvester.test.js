@@ -1,4 +1,5 @@
-import { Harvester, send } from '../../../../src/common/harvest/harvester'
+import { Harvester } from '../../../../src/common/harvest/harvester'
+import { send } from '../../../../src/common/harvest/send'
 
 let mockEolCb
 jest.mock('../../../../src/common/unload/eol', () => ({

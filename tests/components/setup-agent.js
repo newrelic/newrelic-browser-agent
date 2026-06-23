@@ -6,6 +6,7 @@ import { TimeKeeper } from '../../src/common/timing/time-keeper'
 import { setupAgentSession } from '../../src/features/utils/agent-session'
 import { Harvester } from '../../src/common/harvest/harvester'
 import { EventAggregator } from '../../src/common/aggregate/event-aggregator'
+import { canEnableSessionTracking } from '../../src/features/utils/feature-gates'
 
 const entityGuid = faker.string.uuid()
 
@@ -30,6 +31,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   const eventEmitter = ee.get(agentIdentifier)
   jest.spyOn(eventEmitter, 'on')
   jest.spyOn(eventEmitter, 'addEventListener')
+  jest.spyOn(eventEmitter, 'emit')
 
   if (!info.applicationID) info.applicationID = faker.string.uuid()
   if (!info.licenseKey) info.licenseKey = faker.string.uuid()
@@ -50,7 +52,9 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
     'browser-test',
     true
   )
-  setupAgentSession(fakeAgent)
+  if (canEnableSessionTracking(fakeAgent.init)) {
+    setupAgentSession(fakeAgent)
+  }
 
   if (!fakeAgent.runtime.timeKeeper) {
     fakeAgent.runtime.timeKeeper = new TimeKeeper(fakeAgent.runtime.session)

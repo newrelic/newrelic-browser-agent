@@ -4,6 +4,55 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "f7df627b14e3e5e8fa4a8d94433ea76e9a9902bb",
+          "message": "Calculate browser_stack_hash from truncated stack trace",
+          "issues": [
+            "1789"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "58663ec19dc99ec94e34c17a5dfaa20a07038dba",
+          "message": "Get responseBodySize from body if content-length is missing",
+          "issues": [
+            "1793"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "08394db8a5a9f2b6fd627e9eee76022977cb433c",
+          "message": "Detect and report AJAX payloads",
+          "issues": [
+            "1651"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "c97aaf9773cfb0b62a810eb07b37e6f5b96d5ab5",
+          "message": "Enhance obfuscation to support event filter",
+          "issues": [
+            "1782"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "b330f8e3e35f2fda076967092bcb70e792de6eeb",
+          "message": "Patch handling of inlining images for Session Replay",
+          "issues": [
+            "1765"
+          ]
+        }
+      ],
+      "version": "1.317.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "2dd3d42c-34f7-427d-a715-cc0222a1e37c",
+      "createTime": "2026-06-18T17:16:32.741Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "60ec5bf566d27d68e59c827f08dcd8dd73d8cd2c",
           "message": "Use app-namespaced keys for session",
@@ -4004,5 +4053,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-06-01T20:10:20.235Z"
+  "updateTime": "2026-06-18T17:16:32.741Z"
 }

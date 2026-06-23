@@ -18,6 +18,7 @@ import { measure } from './measure'
 import { recordCustomEvent } from './recordCustomEvent'
 import { subscribeToPageUnload } from '../../common/window/page-visibility'
 import { findScriptTimings } from '../../common/v2/script-tracker'
+import { trackMFEVitals } from '../../common/v2/mfe-vitals'
 import { generateRandomHexString } from '../../common/ids/unique-id'
 
 /**
@@ -82,6 +83,9 @@ function register (agentRef, target) {
   }
 
   const timings = findScriptTimings()
+
+  // Track MFE vitals for this entity
+  const vitals = trackMFEVitals(target.id)
 
   const attrs = {}
 
@@ -149,7 +153,8 @@ function register (agentRef, target) {
     metadata: {
       get customAttributes () { return attrs },
       target,
-      timings
+      timings,
+      vitals
     }
   }
 
@@ -177,9 +182,18 @@ function register (agentRef, target) {
     // only ever report the timings the first time this is called
     if (timings.reportedAt) return
     timings.reportedAt = now()
+
+    // Disconnect observers and capture current values, store in timings obj for visibility
+    vitals.disconnect()
+    timings.fcp = vitals.fcp
+    timings.lcp = vitals.lcp
+    timings.cls = vitals.cls
+    timings.inp = vitals.inp
+
     const timeToFetch = timings.fetchEnd - timings.fetchStart // fetchStart to fetchEnd
     const timeToExecute = timings.scriptEnd - timings.scriptStart // scriptStart to scriptEnd
-    api.recordCustomEvent('MicroFrontEndTiming', {
+
+    const eventData = {
       assetUrl: timings.asset, // the url of the script that was registered, or undefined if it could not be determined (inline or no match)
       assetType: timings.type, // the type of asset that was associated with the timings, one of 'script', 'link' (if preloaded and found in the resource timing buffer), 'preload' (if preloaded but not found in the resource timing buffer), or "unknown" if it could not be determined
       timeAlive: timings.reportedAt - timings.registeredAt, // registeredAt to reportedAt
@@ -187,8 +201,14 @@ function register (agentRef, target) {
       timeToExecute, // scriptStart to scriptEnd
       timeToFetch, // fetchStart to fetchEnd
       timeToLoad: timeToFetch + timeToExecute, // fetch time and script time together
-      timeToRegister: timings.registeredAt // timestamp when register() was called
-    })
+      timeToRegister: timings.registeredAt, // timestamp when register() was called
+      'nr.vitals.fcp': vitals.fcp || null, // FCP vital object with value and metadata
+      'nr.vitals.lcp': vitals.lcp || null, // LCP vital object with value and metadata
+      'nr.vitals.cls': vitals.cls || null, // CLS vital object with value and metadata
+      'nr.vitals.inp': vitals.inp || null // INP vital object with value and metadata
+    }
+
+    api.recordCustomEvent('MicroFrontEndTiming', eventData)
   }
 
   /**

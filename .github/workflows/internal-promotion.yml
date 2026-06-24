@@ -1,7 +1,7 @@
 # This workflow is used to manually deploy a specific Browser Agent version
 # to NR1 environments by updating the "released" asset that NR1 pages load.
 # This workflow enforces a strict sequential promotion path:
-# dev -> staging -> jp-prod -> eu-prod -> us-prod
+# dev -> staging -> eu-prod -> jp-prod -> us-prod
 # Each environment requires manual approval via GitHub Environment protection rules.
 #
 # Two deployment modes:
@@ -96,86 +96,22 @@ jobs:
   # Step 1: Deploy to Dev (runs first)
   deploy-dev:
     needs: [resolve-version]
-    runs-on: ubuntu-latest
-    environment: nr1-dev
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.11.0
-      
-      # Determine branch name for webpack version suffix
-      - name: Determine branch name for version
-        id: branch-name
-        run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            BRANCH="${{ github.head_ref }}"
-          else
-            BRANCH="${{ github.ref_name }}"
-          fi
-          
-          # Clean branch name for version suffix (lowercase, replace special chars with hyphens)
-          CLEAN_BRANCH=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
-          echo "branch_name=${CLEAN_BRANCH}" >> $GITHUB_OUTPUT
-          echo "🏷️  Using branch-specific version suffix: ${CLEAN_BRANCH}"
-      
-      # Build and deploy RC assets
-      - name: Deploy RC assets for dev
-        if: needs.resolve-version.outputs.is_rc_mode == 'true'
-        id: deploy-rc
-        uses: ./.github/actions/deploy-rc-assets
-        with:
-          environment: dev
-          bucket_dir: dev/
-          cdn_service: js-agent.newrelic.com
-          branch_name: ${{ steps.branch-name.outputs.branch_name }}
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-      
-      - name: Promote agent to Dev
-        uses: ./.github/actions/internal-promotion
-        with:
-          nr_environment: dev
-          nrba_released_script_url: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.script_url || needs.resolve-version.outputs.script_url }}
-          nrba_app_id: ${{ secrets.INTERNAL_DEV_APPLICATION_ID }}
-          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-    
-    outputs:
-      version_label: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.version_label || needs.resolve-version.outputs.version_label }}
-
-  # Create change tracking event for dev
-  create-dev-change-tracking:
-    needs: [deploy-dev]
-    environment: change-tracking
-    runs-on: Browser-Agent-Assigned-IP-Linux
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - name: Create dev change tracking event (Account 1067061)
-        uses: ./.github/actions/change-tracking
-        with:
-          accountId: '1067061'
-          entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_DEV }}
-          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
-          region: 'Dev'
-          version: ${{ needs.deploy-dev.outputs.version_label }}
-          type: 'Basic'
-          description: 'Dev promoted to ${{ needs.deploy-dev.outputs.version_label }}'
-          shortDescription: 'Dev: ${{ needs.deploy-dev.outputs.version_label }}'
-          deepLink: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
-          commit: ${{ github.sha }}
-          user: ${{ github.actor }}
-          groupId: '${{ github.run_id }}-${{ github.sha }}'
+    uses: ./.github/workflows/deploy-environment.yml
+    with:
+      environment: nr1-dev
+      bucket_dir: dev/
+      nr_environment: dev
+      cdn_service: js-agent.newrelic.com
+      runner: ubuntu-latest
+      is_rc_mode: ${{ needs.resolve-version.outputs.is_rc_mode }}
+      script_url: ${{ needs.resolve-version.outputs.script_url }}
+      version_label: ${{ needs.resolve-version.outputs.version_label }}
+      determine_branch_name: true
+      include_nrdb_upload: false
+      include_notification: false
+      region_name: Dev
+      change_tracking_type: Basic
+    secrets: inherit
 
   # Step 2: Deploy to Staging
   deploy-staging:
@@ -183,355 +119,83 @@ jobs:
     if: |
       (github.event_name == 'workflow_dispatch' && (github.ref_name == 'main' || startsWith(github.ref_name, 'release-please--'))) ||
       (github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please--'))
-    # Requires manual approval via environment protection rules
     needs: [resolve-version, deploy-dev]
-    # use the hosted runner with white-listed IPs to ensure we can access internal NR1 staging environment for asset publishing for copy/paste loader update.
-    runs-on: Browser-Agent-Assigned-IP-Linux
-    environment: nr1-staging
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.11.0
-      
-      # Build and deploy RC assets
-      - name: Deploy RC assets for staging
-        if: needs.resolve-version.outputs.is_rc_mode == 'true'
-        id: deploy-rc
-        uses: ./.github/actions/deploy-rc-assets
-        with:
-          environment: staging
-          bucket_dir: staging/
-          cdn_service: js-agent.newrelic.com
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-      
-      - name: Promote agent to Staging
-        uses: ./.github/actions/internal-promotion
-        with:
-          nr_environment: staging
-          nrba_released_script_url: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.script_url || needs.resolve-version.outputs.script_url }}
-          nrba_app_id: ${{ secrets.INTERNAL_STAGING_APPLICATION_ID }}
-          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-      
-      - name: Build versioned loaders for NRDB copy+paste
-        if: needs.resolve-version.outputs.is_rc_mode == 'true'
-        run: |
-          echo "🔨 Building prod loaders with versioned filenames for NRDB upload"
-          npm run cdn:webpack -- --env mode=prod
-      
-      - name: Update copy-paste loader in NRDB
-        if: needs.resolve-version.outputs.is_rc_mode == 'true'
-        continue-on-error: true # Don't fail the deployment if this step fails
-        env:
-          STAGE_API_KEY: ${{ secrets.NR_API_KEY_STAGING }}
-        run: |
-          LOADER_VERSION=$(jq -r '.version' package.json)
-          npm --prefix .github/actions install
-          node .github/actions/nr-upload/index.js \
-            --environment=stage \
-            --loader-version=$LOADER_VERSION \
-            --stage-api-key=$STAGE_API_KEY \
-            --local-dir=./build
-          node .github/actions/nr-verify/index.js \
-            --loader-version=$LOADER_VERSION
-    
-    outputs:
-      version_label: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.version_label || needs.resolve-version.outputs.version_label }}
-
-  # Create change tracking event for staging
-  create-staging-change-tracking:
-    needs: [deploy-staging]
-    environment: change-tracking
-    runs-on: Browser-Agent-Assigned-IP-Linux
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - name: Create staging change tracking event (Account 1067061)
-        uses: ./.github/actions/change-tracking
-        with:
-          accountId: '1067061'
-          entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_STAGING }}
-          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
-          region: 'Staging'
-          version: ${{ needs.deploy-staging.outputs.version_label }}
-          type: 'Basic'
-          description: 'Staging promoted to ${{ needs.deploy-staging.outputs.version_label }}'
-          shortDescription: 'Staging: ${{ needs.deploy-staging.outputs.version_label }}'
-          deepLink: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
-          commit: ${{ github.sha }}
-          user: ${{ github.actor }}
-          groupId: '${{ github.run_id }}-${{ github.sha }}'
-
-  # Notify staging deployment
-  notify-staging:
-    needs: [resolve-version, deploy-staging]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - name: Send Slack notification
-        uses: ./.github/actions/slack-notification
-        with:
-          notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
-          dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          message: ":rocket: New Browser Agent version promoted to \\`staging\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
+    uses: ./.github/workflows/deploy-environment.yml
+    with:
+      environment: nr1-staging
+      bucket_dir: staging/
+      nr_environment: staging
+      cdn_service: js-agent.newrelic.com
+      runner: Browser-Agent-Assigned-IP-Linux
+      is_rc_mode: ${{ needs.resolve-version.outputs.is_rc_mode }}
+      script_url: ${{ needs.resolve-version.outputs.script_url }}
+      version_label: ${{ needs.resolve-version.outputs.version_label }}
+      determine_branch_name: false
+      include_nrdb_upload: true
+      include_notification: true
+      region_name: Staging
+      change_tracking_type: Basic
+    secrets: inherit
 
   # Step 3: Deploy to EU Production
   deploy-eu-prod:
     needs: [resolve-version, deploy-staging]
-    runs-on: ubuntu-latest
-    environment: nr1-jp-prod
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.11.0
-      
-      # Build and deploy RC assets
-      - name: Deploy RC assets for jp-prod
-        if: needs.resolve-version.outputs.is_rc_mode == 'true'
-        id: deploy-rc
-        uses: ./.github/actions/deploy-rc-assets
-        with:
-          environment: jp-prod
-          bucket_dir: jp-prod/
-          cdn_service: js-agent.newrelic.com
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-      
-      - name: Promote agent to JP Production
-        uses: ./.github/actions/internal-promotion
-        with:
-          nr_environment: jp-prod
-          nrba_released_script_url: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.script_url || needs.resolve-version.outputs.script_url }}
-          nrba_app_id: ${{ secrets.INTERNAL_JP_PRODUCTION_APPLICATION_ID }}
-          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-    
-    outputs:
-      version_label: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.version_label || needs.resolve-version.outputs.version_label }}
-
-  # Create change tracking event for JP production
-  create-jp-prod-change-tracking:
-    needs: [deploy-jp-prod]
-    environment: change-tracking
-    runs-on: Browser-Agent-Assigned-IP-Linux
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - name: Create JP production change tracking event (Account 1067061)
-        uses: ./.github/actions/change-tracking
-        with:
-          accountId: '1067061'
-          entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_JP_PROD }}
-          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
-          region: 'JP'
-          version: ${{ needs.deploy-jp-prod.outputs.version_label }}
-          type: 'Rolling'
-          description: 'JP production promoted to ${{ needs.deploy-jp-prod.outputs.version_label }}'
-          shortDescription: 'JP Prod: ${{ needs.deploy-jp-prod.outputs.version_label }}'
-          deepLink: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
-          commit: ${{ github.sha }}
-          user: ${{ github.actor }}
-          groupId: '${{ github.run_id }}-${{ github.sha }}'
-
-  # Notify JP production deployment
-  notify-jp-prod:
-    needs: [resolve-version, deploy-jp-prod]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - name: Send Slack notification
-        uses: ./.github/actions/slack-notification
-        with:
-          notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
-          dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          message: ":rocket: New Browser Agent version promoted to \\`jp-prod\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
+    uses: ./.github/workflows/deploy-environment.yml
+    with:
+      environment: nr1-eu-prod
+      bucket_dir: eu-prod/
+      nr_environment: eu-prod
+      cdn_service: js-agent.newrelic.com
+      runner: ubuntu-latest
+      is_rc_mode: ${{ needs.resolve-version.outputs.is_rc_mode }}
+      script_url: ${{ needs.resolve-version.outputs.script_url }}
+      version_label: ${{ needs.resolve-version.outputs.version_label }}
+      determine_branch_name: false
+      include_nrdb_upload: false
+      include_notification: true
+      region_name: EU
+      change_tracking_type: Rolling
+    secrets: inherit
 
   # Step 4: Deploy to Japan Production
   deploy-jp-prod:
     needs: [resolve-version, deploy-eu-prod]
-    runs-on: ubuntu-latest
-    environment: nr1-eu-prod
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.11.0
-      
-      # Build and deploy RC assets
-      - name: Deploy RC assets for eu-prod
-        if: needs.resolve-version.outputs.is_rc_mode == 'true'
-        id: deploy-rc
-        uses: ./.github/actions/deploy-rc-assets
-        with:
-          environment: eu-prod
-          bucket_dir: eu-prod/
-          cdn_service: js-agent.newrelic.com
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-      
-      - name: Promote agent to EU Production
-        uses: ./.github/actions/internal-promotion
-        with:
-          nr_environment: eu-prod
-          nrba_released_script_url: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.script_url || needs.resolve-version.outputs.script_url }}
-          nrba_app_id: ${{ secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID }}
-          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-    
-    outputs:
-      version_label: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.version_label || needs.resolve-version.outputs.version_label }}
-
-  # Create change tracking event for EU production
-  create-eu-prod-change-tracking:
-    needs: [deploy-eu-prod]
-    environment: change-tracking
-    runs-on: Browser-Agent-Assigned-IP-Linux
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - name: Create EU production change tracking event (Account 1067061)
-        uses: ./.github/actions/change-tracking
-        with:
-          accountId: '1067061'
-          entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_EU_PROD }}
-          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
-          region: 'EU'
-          version: ${{ needs.deploy-eu-prod.outputs.version_label }}
-          type: 'Rolling'
-          description: 'EU production promoted to ${{ needs.deploy-eu-prod.outputs.version_label }}'
-          shortDescription: 'EU Prod: ${{ needs.deploy-eu-prod.outputs.version_label }}'
-          deepLink: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
-          commit: ${{ github.sha }}
-          user: ${{ github.actor }}
-          groupId: '${{ github.run_id }}-${{ github.sha }}'
-
-  # Notify EU production deployment
-  notify-eu-prod:
-    needs: [resolve-version, deploy-eu-prod]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - name: Send Slack notification
-        uses: ./.github/actions/slack-notification
-        with:
-          notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
-          dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          message: ":rocket: New Browser Agent version promoted to \\`eu-prod\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
+    uses: ./.github/workflows/deploy-environment.yml
+    with:
+      environment: nr1-jp-prod
+      bucket_dir: jp-prod/
+      nr_environment: jp-prod
+      cdn_service: js-agent.newrelic.com
+      runner: ubuntu-latest
+      is_rc_mode: ${{ needs.resolve-version.outputs.is_rc_mode }}
+      script_url: ${{ needs.resolve-version.outputs.script_url }}
+      version_label: ${{ needs.resolve-version.outputs.version_label }}
+      determine_branch_name: false
+      include_nrdb_upload: false
+      include_notification: true
+      region_name: JP
+      change_tracking_type: Rolling
+    secrets: inherit
 
   # Step 5: Deploy to US Production
   deploy-us-prod:
     needs: [resolve-version, deploy-jp-prod]
-    runs-on: ubuntu-latest
-    environment: nr1-us-prod
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.11.0
-      
-      # Build and deploy RC assets
-      - name: Deploy RC assets for us-prod
-        if: needs.resolve-version.outputs.is_rc_mode == 'true'
-        id: deploy-rc
-        uses: ./.github/actions/deploy-rc-assets
-        with:
-          environment: us-prod
-          bucket_dir: prod/
-          cdn_service: js-agent.newrelic.com
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-      
-      - name: Promote agent to US Production
-        uses: ./.github/actions/internal-promotion
-        with:
-          nr_environment: prod
-          nrba_released_script_url: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.script_url || needs.resolve-version.outputs.script_url }}
-          nrba_app_id: ${{ secrets.INTERNAL_PRODUCTION_APPLICATION_ID }}
-          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-    
-    outputs:
-      version_label: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.version_label || needs.resolve-version.outputs.version_label }}
-
-  # Create change tracking event for US production
-  create-us-prod-change-tracking:
-    needs: [deploy-us-prod]
-    environment: change-tracking
-    runs-on: Browser-Agent-Assigned-IP-Linux
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - name: Create US production change tracking event (Account 1067061)
-        uses: ./.github/actions/change-tracking
-        with:
-          accountId: '1067061'
-          entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_US_PROD }}
-          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
-          region: 'US'
-          version: ${{ needs.deploy-us-prod.outputs.version_label }}
-          type: 'Rolling'
-          description: 'US production promoted to ${{ needs.deploy-us-prod.outputs.version_label }}'
-          shortDescription: 'US Prod: ${{ needs.deploy-us-prod.outputs.version_label }}'
-          deepLink: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
-          commit: ${{ github.sha }}
-          user: ${{ github.actor }}
-          groupId: '${{ github.run_id }}-${{ github.sha }}'
-
-  # Notify US production deployment
-  notify-us-prod:
-    needs: [resolve-version, deploy-us-prod]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - name: Send Slack notification
-        uses: ./.github/actions/slack-notification
-        with:
-          notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
-          dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          message: ":rocket: New Browser Agent version promoted to \\`us-prod\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
+    uses: ./.github/workflows/deploy-environment.yml
+    with:
+      environment: nr1-us-prod
+      bucket_dir: prod/
+      nr_environment: prod
+      cdn_service: js-agent.newrelic.com
+      runner: ubuntu-latest
+      is_rc_mode: ${{ needs.resolve-version.outputs.is_rc_mode }}
+      script_url: ${{ needs.resolve-version.outputs.script_url }}
+      version_label: ${{ needs.resolve-version.outputs.version_label }}
+      determine_branch_name: false
+      include_nrdb_upload: false
+      include_notification: true
+      region_name: US
+      change_tracking_type: Rolling
+    secrets: inherit
 
   # Verify promotion status for PR gating
   # This job can be used as a required status check to block release-please PR merges

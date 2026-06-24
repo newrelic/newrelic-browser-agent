@@ -156,13 +156,6 @@ jobs:
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
       
-      # Build versioned loaders for NRDB copy+paste (staging only)
-      - name: Build versioned loaders for NRDB copy+paste
-        if: steps.env-details.outputs.upload_to_nrdb == 'true' && inputs.script_url == ''
-        run: |
-          echo "🔨 Building prod loaders with versioned filenames for NRDB upload"
-          npm run cdn:webpack -- --env mode=prod
-      
       # Update copy-paste loader in NRDB (staging only)
       - name: Update copy-paste loader in NRDB
         if: steps.env-details.outputs.upload_to_nrdb == 'true' && inputs.script_url == ''

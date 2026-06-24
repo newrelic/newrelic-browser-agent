@@ -42,7 +42,6 @@ jobs:
       (github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please--'))
     runs-on: ubuntu-latest
     outputs:
-      is_rc_mode: ${{ steps.determine-mode.outputs.is_rc_mode }}
       script_url: ${{ steps.resolve-cdn-path.outputs.script_url }}
       version_label: ${{ steps.resolve-cdn-path.outputs.version_label }}
     steps:
@@ -98,19 +97,9 @@ jobs:
     needs: [resolve-version]
     uses: ./.github/workflows/deploy-environment.yml
     with:
-      environment: nr1-dev
-      bucket_dir: dev/
       nr_environment: dev
-      cdn_service: js-agent.newrelic.com
-      runner: ubuntu-latest
-      is_rc_mode: ${{ needs.resolve-version.outputs.is_rc_mode }}
       script_url: ${{ needs.resolve-version.outputs.script_url }}
       version_label: ${{ needs.resolve-version.outputs.version_label }}
-      determine_branch_name: true
-      include_nrdb_upload: false
-      include_notification: false
-      region_name: Dev
-      change_tracking_type: Basic
     secrets: inherit
 
   # Step 2: Deploy to Staging
@@ -122,19 +111,9 @@ jobs:
     needs: [resolve-version, deploy-dev]
     uses: ./.github/workflows/deploy-environment.yml
     with:
-      environment: nr1-staging
-      bucket_dir: staging/
       nr_environment: staging
-      cdn_service: js-agent.newrelic.com
-      runner: Browser-Agent-Assigned-IP-Linux
-      is_rc_mode: ${{ needs.resolve-version.outputs.is_rc_mode }}
       script_url: ${{ needs.resolve-version.outputs.script_url }}
       version_label: ${{ needs.resolve-version.outputs.version_label }}
-      determine_branch_name: false
-      include_nrdb_upload: true
-      include_notification: true
-      region_name: Staging
-      change_tracking_type: Basic
     secrets: inherit
 
   # Step 3: Deploy to EU Production
@@ -142,19 +121,9 @@ jobs:
     needs: [resolve-version, deploy-staging]
     uses: ./.github/workflows/deploy-environment.yml
     with:
-      environment: nr1-eu-prod
-      bucket_dir: eu-prod/
       nr_environment: eu-prod
-      cdn_service: js-agent.newrelic.com
-      runner: ubuntu-latest
-      is_rc_mode: ${{ needs.resolve-version.outputs.is_rc_mode }}
       script_url: ${{ needs.resolve-version.outputs.script_url }}
       version_label: ${{ needs.resolve-version.outputs.version_label }}
-      determine_branch_name: false
-      include_nrdb_upload: false
-      include_notification: true
-      region_name: EU
-      change_tracking_type: Rolling
     secrets: inherit
 
   # Step 4: Deploy to Japan Production
@@ -162,19 +131,9 @@ jobs:
     needs: [resolve-version, deploy-eu-prod]
     uses: ./.github/workflows/deploy-environment.yml
     with:
-      environment: nr1-jp-prod
-      bucket_dir: jp-prod/
       nr_environment: jp-prod
-      cdn_service: js-agent.newrelic.com
-      runner: ubuntu-latest
-      is_rc_mode: ${{ needs.resolve-version.outputs.is_rc_mode }}
       script_url: ${{ needs.resolve-version.outputs.script_url }}
       version_label: ${{ needs.resolve-version.outputs.version_label }}
-      determine_branch_name: false
-      include_nrdb_upload: false
-      include_notification: true
-      region_name: JP
-      change_tracking_type: Rolling
     secrets: inherit
 
   # Step 5: Deploy to US Production
@@ -182,19 +141,9 @@ jobs:
     needs: [resolve-version, deploy-jp-prod]
     uses: ./.github/workflows/deploy-environment.yml
     with:
-      environment: nr1-us-prod
-      bucket_dir: prod/
       nr_environment: prod
-      cdn_service: js-agent.newrelic.com
-      runner: ubuntu-latest
-      is_rc_mode: ${{ needs.resolve-version.outputs.is_rc_mode }}
       script_url: ${{ needs.resolve-version.outputs.script_url }}
       version_label: ${{ needs.resolve-version.outputs.version_label }}
-      determine_branch_name: false
-      include_nrdb_upload: false
-      include_notification: true
-      region_name: US
-      change_tracking_type: Rolling
     secrets: inherit
 
   # Verify promotion status for PR gating

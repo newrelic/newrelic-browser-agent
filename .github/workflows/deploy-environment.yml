@@ -6,73 +6,21 @@ name: Deploy to Environment
 on:
   workflow_call:
     inputs:
-      # Environment configuration
-      environment:
-        description: 'GitHub environment name for protection rules (e.g., nr1-dev, nr1-staging)'
-        required: true
-        type: string
-      bucket_dir:
-        description: 'S3 bucket directory for this environment (e.g., dev/, staging/, prod/)'
-        required: true
-        type: string
+      # Core environment identifier
       nr_environment:
-        description: 'NR environment name used by internal-promotion action (e.g., dev, staging, prod)'
+        description: 'NR environment name (dev, staging, eu-prod, jp-prod, prod)'
         required: true
         type: string
-      cdn_service:
-        description: 'Fastly CDN service name'
-        required: false
-        type: string
-        default: js-agent.newrelic.com
       
-      # Runner configuration
-      runner:
-        description: 'GitHub runner to use (ubuntu-latest or Browser-Agent-Assigned-IP-Linux)'
-        required: false
-        type: string
-        default: ubuntu-latest
-      
-      # Deployment mode
-      is_rc_mode:
-        description: 'Whether to build fresh RC assets (true) or use existing version (false)'
-        required: true
-        type: string
+      # Deployment source (empty = build fresh RC, populated = use existing version)
       script_url:
-        description: 'Script URL for existing version mode (ignored in RC mode)'
+        description: 'Script URL for existing version (if empty, builds fresh RC from current branch)'
         required: false
         type: string
       version_label:
-        description: 'Version label for existing version mode (ignored in RC mode)'
+        description: 'Version label for existing version (if empty, builds fresh RC from current branch)'
         required: false
         type: string
-      
-      # Special features
-      determine_branch_name:
-        description: 'Whether to determine branch name for version suffix (only dev needs this)'
-        required: false
-        type: boolean
-        default: false
-      include_nrdb_upload:
-        description: 'Whether to upload copy-paste loader to NRDB (only staging needs this)'
-        required: false
-        type: boolean
-        default: false
-      include_notification:
-        description: 'Whether to send Slack notification (dev does not notify)'
-        required: false
-        type: boolean
-        default: true
-      
-      # Change tracking metadata
-      region_name:
-        description: 'Region name for change tracking (e.g., Dev, Staging, EU, JP, US)'
-        required: true
-        type: string
-      change_tracking_type:
-        description: 'Change tracking type (Basic or Rolling)'
-        required: false
-        type: string
-        default: Basic
     
     outputs:
       version_label:
@@ -83,11 +31,14 @@ on:
 
 jobs:
   deploy:
-    runs-on: ${{ inputs.runner }}
-    environment: ${{ inputs.environment }}
+    # Staging needs whitelisted IP for NRDB upload (auto-detected)
+    runs-on: ${{ inputs.nr_environment == 'staging' && 'Browser-Agent-Assigned-IP-Linux' || 'ubuntu-latest' }}
+    environment: nr1-${{ inputs.nr_environment }}
     timeout-minutes: 30
     outputs:
       version_label: ${{ steps.set-version.outputs.version_label }}
+      region_name: ${{ steps.env-details.outputs.region_name }}
+      env_id: ${{ steps.env-details.outputs.env_id }}
     steps:
       - uses: actions/checkout@v4
       
@@ -95,19 +46,50 @@ jobs:
         with:
           node-version: 22.11.0
       
-      # Derive env_id from environment name (strip 'nr1-' prefix)
-      # Used for selecting environment-specific secrets
-      - name: Set environment ID
-        id: env-id
+      # Derive environment details from nr_environment
+      - name: Set environment details
+        id: env-details
         run: |
-          ENV_ID="${{ inputs.environment }}"
-          ENV_ID="${ENV_ID#nr1-}"  # Strip nr1- prefix
-          echo "value=${ENV_ID}" >> $GITHUB_OUTPUT
-          echo "🏷️  Environment ID: ${ENV_ID}"
+          NR_ENV="${{ inputs.nr_environment }}"
+          
+          # Derive env_id (strip nr1- if present, for secret mapping)
+          ENV_ID="${NR_ENV}"
+          echo "env_id=${ENV_ID}" >> $GITHUB_OUTPUT
+          
+          # Derive bucket_dir (prod -> prod/, others -> {env}/)
+          if [[ "$NR_ENV" == "prod" ]]; then
+            BUCKET_DIR="prod/"
+          else
+            BUCKET_DIR="${NR_ENV}/"
+          fi
+          echo "bucket_dir=${BUCKET_DIR}" >> $GITHUB_OUTPUT
+          
+          # Derive region_name for change tracking
+          case "$NR_ENV" in
+            dev) REGION="Dev" ;;
+            staging) REGION="Staging" ;;
+            eu-prod) REGION="EU" ;;
+            jp-prod) REGION="JP" ;;
+            prod) REGION="US" ;;
+            *) REGION="${NR_ENV}" ;;
+          esac
+          echo "region_name=${REGION}" >> $GITHUB_OUTPUT
+          
+          # Derive behavioral flags from environment
+          [[ "$NR_ENV" == "dev" ]] && APPEND_BRANCH="true" || APPEND_BRANCH="false"
+          echo "append_branch_name=${APPEND_BRANCH}" >> $GITHUB_OUTPUT
+          
+          [[ "$NR_ENV" == "staging" ]] && UPLOAD_NRDB="true" || UPLOAD_NRDB="false"
+          echo "upload_to_nrdb=${UPLOAD_NRDB}" >> $GITHUB_OUTPUT
+          
+          [[ "$NR_ENV" != "dev" ]] && NOTIFY="true" || NOTIFY="false"
+          echo "send_notification=${NOTIFY}" >> $GITHUB_OUTPUT
+          
+          echo "🏷️  Environment: ${NR_ENV}, Bucket: ${BUCKET_DIR}, Region: ${REGION}, Branch Suffix: ${APPEND_BRANCH}, NRDB Upload: ${UPLOAD_NRDB}, Notify: ${NOTIFY}"
       
-      # Determine branch name for version suffix (only dev needs this)
+      # Determine branch name for version suffix (only dev)
       - name: Determine branch name for version
-        if: inputs.determine_branch_name
+        if: steps.env-details.outputs.append_branch_name == 'true'
         id: branch-name
         run: |
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
@@ -123,27 +105,27 @@ jobs:
       
       # Build and deploy RC assets
       - name: Deploy RC assets
-        if: inputs.is_rc_mode == 'true'
+        if: inputs.script_url == ''
         id: deploy-rc
         uses: ./.github/actions/deploy-rc-assets
         with:
           environment: ${{ inputs.nr_environment }}
-          bucket_dir: ${{ inputs.bucket_dir }}
-          cdn_service: ${{ inputs.cdn_service }}
-          branch_name: ${{ inputs.determine_branch_name && steps.branch-name.outputs.branch_name || '' }}
+          bucket_dir: ${{ steps.env-details.outputs.bucket_dir }}
+          cdn_service: js-agent.newrelic.com
+          branch_name: ${{ steps.env-details.outputs.append_branch_name == 'true' && steps.branch-name.outputs.branch_name || '' }}
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secsteps.env-id.outputs.value == 'dev' && secrets.INTERNAL_DEV_APPLICATION_ID || steps.env-id.outputs.value == 'staging' && secrets.INTERNAL_STAGING_APPLICATION_ID || steps.env-id.outputs.value == 'eu-prod' && secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID || steps.env-id.outputs.value
+          aws_role: ${{ steps.env-details.outputs.env_id == 'dev' && secrets.INTERNAL_DEV_APPLICATION_ID || steps.env-details.outputs.env_id == 'staging' && secrets.INTERNAL_STAGING_APPLICATION_ID || steps.env-details.outputs.env_id == 'eu-prod' && secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID || steps.env-details.outputs.env_id == 'jp-prod' && secrets.INTERNAL_JP_PRODUCTION_APPLICATION_ID || secrets.INTERNAL_PRODUCTION_APPLICATION_ID }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
       
       # Promote agent to environment
-      - name: Promote agent to ${{ inputs.region_name }}
+      - name: Promote agent to ${{ steps.env-details.outputs.region_name }}
         uses: ./.github/actions/internal-promotion
         with:
           nr_environment: ${{ inputs.nr_environment }}
-          nrba_released_script_url: ${{ inputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.script_url || inputs.script_url }}
-          nrba_app_id: ${{ inputs.env_id == 'dev' && secrets.INTERNAL_DEV_APPLICATION_ID || inputs.env_id == 'staging' && secrets.INTERNAL_STAGING_APPLICATION_ID || inputs.env_id == 'eu-prod' && secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID || inputs.env_id == 'jp-prod' && secrets.INTERNAL_JP_PRODUCTION_APPLICATION_ID || secrets.INTERNAL_PRODUCTION_APPLICATION_ID }}
+          nrba_released_script_url: ${{ inputs.script_url == '' && steps.deploy-rc.outputs.script_url || inputs.script_url }}
+          nrba_app_id: ${{ steps.env-details.outputs.env_id == 'dev' && secrets.INTERNAL_DEV_APPLICATION_ID || steps.env-details.outputs.env_id == 'staging' && secrets.INTERNAL_STAGING_APPLICATION_ID || steps.env-details.outputs.env_id == 'eu-prod' && secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID || steps.env-details.outputs.env_id == 'jp-prod' && secrets.INTERNAL_JP_PRODUCTION_APPLICATION_ID || secrets.INTERNAL_PRODUCTION_APPLICATION_ID }}
           nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -153,14 +135,14 @@ jobs:
       
       # Build versioned loaders for NRDB copy+paste (staging only)
       - name: Build versioned loaders for NRDB copy+paste
-        if: inputs.include_nrdb_upload && inputs.is_rc_mode == 'true'
+        if: steps.env-details.outputs.upload_to_nrdb == 'true' && inputs.script_url == ''
         run: |
           echo "🔨 Building prod loaders with versioned filenames for NRDB upload"
           npm run cdn:webpack -- --env mode=prod
       
       # Update copy-paste loader in NRDB (staging only)
       - name: Update copy-paste loader in NRDB
-        if: inputs.include_nrdb_upload && inputs.is_rc_mode == 'true'
+        if: steps.env-details.outputs.upload_to_nrdb == 'true' && inputs.script_url == ''
         continue-on-error: true
         env:
           STAGE_API_KEY: ${{ secrets.NR_API_KEY_STAGING }}
@@ -179,7 +161,8 @@ jobs:
       - name: Set version label
         id: set-version
         run: |
-          if [[ "${{ inputs.is_rc_mode }}" == "true" ]]; then
+          # Use RC-generated version if building fresh, otherwise use provided version
+          if [[ -z "${{ inputs.script_url }}" ]]; then
             VERSION="${{ steps.deploy-rc.outputs.version_label }}"
           else
             VERSION="${{ inputs.version_label }}"
@@ -194,17 +177,17 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Create ${{ inputs.region_name }} change tracking event
+      - name: Create ${{ needs.deploy.outputs.region_name }} change tracking event
         uses: ./.github/actions/change-tracking
         with:
           accountId: '1067061'
-          entityGuid: ${{ steps.env-id.outputs.value == 'dev' && secrets.NR_ENTITY_GUID_NR1_DEV || steps.env-id.outputs.value == 'staging' && secrets.NR_ENTITY_GUID_NR1_STAGING || steps.env-id.outputs.value == 'eu-prod' && secrets.NR_ENTITY_GUID_NR1_EU_PROD || steps.env-id.outputs.value == 'jp-prod' && secrets.NR_ENTITY_GUID_NR1_JP_PROD || secrets.NR_ENTITY_GUID_NR1_US_PROD }}
+          entityGuid: ${{ needs.deploy.outputs.env_id == 'dev' && secrets.NR_ENTITY_GUID_NR1_DEV || needs.deploy.outputs.env_id == 'staging' && secrets.NR_ENTITY_GUID_NR1_STAGING || needs.deploy.outputs.env_id == 'eu-prod' && secrets.NR_ENTITY_GUID_NR1_EU_PROD || needs.deploy.outputs.env_id == 'jp-prod' && secrets.NR_ENTITY_GUID_NR1_JP_PROD || secrets.NR_ENTITY_GUID_NR1_US_PROD }}
           apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
-          region: ${{ inputs.region_name }}
+          region: ${{ needs.deploy.outputs.region_name }}
           version: ${{ needs.deploy.outputs.version_label }}
-          type: ${{ inputs.change_tracking_type }}
-          description: '${{ inputs.region_name }} promoted to ${{ needs.deploy.outputs.version_label }}'
-          shortDescription: '${{ inputs.region_name }}: ${{ needs.deploy.outputs.version_label }}'
+          type: Rolling
+          description: '${{ needs.deploy.outputs.region_name }} promoted to ${{ needs.deploy.outputs.version_label }}'
+          shortDescription: '${{ needs.deploy.outputs.region_name }}: ${{ needs.deploy.outputs.version_label }}'
           deepLink: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
           commit: ${{ github.sha }}
           user: ${{ github.actor }}
@@ -212,7 +195,7 @@ jobs:
 
   # Send Slack notification
   notify:
-    if: inputs.include_notification
+    if: needs.deploy.outputs.env_id != 'dev'
     needs: [deploy]
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -223,6 +206,4 @@ jobs:
         with:
           notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          message: ":rocket: New Browser Agent version promoted to \\`${{ inputs.region_name }}\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
-
-          message: ":rocket: New Browser Agent version promoted to \\`${{ inputs.region_name }}\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
+          message: ":rocket: New Browser Agent version promoted to \\`${{ needs.deploy.outputs.region_name }}\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."

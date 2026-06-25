@@ -148,7 +148,6 @@ export function trackMFEVitals (id, timings) {
       const capturedAt = now()
       vitals.fcp = {
         get value () { return getNowRelativeToScriptStart(capturedAt) }
-        // loadState: globalScope.document?.readyState || null
       }
       obs.disconnect()
     }
@@ -167,10 +166,6 @@ export function trackMFEVitals (id, timings) {
         const capturedAt = now()
         vitals.lcp = {
           get value () { return getNowRelativeToScriptStart(capturedAt) }
-          // size
-          // elTag: elem.tagName || null,
-          // eid: elem.id || null,
-          // elUrl: getElementURL(elem)
         }
       }
     } catch (e) {
@@ -186,17 +181,7 @@ export function trackMFEVitals (id, timings) {
     if (entry.hadRecentInput) return
     ;(entry.sources || []).some(source => {
       if (isInMFE(source.node, id)) {
-        // vitals.cls ??= { value: 0, largestShiftValue: null, largestShiftTime: null, largestShiftTarget: null, loadState: null }
         vitals.cls.value += entry.value
-        // vitals.cls.value = clsValue
-
-        // Track largest shift
-        // if (entry.value > (vitals.cls.largestShiftValue || 0)) {
-        //   vitals.cls.largestShiftValue = entry.value
-        //   vitals.cls.largestShiftTime = entry.startTime
-        //   vitals.cls.largestShiftTarget = getElementSelector(source.node)
-        //   vitals.cls.loadState = globalScope.document?.readyState || null
-        // }
         return true
       }
       return false
@@ -209,14 +194,6 @@ export function trackMFEVitals (id, timings) {
     if (vitals.inp === null || entry.duration > vitals.inp.value) {
       vitals.inp = {
         value: entry.duration
-        // interactionTarget: getElementSelector(entry.target),
-        // interactionTime: entry.startTime,
-        // interactionType: entry.name,
-        // inputDelay: entry.processingStart ? entry.processingStart - entry.startTime : null,
-        // processingDuration: (entry.processingStart && entry.processingEnd) ? entry.processingEnd - entry.processingStart : null,
-        // presentationDelay: (entry.processingEnd && entry.duration) ? entry.duration - (entry.processingEnd - entry.startTime) : null,
-        // nextPaintTime: entry.startTime + entry.duration,
-        // loadState: globalScope.document?.readyState || null
       }
     }
   })

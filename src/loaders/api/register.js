@@ -203,10 +203,10 @@ function register (agentRef, target) {
       timeToLoad: timeToFetch + timeToExecute, // fetch time and script time together
       timeToRegister: timings.registeredAt, // timestamp when register() was called
       // leave room to extend these with more data keys as needed
-      'nr.vitals.fcp.value': vitals.fcp?.value || null, // FCP vital object with value and metadata
-      'nr.vitals.lcp.value': vitals.lcp?.value || null, // LCP vital object with value and metadata
-      'nr.vitals.cls.value': vitals.cls?.value || null, // CLS vital object with value and metadata
-      'nr.vitals.inp.value': vitals.inp?.value || null // INP vital object with value and metadata
+      'nr.vitals.fcp.value': vitals.fcp?.value ?? null, // FCP vital object with value and metadata
+      'nr.vitals.lcp.value': vitals.lcp?.value ?? null, // LCP vital object with value and metadata
+      'nr.vitals.cls.value': vitals.cls?.value ?? null, // CLS vital object with value and metadata
+      'nr.vitals.inp.value': vitals.inp?.value ?? null // INP vital object with value and metadata
     }
 
     api.recordCustomEvent('MicroFrontEndTiming', eventData)

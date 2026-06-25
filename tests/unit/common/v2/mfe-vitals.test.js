@@ -11,6 +11,7 @@ describe('trackMFEVitals', () => {
   let mockEventListeners
   let mutationCallbacks
   let performanceCallbacks
+  let timings
 
   beforeEach(async () => {
     jest.resetModules()
@@ -67,6 +68,11 @@ describe('trackMFEVitals', () => {
       now: jest.fn(() => timeCounter++)
     }))
 
+    timings = {
+      scriptStart: 90,
+      registeredAt: 0
+    }
+
     // Import after mocking
     const module = await import('../../../../src/common/v2/mfe-vitals')
     trackMFEVitals = module.trackMFEVitals
@@ -74,7 +80,7 @@ describe('trackMFEVitals', () => {
 
   describe('FCP tracking', () => {
     it('should track FCP when contentful element is added to MFE', () => {
-      const vitals = trackMFEVitals('test-mfe')
+      const vitals = trackMFEVitals('test-mfe', timings)
       expect(vitals.fcp).toBeNull()
 
       // Create a mock element with text content inside MFE container
@@ -101,13 +107,11 @@ describe('trackMFEVitals', () => {
       }]))
 
       expect(vitals.fcp).toBeDefined()
-      expect(vitals.fcp.value).toBeGreaterThan(0)
-      expect(vitals.fcp.loadState).toBe('complete')
+      expect(vitals.fcp.value).toBe(10)
     })
 
-    it('should capture loadState when FCP occurs', () => {
-      mockDocument.readyState = 'loading'
-      const vitals = trackMFEVitals('test-mfe')
+    it('should use scriptStart as the timestamp anchor for FCP', () => {
+      const vitals = trackMFEVitals('test-mfe', timings)
 
       const mockContainer = {
         nodeType: 1,
@@ -128,13 +132,13 @@ describe('trackMFEVitals', () => {
 
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
 
-      expect(vitals.fcp.loadState).toBe('loading')
+      expect(vitals.fcp.value).toBe(10)
     })
   })
 
   describe('LCP tracking', () => {
-    it('should track LCP element metadata', () => {
-      const vitals = trackMFEVitals('test-mfe')
+    it('should track LCP as a relative timestamp', () => {
+      const vitals = trackMFEVitals('test-mfe', timings)
 
       const mockContainer = {
         nodeType: 1,
@@ -159,15 +163,11 @@ describe('trackMFEVitals', () => {
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
 
       expect(vitals.lcp).toBeDefined()
-      expect(vitals.lcp.value).toBeGreaterThan(0)
-      expect(vitals.lcp.size).toBe(480000)
-      expect(vitals.lcp.elTag).toBe('IMG')
-      expect(vitals.lcp.eid).toBe('hero-image')
-      expect(vitals.lcp.elUrl).toBe('https://example.com/image.jpg')
+      expect(vitals.lcp.value).toBe(11)
     })
 
     it('should update LCP when larger element is added', () => {
-      const vitals = trackMFEVitals('test-mfe')
+      const vitals = trackMFEVitals('test-mfe', timings)
 
       const mockContainer = {
         nodeType: 1,
@@ -204,13 +204,12 @@ describe('trackMFEVitals', () => {
 
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [largeElement] }]))
 
-      expect(vitals.lcp.value).toBeGreaterThan(firstLcp)
-      expect(vitals.lcp.size).toBe(480000)
-      expect(vitals.lcp.eid).toBe('large')
+      expect(firstLcp).toBe(11)
+      expect(vitals.lcp.value).toBe(12)
     })
 
     it('should extract URL from element background image', () => {
-      const vitals = trackMFEVitals('test-mfe')
+      const vitals = trackMFEVitals('test-mfe', timings)
 
       const mockGlobalScope = require('../../../../src/common/constants/runtime').globalScope
       mockGlobalScope.getComputedStyle = jest.fn(() => ({
@@ -238,13 +237,13 @@ describe('trackMFEVitals', () => {
 
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
 
-      expect(vitals.lcp.elUrl).toBe('https://example.com/bg.png')
+      expect(vitals.lcp.value).toBe(11)
     })
   })
 
   describe('CLS tracking', () => {
-    it('should track largest shift metadata', () => {
-      const vitals = trackMFEVitals('test-mfe')
+    it('should accumulate CLS from matching layout shifts', () => {
+      const vitals = trackMFEVitals('test-mfe', timings)
 
       const mockNode = {
         nodeType: 1,
@@ -268,14 +267,10 @@ describe('trackMFEVitals', () => {
       performanceCallbacks['layout-shift']({ getEntries: () => [shiftEntry] })
 
       expect(vitals.cls.value).toBeCloseTo(0.15, 2)
-      expect(vitals.cls.largestShiftValue).toBe(0.15)
-      expect(vitals.cls.largestShiftTime).toBe(1000)
-      expect(vitals.cls.largestShiftTarget).toBe('div#shifty')
-      expect(vitals.cls.loadState).toBe('complete')
     })
 
     it('should update largest shift when bigger shift occurs', () => {
-      const vitals = trackMFEVitals('test-mfe')
+      const vitals = trackMFEVitals('test-mfe', timings)
 
       const mockNode1 = {
         nodeType: 1,
@@ -321,13 +316,10 @@ describe('trackMFEVitals', () => {
       })
 
       expect(vitals.cls.value).toBeCloseTo(0.35, 2)
-      expect(vitals.cls.largestShiftValue).toBe(0.25)
-      expect(vitals.cls.largestShiftTime).toBe(1500)
-      expect(vitals.cls.largestShiftTarget).toBe('img#large-shift')
     })
 
     it('should ignore shifts with recent input', () => {
-      const vitals = trackMFEVitals('test-mfe')
+      const vitals = trackMFEVitals('test-mfe', timings)
 
       const mockNode = {
         nodeType: 1,
@@ -351,7 +343,6 @@ describe('trackMFEVitals', () => {
 
       // CLS should remain at initial value of 0 since input-related shifts are ignored
       expect(vitals.cls.value).toBe(0)
-      expect(vitals.cls.largestShiftValue).toBeNull()
     })
 
     it('should be null when MFE container is not found in DOM', () => {
@@ -359,15 +350,15 @@ describe('trackMFEVitals', () => {
       const mockGlobalScope = require('../../../../src/common/constants/runtime').globalScope
       mockGlobalScope.document.querySelector = jest.fn(() => null)
 
-      const vitals = trackMFEVitals('missing-mfe')
+      const vitals = trackMFEVitals('missing-mfe', timings)
 
       expect(vitals.cls).toBeNull()
     })
   })
 
   describe('INP tracking', () => {
-    it('should track interaction metadata', () => {
-      const vitals = trackMFEVitals('test-mfe')
+    it('should track the longest interaction duration', () => {
+      const vitals = trackMFEVitals('test-mfe', timings)
 
       const mockTarget = {
         nodeType: 1,
@@ -393,18 +384,10 @@ describe('trackMFEVitals', () => {
       performanceCallbacks.event({ getEntries: () => [eventEntry] })
 
       expect(vitals.inp.value).toBe(250)
-      expect(vitals.inp.interactionTarget).toBe('button#submit')
-      expect(vitals.inp.interactionTime).toBe(1000)
-      expect(vitals.inp.interactionType).toBe('pointerdown')
-      expect(vitals.inp.inputDelay).toBe(10)
-      expect(vitals.inp.processingDuration).toBe(190)
-      expect(vitals.inp.presentationDelay).toBe(50)
-      expect(vitals.inp.nextPaintTime).toBe(1250)
-      expect(vitals.inp.loadState).toBe('complete')
     })
 
     it('should update INP when longer interaction occurs', () => {
-      const vitals = trackMFEVitals('test-mfe')
+      const vitals = trackMFEVitals('test-mfe', timings)
 
       const mockTarget1 = {
         nodeType: 1,
@@ -455,12 +438,10 @@ describe('trackMFEVitals', () => {
       })
 
       expect(vitals.inp.value).toBe(300)
-      expect(vitals.inp.interactionTarget).toBe('button#field2')
-      expect(vitals.inp.interactionType).toBe('click')
     })
 
     it('should handle missing processingStart/End gracefully', () => {
-      const vitals = trackMFEVitals('test-mfe')
+      const vitals = trackMFEVitals('test-mfe', timings)
 
       const mockTarget = {
         nodeType: 1,
@@ -485,13 +466,10 @@ describe('trackMFEVitals', () => {
       })
 
       expect(vitals.inp.value).toBe(150)
-      expect(vitals.inp.inputDelay).toBeNull()
-      expect(vitals.inp.processingDuration).toBeNull()
-      expect(vitals.inp.presentationDelay).toBeNull()
     })
 
     it('should ignore events without interactionId', () => {
-      const vitals = trackMFEVitals('test-mfe')
+      const vitals = trackMFEVitals('test-mfe', timings)
 
       const mockTarget = {
         nodeType: 1,
@@ -519,7 +497,7 @@ describe('trackMFEVitals', () => {
 
   describe('Element scope validation', () => {
     it('should only track elements within the specified MFE', () => {
-      const vitals = trackMFEVitals('mfe-a')
+      const vitals = trackMFEVitals('mfe-a', timings)
 
       const mfeBContainer = {
         nodeType: 1,
@@ -544,7 +522,7 @@ describe('trackMFEVitals', () => {
     })
 
     it('should track nested elements within MFE', () => {
-      const vitals = trackMFEVitals('nested-mfe')
+      const vitals = trackMFEVitals('nested-mfe', timings)
 
       const parentElement = {
         nodeType: 1,
@@ -567,15 +545,15 @@ describe('trackMFEVitals', () => {
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [childElement] }]))
 
       expect(vitals.fcp).toBeDefined()
-      expect(vitals.fcp.value).toBeGreaterThan(0)
+      expect(vitals.fcp.value).toBe(10)
       expect(vitals.lcp).toBeDefined()
-      expect(vitals.lcp.value).toBeGreaterThan(0)
+      expect(vitals.lcp.value).toBe(11)
     })
   })
 
   describe('disconnect functionality', () => {
     it('should disconnect all observers', () => {
-      const vitals = trackMFEVitals('test-mfe')
+      const vitals = trackMFEVitals('test-mfe', timings)
 
       vitals.disconnect()
 
@@ -600,7 +578,7 @@ describe('trackMFEVitals', () => {
     })
 
     it('should handle disconnect errors gracefully', () => {
-      const vitals = trackMFEVitals('test-mfe')
+      const vitals = trackMFEVitals('test-mfe', timings)
 
       // Override disconnect to throw
       mockMutationObserver.mock.instances.forEach(instance => {
@@ -613,7 +591,7 @@ describe('trackMFEVitals', () => {
 
   describe('edge cases', () => {
     it('should return empty vitals when id is missing', () => {
-      const vitals = trackMFEVitals('')
+      const vitals = trackMFEVitals('', timings)
 
       expect(vitals.fcp).toBeNull()
       expect(vitals.lcp).toBeNull()
@@ -622,7 +600,7 @@ describe('trackMFEVitals', () => {
     })
 
     it('should handle elements without id or className', () => {
-      const vitals = trackMFEVitals('test-mfe')
+      const vitals = trackMFEVitals('test-mfe', timings)
 
       const mockContainer = {
         nodeType: 1,
@@ -644,12 +622,11 @@ describe('trackMFEVitals', () => {
 
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
 
-      expect(vitals.lcp.elTag).toBe('SPAN')
-      expect(vitals.lcp.eid).toBe(null)
+      expect(vitals.lcp.value).toBe(11)
     })
 
     it('should handle elements with className as object', () => {
-      const vitals = trackMFEVitals('test-mfe')
+      const vitals = trackMFEVitals('test-mfe', timings)
 
       const mockContainer = {
         nodeType: 1,

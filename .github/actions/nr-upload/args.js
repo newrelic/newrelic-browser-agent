@@ -22,8 +22,11 @@ export const args = yargs(hideBin(process.argv))
   .string('local-dir')
   .describe('local-dir', 'Local directory to read loader files from instead of fetching from CDN')
 
-  .demandOption(['environment', 'loader-version'])
+  .demandOption(['environment'])
   .check((argv) => {
+    if (!argv.loaderVersion && !argv.localDir) {
+      throw new Error('Cannot upload loaders without a loader version or local directory.')
+    }
     if (argv.environment.includes('stage') && !argv.stageApiKey) {
       throw new Error('Cannot upload to stage environment without api key.')
     }

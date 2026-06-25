@@ -163,15 +163,13 @@ jobs:
         env:
           STAGE_API_KEY: ${{ secrets.NR_API_KEY_STAGING }}
         run: |
-          LOADER_VERSION=$(jq -r '.version' package.json)
           npm --prefix .github/actions install
           node .github/actions/nr-upload/index.js \
             --environment=stage \
-            --loader-version=$LOADER_VERSION \
             --stage-api-key=$STAGE_API_KEY \
             --local-dir=./build
           node .github/actions/nr-verify/index.js \
-            --loader-version=$LOADER_VERSION
+            --local-dir=./build
       
       # Set version label output
       - name: Set version label

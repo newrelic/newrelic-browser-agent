@@ -3,10 +3,19 @@ import { readFile } from 'fs/promises'
 import { join } from 'path'
 import { args } from './args.js'
 import { fetchRetry } from '../shared-utils/fetch-retry.js'
-import { constructLoaderFileNames, constructFuzzyVersions } from '../shared-utils/loaders.js'
+import {
+  expandLoaderFileNames,
+  resolveLoaderFileNames
+} from '../shared-utils/loaders.js'
 
-const loaderFileNames = constructLoaderFileNames(args.loaderVersion)
-const fuzzyVersions = constructFuzzyVersions(args.loaderVersion)
+const {
+  loaderFileNames,
+  loaderVersion,
+  hasFuzzyVersions
+} = await resolveLoaderFileNames({
+  localDir: args.localDir,
+  loaderVersion: args.loaderVersion
+})
 const envOptions = {
   stage: {
     url: 'https://staging-api.newrelic.com/v2/js_agent_loaders/create.json',
@@ -57,25 +66,25 @@ const loaderFileContents = (await Promise.all(
 }, {})
 
 const uploadJobs = args.environment.map(env => {
-  return Object.entries(loaderFileContents).map(([loaderFileName, loaderFileContent]) => {
-    return [
-      {
+  return Object.entries(loaderFileContents).flatMap(([loaderFileName, loaderFileContent]) => {
+    const jobs = [{
+      env,
+      loaderFileName,
+      loaderFileContent
+    }]
+
+    if (hasFuzzyVersions && loaderVersion) {
+      const fuzzyVersions = expandLoaderFileNames([loaderFileName], loaderVersion, true)
+
+      jobs.push(...fuzzyVersions.slice(1).map(uploadLoaderFileName => ({
         env,
-        loaderFileName,
+        loaderFileName: uploadLoaderFileName,
         loaderFileContent
-      },
-      {
-        env,
-        loaderFileName: loaderFileName.replace(args.loaderVersion, fuzzyVersions.PATCH),
-        loaderFileContent
-      },
-      {
-        env,
-        loaderFileName: loaderFileName.replace(args.loaderVersion, fuzzyVersions.MINOR),
-        loaderFileContent
-      }
-    ]
-  }).flat()
+      })))
+    }
+
+    return jobs
+  })
 }).flat()
 
 let jobs = 0, success = true

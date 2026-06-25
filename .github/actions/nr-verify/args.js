@@ -13,5 +13,15 @@ export const args = yargs(hideBin(process.argv))
   .string('loader-version')
   .describe('loader-version', 'Browser Agent version number')
 
-  .demandOption(['environment', 'loader-version'])
+  .string('local-dir')
+  .describe('local-dir', 'Local directory to inspect for loader filenames instead of deriving them from a version')
+
+  .demandOption(['environment'])
+  .check((argv) => {
+    if (!argv.loaderVersion && !argv.localDir) {
+      throw new Error('Cannot verify loaders without a loader version or local directory.')
+    }
+
+    return true
+  })
   .argv

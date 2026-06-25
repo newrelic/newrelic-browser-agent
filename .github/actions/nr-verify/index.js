@@ -1,9 +1,19 @@
 import { args } from './args.js'
 import { fetchRetry } from '../shared-utils/fetch-retry.js'
-import { constructLoaderFileNames, constructFuzzyVersions } from '../shared-utils/loaders.js'
+import {
+  expandLoaderFileNames,
+  resolveLoaderFileNames
+} from '../shared-utils/loaders.js'
 
-const loaderFileNames = constructLoaderFileNames(args.loaderVersion)
-const fuzzyVersions = constructFuzzyVersions(args.loaderVersion)
+const {
+  loaderFileNames,
+  loaderVersion,
+  hasFuzzyVersions
+} = await resolveLoaderFileNames({
+  localDir: args.localDir,
+  loaderVersion: args.loaderVersion
+})
+const verifyFileNames = expandLoaderFileNames(loaderFileNames, loaderVersion, hasFuzzyVersions)
 const envOptions = {
   stage: {
     url: 'https://staging-api.newrelic.com/v2/js_agent_loaders/version.json'
@@ -13,24 +23,12 @@ const envOptions = {
   }
 }
 
-const verifyJobs = args.environment.map(env => {
-  return loaderFileNames.map(loaderFileName => {
-    return [
-      {
-        env,
-        loaderFileName
-      },
-      {
-        env,
-        loaderFileName: loaderFileName.replace(args.loaderVersion, fuzzyVersions.PATCH)
-      },
-      {
-        env,
-        loaderFileName: loaderFileName.replace(args.loaderVersion, fuzzyVersions.MINOR)
-      }
-    ]
-  }).flat()
-}).flat()
+const verifyJobs = args.environment.flatMap(env => {
+  return verifyFileNames.map(loaderFileName => ({
+    env,
+    loaderFileName
+  }))
+})
 
 const results = await Promise.allSettled(
   verifyJobs.map(async jobDetails => {
@@ -51,7 +49,7 @@ const results = await Promise.allSettled(
         console.log(`Verified existence of ${jobDetails.loaderFileName} in ${jobDetails.env} NR environment.`)
         return true
       }
-    } catch(err){
+    } catch (err) {
       console.log(`FAILURE: ${jobDetails.loaderFileName}\n\n`)
       throw new Error(err)
     }
@@ -62,7 +60,7 @@ if (
   results.find(result => result.status === 'rejected') ||
   results.find(result => result.value === false)
 ) {
-  throw new Error(`Not all loaders could be verified in NR.`)
+  throw new Error('Not all loaders could be verified in NR.')
 } else {
   console.log(`Verified ${results.length} loaders in NR`)
   process.exit(0)

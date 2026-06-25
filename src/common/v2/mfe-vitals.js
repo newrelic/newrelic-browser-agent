@@ -219,8 +219,9 @@ export function trackMFEVitals (id, timings) {
       // Observer may already be disconnected
     }
   }
+
   ;['click', 'keydown', 'scroll'].forEach(type => {
-    globalScope.addEventListener(type, disconnectLCP, { once: true, passive: true })
+    globalScope.addEventListener(type, (event) => { if (isInMFE(event?.target, id)) disconnectLCP() }, { once: true, passive: true })
   })
 
   // Disconnect all observers on visibility change or page unload

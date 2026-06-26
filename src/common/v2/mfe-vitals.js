@@ -72,6 +72,7 @@ const isObservable = (node) => {
  * @returns {boolean}
  */
 const isInMFE = (node, id) => {
+  if (!node || !id) return false
   try {
     let curr = node.nodeType === 1 ? node : node.parentElement
     while (curr?.tagName) {
@@ -85,16 +86,18 @@ const isInMFE = (node, id) => {
 /**
  * Create mutation observer for MFE nodes
  * @param {string} id - MFE ID to track
- * @param {Function} onMatch - Callback when matching node is added
+ * @param {Function} onMatch - Callback when matching node is *added*
  * @returns {MutationObserver}
  */
 const observeMutations = (id, onMatch) => {
   const obs = new globalScope.MutationObserver(mutations => {
-    mutations.forEach(m => m.addedNodes.forEach(node => {
-      if (isObservable(node) && isInMFE(node, id)) {
-        onMatch(node, obs)
-      }
-    }))
+    mutations.forEach(m => {
+      m.addedNodes.forEach(node => {
+        if (isObservable(node) && isInMFE(node, id)) {
+          onMatch(node, obs)
+        }
+      })
+    })
   })
   obs.observe(globalScope.document, { childList: true, subtree: true })
   return obs
@@ -126,11 +129,27 @@ const observePerformance = (observers, config, onEntry) => {
  * @returns {{fcp: object|null, lcp: object|null, cls: object|null, inp: object|null, disconnect: Function}}
  */
 export function trackMFEVitals (id, timings) {
+  let fcpObservedAt = null
+  let lcpObservedAt = null
+
+  const getTimeRelativeToScriptStart = (capturedAt) => {
+    if (capturedAt === null) return null
+    return capturedAt - (timings?.scriptStart || timings?.registeredAt || 0)
+  }
+
   const vitals = {
-    fcp: null,
-    lcp: null,
-    cls: null,
-    inp: null,
+    fcp: {
+      get value () { return getTimeRelativeToScriptStart(fcpObservedAt) }
+    },
+    lcp: {
+      get value () { return getTimeRelativeToScriptStart(lcpObservedAt) }
+    },
+    cls: {
+      value: null
+    },
+    inp: {
+      value: null
+    },
     disconnect: () => {}
   }
 
@@ -138,24 +157,27 @@ export function trackMFEVitals (id, timings) {
 
   const observers = []
 
-  const getNowRelativeToScriptStart = (capturedAt) => {
-    return capturedAt - (timings?.scriptStart || timings?.registeredAt || 0)
+  const populateVitalMinimums = () => {
+    fcpObservedAt ??= now()
+    lcpObservedAt ??= now()
+    vitals.cls.value ??= 0
   }
 
+  // if the MFE has already rendered something on the page before we could set up listeners, just populate vital minimums immediately
+  if (globalScope.document?.querySelector(`[data-nr-mfe-id="${id}"]`)) populateVitalMinimums()
+
   // Track FCP - first contentful paint
-  observeMutations(id, (node, obs) => {
-    if (vitals.fcp === null) {
-      const capturedAt = now()
-      vitals.fcp = {
-        get value () { return getNowRelativeToScriptStart(capturedAt) }
-      }
-      obs.disconnect()
-    }
+  observeMutations(id, (_, obs) => {
+    // An observed "FCP" means _something_ rendered, so at minimum we can populate all the baseline values for the vitals
+    populateVitalMinimums()
+    obs.disconnect()
   })
 
   // Track LCP - largest contentful paint
   let largestSize = 0
   const lcpObs = observeMutations(id, (node) => {
+    // an observed "LCP" means _something_ rendered, so at minimum we can make sure all the baseline values are populated for the vitals
+    populateVitalMinimums()
     try {
       const elem = node.nodeType === 1 ? node : node.parentElement
       if (!elem) return
@@ -163,10 +185,7 @@ export function trackMFEVitals (id, timings) {
       const size = rect.width * rect.height
       if (size > largestSize) {
         largestSize = size
-        const capturedAt = now()
-        vitals.lcp = {
-          get value () { return getNowRelativeToScriptStart(capturedAt) }
-        }
+        lcpObservedAt = now()
       }
     } catch (e) {
       // Element may be detached from DOM
@@ -177,10 +196,11 @@ export function trackMFEVitals (id, timings) {
   // Track CLS - cumulative layout shift
   // Initialize CLS to 0 if browser supports it
   observePerformance(observers, { type: 'layout-shift', buffered: true }, (entry) => {
-    vitals.cls ??= { value: 0 }
     if (entry.hadRecentInput) return
     ;(entry.sources || []).some(source => {
       if (isInMFE(source.node, id)) {
+        // an observed "CLS" means _something_ rendered for the MFE, so at minimum we can make sure all the baseline values are populated for the vitals
+        populateVitalMinimums()
         vitals.cls.value += entry.value
         return true
       }
@@ -190,11 +210,11 @@ export function trackMFEVitals (id, timings) {
 
   // Track INP - interaction to next paint
   observePerformance(observers, { type: 'event', buffered: true, durationThreshold: 16 }, (entry) => {
-    if (!entry.interactionId || !entry.target || !isInMFE(entry.target, id)) return
-    if (vitals.inp === null || entry.duration > vitals.inp.value) {
-      vitals.inp = {
-        value: entry.duration
-      }
+    if (!entry.interactionId || !isInMFE(entry.target, id)) return
+    if (vitals.inp.value === null || entry.duration > vitals.inp.value) {
+      // an observed "INP" means _something_ rendered for the MFE, so at minimum we can make sure all the baseline values are populated for the vitals
+      populateVitalMinimums()
+      vitals.inp.value = entry.duration
     }
   })
 

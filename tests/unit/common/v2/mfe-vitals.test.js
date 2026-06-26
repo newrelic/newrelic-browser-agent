@@ -12,6 +12,7 @@ describe('trackMFEVitals', () => {
   let mutationCallbacks
   let performanceCallbacks
   let timings
+  const clockBaseline = 11
 
   beforeEach(async () => {
     jest.resetModules()
@@ -62,7 +63,9 @@ describe('trackMFEVitals', () => {
       isBrowserScope: true
     }))
 
-    // Mock now() to return incrementing values
+    // Mock now() to return incrementing values.
+    // The first relative LCP tick lands on `clockBaseline + 1` because the collector
+    // consumes one clock tick when it observes the node and another when it wins the size check.
     let timeCounter = 100
     jest.doMock('../../../../src/common/timing/now', () => ({
       now: jest.fn(() => timeCounter++)
@@ -81,7 +84,8 @@ describe('trackMFEVitals', () => {
   describe('FCP tracking', () => {
     it('should track FCP when contentful element is added to MFE', () => {
       const vitals = trackMFEVitals('test-mfe', timings)
-      expect(vitals.fcp).toBeNull()
+      // The collector seeds FCP as soon as it sees the MFE marker on the page.
+      expect(vitals.fcp.value).toBe(clockBaseline - 1)
 
       // Create a mock element with text content inside MFE container
       const mockContainer = {
@@ -107,7 +111,7 @@ describe('trackMFEVitals', () => {
       }]))
 
       expect(vitals.fcp).toBeDefined()
-      expect(vitals.fcp.value).toBe(10)
+      expect(vitals.fcp.value).toBe(clockBaseline - 1)
     })
 
     it('should use scriptStart as the timestamp anchor for FCP', () => {
@@ -132,7 +136,7 @@ describe('trackMFEVitals', () => {
 
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
 
-      expect(vitals.fcp.value).toBe(10)
+      expect(vitals.fcp.value).toBe(clockBaseline - 1)
     })
   })
 
@@ -163,7 +167,7 @@ describe('trackMFEVitals', () => {
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
 
       expect(vitals.lcp).toBeDefined()
-      expect(vitals.lcp.value).toBe(11)
+      expect(vitals.lcp.value).toBe(clockBaseline + 1)
     })
 
     it('should update LCP when larger element is added', () => {
@@ -204,8 +208,8 @@ describe('trackMFEVitals', () => {
 
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [largeElement] }]))
 
-      expect(firstLcp).toBe(11)
-      expect(vitals.lcp.value).toBe(12)
+      expect(firstLcp).toBe(clockBaseline + 1)
+      expect(vitals.lcp.value).toBe(clockBaseline + 2)
     })
 
     it('should extract URL from element background image', () => {
@@ -237,7 +241,7 @@ describe('trackMFEVitals', () => {
 
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
 
-      expect(vitals.lcp.value).toBe(11)
+      expect(vitals.lcp.value).toBe(clockBaseline + 1)
     })
   })
 
@@ -352,7 +356,7 @@ describe('trackMFEVitals', () => {
 
       const vitals = trackMFEVitals('missing-mfe', timings)
 
-      expect(vitals.cls).toBeNull()
+      expect(vitals.cls.value).toBeNull()
     })
   })
 
@@ -491,12 +495,15 @@ describe('trackMFEVitals', () => {
         ]
       })
 
-      expect(vitals.inp).toBeNull()
+      expect(vitals.inp.value).toBeNull()
     })
   })
 
   describe('Element scope validation', () => {
     it('should only track elements within the specified MFE', () => {
+      const mockGlobalScope = require('../../../../src/common/constants/runtime').globalScope
+      mockGlobalScope.document.querySelector = jest.fn(() => null)
+
       const vitals = trackMFEVitals('mfe-a', timings)
 
       const mfeBContainer = {
@@ -518,7 +525,7 @@ describe('trackMFEVitals', () => {
 
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [mfeBElement] }]))
 
-      expect(vitals.fcp).toBeNull()
+      expect(vitals.fcp.value).toBeNull()
     })
 
     it('should track nested elements within MFE', () => {
@@ -545,9 +552,9 @@ describe('trackMFEVitals', () => {
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [childElement] }]))
 
       expect(vitals.fcp).toBeDefined()
-      expect(vitals.fcp.value).toBe(10)
+      expect(vitals.fcp.value).toBe(clockBaseline - 1)
       expect(vitals.lcp).toBeDefined()
-      expect(vitals.lcp.value).toBe(11)
+      expect(vitals.lcp.value).toBe(clockBaseline + 1)
     })
   })
 
@@ -593,10 +600,11 @@ describe('trackMFEVitals', () => {
     it('should return empty vitals when id is missing', () => {
       const vitals = trackMFEVitals('', timings)
 
-      expect(vitals.fcp).toBeNull()
-      expect(vitals.lcp).toBeNull()
-      expect(vitals.cls).toBeNull()
-      expect(vitals.inp).toBeNull()
+      // The collector still returns the vitals shell, but the value getters are never populated.
+      expect(Object.getOwnPropertyDescriptor(vitals.fcp, 'value')?.get).toEqual(expect.any(Function))
+      expect(Object.getOwnPropertyDescriptor(vitals.lcp, 'value')?.get).toEqual(expect.any(Function))
+      expect(vitals.cls.value).toBeNull()
+      expect(vitals.inp.value).toBeNull()
     })
 
     it('should handle elements without id or className', () => {
@@ -622,7 +630,7 @@ describe('trackMFEVitals', () => {
 
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
 
-      expect(vitals.lcp.value).toBe(11)
+      expect(vitals.lcp.value).toBe(clockBaseline + 1)
     })
 
     it('should handle elements with className as object', () => {

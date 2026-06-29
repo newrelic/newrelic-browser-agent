@@ -19,11 +19,8 @@ export const args = yargs(hideBin(process.argv))
   .string('loader-version')
   .describe('loader-version', 'Browser Agent version number')
 
-  .demandOption(['environment'])
+  .demandOption(['environment', 'loader-version'])
   .check((argv) => {
-    if (!argv.loaderVersion) {
-      throw new Error('Cannot upload loaders without a loader version.')
-    }
     if (argv.environment.includes('stage') && !argv.stageApiKey) {
       throw new Error('Cannot upload to stage environment without api key.')
     }

@@ -11,52 +11,6 @@ import { now } from '../timing/now'
  * @typedef {import('./register-api-types').RegisterAPITimings} RegisterAPITimings
  */
 
-/**
- * Generate a simple CSS selector for an element
- * @param {Element} elem - The element to generate selector for
- * @returns {string|null} CSS selector or null if element is invalid
- */
-// const getElementSelector = (elem) => {
-//   try {
-//     if (!elem || !elem.tagName) return null
-
-//     let selector = elem.tagName.toLowerCase()
-//     if (elem.id) selector += `#${elem.id}`
-//     else if (elem.className && typeof elem.className === 'string') {
-//       const classes = elem.className.trim().split(/\s+/).slice(0, 2).join('.')
-//       if (classes) selector += `.${classes}`
-//     }
-//     return selector
-//   } catch (e) {
-//     return null
-//   }
-// }
-
-/**
- * Extract URL from an element (for images, videos, etc.)
- * @param {Element} elem - The element to extract URL from
- * @returns {string|null} Cleaned URL or null
- */
-// const getElementURL = (elem) => {
-//   try {
-//     if (!elem) return null
-
-//     // For images and videos
-//     if (elem.src) return cleanURL(elem.src)
-
-//     // For elements with background images
-//     const bgImage = globalScope.getComputedStyle?.(elem)?.backgroundImage
-//     if (bgImage && bgImage !== 'none') {
-//       const match = bgImage.match(/url\(['"]?([^'"]+)['"]?\)/)
-//       if (match?.[1]) return cleanURL(match[1])
-//     }
-
-//     return null
-//   } catch (e) {
-//     return null
-//   }
-// }
-
 const isObservable = (node) => {
   try {
     return node?.textContent?.trim() || ['img', 'video', 'canvas', 'svg'].includes(node?.nodeName?.toLowerCase())
@@ -240,8 +194,18 @@ export function trackMFEVitals (id, timings) {
     }
   }
 
-  ;['click', 'keydown', 'scroll'].forEach(type => {
-    globalScope.addEventListener(type, (event) => { if (isInMFE(event?.target, id)) disconnectLCP() }, { once: true, passive: true })
+  const interactionEvents = ['click', 'keydown', 'scroll']
+  const handleInteraction = (event) => {
+    if (!isInMFE(event?.target, id)) return
+
+    disconnectLCP()
+    interactionEvents.forEach(type => {
+      globalScope.removeEventListener(type, handleInteraction, { passive: true })
+    })
+  }
+
+  interactionEvents.forEach(type => {
+    globalScope.addEventListener(type, handleInteraction, { passive: true })
   })
 
   // Disconnect all observers on visibility change or page unload

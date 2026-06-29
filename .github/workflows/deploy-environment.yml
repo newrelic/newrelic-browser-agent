@@ -39,7 +39,6 @@ jobs:
       version_label: ${{ steps.set-version.outputs.version_label }}
       region_name: ${{ steps.env-details.outputs.region_name }}
       env_id: ${{ steps.env-details.outputs.env_id }}
-      aws_role: ${{ steps.env-details.outputs.aws_role }}
       nrba_app_id: ${{ steps.env-details.outputs.nrba_app_id }}
       entity_guid: ${{ steps.env-details.outputs.entity_guid }}
     steps:
@@ -88,16 +87,15 @@ jobs:
           [[ "$NR_ENV" != "dev" ]] && NOTIFY="true" || NOTIFY="false"
           echo "send_notification=${NOTIFY}" >> $GITHUB_OUTPUT
           
-          # Derive environment-specific secret names (computed once, used multiple times)
+          # Derive environment-specific NRDB identifiers once, then reuse the outputs below.
           case "$ENV_ID" in
-            dev) AWS_ROLE="${{ secrets.INTERNAL_DEV_APPLICATION_ID }}" ;;
-            staging) AWS_ROLE="${{ secrets.INTERNAL_STAGING_APPLICATION_ID }}" ;;
-            eu-prod) AWS_ROLE="${{ secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID }}" ;;
-            jp-prod) AWS_ROLE="${{ secrets.INTERNAL_JP_PRODUCTION_APPLICATION_ID }}" ;;
-            *) AWS_ROLE="${{ secrets.INTERNAL_PRODUCTION_APPLICATION_ID }}" ;;
+            dev) NRBA_APP_ID="${{ secrets.INTERNAL_DEV_APPLICATION_ID }}" ;;
+            staging) NRBA_APP_ID="${{ secrets.INTERNAL_STAGING_APPLICATION_ID }}" ;;
+            eu-prod) NRBA_APP_ID="${{ secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID }}" ;;
+            jp-prod) NRBA_APP_ID="${{ secrets.INTERNAL_JP_PRODUCTION_APPLICATION_ID }}" ;;
+            *) NRBA_APP_ID="${{ secrets.INTERNAL_PRODUCTION_APPLICATION_ID }}" ;;
           esac
-          echo "aws_role=${AWS_ROLE}" >> $GITHUB_OUTPUT
-          echo "nrba_app_id=${AWS_ROLE}" >> $GITHUB_OUTPUT
+          echo "nrba_app_id=${NRBA_APP_ID}" >> $GITHUB_OUTPUT
           
           case "$ENV_ID" in
             dev) ENTITY_GUID="${{ secrets.NR_ENTITY_GUID_NR1_DEV }}" ;;
@@ -148,7 +146,7 @@ jobs:
         with:
           nr_environment: ${{ inputs.nr_environment }}
           nrba_released_script_url: ${{ inputs.script_url == '' && steps.deploy-rc.outputs.script_url || inputs.script_url }}
-          nrba_app_id: ${{ steps.env-details.outputs.env_id == 'dev' && secrets.INTERNAL_DEV_APPLICATION_ID || steps.env-details.outputs.env_id == 'staging' && secrets.INTERNAL_STAGING_APPLICATION_ID || steps.env-details.outputs.env_id == 'eu-prod' && secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID || steps.env-details.outputs.env_id == 'jp-prod' && secrets.INTERNAL_JP_PRODUCTION_APPLICATION_ID || secrets.INTERNAL_PRODUCTION_APPLICATION_ID }}
+          nrba_app_id: ${{ steps.env-details.outputs.nrba_app_id }}
           nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -200,7 +198,7 @@ jobs:
         uses: ./.github/actions/change-tracking
         with:
           accountId: '1067061'
-          entityGuid: ${{ needs.deploy.outputs.env_id == 'dev' && secrets.NR_ENTITY_GUID_NR1_DEV || needs.deploy.outputs.env_id == 'staging' && secrets.NR_ENTITY_GUID_NR1_STAGING || needs.deploy.outputs.env_id == 'eu-prod' && secrets.NR_ENTITY_GUID_NR1_EU_PROD || needs.deploy.outputs.env_id == 'jp-prod' && secrets.NR_ENTITY_GUID_NR1_JP_PROD || secrets.NR_ENTITY_GUID_NR1_US_PROD }}
+          entityGuid: ${{ needs.deploy.outputs.entity_guid }}
           apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
           region: ${{ needs.deploy.outputs.region_name }}
           version: ${{ needs.deploy.outputs.version_label }}

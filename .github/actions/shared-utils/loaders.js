@@ -27,7 +27,33 @@ export function constructFuzzyVersions (loaderVersion) {
   }
 }
 
-export async function resolveLoaderFileNames ({ localDir, loaderVersion }) {
+function constructLoaderFileNameVariants (loaderFileName, loaderVersion) {
+  const fuzzyVersions = constructFuzzyVersions(loaderVersion)
+
+  let exactLoaderFileName = loaderFileName
+
+  if (!loaderFileName.includes(loaderVersion)) {
+    const versionlessMatch = loaderFileName.match(versionlessLoaderFilePattern)
+
+    if (!versionlessMatch) {
+      throw new Error(`Unexpected loader filename ${loaderFileName}.`)
+    }
+
+    const [, type] = versionlessMatch
+    exactLoaderFileName = loaderFileName.replace(
+      versionlessLoaderFilePattern,
+      `nr-loader-${type}-${loaderVersion}${loaderFileName.includes('.min') ? '.min' : ''}.js`
+    )
+  }
+
+  return {
+    exact: exactLoaderFileName,
+    patch: exactLoaderFileName.replace(loaderVersion, fuzzyVersions.PATCH),
+    minor: exactLoaderFileName.replace(loaderVersion, fuzzyVersions.MINOR)
+  }
+}
+
+export async function resolveLoaderFileNames ({ localDir, loaderVersion, fuzzyOnly = false }) {
   if (localDir) {
     const localFiles = await readdir(localDir)
     const expectedLoaderFileNames = constructLoaderFileNames()
@@ -37,10 +63,14 @@ export async function resolveLoaderFileNames ({ localDir, loaderVersion }) {
       throw new Error(`Unable to determine versionless loader filenames from ${localDir}. Missing: ${missingLoaderFileNames.join(', ')}`)
     }
 
+    if (fuzzyOnly && !loaderVersion) {
+      throw new Error('A loader version is required when using local directory fuzzy-only mode.')
+    }
+
     return {
       loaderFileNames: expectedLoaderFileNames,
-      loaderVersion: null,
-      hasFuzzyVersions: false
+      loaderVersion: fuzzyOnly ? loaderVersion : null,
+      hasFuzzyVersions: fuzzyOnly
     }
   }
 
@@ -55,16 +85,14 @@ export async function resolveLoaderFileNames ({ localDir, loaderVersion }) {
   }
 }
 
-export function expandLoaderFileNames (loaderFileNames, loaderVersion, hasFuzzyVersions = true) {
+export function expandLoaderFileNames (loaderFileNames, loaderVersion, hasFuzzyVersions = true, fuzzyOnly = false) {
   if (!loaderVersion || !hasFuzzyVersions) {
     return loaderFileNames
   }
 
-  const fuzzyVersions = constructFuzzyVersions(loaderVersion)
+  return loaderFileNames.flatMap(loaderFileName => {
+    const variants = constructLoaderFileNameVariants(loaderFileName, loaderVersion)
 
-  return loaderFileNames.map(loaderFileName => [
-    loaderFileName,
-    loaderFileName.replace(loaderVersion, fuzzyVersions.PATCH),
-    loaderFileName.replace(loaderVersion, fuzzyVersions.MINOR)
-  ]).flat()
+    return fuzzyOnly ? [variants.patch, variants.minor] : [variants.exact, variants.patch, variants.minor]
+  })
 }

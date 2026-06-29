@@ -167,9 +167,14 @@ jobs:
           node .github/actions/nr-upload/index.js \
             --environment=stage \
             --stage-api-key=$STAGE_API_KEY \
-            --local-dir=./build
+            --local-dir=./build \
+            --loader-version=${{ steps.deploy-rc.outputs.version_label }} \
+            --fuzzy-only
           node .github/actions/nr-verify/index.js \
-            --local-dir=./build
+            --local-dir=./build \
+            --environment=stage \
+            --loader-version=${{ steps.deploy-rc.outputs.version_label }} \
+            --fuzzy-only
       
       # Set version label output
       - name: Set version label

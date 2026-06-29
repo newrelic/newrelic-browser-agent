@@ -14,7 +14,8 @@ const {
   hasFuzzyVersions
 } = await resolveLoaderFileNames({
   localDir: args.localDir,
-  loaderVersion: args.loaderVersion
+  loaderVersion: args.loaderVersion,
+  fuzzyOnly: args.fuzzyOnly
 })
 const envOptions = {
   stage: {
@@ -67,23 +68,15 @@ const loaderFileContents = (await Promise.all(
 
 const uploadJobs = args.environment.map(env => {
   return Object.entries(loaderFileContents).flatMap(([loaderFileName, loaderFileContent]) => {
-    const jobs = [{
+    const uploadLoaderFileNames = hasFuzzyVersions && loaderVersion
+      ? expandLoaderFileNames([loaderFileName], loaderVersion, true, args.fuzzyOnly)
+      : [loaderFileName]
+
+    return uploadLoaderFileNames.map(uploadLoaderFileName => ({
       env,
-      loaderFileName,
+      loaderFileName: uploadLoaderFileName,
       loaderFileContent
-    }]
-
-    if (hasFuzzyVersions && loaderVersion) {
-      const fuzzyVersions = expandLoaderFileNames([loaderFileName], loaderVersion, true)
-
-      jobs.push(...fuzzyVersions.slice(1).map(uploadLoaderFileName => ({
-        env,
-        loaderFileName: uploadLoaderFileName,
-        loaderFileContent
-      })))
-    }
-
-    return jobs
+    }))
   })
 }).flat()
 

@@ -51,6 +51,84 @@ describe('github actions loader filename resolution', () => {
     ])
   })
 
+  test('uses fuzzy-only aliases when a loader version is provided directly', async () => {
+    const result = await resolveLoaderFileNames({ loaderVersion: '1.317.0' })
+
+    expect(result.loaderVersion).toBe('1.317.0')
+    expect(result.hasFuzzyVersions).toBe(true)
+    expect(expandLoaderFileNames(result.loaderFileNames, result.loaderVersion, result.hasFuzzyVersions, true)).toEqual([
+      'nr-loader-rum-1.317.x.min.js',
+      'nr-loader-rum-1.x.x.min.js',
+      'nr-loader-rum-1.317.x.js',
+      'nr-loader-rum-1.x.x.js',
+      'nr-loader-full-1.317.x.min.js',
+      'nr-loader-full-1.x.x.min.js',
+      'nr-loader-full-1.317.x.js',
+      'nr-loader-full-1.x.x.js',
+      'nr-loader-spa-1.317.x.min.js',
+      'nr-loader-spa-1.x.x.min.js',
+      'nr-loader-spa-1.317.x.js',
+      'nr-loader-spa-1.x.x.js'
+    ])
+  })
+
+  test('uses fuzzy-only aliases when local-dir mode receives a loader version', async () => {
+    tempDir = await mkdtemp(join(tmpdir(), 'nrba-loaders-'))
+
+    await writeFile(join(tempDir, 'nr-loader-rum.min.js'), '')
+    await writeFile(join(tempDir, 'nr-loader-rum.js'), '')
+    await writeFile(join(tempDir, 'nr-loader-full.min.js'), '')
+    await writeFile(join(tempDir, 'nr-loader-full.js'), '')
+    await writeFile(join(tempDir, 'nr-loader-spa.min.js'), '')
+    await writeFile(join(tempDir, 'nr-loader-spa.js'), '')
+
+    const result = await resolveLoaderFileNames({ localDir: tempDir, loaderVersion: '1.317.0', fuzzyOnly: true })
+
+    expect(result.loaderVersion).toBe('1.317.0')
+    expect(result.hasFuzzyVersions).toBe(true)
+    expect(expandLoaderFileNames(result.loaderFileNames, result.loaderVersion, result.hasFuzzyVersions, true)).toEqual([
+      'nr-loader-rum-1.317.x.min.js',
+      'nr-loader-rum-1.x.x.min.js',
+      'nr-loader-rum-1.317.x.js',
+      'nr-loader-rum-1.x.x.js',
+      'nr-loader-full-1.317.x.min.js',
+      'nr-loader-full-1.x.x.min.js',
+      'nr-loader-full-1.317.x.js',
+      'nr-loader-full-1.x.x.js',
+      'nr-loader-spa-1.317.x.min.js',
+      'nr-loader-spa-1.x.x.min.js',
+      'nr-loader-spa-1.317.x.js',
+      'nr-loader-spa-1.x.x.js'
+    ])
+  })
+
+  test('keeps exact and fuzzy aliases when fuzzy-only is not enabled', async () => {
+    const result = await resolveLoaderFileNames({ loaderVersion: '1.317.0' })
+
+    expect(result.loaderVersion).toBe('1.317.0')
+    expect(result.hasFuzzyVersions).toBe(true)
+    expect(expandLoaderFileNames(result.loaderFileNames, result.loaderVersion, result.hasFuzzyVersions, false)).toEqual([
+      'nr-loader-rum-1.317.0.min.js',
+      'nr-loader-rum-1.317.x.min.js',
+      'nr-loader-rum-1.x.x.min.js',
+      'nr-loader-rum-1.317.0.js',
+      'nr-loader-rum-1.317.x.js',
+      'nr-loader-rum-1.x.x.js',
+      'nr-loader-full-1.317.0.min.js',
+      'nr-loader-full-1.317.x.min.js',
+      'nr-loader-full-1.x.x.min.js',
+      'nr-loader-full-1.317.0.js',
+      'nr-loader-full-1.317.x.js',
+      'nr-loader-full-1.x.x.js',
+      'nr-loader-spa-1.317.0.min.js',
+      'nr-loader-spa-1.317.x.min.js',
+      'nr-loader-spa-1.x.x.min.js',
+      'nr-loader-spa-1.317.0.js',
+      'nr-loader-spa-1.317.x.js',
+      'nr-loader-spa-1.x.x.js'
+    ])
+  })
+
   test('uses numbered loader filenames when a loader version is provided directly', async () => {
     const result = await resolveLoaderFileNames({ loaderVersion: '1.317.0' })
 
@@ -84,5 +162,20 @@ describe('github actions loader filename resolution', () => {
       'nr-loader-spa-1.317.x.js',
       'nr-loader-spa-1.x.x.js'
     ])
+  })
+
+  test('rejects fuzzy-only mode without a loader version', async () => {
+    tempDir = await mkdtemp(join(tmpdir(), 'nrba-loaders-'))
+
+    await writeFile(join(tempDir, 'nr-loader-rum.min.js'), '')
+    await writeFile(join(tempDir, 'nr-loader-rum.js'), '')
+    await writeFile(join(tempDir, 'nr-loader-full.min.js'), '')
+    await writeFile(join(tempDir, 'nr-loader-full.js'), '')
+    await writeFile(join(tempDir, 'nr-loader-spa.min.js'), '')
+    await writeFile(join(tempDir, 'nr-loader-spa.js'), '')
+
+    await expect(resolveLoaderFileNames({ localDir: tempDir, fuzzyOnly: true })).rejects.toThrow(
+      'A loader version is required when using local directory fuzzy-only mode.'
+    )
   })
 })

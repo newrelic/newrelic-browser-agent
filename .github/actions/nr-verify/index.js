@@ -11,9 +11,10 @@ const {
   hasFuzzyVersions
 } = await resolveLoaderFileNames({
   localDir: args.localDir,
-  loaderVersion: args.loaderVersion
+  loaderVersion: args.loaderVersion,
+  fuzzyOnly: args.fuzzyOnly
 })
-const verifyFileNames = expandLoaderFileNames(loaderFileNames, loaderVersion, hasFuzzyVersions)
+const verifyFileNames = expandLoaderFileNames(loaderFileNames, loaderVersion, hasFuzzyVersions, args.fuzzyOnly)
 const envOptions = {
   stage: {
     url: 'https://staging-api.newrelic.com/v2/js_agent_loaders/version.json'

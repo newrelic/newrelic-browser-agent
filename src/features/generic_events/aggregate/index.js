@@ -251,7 +251,7 @@ export class Aggregate extends AggregateBase {
         this.addEvent(event, target)
       }, this.featureName, this.ee)
 
-      if (agentRef.init.feature_flags.includes('websockets')) {
+      if (agentRef.init.feature_flags.includes('websockets') || agentRef.init.web_sockets?.enabled) {
         registerHandler('ws-complete', (nrData) => {
           const event = {
             ...nrData,

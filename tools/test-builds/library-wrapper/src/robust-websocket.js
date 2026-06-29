@@ -6,7 +6,7 @@ const opts = {
   info: NREUM.info,
   init: {
     ...NREUM.init,
-    feature_flags: ['websockets']
+    web_sockets: { enabled: true }
   }
 }
 

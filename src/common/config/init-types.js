@@ -88,6 +88,8 @@
  * @property {Object} [user_actions]
  * @property {boolean} [user_actions.enabled] - Must be true to allow UserAction events to be captured.
  * @property {Array<string>} [user_actions.elementAttributes] - List of HTML Element properties to be captured with UserAction events' target elements. This may help to identify the source element being interacted with in the UI.
+ * @property {Object} [web_sockets]
+ * @property {boolean} [web_sockets.enabled] - Turn on/off the web sockets feature (off by default).
  */
 
 export default {}

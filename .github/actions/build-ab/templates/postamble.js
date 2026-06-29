@@ -1,14 +1,3 @@
-// Reset config values back to released
-window.NREUM.loader_config.agentID = '{{{args.appId}}}'
-window.NREUM.loader_config.applicationID = '{{{args.appId}}}'
-window.NREUM.loader_config.licenseKey = '{{{args.licenseKey}}}'
-window.NREUM.info.applicationID = '{{{args.appId}}}'
-window.NREUM.info.licenseKey = '{{{args.licenseKey}}}'
-window.NREUM.init.proxy = {}
-window.NREUM.init.session_replay.enabled = true
-window.NREUM.init.session_trace.enabled = true
-window.NREUM.init.user_actions = { elementAttributes: ['id', 'className', 'tagName', 'type', 'ariaLabel', 'alt', 'title'] }
-
 // Session replay entitlements check
 try {
   var xhr = new XMLHttpRequest()

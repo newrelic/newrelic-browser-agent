@@ -42,7 +42,7 @@ export default async (env) => {
     case 'staging':
       PATH_VERSION = ''
       SUBVERSION = 'STAGING'
-      PUBLIC_PATH = 'https://staging-js-agent.newrelic.com/staging/'
+      PUBLIC_PATH = 'https://js-agent.newrelic.com/staging/'
       VERSION = `${VERSION}-rc`
       break
     case 'jp-prod':

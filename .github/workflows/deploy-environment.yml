@@ -31,8 +31,7 @@ on:
 
 jobs:
   deploy:
-    # Staging needs whitelisted IP for NRDB upload (auto-detected)
-    runs-on: ${{ inputs.nr_environment == 'staging' && 'Browser-Agent-Assigned-IP-Linux' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     environment: nr1-${{ inputs.nr_environment }}
     timeout-minutes: 30
     outputs:
@@ -81,13 +80,10 @@ jobs:
           [[ "$NR_ENV" == "dev" ]] && APPEND_BRANCH="true" || APPEND_BRANCH="false"
           echo "append_branch_name=${APPEND_BRANCH}" >> $GITHUB_OUTPUT
           
-          [[ "$NR_ENV" == "staging" ]] && UPLOAD_NRDB="true" || UPLOAD_NRDB="false"
-          echo "upload_to_nrdb=${UPLOAD_NRDB}" >> $GITHUB_OUTPUT
-          
           [[ "$NR_ENV" != "dev" ]] && NOTIFY="true" || NOTIFY="false"
           echo "send_notification=${NOTIFY}" >> $GITHUB_OUTPUT
           
-          # Derive environment-specific NRDB identifiers once, then reuse the outputs below.
+          # Derive environment-specific deployment identifiers once, then reuse the outputs below.
           case "$ENV_ID" in
             dev) NRBA_APP_ID="${{ secrets.INTERNAL_DEV_APPLICATION_ID }}" ;;
             staging) NRBA_APP_ID="${{ secrets.INTERNAL_STAGING_APPLICATION_ID }}" ;;
@@ -106,7 +102,7 @@ jobs:
           esac
           echo "entity_guid=${ENTITY_GUID}" >> $GITHUB_OUTPUT
           
-          echo "🏷️  Environment: ${NR_ENV}, Bucket: ${BUCKET_DIR}, Region: ${REGION}, Branch Suffix: ${APPEND_BRANCH}, NRDB Upload: ${UPLOAD_NRDB}, Notify: ${NOTIFY}"
+          echo "🏷️  Environment: ${NR_ENV}, Bucket: ${BUCKET_DIR}, Region: ${REGION}, Branch Suffix: ${APPEND_BRANCH}, Notify: ${NOTIFY}"
       
       # Determine branch name for version suffix (only dev)
       - name: Determine branch name for version
@@ -153,26 +149,6 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-      
-      # Update copy-paste loader in NRDB (staging only)
-      - name: Update copy-paste loader in NRDB
-        if: steps.env-details.outputs.upload_to_nrdb == 'true' && inputs.script_url == ''
-        continue-on-error: true
-        env:
-          STAGE_API_KEY: ${{ secrets.NR_API_KEY_STAGING }}
-        run: |
-          npm --prefix .github/actions install
-          node .github/actions/nr-upload/index.js \
-            --environment=stage \
-            --stage-api-key=$STAGE_API_KEY \
-            --local-dir=./build \
-            --loader-version=${{ steps.deploy-rc.outputs.version_label }} \
-            --fuzzy-only
-          node .github/actions/nr-verify/index.js \
-            --local-dir=./build \
-            --environment=stage \
-            --loader-version=${{ steps.deploy-rc.outputs.version_label }} \
-            --fuzzy-only
       
       # Set version label output
       - name: Set version label

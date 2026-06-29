@@ -16,10 +16,6 @@ inputs:
   loader_version:
     description: "Browser Agent version number"
     required: true
-  fuzzy_only:
-    description: "Only upload patch and minor fuzzy versions"
-    required: false
-
 runs:
   using: "composite"
   steps:
@@ -33,6 +29,5 @@ runs:
           ${{ inputs.environment && format('--environment {0}', inputs.environment) || '' }} \
           ${{ inputs.nr_prod_api_key && format('--prod-api-key {0}', inputs.nr_prod_api_key) || '' }} \
           ${{ inputs.nr_stage_api_key && format('--stage-api-key {0}', inputs.nr_stage_api_key) || '' }} \
-          --loader-version ${{ inputs.loader_version }} \
-          ${{ inputs.fuzzy_only && '--fuzzy-only' || '' }}
+          --loader-version ${{ inputs.loader_version }}
       shell: bash

@@ -10,10 +10,6 @@ inputs:
   loader_version:
     description: "Browser Agent version number"
     required: true
-  fuzzy_only:
-    description: "Only verify patch and minor fuzzy versions"
-    required: false
-
 runs:
   using: "composite"
   steps:
@@ -25,6 +21,5 @@ runs:
       run: |
         node $GITHUB_ACTION_PATH/index.js \
           ${{ inputs.environment && format('--environment {0}', inputs.environment) || '' }} \
-          --loader-version ${{ inputs.loader_version }} \
-          ${{ inputs.fuzzy_only && '--fuzzy-only' || '' }}
+          --loader-version ${{ inputs.loader_version }}
       shell: bash

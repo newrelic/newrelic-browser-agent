@@ -1,6 +1,4 @@
 import { v4 as uuidv4 } from 'uuid'
-import { readFile } from 'fs/promises'
-import { join } from 'path'
 import { args } from './args.js'
 import { fetchRetry } from '../shared-utils/fetch-retry.js'
 import {
@@ -10,12 +8,9 @@ import {
 
 const {
   loaderFileNames,
-  loaderVersion,
-  hasFuzzyVersions
+  loaderVersion
 } = await resolveLoaderFileNames({
-  localDir: args.localDir,
-  loaderVersion: args.loaderVersion,
-  fuzzyOnly: args.fuzzyOnly
+  loaderVersion: args.loaderVersion
 })
 const envOptions = {
   stage: {
@@ -34,32 +29,15 @@ const envOptions = {
   }
 }
 
-// Read loader contents from local directory or fetch from CDN
 const loaderFileContents = (await Promise.all(
   loaderFileNames.map(async loaderFileName => {
-    let fileContents
-    
-    if (args.localDir) {
-      // Read from local build directory
-      const filePath = join(args.localDir, loaderFileName)
-      console.log(`Reading ${loaderFileName} from ${filePath}`)
-      try {
-        fileContents = await readFile(filePath, 'utf-8')
-      } catch (error) {
-        throw new Error(`Failed to read local file ${filePath}: ${error.message}`)
-      }
-    } else {
-      // Fetch from CDN
-      const fileContentsRequest = await fetchRetry(`https://js-agent.newrelic.com/${loaderFileName}?_nocache=${uuidv4()}`, { retry: 3 })
+    const fileContentsRequest = await fetchRetry(`https://js-agent.newrelic.com/${loaderFileName}?_nocache=${uuidv4()}`, { retry: 3 })
 
-      if (!fileContentsRequest.ok) {
-        throw new Error(`Download for loader ${loaderFileName} failed.`)
-      }
-
-      fileContents = await fileContentsRequest.text()
+    if (!fileContentsRequest.ok) {
+      throw new Error(`Download for loader ${loaderFileName} failed.`)
     }
 
-    return [loaderFileName, fileContents]
+    return [loaderFileName, await fileContentsRequest.text()]
   })
 )).reduce((aggregator, [loaderFileName, fileContents]) => {
   aggregator[loaderFileName] = fileContents
@@ -68,8 +46,8 @@ const loaderFileContents = (await Promise.all(
 
 const uploadJobs = args.environment.map(env => {
   return Object.entries(loaderFileContents).flatMap(([loaderFileName, loaderFileContent]) => {
-    const uploadLoaderFileNames = hasFuzzyVersions && loaderVersion
-      ? expandLoaderFileNames([loaderFileName], loaderVersion, true, args.fuzzyOnly)
+    const uploadLoaderFileNames = loaderVersion
+      ? expandLoaderFileNames([loaderFileName], loaderVersion)
       : [loaderFileName]
 
     return uploadLoaderFileNames.map(uploadLoaderFileName => ({

@@ -13,12 +13,5 @@ export const args = yargs(hideBin(process.argv))
   .string('loader-version')
   .describe('loader-version', 'Browser Agent version number')
 
-  .demandOption(['environment'])
-  .check((argv) => {
-    if (!argv.loaderVersion) {
-      throw new Error('Cannot verify loaders without a loader version.')
-    }
-
-    return true
-  })
+  .demandOption(['environment', 'loader-version'])
   .argv

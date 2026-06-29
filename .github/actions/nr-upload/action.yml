@@ -16,6 +16,7 @@ inputs:
   loader_version:
     description: "Browser Agent version number"
     required: true
+
 runs:
   using: "composite"
   steps:

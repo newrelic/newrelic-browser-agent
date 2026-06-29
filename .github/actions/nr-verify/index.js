@@ -2,16 +2,11 @@ import { args } from './args.js'
 import { fetchRetry } from '../shared-utils/fetch-retry.js'
 import {
   expandLoaderFileNames,
-  resolveLoaderFileNames
+  constructLoaderFileNames
 } from '../shared-utils/loaders.js'
 
-const {
-  loaderFileNames,
-  loaderVersion
-} = await resolveLoaderFileNames({
-  loaderVersion: args.loaderVersion
-})
-const verifyFileNames = expandLoaderFileNames(loaderFileNames, loaderVersion)
+const loaderVersion = args.loaderVersion
+const verifyFileNames = expandLoaderFileNames(constructLoaderFileNames(loaderVersion), loaderVersion)
 const envOptions = {
   stage: {
     url: 'https://staging-api.newrelic.com/v2/js_agent_loaders/version.json'

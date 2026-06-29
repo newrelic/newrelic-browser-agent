@@ -23,17 +23,6 @@ export function constructFuzzyVersions (loaderVersion) {
   }
 }
 
-export function resolveLoaderFileNames ({ loaderVersion }) {
-  if (!loaderVersion) {
-    throw new Error('A loader version is required.')
-  }
-
-  return {
-    loaderFileNames: constructLoaderFileNames(loaderVersion),
-    loaderVersion
-  }
-}
-
 export function expandLoaderFileNames (loaderFileNames, loaderVersion) {
   if (!loaderVersion) {
     return loaderFileNames

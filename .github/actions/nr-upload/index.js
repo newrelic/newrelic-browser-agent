@@ -3,15 +3,11 @@ import { args } from './args.js'
 import { fetchRetry } from '../shared-utils/fetch-retry.js'
 import {
   expandLoaderFileNames,
-  resolveLoaderFileNames
+  constructLoaderFileNames
 } from '../shared-utils/loaders.js'
 
-const {
-  loaderFileNames,
-  loaderVersion
-} = await resolveLoaderFileNames({
-  loaderVersion: args.loaderVersion
-})
+const loaderVersion = args.loaderVersion
+const loaderFileNames = constructLoaderFileNames(loaderVersion)
 const envOptions = {
   stage: {
     url: 'https://staging-api.newrelic.com/v2/js_agent_loaders/create.json',
@@ -46,9 +42,7 @@ const loaderFileContents = (await Promise.all(
 
 const uploadJobs = args.environment.map(env => {
   return Object.entries(loaderFileContents).flatMap(([loaderFileName, loaderFileContent]) => {
-    const uploadLoaderFileNames = loaderVersion
-      ? expandLoaderFileNames([loaderFileName], loaderVersion)
-      : [loaderFileName]
+    const uploadLoaderFileNames = expandLoaderFileNames([loaderFileName], loaderVersion)
 
     return uploadLoaderFileNames.map(uploadLoaderFileName => ({
       env,

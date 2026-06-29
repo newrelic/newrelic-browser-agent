@@ -1,14 +1,12 @@
 const {
-  expandLoaderFileNames,
-  resolveLoaderFileNames
+  constructLoaderFileNames,
+  constructFuzzyVersions,
+  expandLoaderFileNames
 } = require('../../../.github/actions/shared-utils/loaders.js')
 
 describe('github actions loader filename resolution', () => {
-  test('uses numbered loader filenames when a loader version is provided directly', async () => {
-    const result = await resolveLoaderFileNames({ loaderVersion: '1.317.0' })
-
-    expect(result.loaderVersion).toBe('1.317.0')
-    expect(result.loaderFileNames).toEqual([
+  test('constructs versioned loader filenames and fuzzy aliases', () => {
+    expect(constructLoaderFileNames('1.317.0')).toEqual([
       'nr-loader-rum-1.317.0.min.js',
       'nr-loader-rum-1.317.0.js',
       'nr-loader-full-1.317.0.min.js',
@@ -16,7 +14,11 @@ describe('github actions loader filename resolution', () => {
       'nr-loader-spa-1.317.0.min.js',
       'nr-loader-spa-1.317.0.js'
     ])
-    expect(expandLoaderFileNames(result.loaderFileNames, result.loaderVersion)).toEqual([
+    expect(constructFuzzyVersions('1.317.0')).toEqual({
+      MINOR: '1.x.x',
+      PATCH: '1.317.x'
+    })
+    expect(expandLoaderFileNames(constructLoaderFileNames('1.317.0'), '1.317.0')).toEqual([
       'nr-loader-rum-1.317.0.min.js',
       'nr-loader-rum-1.317.x.min.js',
       'nr-loader-rum-1.x.x.min.js',

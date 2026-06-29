@@ -159,7 +159,7 @@ export class Aggregate extends AggregateBase {
 
       this.appendGlobalCustomAttributes(timing)
 
-      var attrParts = addCustomAttributes(timing.attrs, addString)
+      var attrParts = addCustomAttributes(timing.attrs, addString, this.obfuscator)
       if (attrParts && attrParts.length > 0) {
         payload += numeric(attrParts.length) + ';' + attrParts.join(';')
       }

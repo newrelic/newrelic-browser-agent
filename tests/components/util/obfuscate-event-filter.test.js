@@ -81,6 +81,41 @@ describe('Obfuscator - Event Type Filtering Integration', () => {
       expect(data.ins[2].name).toBe('GLOBAL ajax-secret log-secret')
     })
 
+    test('preserves object keys while obfuscating only matching event values', () => {
+      const agentRef = {
+        init: {
+          obfuscate: [
+            { regex: /secret/g, replacement: '***', eventFilter: ['PageAction'] }
+          ]
+        }
+      }
+
+      const genericObfuscator = new Obfuscator(agentRef)
+      const data = {
+        ins: [
+          {
+            eventType: 'PageAction',
+            'ajaxRequest.id': 'secret-value',
+            message: 'secret message'
+          },
+          {
+            eventType: 'UserAction',
+            'ajaxRequest.id': 'secret-value',
+            message: 'secret message'
+          }
+        ]
+      }
+
+      genericObfuscator.traverseAndObfuscateEvents(data)
+
+      expect(Object.keys(data.ins[0])).toEqual(expect.arrayContaining(['eventType', 'ajaxRequest.id', 'message']))
+      expect(data.ins[0]['ajaxRequest.id']).not.toBe('secret-value')
+      expect(data.ins[0].message).toBe('*** message')
+      expect(Object.keys(data.ins[1])).toEqual(expect.arrayContaining(['eventType', 'ajaxRequest.id', 'message']))
+      expect(data.ins[1]['ajaxRequest.id']).toBe('secret-value')
+      expect(data.ins[1].message).toBe('secret message')
+    })
+
     test('SSN and CC obfuscation for AJAX only (DACI Option 5 scenario)', () => {
       const agentRef = {
         init: {

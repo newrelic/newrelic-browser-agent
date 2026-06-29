@@ -69,7 +69,7 @@ export class AjaxNode extends BelNode {
       [AJAX_ID]: this[AJAX_ID],
       ...(this.targetAttributes || {}),
       ...(this.gql || {})
-    }, addString)
+    }, addString, ajaxObfuscator)
 
     // Payload attributes: obfuscate then truncate
     const payloadAttrs = addCustomAttributes({
@@ -78,7 +78,7 @@ export class AjaxNode extends BelNode {
       ...(this.requestQuery ? { requestQuery: this.requestQuery } : {}),
       ...(this.responseBody ? { responseBody: this.responseBody } : {}),
       ...(this.responseHeaders ? { responseHeaders: this.responseHeaders } : {})
-    }, addStringWithTruncation)
+    }, addStringWithTruncation, ajaxObfuscator)
 
     let allAttachedNodes = [...regularAttrs, ...payloadAttrs]
     this.children.forEach(node => allAttachedNodes.push(node.serialize())) // no children is expected under ajax nodes at this time

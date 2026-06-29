@@ -4,6 +4,7 @@
  */
 
 import { stringify } from '../util/stringify'
+import { isPureObject } from '../util/type-check'
 
 var hasOwnProp = Object.prototype.hasOwnProperty
 var MAX_ATTRIBUTES = 64
@@ -27,10 +28,12 @@ export function getAddStringContext (obfuscator, truncator) {
 
   return addString
 
-  function addString (str) {
+  function addString (str, opts = {}) {
+    const { obfuscate = true, truncate = true } = opts
     if (typeof str === 'undefined' || str === '') return ''
-    str = obfuscator?.obfuscateString(String(str)) ?? String(str)
-    str = truncator?.(str) ?? str
+    str = String(str)
+    if (obfuscate) str = obfuscator?.obfuscateString(str) ?? str
+    if (truncate) str = truncator?.(str) ?? str
     if (hasOwnProp.call(stringTable, str)) {
       return numeric(stringTable[str], true)
     } else {
@@ -40,21 +43,22 @@ export function getAddStringContext (obfuscator, truncator) {
   }
 }
 
-export function addCustomAttributes (attrs, addString) {
+export function addCustomAttributes (attrs, addString, obfuscator) {
   var attrParts = []
 
   Object.entries(attrs || {}).forEach(([key, val]) => {
     if (attrParts.length >= MAX_ATTRIBUTES) return
     var type = 5
     var serializedValue
-    // add key to string table first
-    key = addString(key)
+    // Attribute names should never be obfuscated or truncated.
+    // Keep them in the shared string table for payload efficiency, but always serialize the raw key.
+    key = addString(key, { obfuscate: false, truncate: false })
 
     switch (typeof val) {
       case 'object':
         if (val) {
-          // serialize objects to strings
-          serializedValue = addString(stringify(val))
+          // serialize objects to strings after obfuscating only leaf values
+          serializedValue = addString(stringify(obfuscateValueLeaves(val, obfuscator)), { obfuscate: false })
         } else {
           // null attribute type
           type = 9
@@ -83,6 +87,22 @@ export function addCustomAttributes (attrs, addString) {
 }
 
 var escapable = /([,\\;])/g
+
+function obfuscateValueLeaves (value, obfuscator, seen = new WeakSet()) {
+  if (!obfuscator || value === null || value === undefined) return value
+  if (typeof value === 'string') return obfuscator.obfuscateString(value)
+  if (typeof value !== 'object') return value
+  if (seen.has(value)) return value
+  seen.add(value)
+
+  if (Array.isArray(value)) return value.map(item => obfuscateValueLeaves(item, obfuscator, seen))
+  if (!isPureObject(value)) return value
+
+  return Object.entries(value).reduce((acc, [key, childValue]) => {
+    acc[key] = obfuscateValueLeaves(childValue, obfuscator, seen)
+    return acc
+  }, {})
+}
 
 function quoteString (str) {
   return "'" + str.replace(escapable, '\\$1')

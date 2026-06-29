@@ -1,6 +1,7 @@
 import { LOGGING_MODE } from '../../../src/features/logging/constants'
 import { rumFlags } from '../../../tools/testing-server/constants'
-import { testInsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testAjaxEventsRequest, testInsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { checkAjaxEvents } from '../../util/basic-checks'
 
 describe('obfuscate rules with eventFilter', () => {
   let insightsCapture
@@ -242,5 +243,56 @@ describe('obfuscate rules with eventFilter', () => {
     expect(payload.includes('CC-REDACTED')).toBeTruthy()
     expect(payload.includes('sensitive-ssn')).toBeFalsy()
     expect(payload.includes('sensitive-cc')).toBeFalsy()
+  })
+
+  it('keeps event keys intact for filtered normal and serialized events', async () => {
+    const config = {
+      init: {
+        obfuscate: [
+          {
+            regex: /a/g,
+            replacement: 'X',
+            eventFilter: ['PageAction', 'AjaxRequest']
+          }
+        ]
+      }
+    }
+
+    const [ajaxKeyCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testAjaxEventsRequest }
+    ])
+
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', config))
+      .then(() => browser.waitForAgentLoad())
+
+    const [insightsHarvests, ajaxHarvests] = await Promise.all([
+      insightsCapture.waitForResult({ timeout: 10000 }),
+      ajaxKeyCapture.waitForResult({ timeout: 10000 }),
+      browser.executeAsync(function (done) {
+        newrelic.addPageAction('key-check', {
+          'ajaxRequest.id': 'alpha',
+          note: 'banana'
+        })
+
+        const xhr = new XMLHttpRequest()
+        xhr.open('GET', '/json')
+        xhr.onloadend = () => done()
+        xhr.send()
+      })
+    ])
+
+    const pageAction = insightsHarvests
+      .flatMap(harvest => harvest.request.body.ins || [])
+      .find(event => event.eventType === 'PageAction' && event.actionName === 'key-check')
+    expect(pageAction).toBeTruthy()
+    expect(pageAction).toEqual(expect.objectContaining({
+      'ajaxRequest.id': expect.any(String),
+      note: expect.any(String)
+    }))
+    expect(Object.keys(pageAction)).toEqual(expect.arrayContaining(['ajaxRequest.id', 'note']))
+
+    const ajaxHarvest = ajaxHarvests.find(harvest => (harvest.request.body || []).some(event => event.path === '/json'))
+    expect(ajaxHarvest).toBeTruthy()
+    checkAjaxEvents(ajaxHarvest.request, { specificPath: '/json' })
   })
 })

@@ -167,7 +167,7 @@ export class Interaction extends BelNode {
       nullable(this.firstPaint, numeric, true) + nullable(this.firstContentfulPaint, numeric)
     ]
     const customAttributes = { ...agentRef.info.jsAttributes, ...this.customAttributes } // attrs specific to this interaction should have precedence over the general custom attrs
-    const allAttachedNodes = addCustomAttributes(customAttributes || {}, addString) // start with all custom attributes
+    const allAttachedNodes = addCustomAttributes(customAttributes || {}, addString, interactionObfuscator) // start with all custom attributes
     if (agentRef.info.atts) allAttachedNodes.push('a,' + addString(agentRef.info.atts)) // add apm provided attributes
     /* Querypack encoder+decoder quirkiness:
        - If first ixn node of payload is being processed, its children's start time must be offset by this node's start. (firstStartTime should be undefined.)

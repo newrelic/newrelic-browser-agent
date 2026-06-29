@@ -242,6 +242,26 @@ describe('eventFilter (event-type specific obfuscation)', () => {
       })
     })
 
+    test('keeps object keys intact while obfuscating values', () => {
+      const rules = [
+        { regex: /a/g, replacement: 'X' }
+      ]
+      const obfuscator = new Obfuscator({ init: { obfuscate: rules } })
+      const data = {
+        'ajaxRequest.id': 'alpha',
+        nested: {
+          'custom.key': 'banana'
+        }
+      }
+
+      obfuscator.traverseAndObfuscateEvents(data)
+
+      expect(Object.keys(data)).toEqual(expect.arrayContaining(['ajaxRequest.id', 'nested']))
+      expect(Object.keys(data.nested)).toEqual(expect.arrayContaining(['custom.key']))
+      expect(data['ajaxRequest.id']).toBe('XlphX')
+      expect(data.nested['custom.key']).toBe('bXnXnX')
+    })
+
     test('obfuscates all strings when no rules have eventFilter', () => {
       const rules = [
         { regex: /secret/g, replacement: '***' }

@@ -85,7 +85,10 @@
         }
       },
       proxy: {},
-      user_actions: {elementAttributes: ['id', 'className', 'tagName', 'type', 'ariaLabel', 'alt', 'title']}
+      user_actions: {elementAttributes: ['id', 'className', 'tagName', 'type', 'ariaLabel', 'alt', 'title']},
+      web_sockets: {
+        enabled: true
+      }
     },
     loader_config: {
       accountID: '1',

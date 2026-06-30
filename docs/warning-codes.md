@@ -140,12 +140,14 @@
 ### 69
 `More than one Browser agent is running on the page`
 ### 70
-`RegisteredIframeEntity interface failed to initialize`
+`A session replay payload failed to send and is being retried. Recording is paused during the retry period, and will resume when a successful harvest is made. Some replay activity may be missed during retry phases.`
 ### 71
-`RegisteredIframeEntity failed to transmit API data from iframe to window context`
+`An invalid feature mode was detected and set to "off".`
 ### 72
-`RegisteredIframeEntity failed to register with window context`
+`RegisteredIframeEntity failed to transmit API data from iframe to window context`
 ### 73
-`RegisteredIframeEntity rejected message from unauthorized origin`
+`RegisteredIframeEntity failed to register with window context`
 ### 74
+`RegisteredIframeEntity rejected message from unauthorized origin`
+### 75
 `RegisteredIframeEntity rejected message with mismatched iframeInterfaceId`

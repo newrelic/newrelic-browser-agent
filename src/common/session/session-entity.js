@@ -7,7 +7,7 @@ import { warn } from '../util/console'
 import { stringify } from '../util/stringify'
 import { Timer } from '../timer/timer'
 import { isBrowserScope } from '../constants/runtime'
-import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, MODE, PREFIX, SESSION_EVENTS, SESSION_EVENT_TYPES } from './constants'
+import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, SESSION_EVENTS, SESSION_EVENT_TYPES, SESSION_STORAGE_KEY_PREFIX } from './constants'
 import { InteractionTimer } from '../timer/interaction-timer'
 import { wrapEvents } from '../wrap/wrap-events'
 import { getModeledObject } from '../config/configurable'
@@ -15,31 +15,31 @@ import { handle } from '../event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { windowAddEventListener } from '../event-listener/event-listener-opts'
-import { LOGGING_MODE } from '../../features/logging/constants'
 
-// this is what can be stored in local storage (not enforced but probably should be)
+// this is what can be stored in local storage (enforced during reads)
 // these values should sync between local storage and the parent class props
 const model = {
   value: '',
   inactiveAt: 0,
   expiresAt: 0,
   updatedAt: Date.now(),
-  sessionReplayMode: MODE.OFF,
+  sessionReplayMode: null,
   sessionReplaySentFirstChunk: false,
-  sessionTraceMode: MODE.OFF,
+  sessionTraceMode: null,
   traceHarvestStarted: false,
-  loggingMode: LOGGING_MODE.OFF,
-  logApiMode: LOGGING_MODE.OFF,
+  loggingMode: null,
+  logApiMode: null,
   serverTimeDiff: null, // set by TimeKeeper; "undefined" value will not be stringified and stored but "null" will
   custom: {},
   numOfResets: 0,
-  consent: false // set by consent() API call
+  consent: false, // set by consent() API call
+  cachedRumResponse: null
 }
 
 export class SessionEntity {
   /**
    * Create a self-managing Session Entity. This entity is scoped to the agent which triggered it, allowing for multiple simultaneous session objects to exist.
-   * There is one "namespace" an agent can store data in LS -- NRBA_{key}. If there are two agents on one page, and they both use the same key, they could overwrite each other since they would both use the same namespace in LS by default.
+  * Session data is stored at NRBA_SESSION::{key}, where key can be app-scoped by the caller to avoid collisions across multiple agents on the same origin.
    * The value can be overridden in the constructor, but will default to a unique 16 character hex string
    * expiresMs and inactiveMs are used to "expire" the session, but can be overridden in the constructor. Pass 0 to disable expiration timers.
    */
@@ -160,7 +160,7 @@ export class SessionEntity {
 
   // This is the actual key appended to the storage API
   get lookupKey () {
-    return `${PREFIX}_${this.key}`
+    return `${SESSION_STORAGE_KEY_PREFIX}${this.key}`
   }
 
   sync (data) {
@@ -242,7 +242,6 @@ export class SessionEntity {
       delete this.isNew
 
       this.setup({
-        agentRef: this.agentRef,
         key: this.key,
         storage: this.storage,
         expiresMs: this.expiresMs,

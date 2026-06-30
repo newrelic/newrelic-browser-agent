@@ -197,6 +197,26 @@ function applyPerformanceEntry (timings, entry) {
 }
 
 /**
+ * Subscribes to late resource timing emissions for a script URL.
+ * @param {RegisterAPITimings} timings - The timings object to update
+ * @param {string} mfeScriptUrl - The script URL to match
+ */
+function subscribeToLatePerformanceEntry (timings, mfeScriptUrl) {
+  if (!globalScope.PerformanceObserver?.supportedEntryTypes?.includes('resource')) return
+
+  poSubscribers.push({
+    addedAt: now(),
+    test: (entry) => {
+      if (entryMatchesUrl(entry, mfeScriptUrl)) {
+        applyPerformanceEntry(timings, entry)
+        return true
+      }
+      return false
+    }
+  })
+}
+
+/**
  * Uses the stack of the initiator function, returns script timing information if a script can be found with the resource timing API matching the URL found in the stack.
  * @returns {RegisterAPITimings} Object containing script fetch start and end times, and the asset URL if found
  */
@@ -223,27 +243,21 @@ export function findScriptTimings () {
     // Get correlation data
     timings.correlation = findCorrelation(mfeScriptUrl)
 
-    // Use correlation's performance entry if available, otherwise check live performance API
-    const performanceEntry = timings.correlation?.performance.value || performance.getEntriesByType('resource').find(e => entryMatchesUrl(e, mfeScriptUrl))
+    // Use correlation's performance entry if available, otherwise wait for the buffered observer to surface it.
+    const performanceEntry = timings.correlation?.performance.value
 
     if (performanceEntry) {
       applyPerformanceEntry(timings, performanceEntry)
-    } else if (wasPreloaded(mfeScriptUrl)) {
-      // Handle preloaded scripts that may report late
-      timings.asset = mfeScriptUrl
-      timings.type = 'preload'
+    } else {
+      const isPreloaded = wasPreloaded(mfeScriptUrl)
 
-      // Subscribe to late performance observer callbacks
-      poSubscribers.push({
-        addedAt: now(),
-        test: (entry) => {
-          if (entryMatchesUrl(entry, mfeScriptUrl)) {
-            applyPerformanceEntry(timings, entry)
-            return true
-          }
-          return false
-        }
-      })
+      // Handle preloaded scripts and any late resource emissions through the shared buffered observer.
+      if (isPreloaded) {
+        timings.asset = mfeScriptUrl
+        timings.type = 'preload'
+      }
+
+      subscribeToLatePerformanceEntry(timings, mfeScriptUrl)
     }
 
     /*

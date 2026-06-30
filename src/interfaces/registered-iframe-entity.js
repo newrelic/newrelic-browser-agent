@@ -2,11 +2,18 @@
  * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+
+/* eslint-disable */
+
+// libraries
+import { onCLS, onFCP, onINP, onLCP } from 'web-vitals'
+// internal
 import { globalScope } from '../common/constants/runtime'
 import { isIFrameWindow } from '../common/dom/iframe'
 import { now } from '../common/timing/now'
 import { warn } from '../common/util/console'
 import { findScriptTimings } from '../common/v2/script-tracker'
+import { parseUrl } from '../common/url/parse-url'
 
 /**
  * @typedef {import('../loaders/api/register-api-types').RegisterAPI} RegisterAPI
@@ -37,6 +44,8 @@ export class RegisteredIframeEntity {
   #messageIdCounter = 0
   /** @private Promise that resolves when registration with parent completes */
   #registrationPromise = null
+  /** @private Resource timing observer used to seed AJAX state */
+  #resourceObserver = null
   /** @private Original target descriptor (serializable) for postMessage */
   #targetDescriptor = null
   /** @private Parent window origin for secure postMessage */
@@ -51,7 +60,7 @@ export class RegisteredIframeEntity {
     this.metadata.target = this.#targetDescriptor = opts
 
     if (!isIFrameWindow(window)) {
-      warn(70, 'Must be in iframe context to use this interface')
+      warn(71, 'Must be in iframe context to use this interface')
       this.blocked = true
       return
     }
@@ -90,23 +99,63 @@ export class RegisteredIframeEntity {
         return response
       })
       .catch(err => {
-        warn(72, err)
+        warn(73, err)
         this.blocked = true
       })
 
-    window.addEventListener('message', (event) => {
+    globalScope.addEventListener('error', err => {
+      this.noticeError(err)
+    })
+
+    onCLS(({ value }) => {
+      // send message to parent with CLS value and attributes
+    }, { reportAllChanges: true })
+
+    onLCP(({ value }) => {
+      // send message to parent with LCP value and attributes
+    })
+
+    onFCP(({ value }) => {
+      // send message to parent with FCP value and attributes
+    })
+
+    onINP(({ value }) => {
+      // send message to parent with INP value and attributes
+    })
+
+    // Instrument ajax here using buffered resource timing so pre-registration entries are included.
+    const initiators = { xmlhttprequest: 'xhr', fetch: 'fetch', beacon: 'beacon' }
+    const processResourceEntry = (resource) => {
+      if (resource.initiatorType in initiators && resource.responseStatus !== 0) {
+        const params = { status: resource.responseStatus }
+        const metrics = { rxSize: resource.transferSize, duration: Math.floor(resource.duration), cbTime: 0 }
+        addUrl(params, resource.name)
+        // this.handler('xhr', [params, metrics, resource.startTime, resource.responseEnd, initiators[resource.initiatorType]], undefined, FEATURE_NAMES.ajax)
+
+        // send message to parent with ajax resource timing data HERE
+      }
+    }
+
+    if (globalScope.PerformanceObserver?.supportedEntryTypes?.includes('resource')) {
+      this.#resourceObserver = new globalScope.PerformanceObserver(list => {
+        list.getEntries().forEach(processResourceEntry)
+      })
+      this.#resourceObserver.observe({ type: 'resource', buffered: true })
+    }
+
+    globalScope.addEventListener('message', (event) => {
       // Validate message structure
       if (event.data?.type !== 'newrelic-iframe-api-response') return
 
       // Validate origin if we have specific allowed origins
       if (!this.#isAllowedOrigin(event.origin)) {
-        warn(73, `Rejected message from unauthorized origin: ${event.origin}`)
+        warn(74, `Rejected message from unauthorized origin: ${event.origin}`)
         return
       }
 
       // Validate iframeInterfaceId to prevent spoofing (message must be for this instance)
       if (event.data.iframeInterfaceId !== this.#iframeInterfaceId) {
-        warn(74, 'Rejected message with mismatched iframeInterfaceId')
+        warn(75, 'Rejected message with mismatched iframeInterfaceId')
         return
       }
 
@@ -146,7 +195,7 @@ export class RegisteredIframeEntity {
   #postMessageToParent (type, data, resolvers) {
     try {
       this.#openPending(data.messageId, resolvers)
-      window.parent.postMessage({
+      globalScope.parent.postMessage({
         type,
         target: this.#targetDescriptor,
         timestamp: now(),
@@ -154,7 +203,7 @@ export class RegisteredIframeEntity {
         ...data
       }, this.#parentOrigin)
     } catch (err) {
-      warn(71, err)
+      warn(72, err)
     }
   }
 
@@ -254,6 +303,11 @@ export class RegisteredIframeEntity {
    * @returns {Promise<void>}
    */
   deregister () {
+    try {
+      this.#resourceObserver?.disconnect()
+    } catch (err) {}
+
+    this.#resourceObserver = null
     return this.#postMethodToAgent('deregister', [])
   }
 
@@ -330,4 +384,17 @@ export class RegisteredIframeEntity {
   log (message, options) {
     this.#postMethodToAgent('log', [message, options])
   }
+}
+
+function addUrl (ctx, url) {
+  var parsed = parseUrl(url)
+  var params = ctx.params || ctx
+
+  params.hostname = parsed.hostname
+  params.port = parsed.port
+  params.protocol = parsed.protocol
+  params.host = parsed.hostname + ':' + parsed.port
+  params.pathname = parsed.pathname
+  ctx.parsedOrigin = parsed
+  ctx.sameOrigin = parsed.sameOrigin
 }

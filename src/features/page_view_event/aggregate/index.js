@@ -5,7 +5,6 @@
 import { globalScope, isBrowserScope, originTime, getNavigationEntry } from '../../../common/constants/runtime'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
-import { isValid } from '../../../common/config/info'
 import * as CONSTANTS from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
 import { activateFeatures } from '../../../common/util/feature-flags'
@@ -16,11 +15,13 @@ import { firstPaint } from '../../../common/vitals/first-paint'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { now } from '../../../common/timing/now'
 import { TimeKeeper } from '../../../common/timing/time-keeper'
-import { applyFnToProps } from '../../../common/util/traverse'
-import { send } from '../../../common/harvest/harvester'
+import { send } from '../../../common/harvest/send'
+import { canEnableSessionTracking } from '../../utils/feature-gates'
+import { Obfuscator } from '../../../common/util/obfuscate'
 import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { getSubmitMethod } from '../../../common/util/submit-data'
 import { webdriverDetected } from '../../../common/util/webdriver-detection'
+import { EVENT_TYPES } from '../../../common/constants/events'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -28,6 +29,7 @@ export class Aggregate extends AggregateBase {
   constructor (agentRef) {
     super(agentRef, CONSTANTS.FEATURE_NAME)
 
+    this.isSessionTrackingEnabled = canEnableSessionTracking(agentRef.init) && !!agentRef.runtime.session
     this.sentRum = false // flag to facilitate calling sendRum() once externally (by the consent API in agent-session.js)
 
     this.timeToFirstByte = 0
@@ -35,13 +37,23 @@ export class Aggregate extends AggregateBase {
     this.firstByteToDomContent = 0 // our "dom processing" duration
     this.retries = 0
 
-    if (!isValid(agentRef.info)) {
-      this.ee.abort()
-      return warn(43)
-    }
+    // Create obfuscator for page view events
+    this.obfuscator = new Obfuscator(agentRef, EVENT_TYPES.PVE)
+
     agentRef.runtime.timeKeeper = new TimeKeeper(agentRef.runtime.session)
 
     if (isBrowserScope) {
+      const cached = this.isSessionTrackingEnabled && agentRef.runtime.session?.state.cachedRumResponse
+      if (cached) {
+        const { app: cachedApp, ...cachedFlags } = cached
+
+        // set the agent runtime objects that require the rum response or entity guid
+        if (!Object.keys(this.agentRef.runtime.appMetadata).length) agentRef.runtime.appMetadata = cachedApp
+        this.drain()
+        agentRef.runtime.harvester.startTimer()
+        activateFeatures(cachedFlags, agentRef)
+      }
+
       timeToFirstByte.subscribe(({ value, attrs }) => {
         const navEntry = attrs.navigationEntry
         this.timeToFirstByte = Math.max(value, this.timeToFirstByte)
@@ -86,9 +98,9 @@ export class Aggregate extends AggregateBase {
       at: info.atts
     }
 
-    if (this.agentRef.runtime.session) queryParameters.fsh = Number(this.agentRef.runtime.session.isNew) // "first session harvest" aka RUM request or PageView event of a session
+    if (this.agentRef.runtime.session) queryParameters.fsh = Number(!this.agentRef.runtime.session.state.cachedRumResponse)
 
-    let body = applyFnToProps({ ja: { ...customAttributes, webdriverDetected } }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
+    let body = this.obfuscator.traverseAndObfuscateEvents({ ja: { ...customAttributes, webdriverDetected } })
 
     if (globalScope.performance) {
       const navTimingEntry = getNavigationEntry()
@@ -132,6 +144,7 @@ export class Aggregate extends AggregateBase {
   postHarvestCleanup ({ sent, status, responseText, xhr, retry }) {
     const rumEndTime = now()
     let app, flags
+    const hasCachedRumResponse = !!this.agentRef.runtime.session?.state.cachedRumResponse
     try {
       ({ app, ...flags } = JSON.parse(responseText))
     } catch (error) {
@@ -139,16 +152,24 @@ export class Aggregate extends AggregateBase {
       warn(53, error)
     }
 
-    super.postHarvestCleanup({ sent, retry }) // this will set isRetrying & re-buffer the body if request is to be retried
+    const shouldCacheResponse = this.isSessionTrackingEnabled && !hasCachedRumResponse && !!app
+    if (hasCachedRumResponse) {
+      let { app: cachedApp, ...cachedFlags } = this.agentRef.runtime.session.state.cachedRumResponse
+      app ??= cachedApp
+      flags = cachedFlags
+    }
+
+    super.postHarvestCleanup({ sent, retry: retry && !hasCachedRumResponse }) // this will set isRetrying & re-buffer the body if request is to be retried
+
     if (this.isRetrying && this.retries++ < 1) { // Only retry once
       setTimeout(() => this.agentRef.runtime.harvester.triggerHarvestFor(this, {
         sendEmptyBody: true
       }), 5000) // Retry sending the RUM event after 5 seconds
       return
     }
+
     if (status >= 400 || status === 0) {
       warn(18, status)
-      this.blocked = true
 
       // Get estimated payload size of our backlog
       const textEncoder = new TextEncoder()
@@ -160,16 +181,24 @@ export class Aggregate extends AggregateBase {
       }, 0)
       const BCSError = 'BCS/Error/'
       // Send SMs about failed RUM request
-      const body = {
-        sm: [{
-          params: {
-            name: BCSError + status
-          },
-          stats: {
-            c: 1
-          }
+      const sm = [{
+        params: {
+          name: BCSError + status
         },
-        {
+        stats: {
+          c: 1
+        }
+      }, {
+        params: {
+          name: BCSError + 'Duration/Ms'
+        },
+        stats: {
+          c: 1,
+          t: rumEndTime - this.rumStartTime
+        }
+      }]
+      if (!hasCachedRumResponse) {
+        sm.push({
           params: {
             name: BCSError + 'Dropped/Bytes'
           },
@@ -177,28 +206,23 @@ export class Aggregate extends AggregateBase {
             c: 1,
             t: payloadSize
           }
-        },
-        {
-          params: {
-            name: BCSError + 'Duration/Ms'
-          },
-          stats: {
-            c: 1,
-            t: rumEndTime - this.rumStartTime
-          }
-        }]
+        })
       }
 
       send(this.agentRef, {
         endpoint: FEATURE_TO_ENDPOINT[FEATURE_NAMES.metrics],
-        payload: { body },
+        payload: { body: { sm } },
         submitMethod: getSubmitMethod(),
         featureName: FEATURE_NAMES.metrics
       })
 
-      // Adding retry logic for the rum call will be a separate change; this.blocked will need to be changed since that prevents another triggerHarvestFor()
-      this.ee.abort()
-      return
+      if (!hasCachedRumResponse) {
+        this.blocked = true
+        this.ee.abort()
+        return
+      }
+    } else if (shouldCacheResponse) {
+      this.agentRef.runtime.session.write({ cachedRumResponse: { app, ...flags } })
     }
 
     try {

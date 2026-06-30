@@ -68,46 +68,10 @@ afterEach(() => {
   jest.clearAllMocks()
 })
 
-test('should merge info, jsattributes, and runtime objects', () => {
-  const mockInfo1 = {
-    [faker.string.uuid()]: faker.lorem.sentence(),
-    jsAttributes: {
-      [faker.string.uuid()]: faker.lorem.sentence()
-    },
-    licenseKey: faker.string.uuid(),
-    applicationID: faker.string.uuid()
-  }
-  jest.mocked(gosCDN).mockReturnValue({ info: mockInfo1 })
-
-  const mockInfo2 = {
-    jsAttributes: {
-      [faker.string.uuid()]: faker.lorem.sentence()
-    }
-  }
-  mainAgent.info = mockInfo2
-
+test('should not perform late configuration checks in AggregateBase', () => {
   new AggregateBase(mainAgent, featureName)
 
-  expect(isValid).toHaveBeenCalledWith(mockInfo2)
-  expect(gosCDN).toHaveBeenCalledTimes(1)
-  expect(configure).toHaveBeenCalledWith(mainAgent, {
-    info: {
-      ...mockInfo1,
-      jsAttributes: {
-        ...mockInfo1.jsAttributes,
-        ...mockInfo2.jsAttributes
-      }
-    },
-    runtime: mainAgent.runtime
-  }, mainAgent.runtime.loaderType)
-})
-
-test('should only configure the agent once', () => {
-  jest.mocked(isValid).mockReturnValue(true)
-
-  new AggregateBase(mainAgent, featureName)
-
-  expect(isValid).toHaveBeenCalledWith(mainAgent.info)
+  expect(isValid).not.toHaveBeenCalled()
   expect(gosCDN).not.toHaveBeenCalled()
   expect(configure).not.toHaveBeenCalled()
 })

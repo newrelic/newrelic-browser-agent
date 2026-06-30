@@ -19,6 +19,7 @@ jobs:
   # Build and publish the github release to S3
   publish-prod-to-s3:
     runs-on: ubuntu-latest
+    environment: public-release
     timeout-minutes: 5
     defaults:
       run:
@@ -122,59 +123,12 @@ jobs:
           fastly_service: staging-js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
 
-  # Rebuild and publish the prod environment A/B script
-  publish-prod-ab:
-    needs: [publish-current-to-s3]
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
-      - name: Deploy prod a/b script
-        uses: ./.github/actions/internal-ab
-        with:
-          nr_environment: prod
-          nrba_app_id: ${{ secrets.INTERNAL_PRODUCTION_APPLICATION_ID }}
-          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-
-  # Rebuild and publish the eu-prod environment A/B script
-  publish-eu-prod-ab:
-    needs: [publish-current-to-s3]
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
-      - name: Deploy eu-prod a/b script
-        uses: ./.github/actions/internal-ab
-        with:
-          nr_environment: eu-prod
-          nrba_app_id: ${{ secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID }}
-          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+  # NOTE: NR1 environment deployments are now manual via the internal-promotion workflow
+  # Auto-publishing of internal A/B scripts has been removed per CDD NR-355574
 
   # Create change tracking event for US production
   create-us-prod-change-tracking:
-    environment: staging
+    environment: change-tracking
     needs: [publish-current-to-s3]
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 30
@@ -205,7 +159,7 @@ jobs:
 
   # Create change tracking event for EU production
   create-eu-prod-change-tracking:
-    environment: staging
+    environment: change-tracking
     needs: [publish-current-to-s3]
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 30
@@ -234,9 +188,40 @@ jobs:
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
 
+  # Create change tracking event for JP production
+  create-jp-prod-change-tracking:
+    environment: change-tracking
+    needs: [publish-current-to-s3]
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get version number
+        id: agent-loader-version
+        run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Create JP production change tracking event (Account 1067061)
+        uses: ./.github/actions/change-tracking
+        with:
+          accountId: '1067061'
+          entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_JP_PROD }}
+          apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          application: 'New Relic One - JP Production'
+          version: ${{ steps.agent-loader-version.outputs.results }}
+          type: 'Rolling'
+          description: 'JP production release v${{ steps.agent-loader-version.outputs.results }}'
+          shortDescription: 'JP Prod: v${{ steps.agent-loader-version.outputs.results }}'
+          changelog: ${{ github.event.release.body }}
+          deepLink: ${{ github.event.release.html_url }}
+          commit: ${{ github.sha }}
+          user: ${{ github.actor }}
+          groupId: '${{ github.run_id }}-${{ github.sha }}'
+
   # Create change tracking event for staging environment (1067061 only)
   create-staging-release-change-tracking:
-    environment: staging
+    environment: change-tracking
     needs: [publish-current-to-s3]
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 30
@@ -265,6 +250,35 @@ jobs:
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
 
+  # Publish the loaders to nr stage
+  publish-to-nr-stage:
+    needs: [ publish-prod-to-s3 ]
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    continue-on-error: true
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Get version number
+        id: agent-loader-version
+        run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Publish loader to nr
+        uses: ./.github/actions/nr-upload
+        with:
+          nr_stage_api_key: ${{ secrets.NR_API_KEY_STAGING }}
+          loader_version: ${{ steps.agent-loader-version.outputs.results }}
+          environment: stage
+      - name: Verify loaders in nr
+        uses: ./.github/actions/nr-verify
+        with:
+          loader_version: ${{ steps.agent-loader-version.outputs.results }}
+          environment: stage
+
   # Publish the loaders to nr prod
   publish-to-nr-prod:
     needs: [publish-prod-to-s3]
@@ -292,34 +306,6 @@ jobs:
         with:
           loader_version: ${{ steps.agent-loader-version.outputs.results }}
           environment: prod
-
-  # Publish the loaders to nr stage
-  # publish-to-nr-stage:
-  #   needs: [ publish-prod-to-s3 ]
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 30
-  #   defaults:
-  #     run:
-  #       shell: bash
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
-  #     - name: Get version number
-  #       id: agent-loader-version
-  #       run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
-  #     - name: Publish loader to nr
-  #       uses: ./.github/actions/nr-upload
-  #       with:
-  #         nr_stage_api_key: ${{ secrets.NR_API_KEY_STAGING }}
-  #         loader_version: ${{ steps.agent-loader-version.outputs.results }}
-  #         environment: stage
-  #     - name: Verify loaders in nr
-  #       uses: ./.github/actions/nr-verify
-  #       with:
-  #         loader_version: ${{ steps.agent-loader-version.outputs.results }}
-  #         environment: stage
 
   # Raise the release notes pr on the docs website repo
   raise-release-notes-pr:

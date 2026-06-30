@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -21,7 +21,7 @@ export function numeric (n, noDefault) {
   return (n === undefined || n === 0) ? '' : Math.floor(n).toString(36)
 }
 
-export function getAddStringContext (obfuscator) {
+export function getAddStringContext (obfuscator, truncator) {
   let stringTableIdx = 0
   const stringTable = Object.prototype.hasOwnProperty.call(Object, 'create') ? Object.create(null) : {}
 
@@ -29,7 +29,8 @@ export function getAddStringContext (obfuscator) {
 
   function addString (str) {
     if (typeof str === 'undefined' || str === '') return ''
-    str = obfuscator.obfuscateString(String(str))
+    str = obfuscator?.obfuscateString(String(str)) ?? String(str)
+    str = truncator?.(str) ?? str
     if (hasOwnProp.call(stringTable, str)) {
       return numeric(stringTable[str], true)
     } else {

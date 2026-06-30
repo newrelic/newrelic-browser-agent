@@ -44,6 +44,7 @@ Before using this action, you need to create the following GitHub secrets:
 |-------------|--------|------------------------|----------------------|
 | staging | Staging | `NR_ENTITY_GUID_NR1_STAGING` | `NR_ENTITY_GUID_BROWSER_STAGING` |
 | us-prod | US | `NR_ENTITY_GUID_NR1_US_PROD` | N/A |
+| jp-prod | JP | `NR_ENTITY_GUID_NR1_JP_PROD` | N/A |
 | eu-prod | EU | `NR_ENTITY_GUID_NR1_EU_PROD` | N/A |
 
 **Note:** Dev environment is not supported by the New Relic Change Tracking API.
@@ -128,20 +129,20 @@ When feature flags are updated (e.g., changes to `released.js`), create a Featur
 - name: Check if released.js changed
   id: check-released
   run: |
-    if git diff HEAD^ HEAD --name-only | grep -q ".github/actions/build-ab/templates/released.js"; then
+    if git diff HEAD^ HEAD --name-only | grep -q ".github/actions/internal-promotion/templates/released.js"; then
       echo "changed=true" >> $GITHUB_OUTPUT
     else
       echo "changed=false" >> $GITHUB_OUTPUT
     fi
 
-- name: Create dev change tracking event (Account 1067061)
+- name: Create staging change tracking event (Account 1067061)
   uses: ./.github/actions/change-tracking
   with:
     accountId: '1067061'
     entityGuid: ${{ secrets.NR_ENTITY_GUID_NR1_STAGING }}
     apiKey: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
     region: 'Staging'
-    version: dev-latest
+    version: staging-released
     category: ${{ steps.check-released.outputs.changed == 'true' && 'Feature Flag' || 'Deployment' }}
     type: 'Basic'
     featureFlagId: ${{ steps.check-released.outputs.changed == 'true' && 'hardcoded feature flag' || '' }}

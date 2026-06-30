@@ -46,6 +46,14 @@ if (args.openPullRequest) {
 
   gitRunner = new GitCliRunner(REPO_ROOT_PATH, args.githubLogin, args.githubToken, args.githubUserName, args.githubEmail)
   await gitRunner.setUser()
+  
+  // Update remote URL to use the provided token instead of the default GITHUB_TOKEN
+  await spawnAsync(
+    'git',
+    ['remote', 'set-url', 'origin', `https://${args.githubLogin}:${args.githubToken}@github.com/${GITHUB_OWNER}/${GITHUB_REPO}.git`],
+    DEFAULT_SPAWN_OPTIONS
+  )
+  
   try {
     await gitRunner.deleteLocalBranch(PR_BRANCH_NAME)
   } catch (error) {
@@ -89,11 +97,16 @@ await spawnAsync(
 )
 
 console.log('Updating third-party licenses')
-await spawnAsync(
-  `npm${os.platform() === 'win32' ? '.cmd' : ''}`,
-  [ 'run', 'third-party-updates' ],
-  DEFAULT_SPAWN_OPTIONS
-)
+try {
+  await spawnAsync(
+    `npm${os.platform() === 'win32' ? '.cmd' : ''}`,
+    [ 'run', 'third-party-updates' ],
+    DEFAULT_SPAWN_OPTIONS
+  )
+} catch (error) {
+  console.warn('⚠️  WARNING: Third-party manifest updates failed. Continuing with other actions...')
+  console.warn(error.message)
+}
 
 console.log('#############################')
 console.log('# Rebuilding Test Projects  #')

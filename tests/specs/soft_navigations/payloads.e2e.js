@@ -1,4 +1,4 @@
-import { notIOS, notSafari, supportsFirstPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { lambdaTestWebdriverFalse, notIOS, notSafari, supportsFirstPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testInteractionEventsRequest, testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('attribution tests', () => {
@@ -53,9 +53,13 @@ describe('attribution tests', () => {
         ).then(() => browser.waitForAgentLoad())
       ])
       const ipl = interactionHarvests[0].request.body[0]
+      const expectedAttributeType = browserMatch(lambdaTestWebdriverFalse) ? 'falseAttribute' : 'trueAttribute'
 
       expect(ipl.trigger).toEqual('initialPageLoad')
-      expect(ipl.children.length).toEqual(1)
+      expect(ipl.children).toEqual([
+        { key: 'isFirstOfSession', type: 'trueAttribute' },
+        { key: 'webdriverDetected', type: expectedAttributeType }
+      ])
       expect(ipl.isRouteChange).not.toBeTruthy()
       if (browserMatch(notIOS)) expect(ipl.oldURL).toEqual('') // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 
@@ -81,9 +85,13 @@ describe('attribution tests', () => {
         ).then(() => browser.waitForAgentLoad())
       ])
       const ipl = interactionHarvests[0].request.body[0]
+      const expectedAttributeType = browserMatch(lambdaTestWebdriverFalse) ? 'falseAttribute' : 'trueAttribute'
 
       expect(ipl.trigger).toEqual('initialPageLoad')
-      expect(ipl.children.length).toEqual(1)
+      expect(ipl.children).toEqual([
+        { key: 'isFirstOfSession', type: 'trueAttribute' },
+        { key: 'webdriverDetected', type: expectedAttributeType }
+      ])
       expect(ipl.isRouteChange).not.toBeTruthy()
       if (browserMatch(notIOS)) expect(ipl.oldURL).toEqual('') // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 
@@ -109,9 +117,13 @@ describe('attribution tests', () => {
         ).then(() => browser.waitForAgentLoad())
       ])
       const ipl = interactionHarvests[0].request.body[0]
+      const expectedAttributeType = browserMatch(lambdaTestWebdriverFalse) ? 'falseAttribute' : 'trueAttribute'
 
       expect(ipl.trigger).toEqual('initialPageLoad')
-      expect(ipl.children.length).toEqual(1)
+      expect(ipl.children).toEqual([
+        { key: 'isFirstOfSession', type: 'trueAttribute' },
+        { key: 'webdriverDetected', type: expectedAttributeType }
+      ])
       expect(ipl.isRouteChange).not.toBeTruthy()
       if (browserMatch(notIOS)) expect(ipl.oldURL).toEqual('') // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 

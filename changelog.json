@@ -5,6 +5,212 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "f7df627b14e3e5e8fa4a8d94433ea76e9a9902bb",
+          "message": "Calculate browser_stack_hash from truncated stack trace",
+          "issues": [
+            "1789"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "58663ec19dc99ec94e34c17a5dfaa20a07038dba",
+          "message": "Get responseBodySize from body if content-length is missing",
+          "issues": [
+            "1793"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "08394db8a5a9f2b6fd627e9eee76022977cb433c",
+          "message": "Detect and report AJAX payloads",
+          "issues": [
+            "1651"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "c97aaf9773cfb0b62a810eb07b37e6f5b96d5ab5",
+          "message": "Enhance obfuscation to support event filter",
+          "issues": [
+            "1782"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "b330f8e3e35f2fda076967092bcb70e792de6eeb",
+          "message": "Patch handling of inlining images for Session Replay",
+          "issues": [
+            "1765"
+          ]
+        }
+      ],
+      "version": "1.317.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "2dd3d42c-34f7-427d-a715-cc0222a1e37c",
+      "createTime": "2026-06-18T17:16:32.741Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "60ec5bf566d27d68e59c827f08dcd8dd73d8cd2c",
+          "message": "Use app-namespaced keys for session",
+          "issues": [
+            "1776"
+          ]
+        }
+      ],
+      "version": "1.316.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "19aaf3cf-3497-4553-9630-8b01ca1e865b",
+      "createTime": "2026-06-01T20:10:20.235Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "937553b208c2efcb66c696ec8d711306960dcba9",
+          "message": "Enhance SPA API to support targetPageLoad option",
+          "issues": [
+            "1762"
+          ]
+        }
+      ],
+      "version": "1.315.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "4355cf7b-49e0-48a0-a31e-d4562cf3a4fe",
+      "createTime": "2026-05-26T19:47:14.737Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "c8a345bc9cd22eb56f876c598677310a2da6be8f",
+          "message": "Add ajaxRequest.id attribute",
+          "issues": [
+            "1757"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "7ca2164771f5c88b0a053a5af9f07d607c0e1d29",
+          "message": "Improve PageViewTiming load timing capture",
+          "issues": [
+            "1764"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "412ef8b6ea80ddd13900cea5f379e12b4fafc007",
+          "message": "Adjust timestamps for clock skew due to machine sleep",
+          "issues": [
+            "1749"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "2c2024e3cbb4b2f6afc22e2bc1c6385b07335be5",
+          "message": "Automatically Detect MFE User Actions",
+          "issues": [
+            "1723"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "9874ac5d851653641ed33241ad5e96678a9b9fee",
+          "message": "Allow Session Replay to retry payloads",
+          "issues": [
+            "1666"
+          ]
+        }
+      ],
+      "version": "1.314.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "54577c1f-0e63-489f-9209-691ac87a609c",
+      "createTime": "2026-05-04T21:54:16.395Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "8442a5b0db01a929315dd7c7e3bd4817e6525200",
+          "message": "Fix method names for MFE methods",
+          "issues": [
+            "1758"
+          ]
+        }
+      ],
+      "version": "1.313.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "9e829e3f-b5cb-43fb-bf82-939befc073cd",
+      "createTime": "2026-04-21T01:00:29.936Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "281617a351459afe82c52e0ce657d3f7b1b5f19c",
+          "message": "Automatically Detect MFE Errors",
+          "issues": [
+            "1720"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "e84c292b9d17918de0e8e1542fe363e28fa67d33",
+          "message": "remove \"withCredentials\"",
+          "issues": [
+            "1747"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "a607ee1b34bb57fb800f0220074cd27d1f86a32d",
+          "message": "Bad `trace.lastTimestamp` in Safari + back nav edge case",
+          "issues": [
+            "1754"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "e59c60af34e8f2408ffa4835dc6db4fdcbf756ba",
+          "message": "Improve MicroFrontEndTiming heuristics",
+          "issues": [
+            "1735"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "65b5b988c6cb8d852ad952a3eee94a54864afcd2",
+          "message": "Report CSP violations as new events",
+          "issues": [
+            "1736"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "24199ee75c0e8d1e74d7d882526fd868b87a93ae",
+          "message": "Apply legal and compliance requirements to register API",
+          "issues": [
+            "1742"
+          ]
+        }
+      ],
+      "version": "1.313.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "82896abc-ceb8-4ef1-85d1-97dbc1e5a05d",
+      "createTime": "2026-04-14T21:43:25.716Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "a20856668b26fc3b2763112a8c78a8eb2cd3a25c",
           "message": ".at causes issues in older browsers",
           "issues": [
@@ -3847,5 +4053,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-04-02T23:33:57.759Z"
+  "updateTime": "2026-06-18T17:16:32.741Z"
 }

@@ -1,7 +1,13 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
 export const FEATURE_NAME = FEATURE_NAMES.ajax
+export const CAPTURE_PAYLOAD_SETTINGS = {
+  NONE: 'none',
+  FAILURES: 'failures',
+  ALL: 'all'
+}
+export const AJAX_ID = 'ajaxRequest.id'

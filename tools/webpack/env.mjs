@@ -29,9 +29,39 @@ export default async (env) => {
     case 'dev':
     case 'development':
       PATH_VERSION = ''
-      SUBVERSION = 'DEV'
       PUBLIC_PATH = 'https://js-agent.newrelic.com/dev/'
-      VERSION = `${VERSION}-dev`
+      // Use branch name suffix if provided, otherwise use -dev
+      if (env.branchName) {
+        SUBVERSION = env.branchName
+        VERSION = `${VERSION}-${env.branchName.toLowerCase()}`
+      } else {
+        SUBVERSION = 'DEV'
+        VERSION = `${VERSION}-dev`
+      }
+      break
+    case 'staging':
+      PATH_VERSION = ''
+      SUBVERSION = 'STAGING'
+      PUBLIC_PATH = 'https://js-agent.newrelic.com/staging/'
+      VERSION = `${VERSION}-rc`
+      break
+    case 'jp-prod':
+      PATH_VERSION = ''
+      SUBVERSION = 'JP-PROD'
+      PUBLIC_PATH = 'https://js-agent.newrelic.com/jp-prod/'
+      VERSION = `${VERSION}-rc`
+      break
+    case 'eu-prod':
+      PATH_VERSION = ''
+      SUBVERSION = 'EU-PROD'
+      PUBLIC_PATH = 'https://js-agent.newrelic.com/eu-prod/'
+      VERSION = `${VERSION}-rc`
+      break
+    case 'us-prod':
+      PATH_VERSION = ''
+      SUBVERSION = 'US-PROD'
+      PUBLIC_PATH = 'https://js-agent.newrelic.com/prod/'
+      VERSION = `${VERSION}-rc`
       break
     case 'experiment':
       // eslint-disable-next-line no-case-declarations

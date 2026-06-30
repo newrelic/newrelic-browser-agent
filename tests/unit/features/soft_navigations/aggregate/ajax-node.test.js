@@ -1,9 +1,12 @@
 import { Obfuscator } from '../../../../../src/common/util/obfuscate'
+import { AJAX_ID } from '../../../../../src/features/ajax/constants'
 
 jest.enableAutomock()
 jest.unmock('../../../../../src/features/soft_navigations/aggregate/ajax-node')
 jest.unmock('../../../../../src/features/soft_navigations/aggregate/bel-node')
 jest.unmock('../../../../../src/common/serialize/bel-serializer')
+jest.unmock('../../../../../src/common/util/obfuscate')
+jest.unmock('../../../../../src/common/payloads/payloads')
 
 const someAgent = {
   agentIdentifier: 'abcd',
@@ -28,7 +31,8 @@ const someAjaxEvent = {
     operationName: 'Anonymous',
     operationType: 'QUERY',
     operationFramework: 'GraphQL'
-  }
+  },
+  [AJAX_ID]: '1234'
 }
 
 let AjaxNode
@@ -78,7 +82,65 @@ test('Ajax serialize output is correct', () => {
   const ajn = new AjaxNode(someAjaxEvent)
 
   expect(ajn.nodeId).toEqual(1)
-  expect(ajn.serialize(0, someAgent)).toEqual("2,3,sg,sg,,,'POST,5p,'google.com,'/,3f,co,1,'1,'some_span_id,'some_trace_id,lx;5,'operationName,'Anonymous;5,'operationType,'QUERY;5,'operationFramework,'GraphQL")
+  expect(ajn.serialize(0, someAgent)).toEqual("2,4,sg,sg,,,'POST,5p,'google.com,'/,3f,co,1,'1,'some_span_id,'some_trace_id,lx;5,'ajaxRequest.id,'1234;5,'operationName,'Anonymous;5,'operationType,'QUERY;5,'operationFramework,'GraphQL")
   // The start (and end) timestamp should translate based on "parent" timestamp passed in:
-  expect(ajn.serialize(512, someAgent)).toEqual("2,3,e8,sg,,,'POST,5p,'google.com,'/,3f,co,1,'1,'some_span_id,'some_trace_id,lx;5,'operationName,'Anonymous;5,'operationType,'QUERY;5,'operationFramework,'GraphQL")
+  expect(ajn.serialize(512, someAgent)).toEqual("2,4,e8,sg,,,'POST,5p,'google.com,'/,3f,co,1,'1,'some_span_id,'some_trace_id,lx;5,'ajaxRequest.id,'1234;5,'operationName,'Anonymous;5,'operationType,'QUERY;5,'operationFramework,'GraphQL")
+})
+
+test('obfuscation happens before truncation and result stays under 4KB in browser interactions', () => {
+  // Create an obfuscation rule that EXPANDS the data significantly
+  const agentWithObfuscation = {
+    agentIdentifier: 'abcd',
+    info: {},
+    init: {
+      obfuscate: [{
+        regex: /X/g,
+        replacement: 'OBFUSCATED_VALUE_REPLACEMENT_TEXT', // 32 chars vs 1 char = 32x expansion
+        eventFilter: ['AjaxRequest']
+      }]
+    },
+    runtime: {}
+  }
+
+  // Create the obfuscator with the agent ref and event type
+  const obfuscator = new Obfuscator(agentWithObfuscation, 'AjaxRequest')
+  agentWithObfuscation.runtime.obfuscator = obfuscator
+
+  // Create a large payload with many X characters that will expand significantly when obfuscated
+  // Using 200 X's per line for 25 lines = 5000 chars before obfuscation
+  // After obfuscation: 200 * 32 * 25 = 160,000 chars (way over 4KB)
+  const largePayloadWithPattern = Array(25).fill('X'.repeat(200)).join('\n')
+
+  const ajaxEventWithPayload = {
+    ...someAjaxEvent,
+    requestBody: largePayloadWithPattern,
+    requestHeaders: { 'content-type': 'application/json' }
+  }
+
+  const ajn = new AjaxNode(ajaxEventWithPayload)
+  // Pass obfuscator as the third parameter like interaction.js does
+  const serialized = ajn.serialize(0, agentWithObfuscation, obfuscator)
+
+  // Verify the value was obfuscated (contains the replacement text)
+  expect(serialized).toContain('OBFUSCATED_VALUE_REPLACEMENT_TEXT')
+
+  // Verify the value was truncated - should end with ' ...'
+  expect(serialized).toMatch(/ \.\.\./)
+
+  // Verify the entire serialized string is reasonable (not 160KB)
+  const byteLength = Buffer.byteLength(serialized, 'utf8')
+  expect(byteLength).toBeLessThan(10000) // Should be much smaller than untruncated 160KB
+
+  // Extract the requestBody value from the serialized string
+  // Format is like: ...;5,'requestBody,'<value>;...
+  const requestBodyMatch = serialized.match(/;5,'requestBody,'([^;]+)/)
+  expect(requestBodyMatch).toBeTruthy()
+  const requestBodyValue = requestBodyMatch[1]
+
+  // Verify the requestBody value specifically is under 4KB
+  const requestBodyByteLength = Buffer.byteLength(requestBodyValue, 'utf8')
+  expect(requestBodyByteLength).toBeLessThanOrEqual(4096)
+
+  // Verify it's close to the limit (was actually truncated, not just small)
+  expect(requestBodyByteLength).toBeGreaterThan(4000)
 })

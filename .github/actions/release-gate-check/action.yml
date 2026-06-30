@@ -1,0 +1,27 @@
+name: 'Release Gate Check'
+description: 'Verifies that all required environments have been deployed after a commit'
+
+inputs:
+  pr_number:
+    description: 'Pull request number'
+    required: true
+  branch_name:
+    description: 'Branch name to check deployments for'
+    required: true
+  github_token:
+    description: 'GitHub token for API access'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install dependencies
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
+    - name: Run release gate check
+      run: node $GITHUB_ACTION_PATH/index.js
+      shell: bash
+      env:
+        INPUT_PR_NUMBER: ${{ inputs.pr_number }}
+        INPUT_BRANCH_NAME: ${{ inputs.branch_name }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}

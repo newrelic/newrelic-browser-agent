@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fetch No Content-Length</title>
+  {init} {config} {loader}
+</head>
+<body>
+<div>
+  This page tests fetch with a response that has no content-length header.
+  The agent should fall back to using the captured payload size.
+</div>
+<div><button id="sendAjax">Send Ajax</button></div>
+<script>
+  window.disableAjaxHashChange = false
+  document.getElementById('sendAjax').addEventListener('click', function () {
+    fetch('/json-no-content-length').then(function () {
+      if (!disableAjaxHashChange) {
+        window.location.hash = Math.random()
+      }
+    })
+  })
+</script>
+</body>
+</html>

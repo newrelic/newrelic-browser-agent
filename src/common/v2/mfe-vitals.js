@@ -5,7 +5,6 @@
 
 import { globalScope, isBrowserScope } from '../constants/runtime'
 import { now } from '../timing/now'
-// import { cleanURL } from '../url/clean-url'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPITimings} RegisterAPITimings

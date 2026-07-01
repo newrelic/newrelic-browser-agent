@@ -140,12 +140,17 @@ if (releasePR) {
   const versionMatch = releasePR.title.match(/(\d+\.\d+\.\d+)/)
   const nextVersion = versionMatch ? versionMatch[1] : 'TBD'
   
-  // Extract changes from PR body
+  // Extract changes from PR body (release-please format)
   const bodyLines = (releasePR.body || '').split('\n')
   const changeLines = bodyLines
-    .filter((line) => line.trim().startsWith('*') || line.trim().startsWith('-'))
+    .filter((line) => line.trim().startsWith('*'))
     .slice(0, 10) // Limit to first 10 changes
-    .map((line) => '  ' + line.trim())
+    .map((line) => {
+      // Strip everything after the first closing paren to remove issue/commit links
+      // "* Improve agent startup ([#1760](...)) ([d75f4bf](...))" -> "* Improve agent startup"
+      const cleaned = line.replace(/\s*\([#\[].*$/, '').trim()
+      return '  ' + cleaned
+    })
   
   lines.push(`with version *${nextVersion}* slated for next release${changeLines.length > 0 ? ', adding the following:' : '.'}`)
   if (changeLines.length > 0) {

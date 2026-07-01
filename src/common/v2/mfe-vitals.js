@@ -193,7 +193,7 @@ export function trackMFEVitals (id, timings) {
     }
   }
 
-  const interactionEvents = ['click', 'keydown', 'scroll']
+  const interactionEvents = ['pointerdown', 'keydown', 'scroll']
   const handleInteraction = (event) => {
     if (!isInMFE(event?.target, id)) return
 

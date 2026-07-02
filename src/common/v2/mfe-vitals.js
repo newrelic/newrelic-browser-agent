@@ -171,6 +171,13 @@ export function trackMFEVitals (id, timings) {
     }
   })
 
+  const interactionEvents = ['pointerdown', 'keydown', 'scroll']
+  const disconnectInteractionListeners = () => {
+    interactionEvents.forEach(type => {
+      globalScope.removeEventListener(type, handleInteraction, { passive: true })
+    })
+  }
+
   // Disconnect all observers
   vitals.disconnect = () => {
     // Disconnect all observers
@@ -181,6 +188,7 @@ export function trackMFEVitals (id, timings) {
         // Observer may already be disconnected
       }
     })
+    disconnectInteractionListeners()
   }
 
   // Auto-disconnect LCP observer on user interaction (per Web Vitals spec)
@@ -193,14 +201,11 @@ export function trackMFEVitals (id, timings) {
     }
   }
 
-  const interactionEvents = ['pointerdown', 'keydown', 'scroll']
   const handleInteraction = (event) => {
     if (!isInMFE(event?.target, id)) return
 
     disconnectLCP()
-    interactionEvents.forEach(type => {
-      globalScope.removeEventListener(type, handleInteraction, { passive: true })
-    })
+    disconnectInteractionListeners()
   }
 
   interactionEvents.forEach(type => {

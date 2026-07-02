@@ -58,6 +58,13 @@ describe('trackMFEVitals', () => {
         addEventListener: jest.fn((type, handler, options) => {
           if (!mockEventListeners[type]) mockEventListeners[type] = []
           mockEventListeners[type].push({ handler, options })
+        }),
+        removeEventListener: jest.fn((type, handler) => {
+          if (mockEventListeners[type]) {
+            mockEventListeners[type] = mockEventListeners[type].filter(
+              listener => listener.handler !== handler
+            )
+          }
         })
       },
       isBrowserScope: true

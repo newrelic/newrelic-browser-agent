@@ -43,16 +43,33 @@ const isInMFE = (node, id) => {
  * @returns {MutationObserver}
  */
 const observeMutations = (id, onMatch) => {
+  // Try to find existing MFE root
+  const mfeRoot = globalScope.document?.querySelector(`[data-nr-mfe-id="${id}"]`)
+  let observingRoot = !!mfeRoot
+
   const obs = new globalScope.MutationObserver(mutations => {
     mutations.forEach(m => {
       m.addedNodes.forEach(node => {
-        if (isObservable(node) && isInMFE(node, id)) {
+        // Check if this is the MFE root being added
+        const elem = node.nodeType === 1 ? node : null
+        if (elem?.dataset?.nrMfeId === id) {
+          // Found the root! Lets switch to observing just this subtree for performance reasons
+          obs.disconnect()
+          obs.observe(elem, { childList: true, subtree: true })
+          observingRoot = true
+        }
+
+        // Only check isInMFE if we're observing the whole document; skip expensive ancestor walk when observing root
+        if (isObservable(node) && (observingRoot || isInMFE(node, id))) {
           onMatch(node, obs)
         }
       })
     })
   })
-  obs.observe(globalScope.document, { childList: true, subtree: true })
+
+  // If root exists, observe just that subtree; otherwise observe document to catch when root is added
+  obs.observe(mfeRoot || globalScope.document, { childList: true, subtree: true })
+
   return obs
 }
 
@@ -128,22 +145,57 @@ export function trackMFEVitals (id, timings) {
 
   // Track LCP - largest contentful paint
   let largestSize = 0
+  let resizeObs = null
+  const observedElements = new Set()
+
+  try {
+    resizeObs = new globalScope.ResizeObserver((entries) => {
+      entries.forEach((entry) => {
+        try {
+          const size = entry.contentRect.width * entry.contentRect.height
+          if (size > largestSize) {
+            largestSize = size
+            const elem = entry.target
+            // For img/video elements, wait for load event
+            if (['IMG', 'VIDEO'].includes(elem.tagName)) {
+              if (elem.complete) {
+                lcpObservedAt = now()
+              } else {
+                elem.addEventListener('load', () => {
+                  lcpObservedAt = now()
+                }, { once: true })
+              }
+            } else {
+              lcpObservedAt = now()
+            }
+          }
+        } catch (e) {
+          // Element may be detached from DOM
+        }
+      })
+    })
+  } catch (e) {
+    // ResizeObserver not supported
+  }
+
   const lcpObs = observeMutations(id, (node) => {
     // an observed "LCP" means _something_ rendered, so at minimum we can make sure all the baseline values are populated for the vitals
     populateVitalMinimums()
-    try {
-      const elem = node.nodeType === 1 ? node : node.parentElement
-      if (!elem) return
-      const rect = elem.getBoundingClientRect()
-      const size = rect.width * rect.height
-      if (size > largestSize) {
-        largestSize = size
-        lcpObservedAt = now()
+
+    if (resizeObs) {
+      try {
+        const elem = node.nodeType === 1 ? node : node.parentElement
+        if (elem && !observedElements.has(elem)) {
+          observedElements.add(elem)
+          resizeObs.observe(elem)
+        }
+      } catch (e) {
+        // Element may not be observable
       }
-    } catch (e) {
-      // Element may be detached from DOM
     }
   })
+
+  if (resizeObs) observers.push(resizeObs)
   observers.push(lcpObs)
 
   // Track CLS - cumulative layout shift
@@ -162,7 +214,7 @@ export function trackMFEVitals (id, timings) {
   })
 
   // Track INP - interaction to next paint
-  observePerformance(observers, { type: 'event', buffered: true, durationThreshold: 16 }, (entry) => {
+  observePerformance(observers, { type: 'event', buffered: true, durationThreshold: 40 }, (entry) => {
     if (!entry.interactionId || !isInMFE(entry.target, id)) return
     if (vitals.inp.value === null || entry.duration > vitals.inp.value) {
       // an observed "INP" means _something_ rendered for the MFE, so at minimum we can make sure all the baseline values are populated for the vitals
@@ -171,7 +223,7 @@ export function trackMFEVitals (id, timings) {
     }
   })
 
-  const interactionEvents = ['pointerdown', 'keydown', 'scroll']
+  const interactionEvents = ['pointerdown', 'keydown']
   const disconnectInteractionListeners = () => {
     interactionEvents.forEach(type => {
       globalScope.removeEventListener(type, handleInteraction, { passive: true })

@@ -8,6 +8,7 @@ describe('trackMFEVitals', () => {
   let mockDocument
   let mockMutationObserver
   let mockPerformanceObserver
+  let mockResizeObserver
   let mockEventListeners
   let mutationCallbacks
   let performanceCallbacks
@@ -37,6 +38,20 @@ describe('trackMFEVitals', () => {
       this.disconnect = jest.fn()
     })
 
+    // Mock ResizeObserver
+    mockResizeObserver = jest.fn(function (callback) {
+      this.observe = jest.fn((element) => {
+        // Trigger callback immediately with mock entry
+        const rect = element.getBoundingClientRect?.() || { width: 0, height: 0 }
+        callback([{
+          target: element,
+          contentRect: rect
+        }])
+      })
+      this.disconnect = jest.fn()
+      this.unobserve = jest.fn()
+    })
+
     mockDocument = {
       readyState: 'complete',
       querySelector: jest.fn((selector) => {
@@ -53,6 +68,8 @@ describe('trackMFEVitals', () => {
       globalScope: {
         MutationObserver: mockMutationObserver,
         PerformanceObserver: mockPerformanceObserver,
+        ResizeObserver: mockResizeObserver,
+        Set: global.Set,
         document: mockDocument,
         getComputedStyle: jest.fn(() => ({ backgroundImage: 'none' })),
         addEventListener: jest.fn((type, handler, options) => {
@@ -166,6 +183,7 @@ describe('trackMFEVitals', () => {
         nodeName: 'IMG',
         id: 'hero-image',
         src: 'https://example.com/image.jpg?v=1#anchor',
+        complete: true,
         parentElement: mockContainer,
         parentNode: mockContainer,
         getBoundingClientRect: jest.fn(() => ({ width: 800, height: 600 }))
@@ -249,6 +267,329 @@ describe('trackMFEVitals', () => {
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
 
       expect(vitals.lcp.value).toBe(clockBaseline + 1)
+    })
+
+    describe('ResizeObserver-based measurement', () => {
+      it('should use ResizeObserver to measure element sizes without layout thrashing', () => {
+        trackMFEVitals('test-mfe', timings)
+
+        const mockContainer = {
+          nodeType: 1,
+          dataset: { nrMfeId: 'test-mfe' },
+          tagName: 'DIV',
+          nodeName: 'DIV',
+          parentNode: null
+        }
+
+        const mockElement = {
+          textContent: 'Content',
+          nodeType: 1,
+          tagName: 'DIV',
+          nodeName: 'DIV',
+          parentElement: mockContainer,
+          parentNode: mockContainer,
+          getBoundingClientRect: jest.fn(() => ({ width: 500, height: 400 }))
+        }
+
+        mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
+
+        // ResizeObserver should have been called
+        expect(mockResizeObserver).toHaveBeenCalled()
+        const resizeObserverInstance = mockResizeObserver.mock.instances[0]
+        expect(resizeObserverInstance.observe).toHaveBeenCalledWith(mockElement)
+      })
+
+      it('should ignore elements with zero dimensions', () => {
+        const vitals = trackMFEVitals('test-mfe', timings)
+
+        const mockContainer = {
+          nodeType: 1,
+          dataset: { nrMfeId: 'test-mfe' },
+          tagName: 'DIV',
+          nodeName: 'DIV',
+          parentNode: null
+        }
+
+        const zeroSizeElement = {
+          textContent: 'Hidden content',
+          nodeType: 1,
+          tagName: 'DIV',
+          nodeName: 'DIV',
+          parentElement: mockContainer,
+          parentNode: mockContainer,
+          getBoundingClientRect: jest.fn(() => ({ width: 0, height: 0 }))
+        }
+
+        mutationCallbacks.forEach(cb => cb([{ addedNodes: [zeroSizeElement] }]))
+
+        // LCP should still be at baseline (from populateVitalMinimums)
+        expect(vitals.lcp.value).toBe(clockBaseline)
+      })
+
+      it('should track same element only once', () => {
+        trackMFEVitals('test-mfe', timings)
+
+        const mockContainer = {
+          nodeType: 1,
+          dataset: { nrMfeId: 'test-mfe' },
+          tagName: 'DIV',
+          nodeName: 'DIV',
+          parentNode: null
+        }
+
+        const mockElement = {
+          textContent: 'Content',
+          nodeType: 1,
+          tagName: 'DIV',
+          nodeName: 'DIV',
+          parentElement: mockContainer,
+          parentNode: mockContainer,
+          getBoundingClientRect: jest.fn(() => ({ width: 300, height: 200 }))
+        }
+
+        // Add same element twice
+        mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
+        mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
+
+        const resizeObserverInstance = mockResizeObserver.mock.instances[0]
+        // Should only observe once (Set prevents duplicates)
+        expect(resizeObserverInstance.observe).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    describe('Image and video load event handling', () => {
+      it('should capture LCP immediately for already-loaded images', () => {
+        const vitals = trackMFEVitals('test-mfe', timings)
+
+        const mockContainer = {
+          nodeType: 1,
+          dataset: { nrMfeId: 'test-mfe' },
+          tagName: 'DIV',
+          nodeName: 'DIV',
+          parentNode: null
+        }
+
+        const loadedImage = {
+          nodeType: 1,
+          tagName: 'IMG',
+          nodeName: 'IMG',
+          complete: true,
+          src: 'https://example.com/image.jpg',
+          parentElement: mockContainer,
+          parentNode: mockContainer,
+          getBoundingClientRect: jest.fn(() => ({ width: 800, height: 600 }))
+        }
+
+        mutationCallbacks.forEach(cb => cb([{ addedNodes: [loadedImage] }]))
+
+        // Should capture LCP timestamp immediately
+        expect(vitals.lcp.value).toBe(clockBaseline + 1)
+      })
+
+      it('should wait for load event on unloaded images', () => {
+        const vitals = trackMFEVitals('test-mfe', timings)
+
+        const mockContainer = {
+          nodeType: 1,
+          dataset: { nrMfeId: 'test-mfe' },
+          tagName: 'DIV',
+          nodeName: 'DIV',
+          parentNode: null
+        }
+
+        const loadListeners = []
+        const unloadedImage = {
+          nodeType: 1,
+          tagName: 'IMG',
+          nodeName: 'IMG',
+          complete: false,
+          src: 'https://example.com/large-image.jpg',
+          parentElement: mockContainer,
+          parentNode: mockContainer,
+          getBoundingClientRect: jest.fn(() => ({ width: 1200, height: 800 })),
+          addEventListener: jest.fn((event, handler, options) => {
+            if (event === 'load') loadListeners.push({ handler, options })
+          })
+        }
+
+        mutationCallbacks.forEach(cb => cb([{ addedNodes: [unloadedImage] }]))
+
+        // LCP timestamp should not be set yet (still at baseline from populateVitalMinimums)
+        const lcpBeforeLoad = vitals.lcp.value
+
+        // Simulate image load event
+        expect(loadListeners.length).toBe(1)
+        loadListeners[0].handler()
+
+        // Now LCP timestamp should be updated
+        expect(vitals.lcp.value).toBeGreaterThan(lcpBeforeLoad)
+      })
+
+      it('should wait for load event on video elements', () => {
+        const vitals = trackMFEVitals('test-mfe', timings)
+
+        const mockContainer = {
+          nodeType: 1,
+          dataset: { nrMfeId: 'test-mfe' },
+          tagName: 'DIV',
+          nodeName: 'DIV',
+          parentNode: null
+        }
+
+        const loadListeners = []
+        const unloadedVideo = {
+          nodeType: 1,
+          tagName: 'VIDEO',
+          nodeName: 'VIDEO',
+          complete: false,
+          src: 'https://example.com/video.mp4',
+          parentElement: mockContainer,
+          parentNode: mockContainer,
+          getBoundingClientRect: jest.fn(() => ({ width: 1920, height: 1080 })),
+          addEventListener: jest.fn((event, handler, options) => {
+            if (event === 'load') loadListeners.push({ handler, options })
+          })
+        }
+
+        mutationCallbacks.forEach(cb => cb([{ addedNodes: [unloadedVideo] }]))
+
+        const lcpBeforeLoad = vitals.lcp.value
+
+        // Simulate video load event
+        expect(loadListeners.length).toBe(1)
+        loadListeners[0].handler()
+
+        expect(vitals.lcp.value).toBeGreaterThan(lcpBeforeLoad)
+      })
+
+      it('should use once:true for image load listeners to prevent memory leaks', () => {
+        trackMFEVitals('test-mfe', timings)
+
+        const mockContainer = {
+          nodeType: 1,
+          dataset: { nrMfeId: 'test-mfe' },
+          tagName: 'DIV',
+          nodeName: 'DIV',
+          parentNode: null
+        }
+
+        const unloadedImage = {
+          nodeType: 1,
+          tagName: 'IMG',
+          nodeName: 'IMG',
+          complete: false,
+          src: 'https://example.com/image.jpg',
+          parentElement: mockContainer,
+          parentNode: mockContainer,
+          getBoundingClientRect: jest.fn(() => ({ width: 600, height: 400 })),
+          addEventListener: jest.fn()
+        }
+
+        mutationCallbacks.forEach(cb => cb([{ addedNodes: [unloadedImage] }]))
+
+        expect(unloadedImage.addEventListener).toHaveBeenCalledWith(
+          'load',
+          expect.any(Function),
+          { once: true }
+        )
+      })
+    })
+
+    describe('Disconnect on user interaction', () => {
+      it('should disconnect LCP observer on pointerdown within MFE', () => {
+        trackMFEVitals('test-mfe', timings)
+        const pointerListeners = mockEventListeners.pointerdown || []
+        expect(pointerListeners.length).toBeGreaterThan(0)
+
+        const mockTarget = {
+          nodeType: 1,
+          dataset: { nrMfeId: 'test-mfe' },
+          tagName: 'BUTTON',
+          nodeName: 'BUTTON',
+          parentElement: null,
+          parentNode: null
+        }
+
+        // Trigger pointerdown event within MFE
+        pointerListeners[0].handler({ target: mockTarget })
+
+        // LCP MutationObserver (second instance) should be disconnected
+        const lcpObserver = mockMutationObserver.mock.instances[1]
+        expect(lcpObserver.disconnect).toHaveBeenCalled()
+      })
+
+      it('should disconnect LCP observer on keydown within MFE', () => {
+        trackMFEVitals('test-mfe', timings)
+
+        const keyListeners = mockEventListeners.keydown || []
+        expect(keyListeners.length).toBeGreaterThan(0)
+
+        const mockTarget = {
+          nodeType: 1,
+          dataset: { nrMfeId: 'test-mfe' },
+          tagName: 'INPUT',
+          nodeName: 'INPUT',
+          parentElement: null,
+          parentNode: null
+        }
+
+        // Trigger keydown event within MFE
+        keyListeners[0].handler({ target: mockTarget })
+
+        const lcpObserver = mockMutationObserver.mock.instances[1]
+        expect(lcpObserver.disconnect).toHaveBeenCalled()
+      })
+
+      it('should not disconnect LCP observer for interactions outside MFE', () => {
+        trackMFEVitals('test-mfe', timings)
+
+        const pointerListeners = mockEventListeners.pointerdown || []
+
+        const outsideTarget = {
+          nodeType: 1,
+          dataset: { nrMfeId: 'different-mfe' },
+          tagName: 'DIV',
+          nodeName: 'DIV',
+          parentElement: null,
+          parentNode: null
+        }
+
+        // Trigger event outside MFE
+        pointerListeners[0].handler({ target: outsideTarget })
+
+        const lcpObserver = mockMutationObserver.mock.instances[1]
+        expect(lcpObserver.disconnect).not.toHaveBeenCalled()
+      })
+
+      it('should remove interaction listeners after LCP disconnect', () => {
+        trackMFEVitals('test-mfe', timings)
+
+        const mockGlobalScope = require('../../../../src/common/constants/runtime').globalScope
+
+        const mockTarget = {
+          nodeType: 1,
+          dataset: { nrMfeId: 'test-mfe' },
+          tagName: 'BUTTON',
+          nodeName: 'BUTTON',
+          parentElement: null,
+          parentNode: null
+        }
+
+        // Trigger interaction
+        mockEventListeners.pointerdown[0].handler({ target: mockTarget })
+
+        // Listeners should be removed
+        expect(mockGlobalScope.removeEventListener).toHaveBeenCalledWith(
+          'pointerdown',
+          expect.any(Function),
+          { passive: true }
+        )
+        expect(mockGlobalScope.removeEventListener).toHaveBeenCalledWith(
+          'keydown',
+          expect.any(Function),
+          { passive: true }
+        )
+      })
     })
   })
 
@@ -562,6 +903,97 @@ describe('trackMFEVitals', () => {
       expect(vitals.fcp.value).toBe(clockBaseline - 1)
       expect(vitals.lcp).toBeDefined()
       expect(vitals.lcp.value).toBe(clockBaseline + 1)
+    })
+  })
+
+  describe('Performance optimizations', () => {
+    describe('MFE root scoping', () => {
+      it('should observe from MFE root when it already exists', () => {
+        const mockRoot = {
+          nodeType: 1,
+          dataset: { nrMfeId: 'test-mfe' },
+          tagName: 'DIV',
+          nodeName: 'DIV'
+        }
+
+        const mockGlobalScope = require('../../../../src/common/constants/runtime').globalScope
+        mockGlobalScope.document.querySelector = jest.fn((selector) => {
+          if (selector === '[data-nr-mfe-id="test-mfe"]') return mockRoot
+          return null
+        })
+
+        trackMFEVitals('test-mfe', timings)
+
+        // MutationObserver should observe the root, not document
+        const mutationObserverInstance = mockMutationObserver.mock.instances[0]
+        expect(mutationObserverInstance.observe).toHaveBeenCalledWith(
+          mockRoot,
+          { childList: true, subtree: true }
+        )
+      })
+
+      it('should switch from document to root observation when root appears', () => {
+        const mockGlobalScope = require('../../../../src/common/constants/runtime').globalScope
+        mockGlobalScope.document.querySelector = jest.fn(() => null)
+
+        trackMFEVitals('dynamic-mfe', timings)
+
+        // Initially observes document
+        const mutationObserverInstance = mockMutationObserver.mock.instances[0]
+        expect(mutationObserverInstance.observe).toHaveBeenCalledWith(
+          mockGlobalScope.document,
+          { childList: true, subtree: true }
+        )
+
+        // Now the MFE root appears
+        const mfeRoot = {
+          nodeType: 1,
+          dataset: { nrMfeId: 'dynamic-mfe' },
+          tagName: 'DIV',
+          nodeName: 'DIV'
+        }
+
+        // Simulate mutation observer detecting the root being added
+        mutationCallbacks.forEach(cb => cb([{ addedNodes: [mfeRoot] }]))
+
+        // Should disconnect and re-observe at root level
+        expect(mutationObserverInstance.disconnect).toHaveBeenCalled()
+        expect(mutationObserverInstance.observe).toHaveBeenCalledWith(
+          mfeRoot,
+          { childList: true, subtree: true }
+        )
+      })
+
+      it('should skip isInMFE checks when observing from root', () => {
+        const mockRoot = {
+          nodeType: 1,
+          dataset: { nrMfeId: 'scoped-mfe' },
+          tagName: 'DIV',
+          nodeName: 'DIV'
+        }
+
+        const mockGlobalScope = require('../../../../src/common/constants/runtime').globalScope
+        mockGlobalScope.document.querySelector = jest.fn((selector) => {
+          if (selector === '[data-nr-mfe-id="scoped-mfe"]') return mockRoot
+          return null
+        })
+
+        const vitals = trackMFEVitals('scoped-mfe', timings)
+
+        // Add element directly under root (no parent hierarchy needed for test)
+        const mockElement = {
+          textContent: 'Content',
+          nodeType: 1,
+          tagName: 'DIV',
+          nodeName: 'DIV',
+          getBoundingClientRect: jest.fn(() => ({ width: 300, height: 200 }))
+        }
+
+        // When observing from root, all mutations are implicitly in the MFE
+        mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
+
+        expect(vitals.lcp.value).toBe(clockBaseline + 1)
+      })
     })
   })
 

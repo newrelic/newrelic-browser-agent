@@ -155,22 +155,8 @@ export function trackMFEVitals (id, timings) {
           const size = entry.contentRect.width * entry.contentRect.height
           if (size > largestSize) {
             largestSize = size
-            const elem = entry.target
-            // For img/video elements, wait for load event
-            if (['IMG', 'VIDEO'].includes(elem.tagName)) {
-              if (elem.complete) {
-                lcpObservedAt = now()
-                resizeObs.unobserve(elem)
-              } else {
-                elem.addEventListener('load', () => {
-                  lcpObservedAt = now()
-                  resizeObs.unobserve(elem)
-                }, { once: true })
-              }
-            } else {
-              lcpObservedAt = now()
-              resizeObs.unobserve(elem)
-            }
+            lcpObservedAt = now()
+            resizeObs.unobserve(entry.target)
           }
         } catch (e) {
           // Element may be detached from DOM
@@ -190,7 +176,29 @@ export function trackMFEVitals (id, timings) {
         const elem = node.nodeType === 1 ? node : node.parentElement
         if (elem && !observedElements.has(elem)) {
           observedElements.add(elem)
-          resizeObs.observe(elem)
+
+          // For media elements, wait for content to load before observing size
+          if (elem.tagName === 'IMG') {
+            if (elem.complete) {
+              resizeObs.observe(elem)
+            } else {
+              elem.addEventListener('load', () => {
+                resizeObs.observe(elem)
+              }, { once: true })
+            }
+          } else if (elem.tagName === 'VIDEO') {
+            // For video, wait for first frame (HAVE_CURRENT_DATA = 2)
+            if (elem.readyState >= 2) {
+              resizeObs.observe(elem)
+            } else {
+              elem.addEventListener('loadeddata', () => {
+                resizeObs.observe(elem)
+              }, { once: true })
+            }
+          } else {
+            // For other elements, observe immediately
+            resizeObs.observe(elem)
+          }
         }
       } catch (e) {
         // Element may not be observable
@@ -251,6 +259,7 @@ export function trackMFEVitals (id, timings) {
   const disconnectLCP = () => {
     try {
       lcpObs?.disconnect()
+      resizeObs?.disconnect()
     } catch (e) {
       // Observer may already be disconnected
     }

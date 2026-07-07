@@ -425,7 +425,7 @@ describe('trackMFEVitals', () => {
         expect(vitals.lcp.value).toBeGreaterThan(lcpBeforeLoad)
       })
 
-      it('should wait for load event on video elements', () => {
+      it('should wait for loadeddata event on video elements', () => {
         const vitals = trackMFEVitals('test-mfe', timings)
 
         const mockContainer = {
@@ -436,18 +436,18 @@ describe('trackMFEVitals', () => {
           parentNode: null
         }
 
-        const loadListeners = []
+        const loadeddataListeners = []
         const unloadedVideo = {
           nodeType: 1,
           tagName: 'VIDEO',
           nodeName: 'VIDEO',
-          complete: false,
+          readyState: 0, // HAVE_NOTHING - video not loaded yet
           src: 'https://example.com/video.mp4',
           parentElement: mockContainer,
           parentNode: mockContainer,
           getBoundingClientRect: jest.fn(() => ({ width: 1920, height: 1080 })),
           addEventListener: jest.fn((event, handler, options) => {
-            if (event === 'load') loadListeners.push({ handler, options })
+            if (event === 'loadeddata') loadeddataListeners.push({ handler, options })
           })
         }
 
@@ -455,9 +455,9 @@ describe('trackMFEVitals', () => {
 
         const lcpBeforeLoad = vitals.lcp.value
 
-        // Simulate video load event
-        expect(loadListeners.length).toBe(1)
-        loadListeners[0].handler()
+        // Simulate video loadeddata event
+        expect(loadeddataListeners.length).toBe(1)
+        loadeddataListeners[0].handler()
 
         expect(vitals.lcp.value).toBeGreaterThan(lcpBeforeLoad)
       })
@@ -492,6 +492,70 @@ describe('trackMFEVitals', () => {
           expect.any(Function),
           { once: true }
         )
+      })
+
+      it('should use once:true for video loadeddata listeners to prevent memory leaks', () => {
+        trackMFEVitals('test-mfe', timings)
+
+        const mockContainer = {
+          nodeType: 1,
+          dataset: { nrMfeId: 'test-mfe' },
+          tagName: 'DIV',
+          nodeName: 'DIV',
+          parentNode: null
+        }
+
+        const unloadedVideo = {
+          nodeType: 1,
+          tagName: 'VIDEO',
+          nodeName: 'VIDEO',
+          readyState: 1, // HAVE_METADATA - not fully loaded
+          src: 'https://example.com/video.mp4',
+          parentElement: mockContainer,
+          parentNode: mockContainer,
+          getBoundingClientRect: jest.fn(() => ({ width: 1920, height: 1080 })),
+          addEventListener: jest.fn()
+        }
+
+        mutationCallbacks.forEach(cb => cb([{ addedNodes: [unloadedVideo] }]))
+
+        expect(unloadedVideo.addEventListener).toHaveBeenCalledWith(
+          'loadeddata',
+          expect.any(Function),
+          { once: true }
+        )
+      })
+
+      it('should observe already-loaded videos immediately', () => {
+        trackMFEVitals('test-mfe', timings)
+
+        const mockContainer = {
+          nodeType: 1,
+          dataset: { nrMfeId: 'test-mfe' },
+          tagName: 'DIV',
+          nodeName: 'DIV',
+          parentNode: null
+        }
+
+        const loadedVideo = {
+          nodeType: 1,
+          tagName: 'VIDEO',
+          nodeName: 'VIDEO',
+          readyState: 2, // HAVE_CURRENT_DATA - first frame loaded
+          src: 'https://example.com/video.mp4',
+          parentElement: mockContainer,
+          parentNode: mockContainer,
+          getBoundingClientRect: jest.fn(() => ({ width: 1920, height: 1080 })),
+          addEventListener: jest.fn()
+        }
+
+        mutationCallbacks.forEach(cb => cb([{ addedNodes: [loadedVideo] }]))
+
+        // Should not add event listener, should observe immediately
+        expect(loadedVideo.addEventListener).not.toHaveBeenCalled()
+
+        const resizeObserverInstance = mockResizeObserver.mock.instances[0]
+        expect(resizeObserverInstance.observe).toHaveBeenCalledWith(loadedVideo)
       })
     })
 

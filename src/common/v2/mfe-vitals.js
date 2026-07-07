@@ -160,13 +160,16 @@ export function trackMFEVitals (id, timings) {
             if (['IMG', 'VIDEO'].includes(elem.tagName)) {
               if (elem.complete) {
                 lcpObservedAt = now()
+                resizeObs.unobserve(elem)
               } else {
                 elem.addEventListener('load', () => {
                   lcpObservedAt = now()
+                  resizeObs.unobserve(elem)
                 }, { once: true })
               }
             } else {
               lcpObservedAt = now()
+              resizeObs.unobserve(elem)
             }
           }
         } catch (e) {

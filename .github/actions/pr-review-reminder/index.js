@@ -46,6 +46,7 @@ do {
             url
             isDraft
             reviewDecision
+            createdAt
             author {
               login
             }
@@ -57,6 +58,40 @@ do {
             assignees(first: 100) {
               nodes {
                 login
+              }
+            }
+            commits(last: 1) {
+              nodes {
+                commit {
+                  committedDate
+                }
+              }
+            }
+            timelineItems(last: 100, itemTypes: [PULL_REQUEST_REVIEW, ISSUE_COMMENT, PULL_REQUEST_REVIEW_THREAD]) {
+              nodes {
+                __typename
+                ... on PullRequestReview {
+                  author {
+                    login
+                  }
+                  createdAt
+                }
+                ... on IssueComment {
+                  author {
+                    login
+                  }
+                  createdAt
+                }
+                ... on PullRequestReviewThread {
+                  comments(first: 1) {
+                    nodes {
+                      author {
+                        login
+                      }
+                      createdAt
+                    }
+                  }
+                }
               }
             }
             body
@@ -204,6 +239,41 @@ if (needsReview.length === 0) {
     
     if (assignees.length === 0) {
       lines.push('  _No assignees yet. Please take a look and assign yourself._')
+    }
+    
+    // Add timing and activity information
+    const createdDate = new Date(pr.createdAt)
+    const formattedDate = createdDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    
+    // Find the most recent comment/review from a non-author
+    const reviewerActivity = pr.timelineItems.nodes
+      .flatMap((item) => {
+        // Handle PullRequestReview and IssueComment
+        if (item.author?.login && item.author.login !== authorLogin && item.createdAt) {
+          return [new Date(item.createdAt)]
+        }
+        // Handle PullRequestReviewThread
+        if (item.__typename === 'PullRequestReviewThread' && item.comments?.nodes) {
+          return item.comments.nodes
+            .filter((comment) => comment.author?.login && comment.author.login !== authorLogin)
+            .map((comment) => new Date(comment.createdAt))
+        }
+        return []
+      })
+      .sort((a, b) => b - a)[0]
+    
+    // Get the most recent commit date
+    const lastCommitDate = pr.commits.nodes.length > 0 
+      ? new Date(pr.commits.nodes[0].commit.committedDate)
+      : null
+    
+    if (reviewerActivity && lastCommitDate && lastCommitDate > reviewerActivity) {
+      lines.push(`    - This PR has been open since ${formattedDate}`)
+      lines.push(`    - This PR has new commits since the last reviewer comment`)
+    } else if (reviewerActivity) {
+      lines.push(`    - This PR has been open since ${formattedDate}`)
+    } else {
+      lines.push(`    - This PR has been open since ${formattedDate} without review`)
     }
   }
 }

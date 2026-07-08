@@ -5,57 +5,10 @@
 
 import { globalScope, isBrowserScope } from '../constants/runtime'
 import { now } from '../timing/now'
-import { cleanURL } from '../url/clean-url'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPITimings} RegisterAPITimings
  */
-
-/**
- * Generate a simple CSS selector for an element
- * @param {Element} elem - The element to generate selector for
- * @returns {string|null} CSS selector or null if element is invalid
- */
-const getElementSelector = (elem) => {
-  try {
-    if (!elem || !elem.tagName) return null
-
-    let selector = elem.tagName.toLowerCase()
-    if (elem.id) selector += `#${elem.id}`
-    else if (elem.className && typeof elem.className === 'string') {
-      const classes = elem.className.trim().split(/\s+/).slice(0, 2).join('.')
-      if (classes) selector += `.${classes}`
-    }
-    return selector
-  } catch (e) {
-    return null
-  }
-}
-
-/**
- * Extract URL from an element (for images, videos, etc.)
- * @param {Element} elem - The element to extract URL from
- * @returns {string|null} Cleaned URL or null
- */
-const getElementURL = (elem) => {
-  try {
-    if (!elem) return null
-
-    // For images and videos
-    if (elem.src) return cleanURL(elem.src)
-
-    // For elements with background images
-    const bgImage = globalScope.getComputedStyle?.(elem)?.backgroundImage
-    if (bgImage && bgImage !== 'none') {
-      const match = bgImage.match(/url\(['"]?([^'"]+)['"]?\)/)
-      if (match?.[1]) return cleanURL(match[1])
-    }
-
-    return null
-  } catch (e) {
-    return null
-  }
-}
 
 const isObservable = (node) => {
   try {
@@ -72,6 +25,7 @@ const isObservable = (node) => {
  * @returns {boolean}
  */
 const isInMFE = (node, id) => {
+  if (!node || !id) return false
   try {
     let curr = node.nodeType === 1 ? node : node.parentElement
     while (curr?.tagName) {
@@ -85,18 +39,37 @@ const isInMFE = (node, id) => {
 /**
  * Create mutation observer for MFE nodes
  * @param {string} id - MFE ID to track
- * @param {Function} onMatch - Callback when matching node is added
+ * @param {Function} onMatch - Callback when matching node is *added*
  * @returns {MutationObserver}
  */
 const observeMutations = (id, onMatch) => {
+  // Try to find existing MFE root
+  const mfeRoot = globalScope.document?.querySelector(`[data-nr-mfe-id="${id}"]`)
+  let observingRoot = !!mfeRoot
+
   const obs = new globalScope.MutationObserver(mutations => {
-    mutations.forEach(m => m.addedNodes.forEach(node => {
-      if (isObservable(node) && isInMFE(node, id)) {
-        onMatch(node, obs)
-      }
-    }))
+    mutations.forEach(m => {
+      m.addedNodes.forEach(node => {
+        // Check if this is the MFE root being added
+        const elem = node.nodeType === 1 ? node : null
+        if (elem?.dataset?.nrMfeId === id) {
+          // Found the root! Lets switch to observing just this subtree for performance reasons
+          obs.disconnect()
+          obs.observe(elem, { childList: true, subtree: true })
+          observingRoot = true
+        }
+
+        // Only check isInMFE if we're observing the whole document; skip expensive ancestor walk when observing root
+        if (isObservable(node) && (observingRoot || isInMFE(node, id))) {
+          onMatch(node, obs)
+        }
+      })
+    })
   })
-  obs.observe(globalScope.document, { childList: true, subtree: true })
+
+  // If root exists, observe just that subtree; otherwise observe document to catch when root is added
+  obs.observe(mfeRoot || globalScope.document, { childList: true, subtree: true })
+
   return obs
 }
 
@@ -125,12 +98,28 @@ const observePerformance = (observers, config, onEntry) => {
  * @param {string} id - The MFE ID to track
  * @returns {{fcp: object|null, lcp: object|null, cls: object|null, inp: object|null, disconnect: Function}}
  */
-export function trackMFEVitals (id) {
+export function trackMFEVitals (id, timings) {
+  let fcpObservedAt = null
+  let lcpObservedAt = null
+
+  const getTimeRelativeToScriptStart = (capturedAt) => {
+    if (capturedAt === null) return null
+    return capturedAt - (timings?.scriptStart || timings?.registeredAt || 0)
+  }
+
   const vitals = {
-    fcp: null,
-    lcp: null,
-    cls: null,
-    inp: null,
+    fcp: {
+      get value () { return getTimeRelativeToScriptStart(fcpObservedAt) }
+    },
+    lcp: {
+      get value () { return getTimeRelativeToScriptStart(lcpObservedAt) }
+    },
+    cls: {
+      value: null
+    },
+    inp: {
+      value: null
+    },
     disconnect: () => {}
   }
 
@@ -138,93 +127,119 @@ export function trackMFEVitals (id) {
 
   const observers = []
 
+  const populateVitalMinimums = () => {
+    fcpObservedAt ??= now()
+    lcpObservedAt ??= now()
+    vitals.cls.value ??= 0
+  }
+
+  // if the MFE has already rendered something on the page before we could set up listeners, just populate vital minimums immediately
+  if (globalScope.document?.querySelector(`[data-nr-mfe-id="${id}"]`)) populateVitalMinimums()
+
   // Track FCP - first contentful paint
-  observeMutations(id, (node, obs) => {
-    if (vitals.fcp === null) {
-      vitals.fcp = {
-        value: now(),
-        loadState: globalScope.document?.readyState || null
-      }
-      obs.disconnect()
-    }
+  observeMutations(id, (_, obs) => {
+    // An observed "FCP" means _something_ rendered, so at minimum we can populate all the baseline values for the vitals
+    populateVitalMinimums()
+    obs.disconnect()
   })
 
   // Track LCP - largest contentful paint
   let largestSize = 0
-  const lcpObs = observeMutations(id, (node) => {
-    try {
-      const elem = node.nodeType === 1 ? node : node.parentElement
-      if (!elem) return
-      const rect = elem.getBoundingClientRect()
-      const size = rect.width * rect.height
-      if (size > largestSize) {
-        largestSize = size
-        vitals.lcp = {
-          value: now(),
-          size,
-          elTag: elem.tagName || null,
-          eid: elem.id || null,
-          elUrl: getElementURL(elem)
+  let resizeObs = null
+  const observedElements = new Set()
+
+  try {
+    resizeObs = new globalScope.ResizeObserver((entries) => {
+      entries.forEach((entry) => {
+        try {
+          const size = entry.contentRect.width * entry.contentRect.height
+          if (size > largestSize) {
+            largestSize = size
+            lcpObservedAt = now()
+          }
+          resizeObs.unobserve(entry.target)
+        } catch (e) {
+          // Element may be detached from DOM
         }
+      })
+    })
+  } catch (e) {
+    // ResizeObserver not supported
+  }
+
+  const lcpObs = observeMutations(id, (node) => {
+    // an observed "LCP" means _something_ rendered, so at minimum we can make sure all the baseline values are populated for the vitals
+    populateVitalMinimums()
+
+    if (resizeObs) {
+      try {
+        const elem = node.nodeType === 1 ? node : node.parentElement
+        if (elem && !observedElements.has(elem)) {
+          observedElements.add(elem)
+
+          // For media elements, wait for content to load before observing size
+          if (elem.tagName === 'IMG') {
+            if (elem.complete) {
+              resizeObs.observe(elem)
+            } else {
+              elem.addEventListener('load', () => {
+                resizeObs.observe(elem)
+              }, { once: true })
+            }
+          } else if (elem.tagName === 'VIDEO') {
+            // For video, wait for first frame (HAVE_CURRENT_DATA = 2)
+            if (elem.readyState >= 2) {
+              resizeObs.observe(elem)
+            } else {
+              elem.addEventListener('loadeddata', () => {
+                resizeObs.observe(elem)
+              }, { once: true })
+            }
+          } else {
+            // For other elements, observe immediately
+            resizeObs.observe(elem)
+          }
+        }
+      } catch (e) {
+        // Element may not be observable
       }
-    } catch (e) {
-      // Element may be detached from DOM
     }
   })
+
+  if (resizeObs) observers.push(resizeObs)
   observers.push(lcpObs)
 
   // Track CLS - cumulative layout shift
-  // Initialize CLS to 0 if browser supports it AND the MFE container exists in the DOM
-  let clsValue = 0
-  const clsObs = observePerformance(observers, { type: 'layout-shift', buffered: true }, (entry) => {
-    if (entry.hadRecentInput || !vitals.cls) return
-    (entry.sources || []).some(source => {
+  // Initialize CLS to 0 if browser supports it
+  observePerformance(observers, { type: 'layout-shift', buffered: true }, (entry) => {
+    if (entry.hadRecentInput) return
+    ;(entry.sources || []).some(source => {
       if (isInMFE(source.node, id)) {
-        clsValue += entry.value
-        vitals.cls ??= { value: 0, largestShiftValue: null, largestShiftTime: null, largestShiftTarget: null, loadState: null }
-        vitals.cls.value = clsValue
-
-        // Track largest shift
-        if (entry.value > (vitals.cls.largestShiftValue || 0)) {
-          vitals.cls.largestShiftValue = entry.value
-          vitals.cls.largestShiftTime = entry.startTime
-          vitals.cls.largestShiftTarget = getElementSelector(source.node)
-          vitals.cls.loadState = globalScope.document?.readyState || null
-        }
+        // an observed "CLS" means _something_ rendered for the MFE, so at minimum we can make sure all the baseline values are populated for the vitals
+        populateVitalMinimums()
+        vitals.cls.value += entry.value
         return true
       }
       return false
     })
   })
 
-  if (clsObs) {
-    try {
-      const mfeContainer = globalScope.document?.querySelector(`[data-nr-mfe-id="${id}"]`)
-      if (mfeContainer) {
-        vitals.cls ??= { value: 0, largestShiftValue: null, largestShiftTime: null, largestShiftTarget: null, loadState: null }
-      }
-    } catch (e) {
-      // querySelector may fail, leave CLS as null
-    }
-  }
-
   // Track INP - interaction to next paint
-  observePerformance(observers, { type: 'event', buffered: true, durationThreshold: 16 }, (entry) => {
-    if (!entry.interactionId || !entry.target || !isInMFE(entry.target, id)) return
-    if (vitals.inp === null || entry.duration > vitals.inp.value) {
-      vitals.inp = {
-        value: entry.duration,
-        interactionTarget: getElementSelector(entry.target),
-        interactionTime: entry.startTime,
-        interactionType: entry.name,
-        inputDelay: entry.processingStart ? entry.processingStart - entry.startTime : null,
-        processingDuration: (entry.processingStart && entry.processingEnd) ? entry.processingEnd - entry.processingStart : null,
-        presentationDelay: (entry.processingEnd && entry.duration) ? entry.duration - (entry.processingEnd - entry.startTime) : null,
-        nextPaintTime: entry.startTime + entry.duration,
-        loadState: globalScope.document?.readyState || null
-      }
+  observePerformance(observers, { type: 'event', buffered: true, durationThreshold: 40 }, (entry) => {
+    if (!entry.interactionId || !isInMFE(entry.target, id)) return
+    if (vitals.inp.value === null || entry.duration > vitals.inp.value) {
+      // an observed "INP" means _something_ rendered for the MFE, so at minimum we can make sure all the baseline values are populated for the vitals
+      populateVitalMinimums()
+      vitals.inp.value = entry.duration
     }
   })
+
+  const interactionEvents = ['pointerdown', 'keydown']
+  const disconnectInteractionListeners = () => {
+    interactionEvents.forEach(type => {
+      globalScope.removeEventListener(type, handleInteraction, { passive: true })
+    })
+  }
 
   // Disconnect all observers
   vitals.disconnect = () => {
@@ -236,6 +251,7 @@ export function trackMFEVitals (id) {
         // Observer may already be disconnected
       }
     })
+    disconnectInteractionListeners()
   }
 
   // Auto-disconnect LCP observer on user interaction (per Web Vitals spec)
@@ -243,12 +259,21 @@ export function trackMFEVitals (id) {
   const disconnectLCP = () => {
     try {
       lcpObs?.disconnect()
+      resizeObs?.disconnect()
     } catch (e) {
       // Observer may already be disconnected
     }
   }
-  ;['click', 'keydown', 'scroll'].forEach(type => {
-    globalScope.addEventListener(type, disconnectLCP, { once: true, passive: true })
+
+  const handleInteraction = (event) => {
+    if (!isInMFE(event?.target, id)) return
+
+    disconnectLCP()
+    disconnectInteractionListeners()
+  }
+
+  interactionEvents.forEach(type => {
+    globalScope.addEventListener(type, handleInteraction, { passive: true })
   })
 
   // Disconnect all observers on visibility change or page unload

@@ -229,7 +229,7 @@ describe.withBrowsersMatching(supportsWebSocketsTesting)('WebSocket wrapper', ()
     // Load a simple instrumented page with websockets feature enabled
     const url = await browser.testHandle.assetURL('instrumented.html', {
       loader: 'spa',
-      init: { feature_flags: ['websockets'] }
+      init: { web_sockets: { enabled: true } }
     })
     await browser.url(url).then(() => browser.waitForAgentLoad())
 

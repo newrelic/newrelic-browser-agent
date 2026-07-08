@@ -179,10 +179,11 @@ jobs:
 
   # Step 2: Deploy to Staging
   deploy-staging:
-    # Only run for workflow_dispatch on main or release-please branches
+    # For workflow_dispatch: only on main or release-please branches
+    # For pull_request: only release-please PRs
     if: |
-      github.event_name == 'workflow_dispatch' && 
-      (github.ref_name == 'main' || startsWith(github.ref_name, 'release-please--'))
+      (github.event_name == 'workflow_dispatch' && (github.ref_name == 'main' || startsWith(github.ref_name, 'release-please--'))) ||
+      (github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please--'))
     needs: [resolve-version, deploy-dev]
     runs-on: ubuntu-latest
     environment: nr1-staging

@@ -31,7 +31,10 @@ NREUM.init = {
   },
   ajax: {
     deny_list: ['bam.nr-data.net']
+  },
+  web_sockets: {
+    enabled: true
   }
 }
-NREUM.feature_flags = ['soft_nav', 'websockets']
+NREUM.feature_flags = ['soft_nav']
 NREUM.info = { beacon: 'bam.nr-data.net', errorBeacon: 'bam.nr-data.net', licenseKey: '{{{releasedUsProdLicenseKey}}}', applicationID: '1431909786', sa: 1 }

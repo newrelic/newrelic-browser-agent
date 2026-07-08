@@ -31,7 +31,10 @@ NREUM.init = {
   },
   ajax: {
     deny_list: ['staging-bam-cell.nr-data.net']
+  },
+  web_sockets: {
+    enabled: true
   }
 }
-NREUM.feature_flags = ['soft_nav', 'websockets']
+NREUM.feature_flags = ['soft_nav']
 NREUM.info = { beacon: 'staging-bam-cell.nr-data.net', errorBeacon: 'staging-bam-cell.nr-data.net', licenseKey: '{{{releasedStagingLicenseKey}}}', applicationID: '78536307', sa: 1 }

@@ -156,8 +156,8 @@ export function trackMFEVitals (id, timings) {
           if (size > largestSize) {
             largestSize = size
             lcpObservedAt = now()
-            resizeObs.unobserve(entry.target)
           }
+          resizeObs.unobserve(entry.target)
         } catch (e) {
           // Element may be detached from DOM
         }

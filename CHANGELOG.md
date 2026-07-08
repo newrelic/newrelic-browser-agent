@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.318.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.317.0...v1.318.0) (2026-07-08)
+
+
+### Features
+
+* Add websocket init config ([#1803](https://github.com/newrelic/newrelic-browser-agent/issues/1803)) ([aa4d2f3](https://github.com/newrelic/newrelic-browser-agent/commit/aa4d2f330fb832e0bbbdd8ed88702621f7564abf))
+* Improve agent startup ([#1760](https://github.com/newrelic/newrelic-browser-agent/issues/1760)) ([d75f4bf](https://github.com/newrelic/newrelic-browser-agent/commit/d75f4bf7758f29e7096a84b8c55ed3d2b135caed))
+* MFE core web-vitals detection ([#1768](https://github.com/newrelic/newrelic-browser-agent/issues/1768)) ([8559842](https://github.com/newrelic/newrelic-browser-agent/commit/8559842cc233db8875f283c301c0e8b062689e05))
+
 ## [1.317.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.316.0...v1.317.0) (2026-06-18)
 
 

@@ -4,6 +4,39 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "aa4d2f330fb832e0bbbdd8ed88702621f7564abf",
+          "message": "Add websocket init config",
+          "issues": [
+            "1803"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "8559842cc233db8875f283c301c0e8b062689e05",
+          "message": "MFE core web-vitals detection",
+          "issues": [
+            "1768"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "d75f4bf7758f29e7096a84b8c55ed3d2b135caed",
+          "message": "Improve agent startup",
+          "issues": [
+            "1760"
+          ]
+        }
+      ],
+      "version": "1.318.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "2cf92556-9b5e-496b-a207-8b6cc0afff7d",
+      "createTime": "2026-07-08T00:40:49.669Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "f7df627b14e3e5e8fa4a8d94433ea76e9a9902bb",
           "message": "Calculate browser_stack_hash from truncated stack trace",
@@ -4053,5 +4086,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-06-18T17:16:32.741Z"
+  "updateTime": "2026-07-08T00:40:49.669Z"
 }

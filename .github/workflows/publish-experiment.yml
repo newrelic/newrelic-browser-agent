@@ -112,7 +112,10 @@ jobs:
               }
             },
             proxy: {},
-            user_actions: {elementAttributes: ['id', 'className', 'tagName', 'type', 'ariaLabel', 'alt', 'title']}
+            user_actions: {elementAttributes: ['id', 'className', 'tagName', 'type', 'ariaLabel', 'alt', 'title']},
+            web_sockets: {
+              enabled: true
+            }
           };
           window.NREUM.loader_config = {
             accountID: '1',

@@ -26,7 +26,7 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
-    const websocketsEnabled = agentRef.init.feature_flags.includes('websockets')
+    const websocketsEnabled = agentRef.init.feature_flags.includes('websockets') || agentRef.init.web_sockets?.enabled
     const securityPolicyViolationEnabled = !agentRef.init.feature_flags.includes('no_spv')
 
     /** config values that gate whether the generic events aggregator should be imported at all */

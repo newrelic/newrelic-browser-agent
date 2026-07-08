@@ -138,7 +138,8 @@ const InitModelFn = () => {
     session_trace: { enabled: true, autoStart: true },
     soft_navigations: { enabled: true, autoStart: true },
     ssl: undefined,
-    user_actions: { enabled: true, elementAttributes: ['id', 'className', 'tagName', 'type'] }
+    user_actions: { enabled: true, elementAttributes: ['id', 'className', 'tagName', 'type'] },
+    web_sockets: { enabled: false }
   }
 }
 

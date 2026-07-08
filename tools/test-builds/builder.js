@@ -77,4 +77,5 @@ const packages = fs.readdirSync(__dirname, { withFileTypes: true })
 Promise.all(packages)
   .catch(err => {
     print('Build failed', err)
+    process.exit(1)
   })

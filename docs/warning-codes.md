@@ -144,10 +144,14 @@
 ### 71
 `An invalid feature mode was detected and set to "off".`
 ### 72
-`RegisteredIframeEntity failed to transmit API data from iframe to window context`
+`RegisteredIframeEntity failed to transmit API data from an iframe to window context`
 ### 73
 `RegisteredIframeEntity failed to register with window context`
 ### 74
 `RegisteredIframeEntity rejected message from unauthorized origin`
 ### 75
 `RegisteredIframeEntity rejected message with mismatched iframeInterfaceId`
+### 76
+`Agent rejected post message, could not match with existing entity`
+### 77
+`Agent rejected post message, could not validate origin`

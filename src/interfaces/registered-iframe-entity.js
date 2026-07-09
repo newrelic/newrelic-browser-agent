@@ -14,6 +14,10 @@ import { now } from '../common/timing/now'
 import { warn } from '../common/util/console'
 import { findScriptTimings } from '../common/v2/script-tracker'
 import { parseUrl } from '../common/url/parse-url'
+import { IFRAME_TIMING_UPDATE, IFRAME_API, IFRAME_API_RESPONSE, IFRAME_VITALS_UPDATE, IFRAME_AJAX } from '../common/constants/iframe-constants'
+import { castErrorEvent, castError } from '../features/jserrors/shared/cast-error'
+
+const REGISTER = 'register' // define it here for now to prevent importing the full list of constants for build size.
 
 /**
  * @typedef {import('../loaders/api/register-api-types').RegisterAPI} RegisterAPI
@@ -60,13 +64,13 @@ export class RegisteredIframeEntity {
     this.metadata.target = this.#targetDescriptor = opts
 
     if (!isIFrameWindow(window)) {
-      warn(71, 'Must be in iframe context to use this interface')
+      warn(72)
       this.blocked = true
       return
     }
 
     // Store the registration promise so other methods can wait for it
-    this.#registrationPromise = this.#postMethodToAgent('register', [opts])
+    this.#registrationPromise = this.#postMethodToAgent(REGISTER, [opts])
       .then(response => {
         // Merge updated metadata from parent (includes full target info with server-generated IDs)
         if (response?.metadata) {
@@ -104,24 +108,24 @@ export class RegisteredIframeEntity {
       })
 
     globalScope.addEventListener('error', err => {
-      this.noticeError(err)
+      this.noticeError(castErrorEvent(err))
     })
 
-    onCLS(({ value }) => {
-      // send message to parent with CLS value and attributes
-    }, { reportAllChanges: true })
-
-    onLCP(({ value }) => {
-      // send message to parent with LCP value and attributes
+    globalScope.addEventListener('unhandledrejection', event => {
+      this.noticeError(castPromiseRejectionEvent(event))
     })
 
-    onFCP(({ value }) => {
-      // send message to parent with FCP value and attributes
+    const vitals = [[onCLS, 'cls'], [onLCP, 'lcp'], [onFCP, 'fcp'], [onINP, 'inp']]
+    vitals.forEach(([vitalFn, property]) => {
+      vitalFn(({ value }) => {
+        // send message to parent with vital value and attributes
+        this.#postMessageToParent(IFRAME_VITALS_UPDATE, {
+          property,
+          value
+        })
+      }, { reportAllChanges: property === 'cls' })
     })
-
-    onINP(({ value }) => {
-      // send message to parent with INP value and attributes
-    })
+  
 
     // Instrument ajax here using buffered resource timing so pre-registration entries are included.
     const initiators = { xmlhttprequest: 'xhr', fetch: 'fetch', beacon: 'beacon' }
@@ -130,9 +134,13 @@ export class RegisteredIframeEntity {
         const params = { status: resource.responseStatus }
         const metrics = { rxSize: resource.transferSize, duration: Math.floor(resource.duration), cbTime: 0 }
         addUrl(params, resource.name)
-        // this.handler('xhr', [params, metrics, resource.startTime, resource.responseEnd, initiators[resource.initiatorType]], undefined, FEATURE_NAMES.ajax)
-
-        // send message to parent with ajax resource timing data HERE
+        this.#postMessageToParent(IFRAME_AJAX, {
+          params, 
+          metrics, 
+          start: resource.startTime, 
+          end: resource.responseEnd, 
+          initiatorType: initiators[resource.initiatorType]
+        })
       }
     }
 
@@ -145,7 +153,7 @@ export class RegisteredIframeEntity {
 
     globalScope.addEventListener('message', (event) => {
       // Validate message structure
-      if (event.data?.type !== 'newrelic-iframe-api-response') return
+      if (event.data?.type !== IFRAME_API_RESPONSE) return
 
       // Validate origin if we have specific allowed origins
       if (!this.#isAllowedOrigin(event.origin)) {
@@ -155,7 +163,7 @@ export class RegisteredIframeEntity {
 
       // Validate iframeInterfaceId to prevent spoofing (message must be for this instance)
       if (event.data.iframeInterfaceId !== this.#iframeInterfaceId) {
-        warn(75, 'Rejected message with mismatched iframeInterfaceId')
+        warn(75)
         return
       }
 
@@ -190,15 +198,18 @@ export class RegisteredIframeEntity {
   /**
    * Low-level helper to send postMessage to parent window with error handling
    * @private
-   * @param {object} message - The message object to send
+   * @param {string} type - The message type to send
+   * @param {object} data - The message payload to send
+   * @param {number} [timestamp=now()] - The relative timestamp of the message trigger. defaults to the postMessage call time if not provided.
+   * @param {{resolve: Function, reject: Function}} [resolvers] - Optional promise resolvers for handling response
    */
-  #postMessageToParent (type, data, resolvers) {
+  #postMessageToParent (type, data, timestamp = now(), resolvers) {
     try {
       this.#openPending(data.messageId, resolvers)
       globalScope.parent.postMessage({
         type,
         target: this.#targetDescriptor,
-        timestamp: now(),
+        timestamp,
         iframeInterfaceId: this.#iframeInterfaceId,
         ...data
       }, this.#parentOrigin)
@@ -216,7 +227,7 @@ export class RegisteredIframeEntity {
   #postTimingToAgent (property, value) {
     if (this.blocked) return
 
-    this.#postMessageToParent('newrelic-iframe-timing-update', {
+    this.#postMessageToParent(IFRAME_TIMING_UPDATE, {
       property,
       value
     })
@@ -232,20 +243,21 @@ export class RegisteredIframeEntity {
    */
   #postMethodToAgent (method, args) {
     if (this.blocked) {
-      return Promise.reject(new Error('Iframe interface is blocked'))
+      const msg = 'Iframe interface is blocked'
+      warn(72, msg)
+      return Promise.reject(new Error(msg))
     }
-
-    // For all methods except register itself, wait for registration to complete first
-    const waitPromise = method === 'register' ? Promise.resolve() : this.#registrationPromise
+    const timestamp = now() // For all methods except register itself, wait for registration to complete first
+    const waitPromise = method === REGISTER ? Promise.resolve() : this.#registrationPromise
 
     return waitPromise.then(() => new Promise((resolve, reject) => {
       try {
         const messageId = ++this.#messageIdCounter
-        this.#postMessageToParent('newrelic-iframe-api', {
+        this.#postMessageToParent(IFRAME_API, {
           messageId,
           method,
           args
-        }, {
+        }, timestamp, {
           resolve,
           reject
         })
@@ -291,7 +303,7 @@ export class RegisteredIframeEntity {
     @returns {Promise<import('../loaders/api/register-api-types').RegisterAPI>} Returns a promise that resolves with an object that contains the available API methods and configurations to use with the external caller. See loaders/api/api.js for more information.
    */
   register (target) {
-    return this.#postMethodToAgent('register', [target])
+    return this.#postMethodToAgent(REGISTER, [target])
   }
 
   /**
@@ -350,7 +362,7 @@ export class RegisteredIframeEntity {
    * @param {object} [customAttributes] An object containing name/value pairs representing custom attributes.
    */
   noticeError (error, customAttributes) {
-    this.#postMethodToAgent('noticeError', [error, customAttributes])
+    this.#postMethodToAgent('noticeError', [castError(error), customAttributes])
   }
 
   /**

@@ -9,7 +9,7 @@ import {
   testMFEAjaxEventsRequest,
   testLogsRequest
 } from '../../../../tools/testing-server/utils/expect-tests'
-import { supportsLargestContentfulPaint, supportsCumulativeLayoutShift } from '../../../../tools/browser-matcher/common-matchers.mjs'
+import { supportsLargestContentfulPaint, supportsCumulativeLayoutShift, supportsInteractionToNextPaint } from '../../../../tools/browser-matcher/common-matchers.mjs'
 
 const SOURCE_ID = 'iframe-test'
 const SOURCE_NAME = 'iframe test'
@@ -24,18 +24,42 @@ function getAttr (event, key) {
 
 /**
  * Load the registered iframe entity parent page with the given feature flags.
- * The iframe (registered-iframe-entity-iframe.html) runs registered-iframe-entity.js automatically, which:
- *  - Registers with id 'iframe-test', name 'iframe test'
- *  - Calls addPageAction, recordCustomEvent, measure, log, and fetch
- *  - Throws an error (captured via global error listener → noticeError)
- *  - Calls deregister() after 3 seconds (triggers MicroFrontEndTiming harvest)
+ * The iframe runs registered-iframe-entity.js automatically, which registers the entity,
+ * fires addPageAction/recordCustomEvent/measure/log/fetch, throws an error, and on 'load'
+ * inserts a spacer for CLS. The test is responsible for clicking (INP + LCP) and deregistering.
  */
-async function loadIframePage (flags = ['register', 'register.jserrors']) {
+async function loadIframePage (flags = ['register', 'register.jserrors'], initOverrides = {}) {
   await browser.url(await browser.testHandle.assetURL(
     'test-builds/browser-agent-wrapper/registered-iframe-entity.html',
-    { init: { feature_flags: flags } }
+    { init: { feature_flags: flags, ...initOverrides } }
   ))
   await browser.waitForAgentLoad()
+}
+
+/**
+ * Perform a real WebDriver click inside the iframe (triggers INP + finalizes LCP via web-vitals),
+ * wait briefly for the web-vitals whenIdle callbacks to fire, then call deregister() which
+ * records the MicroFrontEndTiming event with all accumulated vitals.
+ */
+async function clickIframe () {
+  const iframeEl = await browser.$('#mfe-iframe')
+  await browser.switchToFrame(iframeEl)
+  await browser.$('h1').click()
+  await browser.switchToFrame(null)
+}
+
+/**
+ * Perform two real WebDriver clicks inside the iframe, spaced out, to give web-vitals'
+ * INP tracking real interactions to measure. The wrapper script debounces its
+ * deregister-on-click handler, so these clicks don't finalize the report prematurely.
+ */
+async function clickIframeForINP () {
+  const iframeEl = await browser.$('#mfe-iframe')
+  await browser.switchToFrame(iframeEl)
+  await browser.$('h1').click()
+  await browser.pause(100)
+  await browser.$('h1').click()
+  await browser.switchToFrame(null)
 }
 
 describe('Register API - Iframe Entity', () => {
@@ -169,9 +193,9 @@ describe('Register API - Iframe Entity', () => {
     ])
 
     await loadIframePage()
+    await clickIframe()
 
-    // The iframe deregisters after 3 seconds — wait long enough to collect the MicroFrontEndTiming harvest
-    const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 15000 })
+    const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 10000 })
     const allInsights = insightsHarvests.flatMap(h => h.request.body?.ins || [])
 
     const timingEvent = allInsights.find(e =>
@@ -191,17 +215,16 @@ describe('Register API - Iframe Entity', () => {
     expect(timingEvent.timeToBeRequested).toBeGreaterThanOrEqual(0)
 
     // Iframe vitals arrive as raw numbers via postMessage (not JSON-stringified objects).
-    // INP: always null — no user interaction in the sense web-vitals tracks (click happens but
-    // onINP only fires for interactions with a presentation delay, not programmatic clicks)
-    expect(timingEvent['nr.vitals.inp']).toBeNull()
-    // FCP, LCP, CLS: positive numbers on supporting browsers, null elsewhere.
+    // FCP, LCP, CLS, INP: positive numbers on supporting browsers, null elsewhere.
     // Values are raw millisecond/score numbers, not JSON-stringified objects.
-    const fcp = timingEvent['nr.vitals.fcp']
-    const lcp = timingEvent['nr.vitals.lcp']
-    const cls = timingEvent['nr.vitals.cls']
-    expect(fcp === null || (typeof fcp === 'number' && fcp > 0)).toBe(true)
-    expect(lcp === null || (typeof lcp === 'number' && lcp > 0)).toBe(true)
-    expect(cls === null || (typeof cls === 'number' && cls > 0)).toBe(true)
+    const fcp = timingEvent['nr.vitals.fcp.value']
+    const lcp = timingEvent['nr.vitals.lcp.value']
+    const cls = timingEvent['nr.vitals.cls.value']
+    const inp = timingEvent['nr.vitals.inp.value']
+    expect(fcp === null || (typeof fcp === 'number' && fcp >= 0)).toBe(true)
+    expect(lcp === null || (typeof lcp === 'number' && lcp >= 0)).toBe(true)
+    expect(cls === null || (typeof cls === 'number' && cls >= 0)).toBe(true)
+    expect(inp === null || (typeof inp === 'number' && inp >= 0)).toBe(true)
   })
 
   it.withBrowsersMatching(supportsLargestContentfulPaint)('should have positive FCP and LCP vital values from the iframe in supporting browsers', async () => {
@@ -210,8 +233,9 @@ describe('Register API - Iframe Entity', () => {
     ])
 
     await loadIframePage()
+    await clickIframe()
 
-    const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 15000 })
+    const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 10000 })
     const allInsights = insightsHarvests.flatMap(h => h.request.body?.ins || [])
 
     const timingEvent = allInsights.find(e =>
@@ -221,13 +245,13 @@ describe('Register API - Iframe Entity', () => {
     expect(timingEvent).toBeDefined()
 
     // The iframe renders an <h1> — FCP and LCP must be positive on supporting browsers
-    expect(timingEvent['nr.vitals.fcp']).not.toBeNull()
-    expect(typeof timingEvent['nr.vitals.fcp']).toBe('number')
-    expect(timingEvent['nr.vitals.fcp']).toBeGreaterThan(0)
+    expect(timingEvent['nr.vitals.fcp.value']).not.toBeNull()
+    expect(typeof timingEvent['nr.vitals.fcp.value']).toBe('number')
+    expect(timingEvent['nr.vitals.fcp.value']).toBeGreaterThan(0)
 
-    expect(timingEvent['nr.vitals.lcp']).not.toBeNull()
-    expect(typeof timingEvent['nr.vitals.lcp']).toBe('number')
-    expect(timingEvent['nr.vitals.lcp']).toBeGreaterThan(0)
+    expect(timingEvent['nr.vitals.lcp.value']).not.toBeNull()
+    expect(typeof timingEvent['nr.vitals.lcp.value']).toBe('number')
+    expect(timingEvent['nr.vitals.lcp.value']).toBeGreaterThan(0)
   })
 
   it.withBrowsersMatching(supportsCumulativeLayoutShift)('should have a positive CLS score from the iframe layout shift in supporting browsers', async () => {
@@ -236,8 +260,10 @@ describe('Register API - Iframe Entity', () => {
     ])
 
     await loadIframePage()
+    await browser.pause(500)
+    await clickIframe()
 
-    const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 15000 })
+    const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 10000 })
     const allInsights = insightsHarvests.flatMap(h => h.request.body?.ins || [])
 
     const timingEvent = allInsights.find(e =>
@@ -246,10 +272,91 @@ describe('Register API - Iframe Entity', () => {
     )
     expect(timingEvent).toBeDefined()
 
-    // The DOMContentLoaded handler inserts a 200px spacer before existing content, causing a
-    // measurable layout shift. The subsequent click finalizes CLS reporting via web-vitals.
-    expect(timingEvent['nr.vitals.cls']).not.toBeNull()
-    expect(typeof timingEvent['nr.vitals.cls']).toBe('number')
-    expect(timingEvent['nr.vitals.cls']).toBeGreaterThan(0)
+    // The load handler inserts a 200px spacer before existing content, causing a measurable
+    // layout shift. The WebDriver click finalizes CLS reporting via web-vitals.
+    expect(timingEvent['nr.vitals.cls.value']).not.toBeNull()
+    expect(typeof timingEvent['nr.vitals.cls.value']).toBe('number')
+    expect(timingEvent['nr.vitals.cls.value']).toBeGreaterThan(0)
+  })
+
+  it.withBrowsersMatching(supportsInteractionToNextPaint)('should have a positive INP score from real interactions in the iframe in supporting browsers', async () => {
+    const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testMFEInsRequest }
+    ])
+
+    await loadIframePage()
+    await browser.pause(500)
+    await clickIframeForINP()
+
+    const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 10000 })
+    const allInsights = insightsHarvests.flatMap(h => h.request.body?.ins || [])
+
+    const timingEvent = allInsights.find(e =>
+      e.eventType === 'MicroFrontEndTiming' &&
+      e['source.id'] === SOURCE_ID
+    )
+    expect(timingEvent).toBeDefined()
+
+    // Two real WebDriver clicks give web-vitals something to measure. The wrapper's
+    // debounced deregister handler waits for interactions to settle before reporting.
+    expect(timingEvent['nr.vitals.inp.value']).not.toBeNull()
+    expect(typeof timingEvent['nr.vitals.inp.value']).toBe('number')
+    expect(timingEvent['nr.vitals.inp.value']).toBeGreaterThan(0)
+  })
+
+  it('should propagate setCustomAttribute, setUserId, and setApplicationVersion through the postMessage bridge', async () => {
+    const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testMFEInsRequest }
+    ])
+
+    await loadIframePage()
+    await browser.pause(1000)
+
+    await browser.execute(function () {
+      const iframe = document.getElementById('mfe-iframe')
+      const entity = iframe.contentWindow.entity
+      entity.setCustomAttribute('bridgeCustomAttr', 'bridgeValue')
+      entity.setUserId('bridge-test-user')
+      entity.setApplicationVersion('9.9.9')
+      entity.addPageAction('BRIDGE_ATTR_CHECK', {})
+    })
+
+    const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 10000 })
+    const allInsights = insightsHarvests.flatMap(h => h.request.body?.ins || [])
+
+    const pageAction = allInsights.find(e =>
+      e.eventType === 'PageAction' &&
+      e.actionName === 'BRIDGE_ATTR_CHECK' &&
+      e['source.id'] === SOURCE_ID
+    )
+    expect(pageAction).toBeDefined()
+    expect(pageAction.bridgeCustomAttr).toEqual('bridgeValue')
+    expect(pageAction['enduser.id']).toEqual('bridge-test-user')
+    expect(pageAction['application.version']).toEqual('9.9.9')
+  })
+
+  it('should block registration when the iframe origin is not in the iframe_domains allowlist', async () => {
+    const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testMFEInsRequest }
+    ])
+
+    await loadIframePage(['register', 'register.jserrors'], {
+      api: { register: { iframe_domains: ['http://not-the-real-origin.example'] } }
+    })
+    await browser.pause(1000)
+    await clickIframe()
+
+    // The parent agent should never have registered an entity for this iframe --
+    // the origin check in the postMessage handler rejects it before agent.register() runs.
+    const registeredOnParent = await browser.execute(function (sourceId) {
+      const agent = Object.values(window.newrelic.initializedAgents)[0]
+      return !!agent?.runtime?.registeredEntities?.some(e => e.metadata?.target?.id === sourceId)
+    }, SOURCE_ID)
+    expect(registeredOnParent).toBe(false)
+
+    const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 4000 })
+    const allInsights = insightsHarvests.flatMap(h => h.request.body?.ins || [])
+    const timingEvent = allInsights.find(e => e['source.id'] === SOURCE_ID)
+    expect(timingEvent).toBeUndefined()
   })
 })

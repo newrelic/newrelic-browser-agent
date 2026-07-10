@@ -6,7 +6,8 @@ window.RegisteredIframeEntity = RegisteredIframeEntity
 if (window.RegisteredIframeEntity) {
   window.entity = new window.RegisteredIframeEntity({
     id: 'iframe-test',
-    name: 'iframe test'
+    name: 'iframe test',
+    tags: { foo: 'bar' }
   })
 
   window.entity.setCustomAttribute('iframeAttribute', 'This is a custom attribute from the iframe!')
@@ -18,24 +19,39 @@ if (window.RegisteredIframeEntity) {
 
   fetch('/json')
 
-  window.addEventListener('DOMContentLoaded', () => {
-    // Insert a tall element before existing content to trigger a layout shift (CLS event)
-    const spacer = document.createElement('div')
-    spacer.style.height = '200px'
-    document.body.insertBefore(spacer, document.body.firstChild)
-
-    document.body.addEventListener('click', () => {
-      const spacer = document.createElement('div')
-      spacer.style.height = '200px'
-      document.body.insertBefore(spacer, document.body.firstChild)
+  window.addEventListener('load', () => {
+    // Wait for two animation frames so the browser actually commits a paint of the
+    // pre-shift layout before we mutate the DOM -- without a rendered "before" frame,
+    // the Layout Instability API has nothing to diff against and never reports a shift.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        // Insert a tall element before existing content to trigger a layout shift (CLS event)
+        const spacer = document.createElement('div')
+        spacer.style.height = '200px'
+        document.body.insertBefore(spacer, document.body.firstChild)
+      })
     })
 
-    // User interaction finalizes both CLS and LCP reporting via web-vitals callbacks
-    document.querySelector('body').click()
+    // Debounced so multiple clicks (e.g. to build up an INP measurement) only
+    // schedule a single deregister, timed off the last click rather than the first --
+    // this gives web-vitals' whenIdle enough time to finalize INP before the
+    // one-shot deregister report locks in.
+    let deregisterTimer = null
+    document.body.addEventListener('click', () => {
+      // Synchronously block the main thread for a bit so the click's Event Timing
+      // entry has a measurable, non-zero duration -- a real click on this trivial
+      // page finishes fast enough that INP would otherwise round down to 0.
+      const blockUntil = performance.now() + 50
+      while (performance.now() < blockUntil) { /* busy-wait */ }
 
-    setTimeout(() => {
-      window.entity.deregister()
-    }, 3000)
+      clearTimeout(deregisterTimer)
+      deregisterTimer = setTimeout(() => {
+        window.entity.deregister()
+      }, 1000)
+    })
+
+    // The test performs one or more real WebDriver clicks (INP + LCP) and lets the
+    // debounced handler above call deregister() once interactions have settled.
   })
   throw new Error('This is a test error from the iframe!')
 }

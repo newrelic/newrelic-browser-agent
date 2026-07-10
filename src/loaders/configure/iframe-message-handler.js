@@ -12,9 +12,9 @@ import { stringify } from '../../common/util/stringify'
 
 /**
  * Retrieves the registered entity associated with the iframeInterfaceId from the event data, and validates that the origin of the message event matches the expected origin for that entity.
- * @param {MessageEvent} event
- * @param {Object} agent
- * @returns {Object|undefined}
+ * @param {MessageEvent} event - The message event containing the method call or registration request
+ * @param {Object} agent - The browser agent instance
+ * @returns {Object|undefined} - The registered entity if it exists and the origin is valid, otherwise undefined
  */
 function getValidEntity (event, agent) {
   try {
@@ -29,7 +29,10 @@ function getValidEntity (event, agent) {
 }
 
 /**
- * Handles timing property updates from iframes
+ * Handles timing property updates from iframes. Mutates the timings object on the entity's metadata with the new value for the specified property.
+ * @param {MessageEvent} event - The message event containing the timing update
+ * @param {Object} agent - The browser agent instance
+ * @returns
  */
 function handleTimingUpdate (event, agent) {
   const entity = getValidEntity(event, agent)
@@ -42,7 +45,10 @@ function handleTimingUpdate (event, agent) {
 }
 
 /**
- * Handles vitals property updates from iframes
+ * Handles vitals property updates from iframes. Mutates the vitals object on the entity's metadata with the new value for the specified property.
+ * @param {MessageEvent} event - The message event containing the vitals update
+ * @param {Object} agent - The browser agent instance
+ * @returns
  */
 function handleVitalsUpdate (event, agent) {
   const entity = getValidEntity(event, agent)
@@ -50,10 +56,16 @@ function handleVitalsUpdate (event, agent) {
 
   if (entity.metadata?.vitals) {
     const { property, value } = event.data
-    if (value !== null && value !== undefined) entity.metadata.vitals[property] = value
+    if (value !== null && value !== undefined) entity.metadata.vitals[property].value = value
   }
 }
 
+/**
+ * Handles ajax events from iframes and forwards them to the agent's event emitter
+ * @param {MessageEvent} event  - The message event containing the method call or registration request
+ * @param {Object} agent - The browser agent instance
+ * @returns
+ */
 function handleAjax (event, agent) {
   const entity = getValidEntity(event, agent)
   if (!entity) return
@@ -63,12 +75,12 @@ function handleAjax (event, agent) {
 
 /**
  * Validates that the origin of the message event matches the expected origin for the registered entity
- * @param {MessageEvent} event
- * @param {Object} entity
+ * @param {MessageEvent} event - The message event containing the method call or registration request
+ * @param {Object} entity - The registered entity associated with the iframeInterfaceId from the event data
  * @returns {boolean}
  */
 function isValidOrigin (event, entity) {
-  if (!entity || !event) return false
+  if (!entity || !event.origin) return false
   try {
     return event.origin === entity.metadata.target.iframeOrigin
   } catch (e) {
@@ -79,14 +91,25 @@ function isValidOrigin (event, entity) {
 
 /**
  * Handles both entity registration and method calls on existing entities
+ * @async
+ * @param {MessageEvent} event - The message event containing the method call or registration request
+ * @param {Object} agent - The browser agent instance
+ * @returns {Promise<{entity: Object|null, result: any}>}
  */
-async function handleMethodCall (method, args, target, iframeInterfaceId, agent, origin) {
+async function handleMethodCall (event, agent) {
+  const { method, args, target, iframeInterfaceId } = event.data
+  const output = { entity: null, result: null }
   // Registration of a new entity needs to be handled differently than method calls on existing entities
   if (method === REGISTER) {
+    const iframeDomains = agent.init.api.register.iframe_domains
+    if (iframeDomains.length && !iframeDomains.includes(event.origin)) {
+      warn(74, event.origin)
+      return output
+    }
     const targetData = args?.[0] || target || {}
     if (!agent[REGISTER]) {
       warn(35, REGISTER)
-      return
+      return output
     }
 
     const freshTarget = {
@@ -97,27 +120,37 @@ async function handleMethodCall (method, args, target, iframeInterfaceId, agent,
       tags: targetData.tags
     }
 
-    const entity = agent[REGISTER](freshTarget)
-    entity.metadata.target.iframeInterfaceId = iframeInterfaceId
-    entity.metadata.target.iframeOrigin = origin
-    return { entity, result: null }
+    output.entity = agent[REGISTER](freshTarget)
+    output.entity.metadata.target.iframeInterfaceId = iframeInterfaceId
+    output.entity.metadata.target.iframeOrigin = event.origin
+
+    return output
   }
 
-  // Handle method calls on existing entities
   const entity = getRegisteredEntityByIframeInterfaceId(iframeInterfaceId, agent)
-  if (!entity) return warn(76)
+  if (!isValidOrigin(event, entity)) {
+    warn(76)
+    return output
+  }
 
+  output.entity = entity
   const methodFn = entity[method]
-  if (typeof methodFn !== 'function') return warn(35, method)
+  if (typeof methodFn !== 'function') {
+    warn(35, method)
+    return output
+  }
 
-  return { entity, result: await methodFn.apply(entity, args || []) }
+  output.result = await methodFn.apply(entity, args || [])
+  return output
 }
 
 /**
  * Serializes entity metadata for postMessage response.
  * Strips out any non-serializable properties and returns a plain object.
  * postMessage cant handle complex objects that cause DataCloneErrors to throw like functions, circular references, etc.
- */
+ * @param {Object} entity - The registered entity whose metadata is to be serialized.  Uses a pattern of stringify and parse to remove any non-serializable properties from the metadata object.
+ * @returns {Object} - The serialized metadata object
+*/
 function serializeMetadata (entity) {
   const meta = entity.metadata
 
@@ -126,14 +159,19 @@ function serializeMetadata (entity) {
 
 /**
  * Sends a postMessage response to the iframe
+ * @param {Window} source - The source window to send the message to
+ * @param {string} origin - The origin to send the message to
+ * @param {string} messageId - The unique message ID for the request/response pair
+ * @param {string} iframeInterfaceId - The unique interface ID for the iframe
+ * @param {Object} payload - The payload to send in the response.  Can contain either a result or an error property.
  */
-function sendResponse (source, origin, messageId, iframeInterfaceId, payload) {
-  source.postMessage({
+function sendResponse (event, payload) {
+  event.source.postMessage({
     type: IFRAME_API_RESPONSE,
-    messageId,
-    iframeInterfaceId,
+    messageId: event.data.messageId,
+    iframeInterfaceId: event.data.iframeInterfaceId,
     ...payload
-  }, origin)
+  }, event.origin)
 }
 
 /**
@@ -146,42 +184,26 @@ export function setupIframeMFEMessageListener (agent) {
   window.addEventListener('message', async (event) => {
     if (!event.data) return
 
-    // Handle timing updates
-    if (event.data.type === IFRAME_TIMING_UPDATE) {
-      handleTimingUpdate(event, agent)
-      return
-    }
-
-    if (event.data.type === IFRAME_VITALS_UPDATE) {
-      handleVitalsUpdate(event, agent)
-      return
-    }
-
-    if (event.data.type === IFRAME_AJAX) {
-      handleAjax(event, agent)
-      return
-    }
-
-    // Validate API call structure
-    if (event.data?.type !== IFRAME_API) return
-
-    const { messageId, target, method, args, iframeInterfaceId } = event.data
-    const source = event.source
-    if (!source || !messageId || !method) return
-
-    // Validate origin for non-register methods
-    if (method !== REGISTER) {
-      const entity = getRegisteredEntityByIframeInterfaceId(iframeInterfaceId, agent)
-      if (!isValidOrigin(event, entity)) return
-    }
-
-    try {
-      const { entity, result } = await handleMethodCall(method, args, target, iframeInterfaceId, agent, event.origin)
-      const metadata = entity ? serializeMetadata(entity) : undefined
-      sendResponse(source, event.origin, messageId, iframeInterfaceId, { result, metadata })
-    } catch (error) {
-      const errorMessage = error?.message || String(error) || 'Unknown error occurred'
-      sendResponse(source, event.origin, messageId, iframeInterfaceId, { error: errorMessage })
+    switch (event.data.type) {
+      case IFRAME_TIMING_UPDATE:
+        handleTimingUpdate(event, agent)
+        return
+      case IFRAME_VITALS_UPDATE:
+        handleVitalsUpdate(event, agent)
+        return
+      case IFRAME_AJAX:
+        handleAjax(event, agent)
+        return
+      case IFRAME_API:
+        try {
+          if (!event.source || !event.data.messageId || !event.data.method) return
+          const { entity, result } = await handleMethodCall(event, agent)
+          const metadata = entity ? serializeMetadata(entity) : undefined
+          sendResponse(event, { result, metadata })
+        } catch (error) {
+          const errorMessage = error?.message || String(error)
+          sendResponse(event, { error: errorMessage })
+        }
     }
   })
 }

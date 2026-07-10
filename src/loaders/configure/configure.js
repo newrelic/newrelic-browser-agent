@@ -83,7 +83,9 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
     })
 
     // Set up iframe postMessage listener for registered entities
-    setupIframeMFEMessageListener(agent)
+    if (agent.init.api.register.allow_iframe_bridge) {
+      setupIframeMFEMessageListener(agent)
+    }
 
     agent.runtime.configured = true
   }

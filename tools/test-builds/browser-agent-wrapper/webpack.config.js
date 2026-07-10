@@ -73,6 +73,7 @@ const registeredIframeEntityHtmlTemplate = () => `<html>
     {config}
     <script>
       NREUM.init.api.register.enabled = true; // allow this parent page to accept registered entities (iframes) to report through it. This is required for the registered iframe entity tests, but not a default setting for security reasons, so we set it on a per test basis here.
+      NREUM.init.api.register.allow_iframe_bridge = true; // allow this parent page to accept registered entities (iframes) to report through it. This is required for the registered iframe entity tests, but not a default setting for security reasons, so we set it on a per test basis here.
       NREUM.init.generic_events.enabled = true; // enable insights events (page actions, custom events)
       NREUM.init.logging.enabled = true; // enable logging for harvest testing
     </script>
@@ -90,6 +91,7 @@ const iframeContentTemplate = (script) => `<html>
   </head>
   <body>
     <h1>Iframe Content - RegisteredEntity Interface</h1>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/d/d7/House_of_Commons_Chamber_1.png" />
   </body>
 </html>`
 

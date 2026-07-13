@@ -58,7 +58,8 @@ function handleVitalsUpdate (event, agent) {
 
   if (entity.metadata?.vitals) {
     const { property, value } = event.data
-    if (value !== null && value !== undefined && Object.hasOwn(entity.metadata.vitals, property)) entity.metadata.vitals[property].value = value
+    const vitalEntry = Object.hasOwn(entity.metadata.vitals, property) && entity.metadata.vitals[property]
+    if (value !== null && value !== undefined && vitalEntry && typeof vitalEntry === 'object') vitalEntry.value = value
   }
 }
 

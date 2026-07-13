@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.318.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.318.0...v1.318.1) (2026-07-13)
+
+
+### Bug Fixes
+
+* Keep Ajax payload out of unrelated events ([#1809](https://github.com/newrelic/newrelic-browser-agent/issues/1809)) ([b0cb098](https://github.com/newrelic/newrelic-browser-agent/commit/b0cb098d0ea36d1d35212355bc51051f3c02c1ae))
+
 ## [1.318.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.317.0...v1.318.0) (2026-07-08)
 
 

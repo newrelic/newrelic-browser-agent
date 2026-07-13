@@ -115,6 +115,11 @@ export class InstrumentBase extends FeatureBase {
         handle(SESSION_ERROR, [e], undefined, this.featureName, this.ee)
       }
 
+      if (agentRef.init.api.register.allow_iframe_bridge) {
+        const { setupIframeMFEMessageListener } = await import(/* webpackChunkName: "iframe-message-handler" */ '../../loaders/configure/iframe-message-handler')
+        setupIframeMFEMessageListener(agentRef)
+      }
+
       /**
        * Note this try-catch differs from the one in Agent.run() in that it's placed later in a page's lifecycle and
        * it's only responsible for aborting its one specific feature, rather than all.

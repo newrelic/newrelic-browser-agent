@@ -7,12 +7,12 @@ import { gosCDN } from '../../common/window/nreum'
 import { mergeInfo } from '../../common/config/info'
 import { mergeInit } from '../../common/config/init'
 import { mergeRuntime } from '../../common/config/runtime'
-import { isWorkerScope } from '../../common/constants/runtime'
+import { isWorkerScope, globalScope } from '../../common/constants/runtime'
 import { redefinePublicPath } from './public-path'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 import { mergeLoaderConfig } from '../../common/config/loader-config'
-import { setupIframeMFEMessageListener } from './iframe-message-handler'
+import { handle } from '../../common/event-emitter/handle'
 
 /**
  * Sets or re-sets the agent's configuration values from global settings. This also attach those as properties to the agent instance.
@@ -84,7 +84,9 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
 
     // Set up iframe postMessage listener for registered entities
     if (agent.init.api.register.allow_iframe_bridge) {
-      setupIframeMFEMessageListener(agent)
+      globalScope.addEventListener('message', async (event) => {
+        handle('iframe-message', [event], undefined, 'IFRAME', agent.ee)
+      })
     }
 
     agent.runtime.configured = true

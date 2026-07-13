@@ -8,6 +8,7 @@ import { now } from '../timing/now'
 import { cleanURL } from '../url/clean-url'
 import { chrome, chromeEval, gecko } from '../util/browser-stack-matchers'
 import { ScriptCorrelation } from './script-correlation'
+import { timingFactory } from './timing-factory'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPITimings} RegisterAPITimings
@@ -264,8 +265,8 @@ export function findScriptTimings () {
      * Use getters here because the correlation data may arrive after this function returns the timing object, and we want to provide the most up-to-date timing information possible when the getters are accessed at harvest time.
      * The getters will fall back to fetchEnd if correlation data isn't available yet, which is our best approximation for script execution start when actual script timings can not be determined.
     */
-    Object.defineProperty(timings, 'scriptStart', { get: () => timings.correlation?.script.start || timings.fetchEnd })
-    Object.defineProperty(timings, 'scriptEnd', { get: () => timings.correlation?.script.end || timings.registeredAt })
+    Object.defineProperty(timings, 'scriptStart', timingFactory(() => timings.correlation?.script.start || timings.fetchEnd))
+    Object.defineProperty(timings, 'scriptEnd', timingFactory(() => timings.correlation?.script.end || timings.registeredAt))
   } catch (error) {
     // Don't let stack parsing errors break anything
   }

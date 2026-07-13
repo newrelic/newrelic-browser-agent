@@ -775,6 +775,12 @@ init@https://cdn.example.com/gecko-app.js:20:10`
     at Generator.<anonymous> (https://staging-one.nr-assets.net/platform/one-vbp-543fd763.js:1:32670)
     at Generator.next (https://staging-one.nr-assets.net/platform/one-vbp-543fd763.js:1:33653)`
 
+      // findScriptTimings correlates via the buffered PerformanceObserver callback, not a
+      // direct getEntriesByType('resource') call -- fire it to populate the correlation map.
+      if (performanceObserverCallback) {
+        performanceObserverCallback({ getEntries: () => [mfeChunkEntry, runtimeEntry] })
+      }
+
       const result = scriptTrackerModule.findScriptTimings()
 
       // Should select MFE chunk (middle), not generator runtime (bottom)

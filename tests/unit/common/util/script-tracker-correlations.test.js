@@ -319,13 +319,9 @@ describe('script-tracker correlations', () => {
   })
 
   describe('findScriptTimings with correlations', () => {
-    let originalGetEntriesByType = globalThis.performance.getEntriesByType
     beforeEach(async () => {
       scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
       globalThis.performance.getEntriesByType = jest.fn()
-    })
-    afterEach(() => {
-      globalThis.performance.getEntriesByType = originalGetEntriesByType
     })
 
     test('calculates script start as max(dom.start, performance.end)', () => {
@@ -496,7 +492,7 @@ describe('script-tracker correlations', () => {
       expect(timings.scriptEnd).toBe(100)
     })
 
-    test('fallback to fetchEnd when no correlation exists', () => {
+    test('fallback to fetchEnd/registeredAt when no correlation exists', () => {
       const scriptUrl = 'https://cdn.example.com/uncorrelated.js'
       mockNavigationEntry = { name: 'https://example.com/' }
       // Use thisFile from module so filtering works correctly
@@ -504,38 +500,25 @@ describe('script-tracker correlations', () => {
     at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
     at init (${scriptUrl}:10:5)`
 
-      // Performance entry exists but no correlation was created
-      currentTime = 100
-      const perfEntry = {
-        name: scriptUrl,
-        initiatorType: 'script',
-        startTime: 20,
-        responseEnd: 80
-      }
-      if (performanceObserverCallback) {
-        performanceObserverCallback({
-          getEntries: () => [perfEntry]
-        })
-      }
-
+      // Deliberately never fire performanceObserverCallback/mutationObserverCallback for this
+      // URL, so getOrCreateCorrelation is never invoked and no correlation entry exists.
       currentTime = 150
       const timings = scriptTrackerModule.findScriptTimings()
 
-      // Should use fetchEnd as fallback for scriptStart
-      expect(timings.scriptStart).toBe(80) // fetchEnd fallback
-      // scriptEnd uses registeredAt as fallback when no correlation exists
-      expect(timings.scriptEnd).toBe(150) // registeredAt fallback
-      expect(timings.fetchStart).toBe(20)
-      expect(timings.fetchEnd).toBe(80)
+      expect(timings.correlation).toBeUndefined()
+      expect(scriptTrackerModule.scriptCorrelations.has(scriptUrl)).toBe(false)
+
+      // With no correlation, fetchStart/fetchEnd stay at their initial 0 values, and the
+      // scriptStart/scriptEnd getters fall back to fetchEnd/registeredAt respectively.
+      expect(timings.fetchStart).toBe(0)
+      expect(timings.fetchEnd).toBe(0)
+      expect(timings.scriptStart).toBe(timings.fetchEnd)
+      expect(timings.scriptEnd).toBe(timings.registeredAt)
+      expect(timings.registeredAt).toBe(150)
     })
   })
 
   describe('Timing calculations for different loading methods', () => {
-    let originalGetEntriesByType = globalThis.performance.getEntriesByType
-
-    afterEach(() => {
-      globalThis.performance.getEntriesByType = originalGetEntriesByType
-    })
     test('dynamic script injection: full capture with all timings', () => {
       const scriptUrl = 'https://cdn.example.com/dynamic.js'
       mockNavigationEntry = { name: 'https://example.com/' }
@@ -712,29 +695,29 @@ describe('script-tracker correlations', () => {
     at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
     at init (${scriptUrl}:10:5)`
 
-      // Only performance entry (MutationObserver missed it)
+      // Only performance entry (MutationObserver missed it) -- delivered via the buffered
+      // PerformanceObserver callback, which is how findScriptTimings actually correlates
+      // resource entries (it never calls getEntriesByType('resource') itself).
       currentTime = 100
-      globalThis.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'resource') {
-          return [{
+      if (performanceObserverCallback) {
+        performanceObserverCallback({
+          getEntries: () => [{
             name: scriptUrl,
             initiatorType: 'script',
             startTime: 20,
             responseEnd: 90
           }]
-        }
-        return []
-      })
+        })
+      }
 
       currentTime = 150
       const timings = scriptTrackerModule.findScriptTimings()
 
       expect(timings.fetchStart).toBe(20)
       expect(timings.fetchEnd).toBe(90)
-      // scriptStart uses fetchEnd as fallback when no correlation
+      // scriptStart/scriptEnd derive from the performance-only correlation's performance.end
       expect(timings.scriptStart).toBe(90)
-      // scriptEnd uses registeredAt as fallback when no correlation
-      expect(timings.scriptEnd).toBe(150)
+      expect(timings.scriptEnd).toBe(90)
     })
   })
 
@@ -922,12 +905,6 @@ describe('script-tracker correlations', () => {
   })
 
   describe('Edge cases', () => {
-    let originalGetEntriesByType = globalThis.performance.getEntriesByType
-
-    afterEach(() => {
-      globalThis.performance.getEntriesByType = originalGetEntriesByType
-    })
-
     test('handles script element without src attribute', () => {
       currentTime = 100
       const inlineScript = document.createElement('script')

@@ -9,6 +9,8 @@ import { REGISTER } from '../api/constants'
 import { handle } from '../../common/event-emitter/handle'
 import { FEATURE_NAMES } from '../features/features'
 import { stringify } from '../../common/util/stringify'
+import { registerHandler } from '../../common/event-emitter/register-handler'
+import { drain } from '../../common/drain/drain'
 
 /**
  * Retrieves the registered entity associated with the iframeInterfaceId from the event data, and validates that the origin of the message event matches the expected origin for that entity.
@@ -58,8 +60,7 @@ function handleVitalsUpdate (event, agent) {
 
   if (entity.metadata?.vitals) {
     const { property, value } = event.data
-    const vitalEntry = Object.hasOwn(entity.metadata.vitals, property) && entity.metadata.vitals[property]
-    if (value !== null && value !== undefined && vitalEntry && typeof vitalEntry === 'object') vitalEntry.value = value
+    if (!!Number(value) || value === 0) entity.metadata.vitals[property].value = value
   }
 }
 
@@ -162,11 +163,8 @@ function serializeMetadata (entity) {
 
 /**
  * Sends a postMessage response to the iframe
- * @param {Window} source - The source window to send the message to
- * @param {string} origin - The origin to send the message to
- * @param {string} messageId - The unique message ID for the request/response pair
- * @param {string} iframeInterfaceId - The unique interface ID for the iframe
- * @param {Object} payload - The payload to send in the response.  Can contain either a result or an error property.
+ * @param {MessageEvent} event - The message event containing the method call or registration request
+ * @param {Object} payload - The response payload to send back to the iframe
  */
 function sendResponse (event, payload) {
   event.source.postMessage({
@@ -184,7 +182,7 @@ function sendResponse (event, payload) {
 export function setupIframeMFEMessageListener (agent) {
   if (typeof window === 'undefined' || !window.addEventListener) return
 
-  window.addEventListener('message', async (event) => {
+  registerHandler('iframe-message', async (event) => {
     if (!event.data) return
 
     switch (event.data.type) {
@@ -208,5 +206,7 @@ export function setupIframeMFEMessageListener (agent) {
           sendResponse(event, { error: errorMessage })
         }
     }
-  })
+  }, 'IFRAME', agent.ee)
+
+  drain(agent, 'IFRAME', true) // drain any buffered iframe messages that were received before the listener was set up
 }

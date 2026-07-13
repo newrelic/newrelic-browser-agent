@@ -40,7 +40,9 @@ function handleTimingUpdate (event, agent) {
 
   if (entity.metadata?.timings) {
     const { property, value } = event.data
-    entity.metadata.timings[property] = value
+    if (typeof property === 'string' && !['__proto__', 'constructor', 'prototype'].includes(property)) {
+      entity.metadata.timings[property] = value
+    }
   }
 }
 
@@ -56,7 +58,7 @@ function handleVitalsUpdate (event, agent) {
 
   if (entity.metadata?.vitals) {
     const { property, value } = event.data
-    if (value !== null && value !== undefined) entity.metadata.vitals[property].value = value
+    if (value !== null && value !== undefined && Object.hasOwn(entity.metadata.vitals, property)) entity.metadata.vitals[property].value = value
   }
 }
 

@@ -15,7 +15,7 @@ import { warn } from '../common/util/console'
 import { findScriptTimings } from '../common/v2/script-tracker'
 import { addUrl } from '../common/url/add-url'
 import { IFRAME_TIMING_UPDATE, IFRAME_API, IFRAME_API_RESPONSE, IFRAME_VITALS_UPDATE, IFRAME_AJAX } from '../common/constants/iframe-constants'
-import { castErrorEvent, castError } from '../features/jserrors/shared/cast-error'
+import { castErrorEvent, castError, castPromiseRejectionEvent } from '../features/jserrors/shared/cast-error'
 
 const REGISTER = 'register' // define it here for now to prevent importing the full list of constants for build size.
 const VITALS = [[onCLS, 'cls'], [onLCP, 'lcp'], [onFCP, 'fcp'], [onINP, 'inp']]
@@ -61,7 +61,13 @@ export class RegisteredIframeEntity {
   /** @private Original target descriptor (serializable) for postMessage */
   #targetDescriptor = null
   /** @private Parent window origin for secure postMessage */
-  #parentOrigin = globalScope?.location?.ancestorOrigins?.[0] || new URL(globalScope?.document?.referrer).origin || '*'
+  #parentOrigin = (() => {
+    try {
+      return globalScope?.location?.ancestorOrigins?.[0] || (globalScope?.document?.referrer ? new URL(globalScope.document.referrer).origin : '*')
+    } catch (e) {
+      return '*'
+    }
+  })()
 
   /**
    *

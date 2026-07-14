@@ -27,9 +27,9 @@ export function getAddStringContext (obfuscator, truncator) {
 
   return addString
 
-  function addString (str) {
+  function addString (str, obfuscate = true) {
     if (typeof str === 'undefined' || str === '') return ''
-    str = obfuscator?.obfuscateString(String(str)) ?? String(str)
+    str = obfuscate ? (obfuscator?.obfuscateString(String(str)) ?? String(str)) : String(str)
     str = truncator?.(str) ?? str
     if (hasOwnProp.call(stringTable, str)) {
       return numeric(stringTable[str], true)
@@ -48,7 +48,7 @@ export function addCustomAttributes (attrs, addString) {
     var type = 5
     var serializedValue
     // add key to string table first
-    key = addString(key)
+    key = addString(key, false)
 
     switch (typeof val) {
       case 'object':

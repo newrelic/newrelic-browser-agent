@@ -7,79 +7,145 @@ import { canCapturePayload } from '../../../../../src/common/payloads/payloads'
 import { hasGQLErrors } from '../../../../../src/features/ajax/aggregate/gql'
 
 describe('canCapturePayload logic', () => {
+  const genEvent = () => {
+    const event = { payloadHostname: 'example.com', statusCode: 200, hasGQLErrors: false }
+    event.status = (statusCode) => { event.statusCode = statusCode; return event }
+    event.gqlErrors = (hasGQLErrors) => { event.hasGQLErrors = hasGQLErrors; return event }
+    return event
+  }
+
   describe('none mode', () => {
     test('never captures payloads', () => {
-      expect(canCapturePayload('none', 200, false)).toBe(false)
-      expect(canCapturePayload('none', 404, false)).toBe(false)
-      expect(canCapturePayload('none', 500, false)).toBe(false)
-      expect(canCapturePayload('none', 0, false)).toBe(false)
-      expect(canCapturePayload('none', 200, true)).toBe(false)
+      expect(canCapturePayload('none', genEvent().status(200).gqlErrors(false))).toBe(false)
+      expect(canCapturePayload('none', genEvent().status(404).gqlErrors(false))).toBe(false)
+      expect(canCapturePayload('none', genEvent().status(500).gqlErrors(false))).toBe(false)
+      expect(canCapturePayload('none', genEvent().status(0).gqlErrors(false))).toBe(false)
+      expect(canCapturePayload('none', genEvent().status(200).gqlErrors(true))).toBe(false)
     })
 
     test('treats null/undefined as none', () => {
-      expect(canCapturePayload(null, 200, false)).toBe(false)
-      expect(canCapturePayload(undefined, 200, false)).toBe(false)
+      expect(canCapturePayload(null, genEvent().status(200).gqlErrors(false))).toBe(false)
+      expect(canCapturePayload(undefined, genEvent().status(200).gqlErrors(false))).toBe(false)
     })
   })
 
   describe('all mode', () => {
     test('captures all payloads regardless of status', () => {
-      expect(canCapturePayload('all', 200, false)).toBe(true)
-      expect(canCapturePayload('all', 201, false)).toBe(true)
-      expect(canCapturePayload('all', 204, false)).toBe(true)
-      expect(canCapturePayload('all', 301, false)).toBe(true)
-      expect(canCapturePayload('all', 400, false)).toBe(true)
-      expect(canCapturePayload('all', 404, false)).toBe(true)
-      expect(canCapturePayload('all', 500, false)).toBe(true)
-      expect(canCapturePayload('all', 0, false)).toBe(true)
+      expect(canCapturePayload('all', genEvent().status(200))).toBe(true)
+      expect(canCapturePayload('all', genEvent().status(201))).toBe(true)
+      expect(canCapturePayload('all', genEvent().status(204))).toBe(true)
+      expect(canCapturePayload('all', genEvent().status(301))).toBe(true)
+      expect(canCapturePayload('all', genEvent().status(400))).toBe(true)
+      expect(canCapturePayload('all', genEvent().status(404))).toBe(true)
+      expect(canCapturePayload('all', genEvent().status(500))).toBe(true)
+      expect(canCapturePayload('all', genEvent().status(0))).toBe(true)
     })
 
     test('captures all payloads regardless of GraphQL errors', () => {
-      expect(canCapturePayload('all', 200, false)).toBe(true)
-      expect(canCapturePayload('all', 200, true)).toBe(true)
+      expect(canCapturePayload('all', genEvent().gqlErrors(false))).toBe(true)
+      expect(canCapturePayload('all', genEvent().gqlErrors(true))).toBe(true)
+    })
+
+    test('canCapturePayload returns false for hostname matching a beacon', () => {
+      const beacons = ['example.com']
+      const event = {
+        statusCode: 200,
+        hasGQLErrors: false,
+        payloadHostname: 'example.com',
+        payloadPathname: '/path'
+      }
+      const actual = canCapturePayload('all', event, beacons)
+      expect(actual).toBe(false)
+    })
+
+    test('canCapturePayload returns false for hostname + pathname matching a beacon', () => {
+      const beacons = ['example.com/path']
+      const event = {
+        statusCode: 200,
+        hasGQLErrors: false,
+        payloadHostname: 'example.com',
+        payloadPathname: '/path'
+      }
+      const actual = canCapturePayload('all', event, beacons)
+      expect(actual).toBe(false)
+    })
+
+    test('canCapturePayload returns true for hostname (no pathname) partially matching a beacon', () => {
+      const beacons = ['example.com/path']
+      const event = {
+        statusCode: 200,
+        hasGQLErrors: false,
+        payloadHostname: 'example.com'
+      }
+      const actual = canCapturePayload('all', event, beacons)
+      expect(actual).toBe(true)
+    })
+
+    test('canCapturePayload returns false for hostname + pathname partially matching a beacon', () => {
+      const beacons = ['example.com/path']
+      const event = {
+        statusCode: 200,
+        hasGQLErrors: false,
+        payloadHostname: 'example.com',
+        payloadPathname: '/path/to/foobar'
+      }
+      const actual = canCapturePayload('all', event, beacons)
+      expect(actual).toBe(false)
+    })
+
+    test('canCapturePayload returns true for unrelated hostname + pathname partially matching a beacon', () => {
+      const beacons = ['example.com/path']
+      const event = {
+        statusCode: 200,
+        hasGQLErrors: false,
+        payloadHostname: 'example.com',
+        payloadPathname: '/pathFoo'
+      }
+      const actual = canCapturePayload('all', event, beacons)
+      expect(actual).toBe(true)
     })
   })
 
   describe('failures mode (default)', () => {
     test('captures status code 0 (network errors)', () => {
-      expect(canCapturePayload('failures', 0, false)).toBe(true)
-      expect(canCapturePayload('failures', 0, null)).toBe(true)
-      expect(canCapturePayload('failures', 0, undefined)).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(0).gqlErrors(false))).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(0).gqlErrors(null))).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(0).gqlErrors(undefined))).toBe(true)
     })
 
     test('does not capture 1xx status codes', () => {
-      expect(canCapturePayload('failures', 100, false)).toBe(false)
-      expect(canCapturePayload('failures', 101, false)).toBe(false)
+      expect(canCapturePayload('failures', genEvent().status(100))).toBe(false)
+      expect(canCapturePayload('failures', genEvent().status(101))).toBe(false)
     })
 
     test('does not capture 2xx success status codes', () => {
-      expect(canCapturePayload('failures', 200, false)).toBe(false)
-      expect(canCapturePayload('failures', 201, false)).toBe(false)
-      expect(canCapturePayload('failures', 204, false)).toBe(false)
+      expect(canCapturePayload('failures', genEvent().status(200))).toBe(false)
+      expect(canCapturePayload('failures', genEvent().status(201))).toBe(false)
+      expect(canCapturePayload('failures', genEvent().status(204))).toBe(false)
     })
 
     test('does not capture 3xx redirect status codes', () => {
-      expect(canCapturePayload('failures', 301, false)).toBe(false)
-      expect(canCapturePayload('failures', 302, false)).toBe(false)
-      expect(canCapturePayload('failures', 304, false)).toBe(false)
+      expect(canCapturePayload('failures', genEvent().status(301))).toBe(false)
+      expect(canCapturePayload('failures', genEvent().status(302))).toBe(false)
+      expect(canCapturePayload('failures', genEvent().status(304))).toBe(false)
     })
 
     test('captures 400 status code', () => {
-      expect(canCapturePayload('failures', 400, false)).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(400))).toBe(true)
     })
 
     test('captures 4xx client errors > 400', () => {
-      expect(canCapturePayload('failures', 401, false)).toBe(true)
-      expect(canCapturePayload('failures', 403, false)).toBe(true)
-      expect(canCapturePayload('failures', 404, false)).toBe(true)
-      expect(canCapturePayload('failures', 429, false)).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(401))).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(403))).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(404))).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(429))).toBe(true)
     })
 
     test('captures 5xx server errors', () => {
-      expect(canCapturePayload('failures', 500, false)).toBe(true)
-      expect(canCapturePayload('failures', 502, false)).toBe(true)
-      expect(canCapturePayload('failures', 503, false)).toBe(true)
-      expect(canCapturePayload('failures', 504, false)).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(500))).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(502))).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(503))).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(504))).toBe(true)
     })
 
     test('captures GraphQL errors with 2xx status codes', () => {
@@ -88,8 +154,8 @@ describe('canCapturePayload logic', () => {
         data: null
       })
 
-      expect(canCapturePayload('failures', 200, hasGQLErrors(gqlError))).toBe(true)
-      expect(canCapturePayload('failures', 201, hasGQLErrors(gqlError))).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(200).gqlErrors(hasGQLErrors(gqlError)))).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(201).gqlErrors(hasGQLErrors(gqlError)))).toBe(true)
     })
 
     test('captures GraphQL errors with partial data', () => {
@@ -98,7 +164,7 @@ describe('canCapturePayload logic', () => {
         data: { user: { name: 'John', email: null } }
       })
 
-      expect(canCapturePayload('failures', 200, hasGQLErrors(gqlPartialError))).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(200).gqlErrors(hasGQLErrors(gqlPartialError)))).toBe(true)
     })
 
     test('does not capture successful GraphQL responses', () => {
@@ -106,7 +172,7 @@ describe('canCapturePayload logic', () => {
         data: { user: { name: 'John', email: 'john@example.com' } }
       })
 
-      expect(canCapturePayload('failures', 200, hasGQLErrors(gqlSuccess))).toBe(false)
+      expect(canCapturePayload('failures', genEvent().status(200).gqlErrors(hasGQLErrors(gqlSuccess)))).toBe(false)
     })
 
     test('captures GraphQL errors even with error status codes', () => {
@@ -116,36 +182,36 @@ describe('canCapturePayload logic', () => {
       })
 
       // Should capture due to status code (isHttpError is true)
-      expect(canCapturePayload('failures', 500, hasGQLErrors(gqlError))).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(500).gqlErrors(hasGQLErrors(gqlError)))).toBe(true)
     })
 
     test('handles non-JSON response bodies', () => {
-      expect(canCapturePayload('failures', 200, hasGQLErrors('plain text response'))).toBe(false)
-      expect(canCapturePayload('failures', 200, hasGQLErrors('<html>content</html>'))).toBe(false)
-      expect(canCapturePayload('failures', 200, hasGQLErrors(null))).toBe(false)
-      expect(canCapturePayload('failures', 200, hasGQLErrors(undefined))).toBe(false)
+      expect(canCapturePayload('failures', genEvent().status(200).gqlErrors(hasGQLErrors('plain text response')))).toBe(false)
+      expect(canCapturePayload('failures', genEvent().status(200).gqlErrors(hasGQLErrors('<html>content</html>')))).toBe(false)
+      expect(canCapturePayload('failures', genEvent().status(200).gqlErrors(hasGQLErrors(null)))).toBe(false)
+      expect(canCapturePayload('failures', genEvent().status(200).gqlErrors(hasGQLErrors(undefined)))).toBe(false)
     })
   })
 
   describe('edge cases', () => {
     test('handles empty response bodies', () => {
-      expect(canCapturePayload('failures', 200, hasGQLErrors(''))).toBe(false)
-      expect(canCapturePayload('failures', 404, hasGQLErrors(''))).toBe(true)
-      expect(canCapturePayload('failures', 0, hasGQLErrors(''))).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(200).gqlErrors(hasGQLErrors('')))).toBe(false)
+      expect(canCapturePayload('failures', genEvent().status(404).gqlErrors(hasGQLErrors('')))).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(0).gqlErrors(hasGQLErrors('')))).toBe(true)
     })
 
     test('handles malformed GraphQL responses', () => {
-      expect(canCapturePayload('failures', 200, hasGQLErrors('{ invalid json'))).toBe(false)
-      expect(canCapturePayload('failures', 200, hasGQLErrors(JSON.stringify({ errors: [] })))).toBe(false)
-      expect(canCapturePayload('failures', 200, hasGQLErrors(JSON.stringify({ errors: [{ noMessage: true }] })))).toBe(false)
+      expect(canCapturePayload('failures', genEvent().status(200).gqlErrors(hasGQLErrors('{ invalid json')))).toBe(false)
+      expect(canCapturePayload('failures', genEvent().status(200).gqlErrors(hasGQLErrors(JSON.stringify({ errors: [] }))))).toBe(false)
+      expect(canCapturePayload('failures', genEvent().status(200).gqlErrors(hasGQLErrors(JSON.stringify({ errors: [{ noMessage: true }] }))))).toBe(false)
     })
 
     test('handles various status code boundaries', () => {
-      expect(canCapturePayload('failures', 399, false)).toBe(false)
-      expect(canCapturePayload('failures', 400, false)).toBe(true)
-      expect(canCapturePayload('failures', 401, false)).toBe(true)
-      expect(canCapturePayload('failures', 599, false)).toBe(true)
-      expect(canCapturePayload('failures', 600, false)).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(399).gqlErrors(false))).toBe(false)
+      expect(canCapturePayload('failures', genEvent().status(400).gqlErrors(false))).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(401).gqlErrors(false))).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(599).gqlErrors(false))).toBe(true)
+      expect(canCapturePayload('failures', genEvent().status(600).gqlErrors(false))).toBe(true)
     })
   })
 })

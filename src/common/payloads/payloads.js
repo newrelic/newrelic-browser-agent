@@ -8,13 +8,28 @@ import { CAPTURE_PAYLOAD_SETTINGS } from '../../features/ajax/constants'
 
 /**
  * Determines whether payload data should be captured based on the capture mode setting,
- * HTTP status code, and GraphQL error status.
+ * HTTP status code, and GraphQL error status.  Will never capture agent's own payloads.
  * @param {string} captureMode - The capture mode setting ('none', 'all', or 'failures')
- * @param {number} statusCode - The HTTP status code
- * @param {boolean} hasGQLErrors - Whether the response contains GraphQL errors
+ * @param {Object} event - An object representing the AJAX event
+ * @param {number} event.statusCode - The HTTP status code
+ * @param {boolean} event.hasGQLErrors - Whether the response contains GraphQL errors
+ * @param {string} event.payloadHostname - The hostname of the AJAX payload
+ * @param {string} [event.payloadPathname=''] - The pathname of the AJAX payload
+ * @param {string[]} [beacons=[]] - Array of beacon hostnames to avoid capturing
  * @returns {boolean} True if payload should be captured
  */
-export function canCapturePayload (captureMode, statusCode, hasGQLErrors) {
+export function canCapturePayload (captureMode, {
+  statusCode,
+  hasGQLErrors,
+  payloadHostname,
+  payloadPathname = ''
+}, beacons = []) {
+  if (payloadHostname) {
+    const payloadUrl = payloadHostname + payloadPathname
+    if (beacons.some((b) => {
+      return b === payloadUrl || payloadUrl.startsWith(b + '/')
+    })) return false
+  }
   if (captureMode === CAPTURE_PAYLOAD_SETTINGS.ALL) return true
   if (!captureMode || captureMode === CAPTURE_PAYLOAD_SETTINGS.NONE) return false
 

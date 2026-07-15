@@ -30,6 +30,10 @@ function getValidEntity (event, agent) {
   }
 }
 
+function isSafeProperty (obj, property) {
+  return property in obj && typeof property === 'string' && !['__proto__', 'constructor', 'prototype'].includes(property)
+}
+
 /**
  * Handles timing property updates from iframes. Mutates the timings object on the entity's metadata with the new value for the specified property.
  * @param {MessageEvent} event - The message event containing the timing update
@@ -42,9 +46,7 @@ function handleTimingUpdate (event, agent) {
 
   if (entity.metadata?.timings) {
     const { property, value } = event.data
-    if (typeof property === 'string' && !['__proto__', 'constructor', 'prototype'].includes(property)) {
-      entity.metadata.timings[property] = value
-    }
+    if (isSafeProperty(entity.metadata.timings, property)) entity.metadata.timings[property] = value
   }
 }
 
@@ -60,7 +62,9 @@ function handleVitalsUpdate (event, agent) {
 
   if (entity.metadata?.vitals) {
     const { property, value } = event.data
-    if (!!Number(value) || value === 0) entity.metadata.vitals[property].value = value
+    if (isSafeProperty(entity.metadata.vitals, property) && (!!Number(value) || value === 0)) {
+      entity.metadata.vitals[property].value = value
+    }
   }
 }
 

@@ -20,8 +20,8 @@ export function consolePrinter (comparisonStats) {
     columns: [
       { name: 'agent', title: 'Agent', alignment: 'left' },
       { name: 'asset', title: 'Asset', alignment: 'left' },
-      ...labels.map(label => ({ name: `size_${label}`, title: displayLabel(label), alignment: 'center' })),
-      { name: 'diff', title: 'Δ', alignment: 'center' }
+      { name: `size_${baseLabel}`, title: displayLabel(baseLabel), alignment: 'center' },
+      ...diffLabels.map(label => ({ name: `diff_${label}`, title: `Δ ${displayLabel(label)}`, alignment: 'center' }))
     ]
   })
 
@@ -33,12 +33,12 @@ export function consolePrinter (comparisonStats) {
 
   sections.forEach(({ agent, byLabel, npmSection, interfaceSection, interfaceName }, index) => {
     if (npmSection) {
-      resultsTable.addRow(buildNpmRow(byLabel, baseLabel, diffLabels, labels))
+      resultsTable.addRow(buildNpmRow(byLabel, baseLabel, diffLabels))
     } else if (interfaceSection) {
-      resultsTable.addRow(buildInterfaceRow(interfaceName, byLabel, baseLabel, diffLabels, labels))
+      resultsTable.addRow(buildInterfaceRow(interfaceName, byLabel, baseLabel, diffLabels))
     } else {
       ASSET_KEYS.forEach(assetKey => {
-        resultsTable.addRow(buildAssetRow(agent, assetKey, byLabel, baseLabel, diffLabels, labels))
+        resultsTable.addRow(buildAssetRow(agent, assetKey, byLabel, baseLabel, diffLabels))
       })
     }
 
@@ -67,8 +67,8 @@ export async function markdownPrinter (comparisonStats, outputLocation, outputFi
   const headerCells = [
     'Agent',
     'Asset',
-    ...labels.map(displayLabel),
-    'Δ'
+    displayLabel(baseLabel),
+    ...diffLabels.map(label => `Δ ${displayLabel(label)}`)
   ]
   outputStream.write(`| ${headerCells.join(' | ')} |\n`)
   outputStream.write(`|${headerCells.map(() => '---').join('|')}|\n`)
@@ -76,8 +76,8 @@ export async function markdownPrinter (comparisonStats, outputLocation, outputFi
   Object.entries(comparisonStats.agents)
     .forEach(([agent, byLabel]) => {
       ASSET_KEYS.forEach(assetKey => {
-        const row = buildAssetRow(agent, assetKey, byLabel, baseLabel, diffLabels, labels, true)
-        writeMarkdownRow(outputStream, row, labels)
+        const row = buildAssetRow(agent, assetKey, byLabel, baseLabel, diffLabels, true)
+        writeMarkdownRow(outputStream, row, baseLabel, diffLabels)
       })
     })
 
@@ -85,26 +85,26 @@ export async function markdownPrinter (comparisonStats, outputLocation, outputFi
 
   Object.entries(comparisonStats.interfaces || {})
     .forEach(([interfaceName, byLabel]) => {
-      const row = buildInterfaceRow(interfaceName, byLabel, baseLabel, diffLabels, labels, true)
-      writeMarkdownRow(outputStream, row, labels)
+      const row = buildInterfaceRow(interfaceName, byLabel, baseLabel, diffLabels, true)
+      writeMarkdownRow(outputStream, row, baseLabel, diffLabels)
     })
 
   outputStream.write(`| ${headerCells.map(() => ' ').join(' | ')} |\n`)
 
-  const npmRow = buildNpmRow(comparisonStats.npm, baseLabel, diffLabels, labels, true)
-  writeMarkdownRow(outputStream, npmRow, labels)
+  const npmRow = buildNpmRow(comparisonStats.npm, baseLabel, diffLabels, true)
+  writeMarkdownRow(outputStream, npmRow, baseLabel, diffLabels)
 
   await new Promise((resolve) => {
     outputStream.close(resolve)
   })
 }
 
-function writeMarkdownRow (outputStream, row, labels) {
+function writeMarkdownRow (outputStream, row, baseLabel, diffLabels) {
   const cells = [
     row.agent,
     row.asset,
-    ...labels.map(label => row[`size_${label}`]),
-    row.diff
+    row[`size_${baseLabel}`],
+    ...diffLabels.map(label => row[`diff_${label}`])
   ]
   outputStream.write(`| ${cells.join(' | ')} |\n`)
 }
@@ -162,7 +162,7 @@ export async function jsonPrinter (comparisonStats, outputLocation, outputFileNa
   })
 }
 
-function buildAssetRow (agent, assetKey, byLabel, baseLabel, diffLabels, labels, colorize) {
+function buildAssetRow (agent, assetKey, byLabel, baseLabel, diffLabels, colorize) {
   return buildRow({
     agent,
     asset: assetKey,
@@ -170,12 +170,11 @@ function buildAssetRow (agent, assetKey, byLabel, baseLabel, diffLabels, labels,
     metrics: [entry => entry.gzipSize],
     baseLabel,
     diffLabels,
-    labels,
     colorize
   })
 }
 
-function buildInterfaceRow (interfaceName, byLabel, baseLabel, diffLabels, labels, colorize) {
+function buildInterfaceRow (interfaceName, byLabel, baseLabel, diffLabels, colorize) {
   return buildRow({
     agent: 'npm-interface',
     asset: interfaceName,
@@ -183,12 +182,11 @@ function buildInterfaceRow (interfaceName, byLabel, baseLabel, diffLabels, label
     metrics: [entry => entry.gzipSize],
     baseLabel,
     diffLabels,
-    labels,
     colorize
   })
 }
 
-function buildNpmRow (byLabel, baseLabel, diffLabels, labels, colorize) {
+function buildNpmRow (byLabel, baseLabel, diffLabels, colorize) {
   return buildRow({
     agent: 'npm-distribution',
     asset: 'tarball',
@@ -196,7 +194,6 @@ function buildNpmRow (byLabel, baseLabel, diffLabels, labels, colorize) {
     metrics: [entry => entry.size],
     baseLabel,
     diffLabels,
-    labels,
     colorize
   })
 }
@@ -206,31 +203,23 @@ function buildNpmRow (byLabel, baseLabel, diffLabels, labels, colorize) {
 // since loader/async-chunk stay on separate rows, but kept as a list so npm
 // (`size`) and interface (`gzipSize`) rows share the same formatting/diff
 // logic without a second code path.
-function buildRow ({ agent, asset, getEntry, metrics, baseLabel, diffLabels, labels, colorize }) {
+function buildRow ({ agent, asset, getEntry, metrics, baseLabel, diffLabels, colorize }) {
   const row = { agent, asset }
 
-  labels.forEach(label => {
-    const entry = getEntry(label)
-    const text = entry ? metrics.map(metric => formatFixedSize(metric(entry))).join(' + ') : 'N/A'
+  const baseEntry = getEntry(baseLabel)
+  const baseText = baseEntry ? metrics.map(metric => formatFixedSize(metric(baseEntry))).join(' + ') : 'N/A'
 
-    if (!colorize || !entry) {
-      row[`size_${label}`] = text
-      return
-    }
+  if (!colorize || !baseEntry) {
+    row[`size_${baseLabel}`] = baseText
+  } else {
+    const severity = worstDiff(getEntry, metrics, baseLabel, diffLabels)
+    row[`size_${baseLabel}`] = sizeBadge(baseText, percentColor(severity))
+  }
 
-    if (label === baseLabel) {
-      const severity = worstDiff(getEntry, metrics, baseLabel, diffLabels)
-      row[`size_${label}`] = sizeBadge(text, percentColor(severity))
-    } else {
-      row[`size_${label}`] = sizeBadge(text, 'white')
-    }
-  })
-
-  row.diff = diffLabels.map(label => {
+  diffLabels.forEach(label => {
     const value = worstDiffForLabel(getEntry, metrics, baseLabel, label)
-    if (value === null) return 'N/A'
-    return formatPercent(value, colorize)
-  }).join(' / ')
+    row[`diff_${label}`] = value === null ? 'N/A' : formatPercent(value, colorize)
+  })
 
   return row
 }
@@ -273,6 +262,15 @@ function formatFixedSize (bytes) {
   return text.length < 10 ? text.padEnd(10, NBSP) : text
 }
 
+// Fixed-width percent text: a sign, 3 integer digits, a period, 2 decimal
+// digits, and a percent sign -- so every delta cell in a column lines up
+// regardless of magnitude or sign.
+function formatFixedPercent (value) {
+  const sign = value < 0 ? '-' : '+'
+  const [intPart, decPart] = Math.abs(value).toFixed(2).split('.')
+  return `${sign}${intPart.padStart(3, NBSP)}.${decPart}%`
+}
+
 // GitHub strips `style` attributes from raw HTML in comments, and its math
 // (KaTeX) renderer only supports a restricted macro subset that turned out
 // too unreliable here (disallowed `\colorbox`, dropped unit suffixes even
@@ -283,7 +281,7 @@ function sizeBadge (text, color) {
 }
 
 function formatPercent (value, colorize) {
-  const text = `${value}%`
+  const text = formatFixedPercent(value)
   if (!colorize) return text
   return sizeBadge(text, percentColor(value))
 }

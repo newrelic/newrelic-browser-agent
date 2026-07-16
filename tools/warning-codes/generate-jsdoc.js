@@ -15,8 +15,8 @@
 const fs = require('fs')
 const path = require('path')
 
-const DOCS_PATH = path.join(__dirname, '..', 'docs', 'warning-codes.md')
-const CONSOLE_JS_PATH = path.join(__dirname, '..', 'src', 'common', 'util', 'console.js')
+const DOCS_PATH = path.join(__dirname, '..', '..', 'docs', 'warning-codes.md')
+const CONSOLE_JS_PATH = path.join(__dirname, '..', '..', 'src', 'common', 'util', 'console.js')
 const START_MARKER = '/* GENERATED-WARNING-CODES:START -- run `npm run generate:warning-codes` after editing docs/warning-codes.md, do not hand-edit this block */'
 const END_MARKER = '/* GENERATED-WARNING-CODES:END */'
 

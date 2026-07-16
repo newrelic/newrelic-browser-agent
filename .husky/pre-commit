@@ -27,6 +27,9 @@ if [ -n "$STAGED_SRC_FILES" ]; then
   done
 fi
 
+# Block the commit if a new warn() call uses a code with no docs/warning-codes.md entry
+npm run check:warning-codes
+
 # Keep the warning code JSDoc in console.js in sync with docs/warning-codes.md
 if git diff --cached --name-only --diff-filter=ACM | grep -q '^docs/warning-codes\.md$'; then
   echo "docs/warning-codes.md changed, regenerating warning code JSDoc..."

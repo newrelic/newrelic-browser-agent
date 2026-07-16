@@ -100,7 +100,7 @@ export async function getInterfaceStats (targetDir) {
     .filter(([, srcFile]) => srcFile && srcFile.startsWith('./src/interfaces/'))
 
   const results = await Promise.all(exportEntries.map(async ([subpath, srcFile]) => {
-    const name = subpath.replace(/^\.\//, '')
+    const name = subpath.replace(/^\.\/interfaces\//, '')
     const stats = await bundleAndMeasure(targetDir, srcFile)
     return [name, stats]
   }))

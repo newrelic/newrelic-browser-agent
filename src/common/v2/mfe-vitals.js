@@ -7,7 +7,9 @@ import { globalScope, isBrowserScope } from '../constants/runtime'
 import { now } from '../timing/now'
 
 /**
- * @typedef {import('./register-api-types').RegisterAPITimings} RegisterAPITimings
+ * @typedef {import('../../loaders/api/register-api-types').RegisterAPITimings} RegisterAPITimings
+ * @typedef {import('../../loaders/api/register-api-types').RegisterAPITarget} RegisterAPITarget
+ * @typedef {import('../../loaders/api/register-api-types').RegisterAPIVitals} RegisterAPIVitals
  */
 
 const isObservable = (node) => {
@@ -18,18 +20,25 @@ const isObservable = (node) => {
   }
 }
 
+const isMatch = (dataset, target) => dataset?.nrMfeId === target.id && (!dataset?.nrMfeObserved || dataset?.nrMfeObserved === target.instance)
+
 /**
  * Check if node is within a specific MFE
  * @param {Node} node - DOM node to check
  * @param {string} id - MFE ID to match
  * @returns {boolean}
  */
-const isInMFE = (node, id) => {
-  if (!node || !id) return false
+const isInMFE = (node, target = {}) => {
+  const id = target.id
+  const instance = target.instance
+  if (!node || !id || !instance) return false
   try {
     let curr = node.nodeType === 1 ? node : node.parentElement
     while (curr?.tagName) {
-      if (curr.dataset?.nrMfeId === id) return true
+      if (isMatch(curr.dataset, target)) {
+        curr.dataset.nrMfeObserved = instance // mark that this MFE has been observed for vitals
+        return true
+      }
       curr = curr.parentNode
     }
   } catch (e) {}
@@ -42,25 +51,28 @@ const isInMFE = (node, id) => {
  * @param {Function} onMatch - Callback when matching node is *added*
  * @returns {MutationObserver}
  */
-const observeMutations = (id, onMatch) => {
+const observeMutations = (target, onMatch) => {
   // Try to find existing MFE root
-  const mfeRoot = globalScope.document?.querySelector(`[data-nr-mfe-id="${id}"]`)
+  const potentialMatches = globalScope.document?.querySelectorAll(`[data-nr-mfe-id="${target.id}"]`)
+  const mfeRoot = (Array.from(potentialMatches)).find(x => isMatch(x.dataset, target))
   let observingRoot = !!mfeRoot
+  if (observingRoot) mfeRoot.dataset.nrMfeObserved ??= target.instance // mark that this MFE has been observed for vitals
 
   const obs = new globalScope.MutationObserver(mutations => {
     mutations.forEach(m => {
       m.addedNodes.forEach(node => {
         // Check if this is the MFE root being added
         const elem = node.nodeType === 1 ? node : null
-        if (elem?.dataset?.nrMfeId === id) {
+        if (!observingRoot && isMatch(elem?.dataset, target)) {
           // Found the root! Lets switch to observing just this subtree for performance reasons
           obs.disconnect()
           obs.observe(elem, { childList: true, subtree: true })
           observingRoot = true
+          elem.dataset.nrMfeObserved = target.instance // mark that this MFE has been observed for vitals
         }
 
         // Only check isInMFE if we're observing the whole document; skip expensive ancestor walk when observing root
-        if (isObservable(node) && (observingRoot || isInMFE(node, id))) {
+        if (isObservable(node) && (observingRoot || isInMFE(node, target))) {
           onMatch(node, obs)
         }
       })
@@ -95,15 +107,16 @@ const observePerformance = (observers, config, onEntry) => {
 
 /**
  * Tracks all Core Web Vitals for a specific MFE.
- * @param {string} id - The MFE ID to track
- * @returns {{fcp: object|null, lcp: object|null, cls: object|null, inp: object|null, disconnect: Function}}
+ * @param {RegisterAPITarget} target - The MFE target to track vitals for
+ * @param {RegisterAPITimings} timings - The timings object to use for relative time calculations
+ * @returns {RegisterAPIVitals} An object containing the vitals values and a disconnect method to stop tracking
  */
-export function trackMFEVitals (id, timings) {
-  let fcpObservedAt = null
-  let lcpObservedAt = null
+export function trackMFEVitals (target, timings) {
+  let fcpObservedAt
+  let lcpObservedAt
 
   const getTimeRelativeToScriptStart = (capturedAt) => {
-    if (capturedAt === null) return null
+    if (capturedAt == null) return capturedAt
     return capturedAt - (timings?.scriptStart || timings?.registeredAt || 0)
   }
 
@@ -115,17 +128,23 @@ export function trackMFEVitals (id, timings) {
       get value () { return getTimeRelativeToScriptStart(lcpObservedAt) }
     },
     cls: {
-      value: null
+      value: undefined
     },
     inp: {
-      value: null
+      value: undefined
     },
     disconnect: () => {}
   }
 
-  if (!id || !isBrowserScope || !globalScope.MutationObserver || !globalScope.PerformanceObserver) return vitals
+  if (!target || !isBrowserScope || !globalScope.MutationObserver || !globalScope.PerformanceObserver) return vitals
 
   const observers = []
+
+  // If FCP hasn't been observed within 10 seconds, give up and shut down all observers.
+  // Once FCP is observed, the other vitals are left to record until their natural lifespan ends.
+  setTimeout(() => {
+    if (!fcpObservedAt) vitals.disconnect()
+  }, 10000)
 
   const populateVitalMinimums = () => {
     fcpObservedAt ??= now()
@@ -134,14 +153,15 @@ export function trackMFEVitals (id, timings) {
   }
 
   // if the MFE has already rendered something on the page before we could set up listeners, just populate vital minimums immediately
-  if (globalScope.document?.querySelector(`[data-nr-mfe-id="${id}"]`)) populateVitalMinimums()
+  if (globalScope.document?.querySelector(`[data-nr-mfe-id="${target.id}"]`)) populateVitalMinimums()
 
   // Track FCP - first contentful paint
-  observeMutations(id, (_, obs) => {
+  const fcpObs = observeMutations(target, (_, obs) => {
     // An observed "FCP" means _something_ rendered, so at minimum we can populate all the baseline values for the vitals
     populateVitalMinimums()
     obs.disconnect()
   })
+  observers.push(fcpObs)
 
   // Track LCP - largest contentful paint
   let largestSize = 0
@@ -167,7 +187,7 @@ export function trackMFEVitals (id, timings) {
     // ResizeObserver not supported
   }
 
-  const lcpObs = observeMutations(id, (node) => {
+  const lcpObs = observeMutations(target, (node) => {
     // an observed "LCP" means _something_ rendered, so at minimum we can make sure all the baseline values are populated for the vitals
     populateVitalMinimums()
 
@@ -214,7 +234,7 @@ export function trackMFEVitals (id, timings) {
   observePerformance(observers, { type: 'layout-shift', buffered: true }, (entry) => {
     if (entry.hadRecentInput) return
     ;(entry.sources || []).some(source => {
-      if (isInMFE(source.node, id)) {
+      if (isInMFE(source.node, target)) {
         // an observed "CLS" means _something_ rendered for the MFE, so at minimum we can make sure all the baseline values are populated for the vitals
         populateVitalMinimums()
         vitals.cls.value += entry.value
@@ -226,8 +246,8 @@ export function trackMFEVitals (id, timings) {
 
   // Track INP - interaction to next paint
   observePerformance(observers, { type: 'event', buffered: true, durationThreshold: 40 }, (entry) => {
-    if (!entry.interactionId || !isInMFE(entry.target, id)) return
-    if (vitals.inp.value === null || entry.duration > vitals.inp.value) {
+    if (!entry.interactionId || !isInMFE(entry.target, target)) return
+    if (vitals.inp.value === undefined || entry.duration > vitals.inp.value) {
       // an observed "INP" means _something_ rendered for the MFE, so at minimum we can make sure all the baseline values are populated for the vitals
       populateVitalMinimums()
       vitals.inp.value = entry.duration
@@ -252,6 +272,9 @@ export function trackMFEVitals (id, timings) {
       }
     })
     disconnectInteractionListeners()
+    ;['visibilitychange', 'pagehide'].forEach(type => {
+      globalScope.removeEventListener(type, vitals.disconnect, { once: true, passive: true })
+    })
   }
 
   // Auto-disconnect LCP observer on user interaction (per Web Vitals spec)
@@ -266,7 +289,7 @@ export function trackMFEVitals (id, timings) {
   }
 
   const handleInteraction = (event) => {
-    if (!isInMFE(event?.target, id)) return
+    if (!isInMFE(event?.target, target)) return
 
     disconnectLCP()
     disconnectInteractionListeners()

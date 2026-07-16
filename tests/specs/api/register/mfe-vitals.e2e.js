@@ -38,43 +38,43 @@ function validateVitals (timingEvent, options = {}) {
 
   if (expectFCP) {
     expect(fcp).toBeDefined()
-    expect(fcp).not.toBeNull()
+    expect(fcp).not.toBeUndefined()
     expect(fcp).toBeGreaterThan(0)
     expect(fcp).toBeLessThan(10000) // Less than 10 seconds
-  } else if (fcp !== null && fcp !== undefined) {
+  } else if (fcp !== undefined) {
     // If FCP is present (but not required), validate it's reasonable
     expect(fcp).toBeGreaterThanOrEqual(0)
   }
 
   if (expectLCP) {
     expect(lcp).toBeDefined()
-    expect(lcp).not.toBeNull()
+    expect(lcp).not.toBeUndefined()
     expect(lcp).toBeGreaterThan(0)
     expect(lcp).toBeLessThan(10000)
     // LCP should be >= FCP if both are present
-    if (fcp !== null && fcp !== undefined) {
+    if (fcp !== undefined) {
       expect(lcp).toBeGreaterThanOrEqual(fcp)
     }
-  } else if (lcp !== null && lcp !== undefined) {
+  } else if (lcp !== undefined) {
     expect(lcp).toBeGreaterThanOrEqual(0)
   }
 
   if (expectCLS) {
     expect(cls).toBeDefined()
-    expect(cls).not.toBeNull()
+    expect(cls).not.toBeUndefined()
     // CLS is a score, typically between 0 and some small number
     expect(cls).toBeGreaterThanOrEqual(0)
     expect(cls).toBeLessThan(10) // CLS scores are typically very small
-  } else if (cls !== null && cls !== undefined) {
+  } else if (cls !== undefined) {
     expect(cls).toBeGreaterThanOrEqual(0)
   }
 
   if (expectINP) {
     expect(inp).toBeDefined()
-    expect(inp).not.toBeNull()
+    expect(inp).not.toBeUndefined()
     expect(inp).toBeGreaterThan(0)
     expect(inp).toBeLessThan(10000)
-  } else if (inp !== null && inp !== undefined) {
+  } else if (inp !== undefined) {
     expect(inp).toBeGreaterThanOrEqual(0)
   }
 }
@@ -302,14 +302,63 @@ describe('Register API - MFE Vitals Tracking', () => {
 
     // Vitals should be null or 0 for MFE with no matching content
     // FCP should be null since no content was added within the MFE scope
-    expect(timing['nr.vitals.fcp.value']).toBeNull()
-    expect(timing['nr.vitals.lcp.value']).toBeNull()
+    expect(timing['nr.vitals.fcp.value']).toBeUndefined()
+    expect(timing['nr.vitals.lcp.value']).toBeUndefined()
     // CLS might be null (unsupported) or have value 0 (supported but no shifts)
-    if (timing['nr.vitals.cls.value'] !== null) {
+    if (timing['nr.vitals.cls.value'] !== undefined) {
       const cls = timing['nr.vitals.cls.value']
       expect(cls).toBe(0)
     }
-    expect(timing['nr.vitals.inp.value']).toBeNull()
+    expect(timing['nr.vitals.inp.value']).toBeUndefined()
+  })
+
+  it('should give up tracking vitals if FCP is not observed within 10 seconds, reporting no timings', async () => {
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+      init: { feature_flags: ['register'] }
+    }))
+      .then(() => browser.waitForAgentLoad())
+
+    // Register an MFE and never render any content tagged with its data-nr-mfe-id,
+    // so FCP is never observed and the 10s internal timeout should kick in.
+    await browser.execute(function () {
+      window.timeoutMfe = newrelic.register({
+        id: 'fcp-timeout-mfe',
+        name: 'FCP Timeout MFE'
+      })
+    })
+
+    // Wait past the 10 second FCP timeout so the tracker gives up and disconnects its observers
+    await browser.pause(11000)
+
+    // Render content AFTER the timeout should have fired - since observers should already be
+    // disconnected at this point, this should NOT be picked up as FCP/LCP/CLS/INP
+    await browser.execute(function () {
+      const div = document.createElement('div')
+      div.textContent = 'Late content after FCP timeout'
+      div.dataset.nrMfeId = 'fcp-timeout-mfe'
+      div.style.width = '400px'
+      div.style.height = '400px'
+      document.body.appendChild(div)
+    })
+
+    await browser.pause(500)
+
+    await browser.execute(function () {
+      window.timeoutMfe.deregister()
+    })
+
+    const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+    const timingEvents = getMFETimingEvents(insightsHarvests, 'fcp-timeout-mfe')
+
+    expect(timingEvents.length).toBeGreaterThanOrEqual(1)
+    const timing = timingEvents[0]
+
+    // No vitals should have been captured - the 10s FCP timeout should have disconnected
+    // all observers before the late content was ever rendered
+    expect(timing['nr.vitals.fcp.value']).toBeUndefined()
+    expect(timing['nr.vitals.lcp.value']).toBeUndefined()
+    expect(timing['nr.vitals.cls.value']).toBeUndefined()
+    expect(timing['nr.vitals.inp.value']).toBeUndefined()
   })
 
   it('should stop tracking vitals after deregistration', async () => {
@@ -402,15 +451,128 @@ describe('Register API - MFE Vitals Tracking', () => {
     expect(timing.timeToLoad).toBeGreaterThanOrEqual(0)
     expect(timing.timeToRegister).toBeGreaterThanOrEqual(0)
 
-    // Vitals properties should exist (even if null)
-    expect(timing).toHaveProperty(['nr.vitals.fcp.value'])
-    expect(timing).toHaveProperty(['nr.vitals.lcp.value'])
-    expect(timing).toHaveProperty(['nr.vitals.cls.value'])
-    expect(timing).toHaveProperty(['nr.vitals.inp.value'])
-
     // At least FCP and LCP should have values for this test case
-    expect(timing['nr.vitals.fcp.value']).not.toBeNull()
-    expect(timing['nr.vitals.lcp.value']).not.toBeNull()
+    expect(timing['nr.vitals.fcp.value']).not.toBeUndefined()
+    expect(timing['nr.vitals.lcp.value']).not.toBeUndefined()
+  })
+
+  it('should independently detect FCP for two MFE instances sharing the same id in separate DOM trees', async () => {
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+      init: { feature_flags: ['register'] }
+    }))
+      .then(() => browser.waitForAgentLoad())
+
+    // Register two separate instances that share the same MFE id, before either DOM tree
+    // exists, so both trackers start out watching the whole document for their shared id.
+    await browser.execute(function () {
+      window.mfeTreeA = newrelic.register({ id: 'dual-tree-mfe', name: 'Tree A' })
+      window.mfeTreeB = newrelic.register({ id: 'dual-tree-mfe', name: 'Tree B' })
+    })
+
+    // Render the first DOM tree for this shared id
+    await browser.execute(function () {
+      const treeA = document.createElement('div')
+      treeA.dataset.nrMfeId = 'dual-tree-mfe'
+      treeA.textContent = 'Tree A content'
+      treeA.style.width = '100px'
+      treeA.style.height = '100px'
+      document.body.appendChild(treeA)
+    })
+
+    await browser.pause(300)
+
+    // Render a second, unrelated DOM tree elsewhere on the page for the SAME shared id.
+    // If a tracker had latched onto Tree A's subtree exclusively, it would never see this.
+    await browser.execute(function () {
+      const treeB = document.createElement('div')
+      treeB.dataset.nrMfeId = 'dual-tree-mfe'
+      treeB.textContent = 'Tree B content'
+      treeB.style.width = '200px'
+      treeB.style.height = '200px'
+      document.body.appendChild(treeB)
+    })
+
+    await browser.pause(300)
+
+    await browser.execute(function () {
+      window.mfeTreeA.deregister()
+      window.mfeTreeB.deregister()
+    })
+
+    const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+    const timingEvents = getMFETimingEvents(insightsHarvests, 'dual-tree-mfe')
+
+    // Both instances should have reported their own timing event
+    expect(timingEvents.length).toBe(2)
+
+    const eventA = timingEvents.find(e => e['source.name'] === 'Tree A')
+    const eventB = timingEvents.find(e => e['source.name'] === 'Tree B')
+
+    expect(eventA).toBeDefined()
+    expect(eventB).toBeDefined()
+
+    // Each instance should have detected FCP from its OWN DOM tree, independently of the other
+    validateVitals(eventA, { expectFCP: true })
+    validateVitals(eventB, { expectFCP: true })
+
+    // Tree B was rendered ~300ms after Tree A, so its FCP timestamp should reflect that later render
+    expect(eventB['nr.vitals.fcp.value'] - eventA['nr.vitals.fcp.value']).toBeGreaterThanOrEqual(300)
+  })
+
+  it.withBrowsersMatching(supportsLargestContentfulPaint)('should independently measure LCP size for two MFE instances sharing the same id', async () => {
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+      init: { feature_flags: ['register'] }
+    }))
+      .then(() => browser.waitForAgentLoad())
+
+    await browser.execute(function () {
+      window.mfeTreeA = newrelic.register({ id: 'dual-tree-lcp-mfe', name: 'LCP Tree A' })
+      window.mfeTreeB = newrelic.register({ id: 'dual-tree-lcp-mfe', name: 'LCP Tree B' })
+    })
+
+    // Small tree A, rendered first
+    await browser.execute(function () {
+      const treeA = document.createElement('div')
+      treeA.dataset.nrMfeId = 'dual-tree-lcp-mfe'
+      treeA.textContent = 'Small tree A'
+      treeA.style.width = '50px'
+      treeA.style.height = '50px'
+      document.body.appendChild(treeA)
+    })
+
+    await browser.pause(300)
+
+    // Larger tree B, in a completely separate part of the page, rendered second
+    await browser.execute(function () {
+      const treeB = document.createElement('div')
+      treeB.dataset.nrMfeId = 'dual-tree-lcp-mfe'
+      treeB.textContent = 'Large tree B'
+      treeB.style.width = '400px'
+      treeB.style.height = '400px'
+      document.body.appendChild(treeB)
+    })
+
+    await browser.pause(500)
+
+    await browser.execute(function () {
+      window.mfeTreeA.deregister()
+      window.mfeTreeB.deregister()
+    })
+
+    const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+    const timingEvents = getMFETimingEvents(insightsHarvests, 'dual-tree-lcp-mfe')
+
+    expect(timingEvents.length).toBe(2)
+
+    const eventA = timingEvents.find(e => e['source.name'] === 'LCP Tree A')
+    const eventB = timingEvents.find(e => e['source.name'] === 'LCP Tree B')
+
+    expect(eventA).toBeDefined()
+    expect(eventB).toBeDefined()
+
+    // Both trees should have measured LCP from their own content, not each other's
+    validateVitals(eventA, { expectLCP: true })
+    validateVitals(eventB, { expectLCP: true })
   })
 
   // it('should capture comprehensive metadata for all vitals', async () => {

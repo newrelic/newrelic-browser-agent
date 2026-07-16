@@ -793,9 +793,9 @@ describe('trackMFEVitals', () => {
     })
 
     it('should be null when MFE container is not found in DOM', () => {
-      // Override querySelector to return null (MFE not in DOM)
+      // Override querySelectorAll to return no matches (MFE not in DOM)
       const mockGlobalScope = require('../../../../src/common/constants/runtime').globalScope
-      mockGlobalScope.document.querySelector = jest.fn(() => null)
+      mockGlobalScope.document.querySelectorAll = jest.fn(() => [])
 
       const vitals = trackMFEVitals(mfeTarget, timings)
 

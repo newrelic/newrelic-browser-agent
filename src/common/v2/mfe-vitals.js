@@ -22,6 +22,15 @@ const isObservable = (node) => {
 
 const isMatch = (dataset, target) => dataset?.nrMfeId === target.id && (!dataset?.nrMfeObserved || dataset?.nrMfeObserved === target.instance)
 
+const escapeSelectorValue = (value) => {
+  try {
+    return globalScope.CSS.escape(value)
+  } catch (e) {
+    // give up
+    return value
+  }
+}
+
 /**
  * Check if node is within a specific MFE
  * @param {Node} node - DOM node to check
@@ -53,8 +62,8 @@ const isInMFE = (node, target = {}) => {
  */
 const observeMutations = (target, onMatch) => {
   // Try to find existing MFE root
-  const potentialMatches = globalScope.document?.querySelectorAll(`[data-nr-mfe-id="${target.id}"]`)
-  const mfeRoot = (Array.from(potentialMatches)).find(x => isMatch(x.dataset, target))
+  const potentialMatches = globalScope.document?.querySelectorAll(`[data-nr-mfe-id="${escapeSelectorValue(target.id)}"]`)
+  const mfeRoot = (Array.from(potentialMatches) || []).find(x => isMatch(x.dataset, target))
   let observingRoot = !!mfeRoot
   if (observingRoot) mfeRoot.dataset.nrMfeObserved ??= target.instance // mark that this MFE has been observed for vitals
 
@@ -153,7 +162,8 @@ export function trackMFEVitals (target, timings) {
   }
 
   // if the MFE has already rendered something on the page before we could set up listeners, just populate vital minimums immediately
-  if (globalScope.document?.querySelector(`[data-nr-mfe-id="${target.id}"]`)) populateVitalMinimums()
+  const existingRoots = globalScope.document?.querySelectorAll(`[data-nr-mfe-id="${escapeSelectorValue(target.id)}"]`)
+  if (Array.from(existingRoots || []).some(x => isMatch(x.dataset, target))) populateVitalMinimums()
 
   // Track FCP - first contentful paint
   const fcpObs = observeMutations(target, (_, obs) => {

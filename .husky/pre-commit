@@ -27,6 +27,13 @@ if [ -n "$STAGED_SRC_FILES" ]; then
   done
 fi
 
+# Keep the warning code JSDoc in console.js in sync with docs/warning-codes.md
+if git diff --cached --name-only --diff-filter=ACM | grep -q '^docs/warning-codes\.md$'; then
+  echo "docs/warning-codes.md changed, regenerating warning code JSDoc..."
+  npm run generate:warning-codes
+  git add src/common/util/console.js
+fi
+
 npm run lint
 
 npm run test -- --onlyChanged

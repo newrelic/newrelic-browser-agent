@@ -7,12 +7,92 @@ import { dispatchGlobalEvent } from '../dispatch/global-event'
 
 /* eslint no-console: ["error", { allow: ["debug"] }] */
 
+/* GENERATED-WARNING-CODES:START -- run `npm run generate:warning-codes` after editing docs/warning-codes.md, do not hand-edit this block */
 /**
- * A helper method to warn to the console with New Relic: decoration
- * @param {string} message The primary message to warn
- * @param {*} [secondary] Secondary data to include, usually an error or object
+ * A helper method to warn to the console with New Relic: decoration.
+ *
+ * `code` corresponds to an entry in
+ * {@link https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md warning-codes.md}:
+ *
+ * | Code | Message |
+ * |------|---------|
+ * | 1 | An error occurred while setting a property of a Configurable |
+ * | 2 | An error occurred while setting a Configurable |
+ * | 3 | Setting a Configurable requires an object as input |
+ * | 4 | Setting a Configurable requires a model to set its initial properties |
+ * | 5 | An invalid session_replay.mask_selector was provided. \* will be used. |
+ * | 6 | An invalid session_replay.block_selector was provided and will not be used |
+ * | 7 | An invalid session_replay.mask_input_option was provided and will not be used |
+ * | 8 | Shared context requires an object as input |
+ * | 9 | An error occurred while setting SharedContext |
+ * | 10 | Failed to read from storage API |
+ * | 11 | Failed to write to the storage API |
+ * | 12 | An obfuscation replacement rule was detected missing a "regex" value. |
+ * | 13 | An obfuscation replacement rule contains a "regex" value with an invalid type (must be a string or RegExp) |
+ * | 14 | An obfuscation replacement rule contains a "replacement" value with an invalid type (must be a string) |
+ * | 15 | An error occurred while intercepting XHR |
+ * | 16 | Could not cast log message to string |
+ * | 17 | Could not calculate New Relic server time. Agent shutting down. |
+ * | 18 | RUM call failed. Agent shutting down. |
+ * | 19 | SPA scheduler is not initialized. Saved interaction is not sent! |
+ * | 20 | A problem occurred when starting up session manager. This page will not start or extend any session. |
+ * | 21 | Failed to initialize the agent. Could not determine the runtime environment. |
+ * | 22 | Failed to initialize all enabled instrument classes (agent aborted) - |
+ * | 23 | An unexpected issue occurred |
+ * | 24 | Something prevented the agent from instrumenting. |
+ * | 25 | Something prevented the agent from being downloaded. |
+ * | 26 | Failed to initialize instrument classes. |
+ * | 27 | Downloading runtime APIs failed... |
+ * | 28 | The Browser Agent is attempting to send a very large payload. This is usually tied to large amounts of custom attributes. Please check your configurations. |
+ * | 29 | Failed to wrap logger: invalid argument(s) |
+ * | 30 | Invalid log level |
+ * | 31 | Ignored log: Log is larger than maximum payload size |
+ * | 32 | Ignored log: Invalid message |
+ * | 33 | Session Replay Aborted |
+ * | 34 | Downloading and initializing a feature failed... |
+ * | 35 | Call to agent api failed. The API is not currently initialized. |
+ * | 36 | A feature is enabled but one or more dependent features have not been initialized. This may cause unintended consequences or missing data... |
+ * | 37 | Invalid feature name supplied. |
+ * | 38 | Call to api was made before agent fully initialized. |
+ * | 39 | Failed to execute setCustomAttribute. Name must be a string type. |
+ * | 40 | Failed to execute setCustomAttribute. Non-null value must be a string, number or boolean type. |
+ * | 41 | Failed to execute setUserId. Non-null value must be a string type. |
+ * | 42 | Failed to execute setApplicationVersion. Expected <String \| null> |
+ * | 43 | Agent not configured properly. |
+ * | 44 | Invalid object passed to generic event aggregate. Missing "eventType". |
+ * | 45 | An internal agent process failed to execute. |
+ * | 46 | A reserved eventType was provided to recordCustomEvent(...) -- The event was not recorded. |
+ * | 47 | We tried to access a stylesheet's contents but failed due to browser security. For best results, ensure that cross-domain CSS assets are decorated with "crossorigin='anonymous'" attribution or are otherwise publicly accessible. |
+ * | 48 | Supplied an invalid API target. Must be an <Object> that contains valid (string) id and name properties. |
+ * | 49 | Supplied API target is missing an entityGuid. Some APIs may not behave correctly without a valid entityGuid (ex. logs). |
+ * | 50 | Failed to connect. Cannot allow registered API. |
+ * | 51 | Container agent is not available to register with. Can not connect |
+ * | 52 | Unexpected problem encountered. There should be at least one app for harvest! |
+ * | 53 | Did not receive a valid entityGuid from connection response |
+ * | 54 | An experimental feature is being used. Support can not be offered for issues |
+ * | 55 | Register API has been disabled on the container agent |
+ * | 56 | Could not find a matching entity to store data |
+ * | 57 | Failed to execute measure. Arguments must have valid types. |
+ * | 58 | Failed to execute measure. Resulting duration must be non-negative. |
+ * | 59 | Session replay harvested before a session trace payload could be sent. This could be problematic for replays that rely on a trace |
+ * | 60 | Session trace aborted |
+ * | 61 | Timestamps must be non-negative and end time cannot be before start time. |
+ * | 62 | Timestamp must be a unix timestamp greater than the page origin time |
+ * | 63 | A single event was larger than the maximum allowed payload size |
+ * | 64 | Required globals have been mutated before being accessed by the browser agent. This can cause issues and should be avoided. |
+ * | 65 | Consent API argument must be boolean or undefined |
+ * | 66 | A new agent session has started |
+ * | 67 | The "spa" feature has been deprecated and disabled. Please use/import "soft_navigations" instead for tracking of BrowserInteraction data. |
+ * | 68 | API has been deregistered and can no longer be used. Call "register" API again with credentials to start over. |
+ * | 69 | More than one Browser agent is running on the page |
+ * | 70 | A session replay payload failed to send and is being retried. Recording is paused during the retry period, and will resume when a successful harvest is made. Some replay activity may be missed during retry phases. |
+ * | 71 | An invalid feature mode was detected and set to "off". |
+ *
+ * @param {1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33|34|35|36|37|38|39|40|41|42|43|44|45|46|47|48|49|50|51|52|53|54|55|56|57|58|59|60|61|62|63|64|65|66|67|68|69|70|71} code The warning code to emit, which will be used to link to the warning code documentation
+ * @param {*} [secondary] Secondary data to include, usually an extra message, error or object
  * @returns
  */
+/* GENERATED-WARNING-CODES:END */
 export function warn (code, secondary) {
   if (typeof console.debug !== 'function') return
   console.debug(`New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#${code}`, secondary)

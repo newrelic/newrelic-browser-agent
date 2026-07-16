@@ -287,7 +287,7 @@ function formatPercent (value, colorize) {
 }
 
 function percentColor (value) {
-  if (value < 0) return 'green'
+  if (value <= 0) return 'green'
   if (value < 2) return 'yellow'
   if (value <= 5) return 'orange'
   return 'red'

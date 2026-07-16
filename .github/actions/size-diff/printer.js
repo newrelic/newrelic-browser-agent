@@ -6,7 +6,8 @@ import { filesize } from 'filesize'
 const ASSET_KEYS = ['loader', 'async-chunk']
 
 export function consolePrinter (comparisonStats) {
-  const { labels, baseLabel, displayLabels = {} } = comparisonStats
+  const { baseLabel, displayLabels = {} } = comparisonStats
+  const labels = [...comparisonStats.labels].reverse()
   const diffLabels = labels.filter(label => label !== baseLabel)
   const displayLabel = label => displayLabels[label] || label
 
@@ -46,7 +47,8 @@ export function consolePrinter (comparisonStats) {
 }
 
 export async function markdownPrinter (comparisonStats, outputLocation, outputFileName) {
-  const { labels, baseLabel, displayLabels = {} } = comparisonStats
+  const { baseLabel, displayLabels = {} } = comparisonStats
+  const labels = [...comparisonStats.labels].reverse()
   const diffLabels = labels.filter(label => label !== baseLabel)
   const displayLabel = label => displayLabels[label] || label
 
@@ -164,14 +166,15 @@ function buildFileSizeRow (agent, assetKey, getEntry, baseLabel, diffLabels, lab
 
   labels.forEach(label => {
     const entry = getEntry(label)
-    row[`size_${label}`] = entry ? `${filesize(entry.fileSize)} / ${filesize(entry.gzipSize)} (gzip)` : 'N/A'
+    const text = entry ? filesize(entry.gzipSize) : 'N/A'
+    row[`size_${label}`] = (colorize && label === baseLabel) ? highlightCurrentCell(text) : text
   })
 
   diffLabels.forEach(label => {
     const entry = getEntry(label)
     const baseEntry = getEntry(baseLabel)
     const diff = (entry && baseEntry) ? calcDiffStats(entry, baseEntry) : null
-    row[`diff_${label}`] = diff ? `${formatPercent(diff.fileSize, colorize)} / ${formatPercent(diff.gzipSize, colorize)} (gzip)` : 'N/A'
+    row[`diff_${label}`] = diff ? formatPercent(diff.gzipSize, colorize) : 'N/A'
   })
 
   return row
@@ -182,15 +185,25 @@ function buildNpmRow (agent, byLabel, baseLabel, diffLabels, labels, colorize) {
 
   labels.forEach(label => {
     const entry = byLabel[label]
-    row[`size_${label}`] = `${filesize(entry.size)} / ${filesize(entry.unpackedSize)} (unpacked)`
+    const text = filesize(entry.size)
+    row[`size_${label}`] = (colorize && label === baseLabel) ? highlightCurrentCell(text) : text
   })
 
   diffLabels.forEach(label => {
     const diff = calcNpmDiffStats(byLabel[label], byLabel[baseLabel])
-    row[`diff_${label}`] = `${formatPercent(diff.size, colorize)} / ${formatPercent(diff.unpackedSize, colorize)} (unpacked)`
+    row[`diff_${label}`] = formatPercent(diff.size, colorize)
   })
 
   return row
+}
+
+// A fixed hex color renders identically regardless of the viewer's light or
+// dark GitHub theme (unlike CSS variables), and this royal purple stays
+// visually distinct from the green/orange/red used for diff cells below.
+const CURRENT_COLUMN_COLOR = '#6b3fa0'
+
+function highlightCurrentCell (text) {
+  return `$\\colorbox{${CURRENT_COLUMN_COLOR}}{\\textcolor{white}{\\text{${text}}}}$`
 }
 
 // GitHub's PR comment renderer supports KaTeX math, including KaTeX's
@@ -200,7 +213,9 @@ function buildNpmRow (agent, byLabel, baseLabel, diffLabels, labels, colorize) {
 // and colors the rest of the group — `\textcolor` is the two-argument form.
 function formatPercent (value, colorize) {
   if (!colorize) return `${value}%`
-  return `$\\textcolor{${percentColor(value)}}{${value}\\%}$`
+  // Wrapped in \text{} so KaTeX renders this as literal text rather than
+  // math notation — without it, `\%` can render without the percent glyph.
+  return `$\\textcolor{${percentColor(value)}}{\\text{${value}\\%}}$`
 }
 
 function percentColor (value) {

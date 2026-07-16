@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/* eslint-disable */
-
 // libraries
 import { onCLS, onFCP, onINP, onLCP } from 'web-vitals'
 // internal
@@ -17,7 +15,7 @@ import { addUrl } from '../common/url/add-url'
 import { IFRAME_TIMING_UPDATE, IFRAME_API, IFRAME_API_RESPONSE, IFRAME_VITALS_UPDATE, IFRAME_AJAX } from '../common/constants/iframe-constants'
 import { castErrorEvent, castError, castPromiseRejectionEvent } from '../features/jserrors/shared/cast-error'
 
-const REGISTER = 'register' // define it here for now to prevent importing the full list of constants for build size.
+const REGISTER = 'register' // define it here to prevent importing the full list of constants for build size.
 const VITALS = [[onCLS, 'cls'], [onLCP, 'lcp'], [onFCP, 'fcp'], [onINP, 'inp']]
 const AJAX_INITIATOR_TYPES = { xmlhttprequest: 'xhr', fetch: 'fetch', beacon: 'beacon' }
 
@@ -41,10 +39,10 @@ export class RegisteredIframeEntity {
     timings: {},
     customAttributes: {},
     vitals: {
-      cls: {value: null},
-      lcp: {value: null},
-      fcp: {value: null},
-      inp: {value: null}
+      cls: { value: null },
+      lcp: { value: null },
+      fcp: { value: null },
+      inp: { value: null }
     }
   }
 
@@ -73,7 +71,7 @@ export class RegisteredIframeEntity {
    *
    * @param {RegisterAPIConstructor} opts The options for setting up the registered iframe entity.
    */
-  constructor(opts) {
+  constructor (opts) {
     warn(54)
     // Store original descriptor for postMessage (before any function merging)
     this.metadata.target = this.#targetDescriptor = opts
@@ -100,7 +98,7 @@ export class RegisteredIframeEntity {
    * @param {RegisterAPIConstructor} opts
    * @returns {Promise<void>}
    */
-  async #register(opts) {
+  async #register (opts) {
     try {
       const response = await this.#postMethodToAgent(REGISTER, [opts])
       if (response.metadata) Object.assign(this.metadata, response.metadata)
@@ -136,7 +134,7 @@ export class RegisteredIframeEntity {
    * Wires up global error/rejection listeners that funnel into noticeError.
    * @private
    */
-  #setupErrorListeners() {
+  #setupErrorListeners () {
     globalScope.addEventListener('error', err => {
       this.noticeError(castErrorEvent(err))
     })
@@ -150,7 +148,7 @@ export class RegisteredIframeEntity {
    * Wires up web-vitals callbacks to report vitals updates to the parent.
    * @private
    */
-  #setupVitalsListeners() {
+  #setupVitalsListeners () {
     VITALS.forEach(([vitalFn, property]) => {
       vitalFn(({ value }) => {
         this.metadata.vitals[property].value = value
@@ -166,7 +164,7 @@ export class RegisteredIframeEntity {
    * Instruments ajax using buffered resource timing so pre-registration entries are included.
    * @private
    */
-  #setupAjaxObserver() {
+  #setupAjaxObserver () {
     if (!globalScope.PerformanceObserver?.supportedEntryTypes?.includes('resource')) return
 
     this.#resourceObserver = new globalScope.PerformanceObserver(list => {
@@ -180,12 +178,12 @@ export class RegisteredIframeEntity {
    * @private
    * @param {PerformanceResourceTiming} resource
    */
-  #processResourceEntry(resource) {
+  #processResourceEntry (resource) {
     if (!(resource.initiatorType in AJAX_INITIATOR_TYPES) || resource.responseStatus === 0) return
     const params = { status: resource.responseStatus }
     const metrics = { rxSize: resource.transferSize, duration: Math.floor(resource.duration), cbTime: 0 }
     addUrl(params, resource.name)
-    
+
     this.#postMessageToParent(IFRAME_AJAX, {
       params,
       metrics,
@@ -199,7 +197,7 @@ export class RegisteredIframeEntity {
    * Listens for postMessage responses from the parent window and routes them to pending resolvers.
    * @private
    */
-  #setupResponseListener() {
+  #setupResponseListener () {
     globalScope.addEventListener('message', (event) => {
       if (this.blocked) return
       // Validate message structure
@@ -227,7 +225,7 @@ export class RegisteredIframeEntity {
    * Explicitly binds API methods as own properties for better console visibility.
    * @private
    */
-  #bindPublicMethods() {
+  #bindPublicMethods () {
     this.addPageAction = this.addPageAction.bind(this)
     this.deregister = this.deregister.bind(this)
     this.recordCustomEvent = this.recordCustomEvent.bind(this)
@@ -249,7 +247,7 @@ export class RegisteredIframeEntity {
    * @param {string} origin - The origin to check
    * @returns {boolean}
    */
-  #isAllowedOrigin(origin) {
+  #isAllowedOrigin (origin) {
     return this.#parentOrigin === '*' || origin === this.#parentOrigin
   }
 
@@ -262,7 +260,7 @@ export class RegisteredIframeEntity {
    * @param {boolean} [needsResponse=false] - Whether to wait for a response from the parent
    * @returns {Promise<void>}
    */
-  async #postMessageToParent(type, data, bypassRegistration = false, needsResponse = false) {
+  async #postMessageToParent (type, data, bypassRegistration = false, needsResponse = false) {
     if (this.blocked) return
 
     const timestamp = now()
@@ -290,7 +288,7 @@ export class RegisteredIframeEntity {
    * @param {string} property - The property name that changed
    * @param {*} value - The new value
    */
-  #postTimingToAgent(property, value) {
+  #postTimingToAgent (property, value) {
     this.#postMessageToParent(IFRAME_TIMING_UPDATE, {
       property,
       value
@@ -304,7 +302,7 @@ export class RegisteredIframeEntity {
    * @param {Array} args The arguments to pass to the method
    * @returns {Promise<any>} Promise that resolves with the response from the agent
    */
-  async #postMethodToAgent(method, args) {
+  async #postMethodToAgent (method, args) {
     return await this.#postMessageToParent(IFRAME_API, {
       method,
       args
@@ -317,7 +315,7 @@ export class RegisteredIframeEntity {
    * @param {number} messageId
    * @returns {Promise<any>}
    */
-  #openPending(messageId) {
+  #openPending (messageId) {
     const resolvers = {}
     const pending = new Promise((resolve, reject) => {
       resolvers.resolve = resolve
@@ -334,7 +332,7 @@ export class RegisteredIframeEntity {
    * @private
    * @param {{messageId: number, error?: string, result?: any, metadata?: object}} event
    */
-  #closePending(event = {}) {
+  #closePending (event = {}) {
     const { messageId, error, result, metadata } = event
     const pending = this.#pendingMessages.get(messageId)
     if (pending) {
@@ -354,7 +352,7 @@ export class RegisteredIframeEntity {
    * @param {string} name Name or category of the action. Reported as the actionName attribute.
    * @param {object} [attributes] JSON object with one or more key/value pairs. For example: {key:"value"}. The key is reported as its own PageAction attribute with the specified values.
    */
-  addPageAction(name, attributes) {
+  addPageAction (name, attributes) {
     this.#postMethodToAgent('addPageAction', [name, attributes])
   }
 
@@ -366,7 +364,7 @@ export class RegisteredIframeEntity {
    * Deregister the registered entity (this), which blocks its use and captures end of life timings.
    * @returns {Promise<void>}
    */
-  deregister() {
+  deregister () {
     try {
       this.#resourceObserver?.disconnect()
     } catch (err) { }
@@ -381,7 +379,7 @@ export class RegisteredIframeEntity {
      * @param {string} eventType The eventType to store the event as.
      * @param {Object} [attributes] JSON object with one or more key/value pairs. For example: {key:"value"}.
      */
-  recordCustomEvent(eventType, attributes) {
+  recordCustomEvent (eventType, attributes) {
     this.#postMethodToAgent('recordCustomEvent', [eventType, attributes])
   }
 
@@ -392,7 +390,7 @@ export class RegisteredIframeEntity {
    * @param {{start?: number|PerformanceMark, end?: number|PerformanceMark, customAttributes?: object}} [options] An object used to control the way the measure API operates
    * @returns {Promise<{start: number, end: number, duration: number, customAttributes: object}>} Measurement details
    */
-  async measure(name, options) {
+  async measure (name, options) {
     return (await this.#postMethodToAgent('measure', [name, options])).result
   }
 
@@ -403,7 +401,7 @@ export class RegisteredIframeEntity {
    * @param {string|number|boolean|null} value Value of the attribute. Appears as the value in the named attribute column in the PageView event. It will appear as a column in the PageAction event if you are using it. Custom attribute values cannot be complex objects, only simple types such as Strings, Integers and Booleans. Passing a null value unsets any existing attribute of the same name.
    * @param {boolean} [persist] Default false. If set to true, the name-value pair will also be set into the browser's storage API. Then on the following instrumented pages that load within the same session, the pair will be re-applied as a custom attribute.
    */
-  setCustomAttribute(name, value, persist) {
+  setCustomAttribute (name, value, persist) {
     this.#postMethodToAgent('setCustomAttribute', [name, value, persist])
   }
 
@@ -413,7 +411,7 @@ export class RegisteredIframeEntity {
    * @param {Error|string} error Provide a meaningful error message that you can use when analyzing data on browser's JavaScript errors page.
    * @param {object} [customAttributes] An object containing name/value pairs representing custom attributes.
    */
-  noticeError(error, customAttributes) {
+  noticeError (error, customAttributes) {
     this.#postMethodToAgent('noticeError', [castError(error), customAttributes])
   }
 
@@ -423,7 +421,7 @@ export class RegisteredIframeEntity {
    * @param {string|null} value A string identifier for the end-user, useful for tying all browser events to specific users. The value parameter does not have to be unique. If IDs should be unique, the caller is responsible for that validation. Passing a null value unsets any existing user ID.
    * @param {boolean} [resetSession=false] Optional param. Should not be used from a registered entity context. To reset a session when updating user id, must be initiated by the main agent.
    */
-  setUserId(value, resetSession = false) {
+  setUserId (value, resetSession = false) {
     this.#postMethodToAgent('setUserId', [value, resetSession])
   }
 
@@ -435,7 +433,7 @@ export class RegisteredIframeEntity {
    * tying all browser events to a specific release tag. The value parameter does not
    * have to be unique. Passing a null value unsets any existing value.
    */
-  setApplicationVersion(value) {
+  setApplicationVersion (value) {
     this.#postMethodToAgent('setApplicationVersion', [value])
   }
 
@@ -445,7 +443,7 @@ export class RegisteredIframeEntity {
    * @param {string} message String to be captured as log message
    * @param {{customAttributes?: object, level?: 'ERROR'|'TRACE'|'DEBUG'|'INFO'|'WARN'}} [options] customAttributes defaults to `{}` if not assigned, level defaults to `info` if not assigned.
   */
-  log(message, options) {
+  log (message, options) {
     this.#postMethodToAgent('log', [message, options])
   }
 }

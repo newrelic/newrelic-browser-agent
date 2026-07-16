@@ -194,12 +194,13 @@ function buildNpmRow (agent, byLabel, baseLabel, diffLabels, labels, colorize) {
 }
 
 // GitHub's PR comment renderer supports KaTeX math, including KaTeX's
-// `\color{name}{...}` extension macro, so this is the only way to get
-// colored text into a markdown table cell without raw HTML (which GitHub
-// strips `style` attributes from in comments).
+// `\textcolor{name}{...}` macro, so this is the only way to get colored text
+// into a markdown table cell without raw HTML (which GitHub strips `style`
+// attributes from in comments). Note: `\color{name}` only takes one argument
+// and colors the rest of the group — `\textcolor` is the two-argument form.
 function formatPercent (value, colorize) {
   if (!colorize) return `${value}%`
-  return `$\\color{${percentColor(value)}}{${value}\\%}$`
+  return `$\\textcolor{${percentColor(value)}}{${value}\\%}$`
 }
 
 function percentColor (value) {

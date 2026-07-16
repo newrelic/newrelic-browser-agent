@@ -65,7 +65,7 @@ export async function markdownPrinter (comparisonStats, outputLocation, outputFi
   Object.entries(comparisonStats.agents)
     .forEach(([agent, byLabel]) => {
       ASSET_KEYS.forEach(assetKey => {
-        const row = buildAssetRow(agent, assetKey, byLabel, baseLabel, diffLabels, labels)
+        const row = buildAssetRow(agent, assetKey, byLabel, baseLabel, diffLabels, labels, true)
         writeMarkdownRow(outputStream, row, labels, diffLabels)
       })
     })
@@ -74,13 +74,13 @@ export async function markdownPrinter (comparisonStats, outputLocation, outputFi
 
   Object.entries(comparisonStats.interfaces || {})
     .forEach(([interfaceName, byLabel]) => {
-      const row = buildInterfaceRow(interfaceName, byLabel, baseLabel, diffLabels, labels)
+      const row = buildInterfaceRow(interfaceName, byLabel, baseLabel, diffLabels, labels, true)
       writeMarkdownRow(outputStream, row, labels, diffLabels)
     })
 
   outputStream.write(`| ${headerCells.map(() => ' ').join(' | ')} |\n`)
 
-  const npmRow = buildNpmRow('npm-distribution', comparisonStats.npm, baseLabel, diffLabels, labels)
+  const npmRow = buildNpmRow('npm-distribution', comparisonStats.npm, baseLabel, diffLabels, labels, true)
   writeMarkdownRow(outputStream, npmRow, labels, diffLabels)
 
   await new Promise((resolve) => {
@@ -151,15 +151,15 @@ export async function jsonPrinter (comparisonStats, outputLocation, outputFileNa
   })
 }
 
-function buildAssetRow (agent, assetKey, byLabel, baseLabel, diffLabels, labels) {
-  return buildFileSizeRow(agent, assetKey, label => byLabel[label] && byLabel[label][assetKey], baseLabel, diffLabels, labels)
+function buildAssetRow (agent, assetKey, byLabel, baseLabel, diffLabels, labels, colorize) {
+  return buildFileSizeRow(agent, assetKey, label => byLabel[label] && byLabel[label][assetKey], baseLabel, diffLabels, labels, colorize)
 }
 
-function buildInterfaceRow (interfaceName, byLabel, baseLabel, diffLabels, labels) {
-  return buildFileSizeRow('npm-interface', interfaceName, label => byLabel[label], baseLabel, diffLabels, labels)
+function buildInterfaceRow (interfaceName, byLabel, baseLabel, diffLabels, labels, colorize) {
+  return buildFileSizeRow('npm-interface', interfaceName, label => byLabel[label], baseLabel, diffLabels, labels, colorize)
 }
 
-function buildFileSizeRow (agent, assetKey, getEntry, baseLabel, diffLabels, labels) {
+function buildFileSizeRow (agent, assetKey, getEntry, baseLabel, diffLabels, labels, colorize) {
   const row = { agent, asset: assetKey }
 
   labels.forEach(label => {
@@ -171,13 +171,13 @@ function buildFileSizeRow (agent, assetKey, getEntry, baseLabel, diffLabels, lab
     const entry = getEntry(label)
     const baseEntry = getEntry(baseLabel)
     const diff = (entry && baseEntry) ? calcDiffStats(entry, baseEntry) : null
-    row[`diff_${label}`] = diff ? `${diff.fileSize}% / ${diff.gzipSize}% (gzip)` : 'N/A'
+    row[`diff_${label}`] = diff ? `${formatPercent(diff.fileSize, colorize)} / ${formatPercent(diff.gzipSize, colorize)} (gzip)` : 'N/A'
   })
 
   return row
 }
 
-function buildNpmRow (agent, byLabel, baseLabel, diffLabels, labels) {
+function buildNpmRow (agent, byLabel, baseLabel, diffLabels, labels, colorize) {
   const row = { agent, asset: 'tarball' }
 
   labels.forEach(label => {
@@ -187,10 +187,25 @@ function buildNpmRow (agent, byLabel, baseLabel, diffLabels, labels) {
 
   diffLabels.forEach(label => {
     const diff = calcNpmDiffStats(byLabel[label], byLabel[baseLabel])
-    row[`diff_${label}`] = `${diff.size}% / ${diff.unpackedSize}% (unpacked)`
+    row[`diff_${label}`] = `${formatPercent(diff.size, colorize)} / ${formatPercent(diff.unpackedSize, colorize)} (unpacked)`
   })
 
   return row
+}
+
+// GitHub's PR comment renderer supports KaTeX math, including KaTeX's
+// `\color{name}{...}` extension macro, so this is the only way to get
+// colored text into a markdown table cell without raw HTML (which GitHub
+// strips `style` attributes from in comments).
+function formatPercent (value, colorize) {
+  if (!colorize) return `${value}%`
+  return `$\\color{${percentColor(value)}}{${value}\\%}$`
+}
+
+function percentColor (value) {
+  if (value < 2) return 'green'
+  if (value <= 5) return 'orange'
+  return 'red'
 }
 
 function calcDiffStats (fromEntry, toEntry) {

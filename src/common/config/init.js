@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { FEATURE_FLAGS } from '../../features/generic_events/constants'
+import { CAPTURE_PAYLOAD_SETTINGS } from '../../features/ajax/constants'
 import { isValidSelector } from '../dom/query-selector'
 import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS } from '../session/constants'
 import { warn } from '../util/console'
@@ -47,7 +48,7 @@ const InitModelFn = () => {
     }
   }
   return {
-    ajax: { deny_list: undefined, block_internal: true, enabled: true, autoStart: true },
+    ajax: { deny_list: undefined, block_internal: true, enabled: true, autoStart: true, capture_payloads: CAPTURE_PAYLOAD_SETTINGS.NONE },
     api: {
       register: {
         get enabled () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.REGISTER) || hiddenState.experimental.register },
@@ -137,7 +138,8 @@ const InitModelFn = () => {
     session_trace: { enabled: true, autoStart: true },
     soft_navigations: { enabled: true, autoStart: true },
     ssl: undefined,
-    user_actions: { enabled: true, elementAttributes: ['id', 'className', 'tagName', 'type'] }
+    user_actions: { enabled: true, elementAttributes: ['id', 'className', 'tagName', 'type'] },
+    web_sockets: { enabled: false }
   }
 }
 

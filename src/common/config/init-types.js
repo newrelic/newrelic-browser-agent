@@ -11,6 +11,7 @@
  * @property {boolean} [ajax.block_internal] - If true, agent requests going to harvest endpoint are treated as on deny list. In other words, agent will not self-report AJAX.
  * @property {boolean} [ajax.enabled] - Turn on/off the ajax feature (on by default).
  * @property {boolean} [ajax.autoStart] - If true, the agent will automatically start the ajax feature. Otherwise, it will be in a deferred state until the `start` API method is called.
+ * @property {('none'|'failures'|'all')} [ajax.capture_payloads] - Controls when AJAX request/response payloads are captured. 'none' = never capture, 'failures' = capture only on errors (4xx, 5xx, network errors, GraphQL errors), 'all' = always capture.
  * @property {Object} [api]
  * @property {Object} [api.register]
  * @property {boolean} [api.register.enabled] - If true, the agent will allow registered children to be sent to the server.
@@ -87,6 +88,8 @@
  * @property {Object} [user_actions]
  * @property {boolean} [user_actions.enabled] - Must be true to allow UserAction events to be captured.
  * @property {Array<string>} [user_actions.elementAttributes] - List of HTML Element properties to be captured with UserAction events' target elements. This may help to identify the source element being interacted with in the UI.
+ * @property {Object} [web_sockets]
+ * @property {boolean} [web_sockets.enabled] - Turn on/off the web sockets feature (off by default).
  */
 
 export default {}

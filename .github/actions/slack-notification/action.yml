@@ -9,6 +9,9 @@ inputs:
   dem_platform_ops_channel_url:
     description: 'Slack API URL for the dem platform ops release channel'
     required: false
+  browser_agent_dev_channel_url:
+    description: 'Slack API URL for the browser-agent-dev channel'
+    required: false
   message:
     description: 'The message to post to Slack channels'
     required: true
@@ -24,5 +27,6 @@ runs:
         node $GITHUB_ACTION_PATH/index.js \
           --notifications-channel-url "${{ inputs.notifications_channel_url }}" \
           --dem-platform-ops-channel-url "${{ inputs.dem_platform_ops_channel_url }}" \
+          --browser-agent-dev-channel-url "${{ inputs.browser_agent_dev_channel_url }}" \
           --message "${{ inputs.message }}"
       shell: bash

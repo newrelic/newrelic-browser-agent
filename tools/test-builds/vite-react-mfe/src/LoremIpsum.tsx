@@ -27,6 +27,13 @@ export function LoremIpsum() {
       </p>
       <button id="mfe-main-button" onClick={() => {
         console.log("click in MFE")
+        
+        // Add blocking work to ensure interaction duration exceeds 40ms threshold for INP tracking
+        const start = performance.now();
+        while (performance.now() - start < 50) {
+          // Busy wait to simulate slow interaction processing
+        }
+        
         const xhr = new XMLHttpRequest();
         // xhr.open('GET', '/fetch');
         // xhr.send();

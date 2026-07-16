@@ -5,6 +5,7 @@ import * as handleModule from '../../../src/common/event-emitter/handle'
 import { Instrument as Ajax } from '../../../src/features/ajax/instrument'
 import { resetAgent, setupAgent } from '../setup-agent'
 import { EventContext } from '../../../src/common/event-emitter/event-context'
+import { AJAX_ID, CAPTURE_PAYLOAD_SETTINGS } from '../../../src/features/ajax/constants'
 
 const ajaxArguments = [
   { // params
@@ -99,6 +100,62 @@ describe('storeXhr', () => {
       expect.any(Object)
     )
   })
+
+  describe('data shapes', () => {
+    beforeEach(() => {
+      fakeAgent.features = {}
+    })
+
+    test('timeslice metric params should have expected keys', () => {
+      fakeAgent.features[FEATURE_NAMES.jserrors] = {} // Set to truthy object to simulate jserrors being present
+      fakeAgent.init.ajax.capture_payloads = CAPTURE_PAYLOAD_SETTINGS.ALL
+
+      context.requestHeaders = { 'content-type': 'application/json' }
+      context.requestBody = 'fooBody'
+      context.responseHeaders = { 'content-type': 'application/json' }
+      context.responseBody = 'barBody'
+      ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
+
+      const expectedParams = ['method', 'status', 'host', 'hostname', 'pathname']
+      const actualParams = Object.keys(fakeAgent.sharedAggregator.get(['xhr']).xhr[0].params)
+      expect(actualParams).toEqual(expect.arrayContaining(expectedParams))
+      expect(actualParams).toHaveLength(expectedParams.length)
+    })
+
+    test('ajax event has expected keys', () => {
+      fakeAgent.features[FEATURE_NAMES.jserrors] = {} // Set to truthy object to simulate jserrors being present
+      fakeAgent.init.ajax.capture_payloads = CAPTURE_PAYLOAD_SETTINGS.ALL
+
+      context.requestHeaders = { 'content-type': 'application/json' }
+      context.requestBody = 'fooBody'
+      context.responseHeaders = { 'content-type': 'application/json' }
+      context.responseBody = 'barBody'
+      ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
+
+      const expectedEventKeys = ['method', 'status', 'domain', 'path', 'requestSize', 'responseSize', 'type', 'startTime', 'endTime', 'callbackDuration', 'ajaxRequest.id', 'gql', 'requestQuery', 'requestHeaders', 'responseHeaders', 'requestBody', 'responseBody']
+      const actualEvent = Object.keys(ajaxAggregate.events.get()[0])
+      expect(actualEvent).toEqual(expect.arrayContaining(expectedEventKeys))
+      expect(actualEvent).toHaveLength(expectedEventKeys.length)
+    })
+
+    test('session trace bstXhrAgg params has expected keys', () => {
+      fakeAgent.features[FEATURE_NAMES.jserrors] = {} // Set to truthy object to simulate jserrors being present
+      fakeAgent.init.ajax.capture_payloads = CAPTURE_PAYLOAD_SETTINGS.ALL
+
+      context.requestHeaders = { 'content-type': 'application/json' }
+      context.requestBody = 'fooBody'
+      context.responseHeaders = { 'content-type': 'application/json' }
+      context.responseBody = 'barBody'
+      ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
+
+      const bstXhrCalls = jest.mocked(handleModule.handle).mock.calls.filter(call => call[0] === 'bstXhrAgg')
+      expect(bstXhrCalls).toHaveLength(1)
+      const expectedParams = ['method', 'status', 'host', 'hostname', 'pathname']
+      const actualParams = Object.keys(bstXhrCalls[0][1][2])
+      expect(actualParams).toEqual(expect.arrayContaining(expectedParams))
+      expect(actualParams).toHaveLength(expectedParams.length)
+    })
+  })
 })
 
 describe('prepareHarvest', () => {
@@ -131,7 +188,8 @@ describe('prepareHarvest', () => {
       customStringAttribute: 'customStringAttribute',
       customNumAttribute: 2,
       customBooleanAttribute: true,
-      nullCustomAttribute: null
+      nullCustomAttribute: null,
+      [AJAX_ID]: expect.any(String) // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
     }
     fakeAgent.info.jsAttributes = expectedCustomAttributes
 
@@ -158,6 +216,81 @@ describe('prepareHarvest', () => {
 
     const serializedPayload = ajaxAggregate.makeHarvestPayload(false)
     expect(serializedPayload).toBeUndefined() // payload that are each too small for limit will be dropped
+  })
+
+  test.each(['POST', 'PUT', 'PATCH', 'DELETE'])('obfuscation happens before truncation and result stays under 4KB for %s requests', async (method) => {
+    // Ensure soft nav is NOT present so events buffer in ajaxEvents
+    delete getNREUMInitializedAgent(fakeAgent.agentIdentifier).features
+
+    // Save original config to restore later
+    const originalObfuscate = fakeAgent.init.obfuscate
+    const originalAjaxConfig = fakeAgent.init.ajax
+
+    // Create an obfuscation rule that EXPANDS the data
+    // Replace short pattern with much longer replacement (10x expansion)
+    fakeAgent.init.obfuscate = [{
+      regex: /X/g,
+      replacement: 'OBFUSCATED_VALUE_REPLACEMENT_TEXT', // 32 chars vs 1 char = 32x expansion
+      eventFilter: ['AjaxRequest'] // Must match EVENT_TYPES.AJAX value
+    }]
+
+    // Enable payload capture
+    fakeAgent.init.ajax = { capture_payloads: 'all' }
+
+    // Recreate ajaxAggregate with new config
+    const ajaxInstrumentWithObfuscation = new Ajax(fakeAgent)
+    await new Promise(process.nextTick)
+    const ajaxAggregateWithObfuscation = ajaxInstrumentWithObfuscation.featAggregate
+    ajaxAggregateWithObfuscation.ee.emit('rumresp', [])
+    ajaxAggregateWithObfuscation.drain()
+
+    // Create a large payload with many X characters that will expand significantly when obfuscated
+    // Using 200 X's per line for 25 lines = 5000 chars before obfuscation
+    // After obfuscation: 200 * 32 * 25 = 160,000 chars (way over 4KB)
+    const largePayloadWithPattern = Array(25).fill('X'.repeat(200)).join('\n')
+
+    // Set context with large request body that will expand during obfuscation
+    const testContext = new EventContext()
+    testContext.requestBody = largePayloadWithPattern
+    testContext.requestHeaders = { 'content-type': 'application/json' }
+
+    // Create ajax arguments with the specific HTTP method being tested
+    const testAjaxArguments = [
+      { ...ajaxArguments[0], method },
+      ...ajaxArguments.slice(1)
+    ]
+
+    ajaxAggregateWithObfuscation.ee.emit('xhr', testAjaxArguments, testContext)
+
+    const serializedPayload = ajaxAggregateWithObfuscation.makeHarvestPayload(false)
+    const decodedEvents = qp.decode(serializedPayload.body)
+
+    expect(decodedEvents.length).toBe(1)
+    const event = decodedEvents[0]
+
+    // Verify the method was captured correctly
+    expect(event.method).toBe(method)
+
+    // Find the requestBody attribute in children
+    const requestBodyAttr = event.children.find(child => child.key === 'requestBody')
+    expect(requestBodyAttr).toBeDefined()
+
+    // Verify the value was obfuscated (contains the replacement text)
+    expect(requestBodyAttr.value).toContain('OBFUSCATED_VALUE_REPLACEMENT_TEXT')
+
+    // Verify the value was truncated - should end with ' ...'
+    expect(requestBodyAttr.value).toMatch(/ \.\.\.$/i)
+
+    // Verify the final byte size is under 4096 bytes (4092 + 4 for ' ...')
+    const byteLength = Buffer.byteLength(requestBodyAttr.value, 'utf8')
+    expect(byteLength).toBeLessThanOrEqual(4096)
+
+    // Verify it's close to the limit (was actually truncated, not just small)
+    expect(byteLength).toBeGreaterThan(4000)
+
+    // Restore original config
+    fakeAgent.init.obfuscate = originalObfuscate
+    fakeAgent.init.ajax = originalAjaxConfig
   })
 })
 

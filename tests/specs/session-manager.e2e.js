@@ -12,7 +12,27 @@ describe('newrelic session ID', () => {
   const anySession = () => buildExpectedSessionState({
     traceHarvestStarted: expect.any(Boolean),
     custom: expect.any(Object),
-    serverTimeDiff: expect.any(Number)
+    serverTimeDiff: expect.any(Number),
+    cachedRumResponse: expect.objectContaining({
+      app: expect.objectContaining({
+        agents: expect.arrayContaining([
+          expect.objectContaining({
+            entityGuid: expect.any(String)
+          })
+        ]),
+        nrServerTime: expect.any(Number)
+      }),
+      loaded: expect.any(Number), // this exists in test-server only, see testing-server/constants.js
+      err: expect.any(Number),
+      ins: expect.any(Number),
+      log: expect.any(Number),
+      logapi: expect.any(Number),
+      spa: expect.any(Number),
+      sr: expect.any(Number),
+      srs: expect.any(Number),
+      st: expect.any(Number),
+      sts: expect.any(Number)
+    })
   })
 
   afterEach(async () => {
@@ -27,6 +47,23 @@ describe('newrelic session ID', () => {
       const { localStorage } = await browser.getAgentSessionInfo()
 
       expect(localStorage).toEqual(anySession())
+    })
+
+    it('should store session data under app namespaced key', async () => {
+      await browser.url(await browser.testHandle.assetURL('session-entity.html', config))
+        .then(() => browser.waitForAgentLoad())
+
+      const namespacedStorage = await browser.execute(function () {
+        const agent = Object.values(newrelic.initializedAgents)[0]
+        const key = agent.runtime.session.lookupKey
+        return {
+          key,
+          value: JSON.parse(localStorage.getItem(key) || '{}')
+        }
+      })
+
+      expect(namespacedStorage.key).toEqual(expect.stringMatching(/^NRBA_SESSION::[a-f0-9]{8}$/))
+      expect(namespacedStorage.value).toEqual(anySession())
     })
   })
 

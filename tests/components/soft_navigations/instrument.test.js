@@ -5,6 +5,7 @@ import { resetAgent, setupAgent } from '../setup-agent'
 import { faker } from '@faker-js/faker'
 
 let mainAgent
+let softNavInstrument
 
 beforeAll(() => {
   mainAgent = setupAgent({
@@ -16,15 +17,28 @@ beforeAll(() => {
 
 beforeEach(async () => {
   jest.spyOn(handleModule, 'handle')
-  new SoftNav(mainAgent)
+  softNavInstrument = new SoftNav(mainAgent)
 })
 
 afterEach(() => {
+  softNavInstrument?.abortHandler?.()
+  softNavInstrument = undefined
+
+  // SoftNav subscribes to history scoped emitter events; clear those listeners per test
+  const historyEE = mainAgent.ee.get('history')
+  ;['pushState-end', 'replaceState-end'].forEach((eventName) => {
+    historyEE.listeners(eventName).forEach((listener) => {
+      historyEE.removeEventListener(eventName, listener)
+    })
+  })
+
   resetAgent(mainAgent)
   jest.clearAllMocks()
 })
 
 test('instrument detects heuristic steps', async () => {
+  handleModule.handle.mockClear()
+
   history.pushState({}, '/foo')
   expect(handleModule.handle).toHaveBeenLastCalledWith('newURL', [expect.any(Number), window.location.href], undefined, FEATURE_NAME, expect.any(Object))
   history.replaceState({}, '')
@@ -46,9 +60,10 @@ test('instrument detects heuristic steps', async () => {
   document.dispatchEvent(new Event('keydown'))
   document.dispatchEvent(new Event('submit'))
   expect(count).toEqual(3)
-  expect(handleModule.handle).toHaveBeenCalledTimes(1) // our processing is debounced (set to 100ms) to fire once on these 3 consecutive UI
+  const newUIEventCalls = handleModule.handle.mock.calls.filter((call) => call[0] === 'newUIEvent')
+  expect(newUIEventCalls.length).toBe(1) // our processing is debounced (set to 100ms) to fire once on these 3 consecutive UI
   expect(handleModule.handle).toHaveBeenLastCalledWith('newUIEvent', [expect.any(Event)], undefined, FEATURE_NAME, expect.any(Object))
-  expect(handleModule.handle.mock.calls[0][1][0].type).toEqual('click') // furthermore, the first of the UI is what's captured
+  expect(newUIEventCalls[0][1][0].type).toEqual('click') // furthermore, the first of the UI is what's captured
 
   jest.spyOn(window, 'requestAnimationFrame')
   document.body.innerHTML = `<span>${faker.lorem.sentence()}</span>`
@@ -56,6 +71,7 @@ test('instrument detects heuristic steps', async () => {
   await new Promise(process.nextTick)
   expect(window.requestAnimationFrame).toHaveBeenCalledTimes(1)
   jest.mocked(window.requestAnimationFrame).mock.calls[0][0]()
-  expect(handleModule.handle).toHaveBeenCalledTimes(2) // similary, dom change RAF callback should only be fired once instead of thrice
+  const newDomEventCalls = handleModule.handle.mock.calls.filter((call) => call[0] === 'newDom')
+  expect(newDomEventCalls.length).toBe(1) // similary, dom change RAF callback should only be fired once instead of thrice
   expect(handleModule.handle).toHaveBeenLastCalledWith('newDom', [expect.any(Number)], undefined, FEATURE_NAME, expect.any(Object))
 })

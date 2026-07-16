@@ -3,6 +3,77 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.318.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.317.0...v1.318.0) (2026-07-08)
+
+
+### Features
+
+* Add websocket init config ([#1803](https://github.com/newrelic/newrelic-browser-agent/issues/1803)) ([aa4d2f3](https://github.com/newrelic/newrelic-browser-agent/commit/aa4d2f330fb832e0bbbdd8ed88702621f7564abf))
+* Improve agent startup ([#1760](https://github.com/newrelic/newrelic-browser-agent/issues/1760)) ([d75f4bf](https://github.com/newrelic/newrelic-browser-agent/commit/d75f4bf7758f29e7096a84b8c55ed3d2b135caed))
+* MFE core web-vitals detection ([#1768](https://github.com/newrelic/newrelic-browser-agent/issues/1768)) ([8559842](https://github.com/newrelic/newrelic-browser-agent/commit/8559842cc233db8875f283c301c0e8b062689e05))
+
+## [1.317.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.316.0...v1.317.0) (2026-06-18)
+
+
+### Features
+
+* Detect and report AJAX payloads ([#1651](https://github.com/newrelic/newrelic-browser-agent/issues/1651)) ([08394db](https://github.com/newrelic/newrelic-browser-agent/commit/08394db8a5a9f2b6fd627e9eee76022977cb433c))
+* Enhance obfuscation to support event filter ([#1782](https://github.com/newrelic/newrelic-browser-agent/issues/1782)) ([c97aaf9](https://github.com/newrelic/newrelic-browser-agent/commit/c97aaf9773cfb0b62a810eb07b37e6f5b96d5ab5))
+
+
+### Bug Fixes
+
+* Calculate browser_stack_hash from truncated stack trace ([#1789](https://github.com/newrelic/newrelic-browser-agent/issues/1789)) ([f7df627](https://github.com/newrelic/newrelic-browser-agent/commit/f7df627b14e3e5e8fa4a8d94433ea76e9a9902bb))
+* Get responseBodySize from body if content-length is missing ([#1793](https://github.com/newrelic/newrelic-browser-agent/issues/1793)) ([58663ec](https://github.com/newrelic/newrelic-browser-agent/commit/58663ec19dc99ec94e34c17a5dfaa20a07038dba))
+* Patch handling of inlining images for Session Replay ([#1765](https://github.com/newrelic/newrelic-browser-agent/issues/1765)) ([b330f8e](https://github.com/newrelic/newrelic-browser-agent/commit/b330f8e3e35f2fda076967092bcb70e792de6eeb))
+
+## [1.316.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.315.0...v1.316.0) (2026-06-01)
+
+
+### Features
+
+* Use app-namespaced keys for session ([#1776](https://github.com/newrelic/newrelic-browser-agent/issues/1776)) ([60ec5bf](https://github.com/newrelic/newrelic-browser-agent/commit/60ec5bf566d27d68e59c827f08dcd8dd73d8cd2c))
+
+## [1.315.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.314.0...v1.315.0) (2026-05-26)
+
+
+### Features
+* Enhance SPA API to support targetPageLoad option ([#1762](https://github.com/newrelic/newrelic-browser-agent/issues/1762)) ([937553b](https://github.com/newrelic/newrelic-browser-agent/commit/937553b208c2efcb66c696ec8d711306960dcba9))
+
+## [1.314.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.313.1...v1.314.0) (2026-05-04)
+
+
+### Features
+
+* Add ajaxRequest.id attribute ([#1757](https://github.com/newrelic/newrelic-browser-agent/issues/1757)) ([c8a345b](https://github.com/newrelic/newrelic-browser-agent/commit/c8a345bc9cd22eb56f876c598677310a2da6be8f))
+* Adjust timestamps for clock skew due to machine sleep ([#1749](https://github.com/newrelic/newrelic-browser-agent/issues/1749)) ([412ef8b](https://github.com/newrelic/newrelic-browser-agent/commit/412ef8b6ea80ddd13900cea5f379e12b4fafc007))
+* Allow Session Replay to retry payloads ([#1666](https://github.com/newrelic/newrelic-browser-agent/issues/1666)) ([9874ac5](https://github.com/newrelic/newrelic-browser-agent/commit/9874ac5d851653641ed33241ad5e96678a9b9fee))
+* Automatically Detect MFE User Actions ([#1723](https://github.com/newrelic/newrelic-browser-agent/issues/1723)) ([2c2024e](https://github.com/newrelic/newrelic-browser-agent/commit/2c2024e3cbb4b2f6afc22e2bc1c6385b07335be5))
+* Improve PageViewTiming load timing capture ([#1764](https://github.com/newrelic/newrelic-browser-agent/issues/1764)) ([7ca2164](https://github.com/newrelic/newrelic-browser-agent/commit/7ca2164771f5c88b0a053a5af9f07d607c0e1d29))
+
+## [1.313.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.313.0...v1.313.1) (2026-04-21)
+
+
+### Bug Fixes
+
+* Fix method names for MFE methods ([#1758](https://github.com/newrelic/newrelic-browser-agent/issues/1758)) ([8442a5b](https://github.com/newrelic/newrelic-browser-agent/commit/8442a5b0db01a929315dd7c7e3bd4817e6525200))
+
+## [1.313.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.312.1...v1.313.0) (2026-04-14)
+
+
+### Features
+
+* Apply legal and compliance requirements to register API ([#1742](https://github.com/newrelic/newrelic-browser-agent/issues/1742)) ([24199ee](https://github.com/newrelic/newrelic-browser-agent/commit/24199ee75c0e8d1e74d7d882526fd868b87a93ae))
+* Automatically Detect MFE Errors ([#1720](https://github.com/newrelic/newrelic-browser-agent/issues/1720)) ([281617a](https://github.com/newrelic/newrelic-browser-agent/commit/281617a351459afe82c52e0ce657d3f7b1b5f19c))
+* Improve MicroFrontEndTiming heuristics ([#1735](https://github.com/newrelic/newrelic-browser-agent/issues/1735)) ([e59c60a](https://github.com/newrelic/newrelic-browser-agent/commit/e59c60af34e8f2408ffa4835dc6db4fdcbf756ba))
+* remove "withCredentials" ([#1747](https://github.com/newrelic/newrelic-browser-agent/issues/1747)) ([e84c292](https://github.com/newrelic/newrelic-browser-agent/commit/e84c292b9d17918de0e8e1542fe363e28fa67d33))
+* Report CSP violations as new events ([#1736](https://github.com/newrelic/newrelic-browser-agent/issues/1736)) ([65b5b98](https://github.com/newrelic/newrelic-browser-agent/commit/65b5b988c6cb8d852ad952a3eee94a54864afcd2))
+
+
+### Bug Fixes
+
+* Bad `trace.lastTimestamp` in Safari + back nav edge case ([#1754](https://github.com/newrelic/newrelic-browser-agent/issues/1754)) ([a607ee1](https://github.com/newrelic/newrelic-browser-agent/commit/a607ee1b34bb57fb800f0220074cd27d1f86a32d))
+
 ## [1.312.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.312.0...v1.312.1) (2026-04-02)
 
 

@@ -44,36 +44,3 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           bucket_dir: experiments/${{ github.event.inputs.nr_environment }}/${{ steps.clean-branch-name.outputs.results }}
-
-  # Rebuild and republish dev after deletion
-  # This removes the deleted experiment from the environment
-  republish-dev:
-    if: ${{ inputs.nr_environment != 'standalone' }}
-    needs: [delete-experiment-on-s3]
-    uses: ./.github/workflows/publish-dev.yml
-    secrets: inherit
-    with:
-      skip_publish_notification: true
-
-  # Notify about experiments in Slack
-  send-slack-notifications:
-    if: ${{ inputs.nr_environment == 'staging' }}
-    needs: [delete-experiment-on-s3, republish-dev]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref }}
-      - name: Clean branch name
-        id: clean-branch-name
-        run: echo "results=$(echo '${{ github.ref }}' | sed 's/refs\/heads\///g' | sed 's/[^[:alnum:].-]/-/g')" >> $GITHUB_OUTPUT
-      - name: Send Slack notifications
-        uses: ./.github/actions/slack-notification
-        with:
-          notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
-          dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          message: ":red-x: Removed browser agent experiment in \\`${{ inputs.nr_environment }}\\` for branch \\`${{ steps.clean-branch-name.outputs.results }}\\`. See <https://github.com/newrelic/newrelic-browser-agent/actions/workflows/delete-experiment.yml|Delete Experiment> workflow."

@@ -8,6 +8,8 @@ import { setupAgentSession } from '../../../../src/features/utils/agent-session'
 import { warn } from '../../../../src/common/util/console'
 import * as runtimeConstantsModule from '../../../../src/common/constants/runtime'
 import { canEnableSessionTracking } from '../../../../src/features/utils/feature-gates'
+import { isValid } from '../../../../src/common/config/info'
+import { configure } from '../../../../src/loaders/configure/configure'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/instrument-base')
@@ -22,11 +24,15 @@ beforeEach(() => {
   jest.replaceProperty(runtimeConstantsModule, 'isBrowserScope', true)
   jest.replaceProperty(runtimeConstantsModule, 'isWorkerScope', false)
   jest.mocked(canEnableSessionTracking).mockReturnValue(true)
+  jest.mocked(isValid).mockReturnValue(true)
 
   agentIdentifier = faker.string.uuid()
   featureName = faker.string.uuid()
   agentBase = {
     agentIdentifier,
+    ee: {
+      abort: jest.fn()
+    },
     info: {
       licenseKey: faker.string.uuid(),
       applicationID: faker.string.uuid()
@@ -36,6 +42,12 @@ beforeEach(() => {
       [FEATURE_NAMES.pageViewEvent]: { autoStart: true },
       [FEATURE_NAMES.pageViewTiming]: { autoStart: true },
       [FEATURE_NAMES.sessionReplay]: { autoStart: true }
+    },
+    runtime: {
+      loaderType: 'browser-test',
+      harvester: {
+        initializedAggregates: []
+      }
     }
   }
 
@@ -167,5 +179,22 @@ test('should drain and not import agg when shouldImportAgg is false for session_
   await windowLoadCallback()
 
   expect(drain).toHaveBeenCalledWith(agentBase, FEATURE_NAMES.sessionReplay)
+  expect(mockAggregate).not.toHaveBeenCalled()
+})
+
+test('should abort early when info remains invalid after late config check', async () => {
+  jest.mocked(isValid).mockReturnValue(false)
+
+  const instrument = new InstrumentBase(agentBase, featureName)
+  const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
+  instrument.importAggregator(agentBase, () => importPromise, aggregateArgs)
+
+  const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
+  await windowLoadCallback()
+
+  expect(configure).toHaveBeenCalledWith(agentBase, expect.any(Object), agentBase.runtime.loaderType)
+  expect(warn).toHaveBeenCalledWith(43)
+  expect(agentBase.ee.abort).toHaveBeenCalledTimes(1)
+  expect(setupAgentSession).not.toHaveBeenCalled()
   expect(mockAggregate).not.toHaveBeenCalled()
 })

@@ -90,7 +90,8 @@ describe('generic events sub-features', () => {
     mainAgent.init.page_action.enabled = false
     mainAgent.init.user_actions.enabled = false
     mainAgent.init.performance = { capture_marks: false, capture_measures: false, resources: { enabled: false } }
-    mainAgent.init.feature_flags = ['websockets', 'no_spv']
+    mainAgent.init.web_sockets = { enabled: true }
+    mainAgent.init.feature_flags = ['no_spv']
 
     const genericEventsInstrument = new GenericEvents(mainAgent)
     await new Promise(process.nextTick)

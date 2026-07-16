@@ -3,15 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { FEATURE_NAME } from '../constants'
+import { ABORT_REASONS, FEATURE_NAME } from '../constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { TraceStorage } from './trace/storage'
 import { obj as encodeObj } from '../../../common/url/encode'
 import { globalScope } from '../../../common/constants/runtime'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
-import { applyFnToProps } from '../../../common/util/traverse'
+import { Obfuscator } from '../../../common/util/obfuscate'
 import { cleanURL } from '../../../common/url/clean-url'
 import { warn } from '../../../common/util/console'
+import { EVENT_TYPES } from '../../../common/constants/events'
 
 /** Reserved room for query param attrs */
 const QUERY_PARAM_PADDING = 5000
@@ -21,6 +22,9 @@ export class Aggregate extends AggregateBase {
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
     this.harvestOpts.raw = true
+
+    // Create obfuscator for session trace nodes
+    this.obfuscator = new Obfuscator(agentRef, EVENT_TYPES.ST)
 
     /** Tied to the entitlement flag response from BCS.  Will short circuit operations of the agg if false  */
     this.entitled = undefined
@@ -39,8 +43,10 @@ export class Aggregate extends AggregateBase {
   /** Sets up event listeners, and initializes this module to run in the correct "mode".  Can be triggered from a few places, but makes an effort to only set up listeners once */
   initialize (stMode, stEntitled, ignoreSession) {
     this.entitled ??= stEntitled
-    if (!this.entitled) this.blocked = true
-    if (this.blocked) return this.deregisterDrain()
+    if (!this.entitled) {
+      this.abort(ABORT_REASONS.ENTITLEMENTS)
+      return this.deregisterDrain()
+    }
     this.timeKeeper ??= this.agentRef.runtime.timeKeeper
 
     if (!this.initialized) {
@@ -51,7 +57,7 @@ export class Aggregate extends AggregateBase {
       // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
       this.ee.on(SESSION_EVENTS.RESET, () => {
         if (this.blocked) return
-        this.abort(1)
+        this.abort(ABORT_REASONS.RESET)
       })
       // The SessionEntity can have updates (locally or across tabs for SR mode changes), (across tabs for ST mode changes).
       // Those updates should be sync'd here to ensure this page also honors the mode after initialization
@@ -60,7 +66,7 @@ export class Aggregate extends AggregateBase {
         // this will only have an effect if ST is NOT already in full mode
         if (this.mode !== MODE.FULL && (sessionState.sessionReplayMode === MODE.FULL || sessionState.sessionTraceMode === MODE.FULL)) this.switchToFull()
         // if another page's session entity has expired, or another page has transitioned to off and this one hasn't... we can just abort straight away here
-        if (this.sessionId !== sessionState.value || (eventType === 'cross-tab' && sessionState.sessionTraceMode === MODE.OFF)) this.abort(2)
+        if (this.sessionId !== sessionState.value || (eventType === 'cross-tab' && sessionState.sessionTraceMode === MODE.OFF)) this.abort(ABORT_REASONS.CROSS_TAB)
       })
 
       if (typeof PerformanceNavigationTiming !== 'undefined' && globalScope.performance?.getEntriesByType('navigation')?.length > 0) {
@@ -72,30 +78,31 @@ export class Aggregate extends AggregateBase {
 
     /** ST/SR sampling flow in BCS - https://drive.google.com/file/d/19hwt2oft-8Hh4RrjpLqEXfpP_9wYBLcq/view?usp=sharing */
     /** ST will run in the mode provided by BCS if the session IS NEW.  If not... it will use the state of the session entity to determine what mode to run in */
-    if (!this.agentRef.runtime.session.isNew && !ignoreSession) this.mode = this.agentRef.runtime.session.state.sessionTraceMode
+    if (this.agentRef.runtime.session.state.sessionTraceMode !== null && !ignoreSession) this.mode = this.agentRef.runtime.session.state.sessionTraceMode
     else this.mode = stMode
+
+    if (this.mode !== MODE.OFF) {
+      /** The handlers set up by the Inst file */
+      registerHandler('bst', (...args) => this.traceStorage.storeEvent(...args), this.featureName, this.ee)
+      registerHandler('bstResource', (...args) => this.traceStorage.storeResources(...args), this.featureName, this.ee)
+      registerHandler('bstHist', (...args) => this.traceStorage.storeHist(...args), this.featureName, this.ee)
+      registerHandler('bstXhrAgg', (...args) => this.traceStorage.storeXhrAgg(...args), this.featureName, this.ee)
+      registerHandler('bstApi', (...args) => this.traceStorage.storeNode(...args), this.featureName, this.ee)
+      registerHandler('trace-jserror', (...args) => this.traceStorage.storeErrorAgg(...args), this.featureName, this.ee)
+      registerHandler('pvtAdded', (...args) => this.traceStorage.processPVT(...args), this.featureName, this.ee)
+
+      if (this.mode === MODE.ERROR) {
+        /** A separate handler for noticing errors, and switching to "full" mode if running in "error" mode */
+        registerHandler('trace-jserror', () => {
+          if (this.mode === MODE.ERROR) this.switchToFull()
+        }, this.featureName, this.ee)
+      }
+    }
+    this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })
 
     /** If the mode is off, we do not want to hold up draining for other features, so we deregister the feature for now.
      * If it drains later (due to a mode change), data and handlers will instantly drain instead of waiting for the registry. */
-    if (this.mode === MODE.OFF) return this.deregisterDrain()
-
-    /** The handlers set up by the Inst file */
-    registerHandler('bst', (...args) => this.traceStorage.storeEvent(...args), this.featureName, this.ee)
-    registerHandler('bstResource', (...args) => this.traceStorage.storeResources(...args), this.featureName, this.ee)
-    registerHandler('bstHist', (...args) => this.traceStorage.storeHist(...args), this.featureName, this.ee)
-    registerHandler('bstXhrAgg', (...args) => this.traceStorage.storeXhrAgg(...args), this.featureName, this.ee)
-    registerHandler('bstApi', (...args) => this.traceStorage.storeNode(...args), this.featureName, this.ee)
-    registerHandler('trace-jserror', (...args) => this.traceStorage.storeErrorAgg(...args), this.featureName, this.ee)
-    registerHandler('pvtAdded', (...args) => this.traceStorage.processPVT(...args), this.featureName, this.ee)
-
-    if (this.mode !== MODE.FULL) {
-      /** A separate handler for noticing errors, and switching to "full" mode if running in "error" mode */
-      registerHandler('trace-jserror', () => {
-        if (this.mode === MODE.ERROR) this.switchToFull()
-      }, this.featureName, this.ee)
-    }
-    this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })
-    this.drain()
+    this.mode === MODE.OFF ? this.deregisterDrain() : this.drain()
   }
 
   preHarvestChecks () {
@@ -104,7 +111,7 @@ export class Aggregate extends AggregateBase {
     if (!this.agentRef.runtime.session) return // session entity is required for trace to run and continue running
     if (this.sessionId !== this.agentRef.runtime.session.state.value || this.ptid !== this.agentRef.runtime.ptid) {
       // If something unexpected happened and we somehow still got to harvesting after a session identifier changed, we should force-exit instead of harvesting:
-      this.abort(3)
+      this.abort(ABORT_REASONS.SESSION_CHANGED)
       return
     }
 
@@ -114,7 +121,7 @@ export class Aggregate extends AggregateBase {
   serializer (stns) {
     if (!stns.length) return // there are no processed nodes
     this.everHarvested = true
-    return applyFnToProps(stns, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
+    return this.obfuscator.traverseAndObfuscateEvents(stns)
   }
 
   queryStringsBuilder (stns) {
@@ -181,8 +188,8 @@ export class Aggregate extends AggregateBase {
   }
 
   /** Stop running for the remainder of the page lifecycle */
-  abort (code) {
-    warn(60, code)
+  abort (reason = {}) {
+    warn(60, reason.message)
     this.blocked = true
     this.mode = MODE.OFF
     this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })

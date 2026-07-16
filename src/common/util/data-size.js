@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -12,7 +12,7 @@ import { stringify } from './stringify'
  * @returns {(number|undefined)} - The size of the data or undefined if size cannot be determined.
  */
 export function dataSize (data) {
-  if (typeof data === 'string' && data.length) return data.length
+  if (typeof data === 'string') return data.length
   if (typeof data !== 'object') return undefined
   // eslint-disable-next-line
   if (typeof ArrayBuffer !== 'undefined' && data instanceof ArrayBuffer && data.byteLength) return data.byteLength

@@ -18,6 +18,7 @@ import { measure } from './measure'
 import { recordCustomEvent } from './recordCustomEvent'
 import { subscribeToPageUnload } from '../../common/window/page-visibility'
 import { findScriptTimings } from '../../common/v2/script-tracker'
+import { trackMFEVitals } from '../../common/v2/mfe-vitals'
 import { generateRandomHexString } from '../../common/ids/unique-id'
 
 /**
@@ -25,6 +26,29 @@ import { generateRandomHexString } from '../../common/ids/unique-id'
  */
 
 const PROTECTED_KEYS = ['name', 'id', 'type']
+
+/**
+ * Map of API methods to their names (prevents minification from breaking method name references)
+ * @private
+ */
+const METHOD_NAMES = new Map([
+  [addPageAction, 'addPageAction'],
+  [log, 'log'],
+  [measure, 'measure'],
+  [noticeError, 'noticeError'],
+  [recordCustomEvent, 'recordCustomEvent']
+])
+
+/**
+ * Warning functions that only fire once - can be reset in tests
+ * @private
+ */
+export const warnings = {
+  experimental: single(() => warn(54, 'newrelic.register')),
+  disabled: single(() => warn(55)),
+  invalidTarget: single((target) => warn(48, target)),
+  deregistered: single(() => warn(68))
+}
 
 /**
  * @experimental
@@ -45,7 +69,7 @@ export function setupRegisterAPI (agent) {
  * @returns {RegisterAPI} the api object to be returned from the register api method
  */
 function register (agentRef, target) {
-  warn(54, 'newrelic.register')
+  warnings.experimental()
 
   target ||= {}
   target.instance = generateRandomHexString(8)
@@ -59,6 +83,9 @@ function register (agentRef, target) {
   }
 
   const timings = findScriptTimings()
+
+  // Track MFE vitals for this entity
+  const vitals = trackMFEVitals(target.id, timings)
 
   const attrs = {}
   Object.defineProperty(target, 'attributes', {
@@ -116,8 +143,8 @@ function register (agentRef, target) {
   }
 
   /** primary cases that can block the register API from working at init time */
-  if (!agentRef.init.api.register.enabled) block(single(() => warn(55)))
-  if (!hasValidValue(target.id) || !hasValidValue(target.name)) block(single(() => warn(48, target)))
+  if (!agentRef.init.api.register.enabled) block(warnings.disabled)
+  if (!hasValidValue(target.id) || !hasValidValue(target.name)) block(() => warnings.invalidTarget(target))
 
   /** @type {RegisterAPI} */
   const api = {
@@ -125,7 +152,7 @@ function register (agentRef, target) {
     deregister: () => {
       /** note: blocking this instance will disable access for all entities sharing the instance, and will invalidate it from the v2 checks */
       reportTimings()
-      block(single(() => warn(68)))
+      block(warnings.deregistered)
     },
     log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     measure: (name, options = {}) => report(measure, [name, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
@@ -138,7 +165,8 @@ function register (agentRef, target) {
     metadata: {
       get customAttributes () { return attrs },
       target,
-      timings
+      timings,
+      vitals
     }
   }
 
@@ -166,9 +194,18 @@ function register (agentRef, target) {
     // only ever report the timings the first time this is called
     if (timings.reportedAt) return
     timings.reportedAt = now()
+
+    // Disconnect observers and capture current values, store in timings obj for visibility
+    vitals.disconnect()
+    timings.fcp = vitals.fcp
+    timings.lcp = vitals.lcp
+    timings.cls = vitals.cls
+    timings.inp = vitals.inp
+
     const timeToFetch = timings.fetchEnd - timings.fetchStart // fetchStart to fetchEnd
     const timeToExecute = timings.scriptEnd - timings.scriptStart // scriptStart to scriptEnd
-    api.recordCustomEvent('MicroFrontEndTiming', {
+
+    const eventData = {
       assetUrl: timings.asset, // the url of the script that was registered, or undefined if it could not be determined (inline or no match)
       assetType: timings.type, // the type of asset that was associated with the timings, one of 'script', 'link' (if preloaded and found in the resource timing buffer), 'preload' (if preloaded but not found in the resource timing buffer), or "unknown" if it could not be determined
       timeAlive: timings.reportedAt - timings.registeredAt, // registeredAt to reportedAt
@@ -176,8 +213,15 @@ function register (agentRef, target) {
       timeToExecute, // scriptStart to scriptEnd
       timeToFetch, // fetchStart to fetchEnd
       timeToLoad: timeToFetch + timeToExecute, // fetch time and script time together
-      timeToRegister: timings.registeredAt // timestamp when register() was called
-    })
+      timeToRegister: timings.registeredAt, // timestamp when register() was called
+      // leave room to extend these with more data keys as needed
+      'nr.vitals.fcp.value': vitals.fcp?.value ?? null, // FCP vital object with value and metadata
+      'nr.vitals.lcp.value': vitals.lcp?.value ?? null, // LCP vital object with value and metadata
+      'nr.vitals.cls.value': vitals.cls?.value ?? null, // CLS vital object with value and metadata
+      'nr.vitals.inp.value': vitals.inp?.value ?? null // INP vital object with value and metadata
+    }
+
+    api.recordCustomEvent('MicroFrontEndTiming', eventData)
   }
 
   /**
@@ -204,7 +248,8 @@ function register (agentRef, target) {
     if (isBlocked() && methodToCall !== register) return
     /** set the timestamp before the async part of waiting for the rum response for better accuracy */
     const timestamp = now()
-    handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodToCall.name}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)
+    const methodName = METHOD_NAMES.get(methodToCall) || 'unknown'
+    handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodName}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)
     try {
       return methodToCall(...args, target, timestamp) // always report to target
     } catch (err) {

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { registerHandler } from '../../../common/event-emitter/register-handler'
@@ -12,6 +12,7 @@ import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime
 import { AggregateBase } from '../../utils/aggregate-base'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { evaluateHarvestMetadata } from './harvest-metadata'
+import { Obfuscator } from '../../../common/util/obfuscate'
 // import { WEBSOCKET_TAG } from '../../../common/wrap/wrap-websocket'
 // import { handleWebsocketEvents } from './websocket-detection'
 
@@ -20,6 +21,9 @@ export class Aggregate extends AggregateBase {
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
     this.harvestOpts.aggregatorTypes = ['cm', 'sm'] // the types in EventAggregator this feature cares about
+
+    // Create a generic obfuscator for checking if rules are configured
+    this.obfuscator = new Obfuscator(agentRef)
 
     /** all the harvest metadata metrics need to be evaluated simulataneously at unload time so just temporarily buffer them and dont make SMs immediately from the data */
     this.harvestMetadata = {}

@@ -1,0 +1,32 @@
+# This composite action builds a daily team dispatch with version info, PRs, issues, and workflow status.
+
+name: 'Daily Dispatch'
+
+inputs:
+  github_token:
+    description: 'GitHub token used to query repository data'
+    required: true
+
+outputs:
+  message:
+    description: 'Generated daily dispatch message'
+    value: ${{ steps.dispatch-message.outputs.message }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
+    - name: Build dispatch message
+      id: dispatch-message
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+      run: |
+        message="$(node $GITHUB_ACTION_PATH/index.js)"
+        {
+          echo 'message<<EOF'
+          printf '%s\n' "$message"
+          echo 'EOF'
+        } >> "$GITHUB_OUTPUT"
+      shell: bash

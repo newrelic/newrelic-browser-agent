@@ -9,6 +9,7 @@ import { cleanURL } from '../url/clean-url'
 import { findTargetsFromStackTrace } from '../v2/utils'
 import { gosNREUMOriginals } from '../window/nreum'
 import { subscribeToPageUnload } from '../window/page-visibility'
+import { EVENT_TYPES } from '../constants/events'
 
 const wrapped = {}
 const openWebSockets = new Set() // track all instances to close out metrics on page unload
@@ -38,7 +39,7 @@ export function wrapWebSocket (sharedEE, agentRef) {
   })
 
   class WrappedWebSocket extends WebSocket {
-    static name = 'WebSocket'
+    static name = EVENT_TYPES.WS
     static toString () { // fake native WebSocket when static class is stringified
       return 'function WebSocket() { [native code] }'
     }

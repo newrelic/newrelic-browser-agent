@@ -1,0 +1,96 @@
+# Composite action to build and deploy Release Candidate assets to CDN
+name: Deploy RC Assets
+description: Builds fresh assets from current branch and uploads to environment-specific CDN path
+
+inputs:
+  environment:
+    description: 'Environment name for build mode (staging, jp-prod, eu-prod, us-prod)'
+    required: true
+  bucket_dir:
+    description: 'S3 bucket subdirectory (e.g., staging/, jp-prod/)'
+    required: true
+  cdn_service:
+    description: 'Fastly CDN service name (staging-js-agent.newrelic.com or js-agent.newrelic.com)'
+    required: true
+  branch_name:
+    description: 'Branch name for version suffix (optional, for dev builds from feature branches)'
+    required: false
+    default: ''
+  aws_access_key_id:
+    description: 'AWS access key id'
+    required: true
+  aws_secret_access_key:
+    description: 'AWS secret access key'
+    required: true
+  aws_role:
+    description: 'AWS role ARN'
+    required: true
+  aws_bucket_name:
+    description: 'S3 bucket name'
+    required: true
+  fastly_key:
+    description: 'Fastly access key'
+    required: true
+
+outputs:
+  s3_results:
+    description: 'JSON array of uploaded files'
+    value: ${{ steps.s3-upload-rc.outputs.results }}
+  script_url:
+    description: 'URL of the deployed script'
+    value: ${{ steps.set-outputs.outputs.script_url }}
+  version_label:
+    description: 'Version label for deployment tracking'
+    value: ${{ steps.set-outputs.outputs.version_label }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Build RC assets
+      shell: bash
+      run: |
+        echo "🔨 Building fresh assets from current branch for ${{ inputs.environment }} environment"
+        npm ci
+        if [[ -n "${{ inputs.branch_name }}" ]]; then
+          echo "🏷️  Using branch-specific version suffix: ${{ inputs.branch_name }}"
+          npm run cdn:webpack -- --env mode=${{ inputs.environment }} --env branchName=${{ inputs.branch_name }}
+        else
+          npm run cdn:webpack -- --env mode=${{ inputs.environment }}
+        fi
+        echo "📤 Preparing upload to /${{ inputs.bucket_dir }}"
+    
+    - name: Upload RC assets to S3
+      id: s3-upload-rc
+      uses: ./.github/actions/s3-upload
+      with:
+        aws_access_key_id: ${{ inputs.aws_access_key_id }}
+        aws_secret_access_key: ${{ inputs.aws_secret_access_key }}
+        aws_role: ${{ inputs.aws_role }}
+        aws_bucket_name: ${{ inputs.aws_bucket_name }}
+        local_dir: ${{ github.workspace }}/build
+        bucket_dir: ${{ inputs.bucket_dir }}
+    
+    - name: Purge CDN cache
+      uses: ./.github/actions/fastly-purge
+      with:
+        fastly_key: ${{ inputs.fastly_key }}
+        fastly_service: ${{ inputs.cdn_service }}
+        purge_path: ${{ join(fromJson(steps.s3-upload-rc.outputs.results).*.Key, ' ') }}
+    
+    - name: Verify CDN assets
+      uses: ./.github/actions/fastly-verify
+      with:
+        fastly_key: ${{ inputs.fastly_key }}
+        fastly_service: ${{ inputs.cdn_service }}
+        asset_path: ${{ join(fromJson(steps.s3-upload-rc.outputs.results).*.Key, ' ') }}
+    
+    - name: Set output values
+      id: set-outputs
+      shell: bash
+      run: |
+        SCRIPT_URL="https://${{ inputs.cdn_service }}/${{ inputs.bucket_dir }}nr-loader-spa.min.js"
+        VERSION_LABEL="${{ inputs.environment }}-rc-$(date +%Y%m%d-%H%M%S)"
+        echo "script_url=$SCRIPT_URL" >> $GITHUB_OUTPUT
+        echo "version_label=$VERSION_LABEL" >> $GITHUB_OUTPUT
+        echo "✅ Deployed script: $SCRIPT_URL"
+        echo "📋 Version label: $VERSION_LABEL"

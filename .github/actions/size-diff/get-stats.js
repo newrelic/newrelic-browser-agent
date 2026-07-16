@@ -1,35 +1,21 @@
 import fs from 'fs'
 import path from 'path'
 import url from 'url'
-import { v4 as uuidv4 } from 'uuid'
 import { reportSettings } from './report-settings.js'
-import { fetchRetry } from '../shared-utils/fetch-retry.js'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
-export async function getAllVersionStats (version) {
+export async function getAllLocalStats () {
   return (await Promise.all(
     Object.entries(reportSettings)
       .map(([name, reportSetting]) =>
-        getStats(version, reportSetting)
+        getLocalStats(reportSetting)
           .then(stats => ([name, stats]))
       )
   )).reduce((aggregator, [name, stats]) => {
     aggregator[name] = stats
     return aggregator
   }, {})
-}
-
-async function getStats (version, reportSetting) {
-  if (version === 'local') {
-    return await getLocalStats(reportSetting)
-  }
-
-  if (version === 'dev') {
-    return await getDevStats(reportSetting)
-  }
-
-  return getVersionedStats(version, reportSetting)
 }
 
 async function getLocalStats (reportSetting) {
@@ -39,39 +25,10 @@ async function getLocalStats (reportSetting) {
   return parseStatsFile(reportSetting, statsFileContent)
 }
 
-async function getDevStats (reportSetting) {
-  const statsFileName = reportSetting.statsFileNameTemplate.replace('{{version}}', '')
-
-  try {
-    const statsFileRequest = await fetchRetry(`https://js-agent.newrelic.com/dev/${statsFileName}?_nocache=${uuidv4()}`, { retry: 3 })
-
-    const statsFileContent = await statsFileRequest.json()
-    return parseStatsFile(reportSetting, statsFileContent)
-  } catch (error) {
-    console.error(error.message)
-    throw new Error(`Could not retrieve dev stats file ${statsFileName}`)
-  }
-}
-
-async function getVersionedStats (version, reportSetting) {
-  const statsFileName = reportSetting.statsFileNameTemplate.replace('{{version}}', `-${version}`)
-
-  try {
-    const statsFileRequest = await fetchRetry(`https://js-agent.newrelic.com/${statsFileName}?_nocache=${uuidv4()}`, { retry: 3 })
-
-    const statsFileContent = await statsFileRequest.json()
-    return parseStatsFile(reportSetting, statsFileContent, version)
-  } catch (error) {
-    console.error(error.message)
-    throw new Error(`Could not retrieve stats file ${statsFileName}`)
-  }
-
-}
-
-function parseStatsFile (reportSetting, statsFileContent, version) {
+function parseStatsFile (reportSetting, statsFileContent) {
   let results = {}
   for (const assetSetting of reportSetting.assetFileNameTemplates) {
-    const assetFileNameRegex = assetSetting.fileNameRegex(version)
+    const assetFileNameRegex = assetSetting.fileNameRegex()
 
     const assetFileStats = statsFileContent.find(stats =>
       assetFileNameRegex.test(stats.label)
@@ -94,7 +51,7 @@ async function findLocalStatsFile (statsFileNameTemplate) {
   const buildDir = path.resolve(
     path.join(__dirname, '../../../build')
   )
-  const buildFiles = await fs.promises.readdir(buildDir, { withFileTypes: true})
+  const buildFiles = await fs.promises.readdir(buildDir, { withFileTypes: true })
 
   const foundFiles = buildFiles.filter(file =>
     file.isFile && file.name.endsWith('.json') && file.name.startsWith(statsFileNameTemplate.split('{{version}}')[0])
@@ -107,4 +64,18 @@ async function findLocalStatsFile (statsFileNameTemplate) {
   }
 
   return path.join(buildDir, foundFiles[0].name)
+}
+
+export async function getNpmPackStats (npmPackJsonPath) {
+  const npmPackContent = JSON.parse(await fs.promises.readFile(npmPackJsonPath))
+  const [packageEntry] = npmPackContent
+
+  if (!packageEntry) {
+    throw new Error(`No package entry found in npm pack output ${npmPackJsonPath}.`)
+  }
+
+  return {
+    size: packageEntry.size,
+    unpackedSize: packageEntry.unpackedSize
+  }
 }

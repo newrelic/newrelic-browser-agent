@@ -102,7 +102,114 @@ jobs:
             ***New supportability metrics require changes to [supportability_metrics.md](https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/supportability-metrics.md), as well as a new PR to [Angler](https://source.datanerd.us/agents/angler).  Please ensure an Angler PR is created and linked to this PR.***
           comment_tag: <!-- supportability_metric_check -->
 
-  size-check:
+  resolve-latest-release:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      tag: ${{ steps.latest-tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Find latest release tag
+        id: latest-tag
+        run: |
+          tag=$(git for-each-ref --sort=-creatordate --count=1 --format='%(refname:short)' 'refs/tags/v*')
+          if [ -z "$tag" ]; then
+            echo "No release tags found" >&2
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+  size-capture:
+    needs: resolve-latest-release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        include:
+          - label: current
+            ref: ${{ github.ref }}
+          - label: main
+            ref: main
+          - label: release
+            ref: ${{ needs.resolve-latest-release.outputs.tag }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Install dependencies
+        run: npm ci
+      - name: Running cdn build
+        run: npm run cdn:build:dev
+      - name: Running npm build
+        run: |
+          npm run npm:build:esm
+          npm run npm:build:cjs
+          npm run npm:build:types
+      - name: Measuring npm pack size
+        run: npm pack --json --dry-run --ignore-scripts > ./build/npm-pack.json
+      - name: Capturing build size stats
+        uses: ./.github/actions/size-diff
+        with:
+          mode: capture
+          label: ${{ matrix.label }}
+          npm_pack_file: ./build/npm-pack.json
+          output_file: ./build/size-stats-${{ matrix.label }}.json
+      - name: Get local stats
+        if: matrix.label == 'current'
+        id: get-stats
+        run: |
+          rum=$(cat ./build/nr-rum-standard.stats.json); echo "rum=$rum" >> $GITHUB_OUTPUT;
+          full=$(cat ./build/nr-full-standard.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;
+          spa=$(cat ./build/nr-spa-standard.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
+      - name: Report lite size to NR
+        if: matrix.label == 'current'
+        continue-on-error: true
+        uses: newrelic-apps/capture-build-size@v1.0.1
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          nr-env: 'staging'
+          analysis-file-contents: ${{ steps.get-stats.outputs.rum }}
+          file-name-filter: '.min.js'
+          trigger: 'pull-request-checks'
+      - name: Report pro size to NR
+        if: matrix.label == 'current'
+        continue-on-error: true
+        uses: newrelic-apps/capture-build-size@v1.0.1
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          nr-env: 'staging'
+          analysis-file-contents: ${{ steps.get-stats.outputs.full }}
+          file-name-filter: '.min.js'
+          trigger: 'pull-request-checks'
+      - name: Report spa size to NR
+        if: matrix.label == 'current'
+        continue-on-error: true
+        uses: newrelic-apps/capture-build-size@v1.0.1
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          nr-env: 'staging'
+          analysis-file-contents: ${{ steps.get-stats.outputs.spa }}
+          file-name-filter: '.min.js'
+          trigger: 'pull-request-checks'
+
+  size-compare:
+    needs: size-capture
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     timeout-minutes: 30
@@ -116,22 +223,27 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
-      - name: Install dependencies
-        run: npm ci
-      - name: Running cdn build
-        run: npm run cdn:build:dev
+      - name: Download build size stats
+        uses: actions/download-artifact@v4
+        with:
+          pattern: size-stats-*
+          path: ./build/stats
+          merge-multiple: true
       - name: Generating asset size report
         uses: ./.github/actions/size-diff
         with:
-          compare_from: dev
-          compare_to: local
+          mode: compare
+          stats_files: |
+            current=./build/stats/size-stats-current.json
+            main=./build/stats/size-stats-main.json
+            release=./build/stats/size-stats-release.json
       - name: Reading asset size report
         id: asset-size-report
         run: |
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "results<<$EOF" >> "$GITHUB_OUTPUT"
           echo "## Asset Size Report <br><br>" >> "$GITHUB_OUTPUT"
-          echo "Merging this pull request will result in the following asset size changes: <br><br>" >> "$GITHUB_OUTPUT"
+          echo "Comparing this pull request's build size against \`main\` and the latest release: <br><br>" >> "$GITHUB_OUTPUT"
           cat ./build/size_report.md >> "$GITHUB_OUTPUT"
           echo "$EOF" >> "$GITHUB_OUTPUT"
       - name: Comment pull request
@@ -141,43 +253,15 @@ jobs:
           pr_number: ${{ github.event.number }}
           comment: ${{ steps.asset-size-report.outputs.results }}
           comment_tag: <!-- browser_agent asset size report -->
-      - name: Get local stats
-        id: get-stats
+
+  size-check-dev-telemetry:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 30
+    defaults:
+      run:
         shell: bash
-        run: |
-          rum=$(cat ./build/nr-rum-standard.stats.json); echo "rum=$rum" >> $GITHUB_OUTPUT;
-          full=$(cat ./build/nr-full-standard.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;
-          spa=$(cat ./build/nr-spa-standard.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
-      - name: Report lite size to NR
-        continue-on-error: true
-        uses: newrelic-apps/capture-build-size@v1.0.1
-        with:
-          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
-          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
-          nr-env: 'staging'
-          analysis-file-contents: ${{ steps.get-stats.outputs.rum }}
-          file-name-filter: '.min.js'
-          trigger: 'pull-request-checks'
-      - name: Report pro size to NR
-        continue-on-error: true
-        uses: newrelic-apps/capture-build-size@v1.0.1
-        with:
-          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
-          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
-          nr-env: 'staging'
-          analysis-file-contents: ${{ steps.get-stats.outputs.full }}
-          file-name-filter: '.min.js'
-          trigger: 'pull-request-checks'
-      - name: Report spa size to NR
-        continue-on-error: true
-        uses: newrelic-apps/capture-build-size@v1.0.1
-        with:
-          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
-          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
-          nr-env: 'staging'
-          analysis-file-contents: ${{ steps.get-stats.outputs.spa }}
-          file-name-filter: '.min.js'
-          trigger: 'pull-request-checks'
+    steps:
       - name: Report dev lite size to NR
         continue-on-error: true
         uses: newrelic-apps/capture-build-size@v1.0.1

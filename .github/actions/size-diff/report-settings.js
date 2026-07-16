@@ -5,13 +5,7 @@ function createRegExpFn (agentType, assetType) {
     assetType = `-${assetType}`
   }
 
-  return (version) => {
-    if (typeof version !== 'string' || version.trim() === '') {
-      return new RegExp(`nr${assetType}-${agentType}.min.js`)
-    } else {
-      return new RegExp(`nr${assetType}-${agentType}(?:\\.[\\w\\d]{8})?-${version}.min.js`)
-    }
-  }
+  return () => new RegExp(`nr${assetType}-${agentType}.min.js`)
 }
 
 export const reportSettings = {

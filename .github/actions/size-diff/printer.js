@@ -3,48 +3,48 @@ import path from 'path'
 import { Table } from 'console-table-printer'
 import { filesize } from 'filesize'
 
+const ASSET_KEYS = ['loader', 'async-chunk']
+
 export function consolePrinter (comparisonStats) {
+  const { labels, baseLabel } = comparisonStats
+  const diffLabels = labels.filter(label => label !== baseLabel)
+
   const resultsTable = new Table({
-    title: `Build Size Stats: dev...local`,
+    title: `Build Size Stats: ${labels.join(' / ')}`,
     columns: [
       { name: 'agent', title: 'Agent', alignment: 'left' },
       { name: 'asset', title: 'Asset', alignment: 'left' },
-      { name: 'fromSize', title: 'Previous Size', alignment: 'center' },
-      { name: 'toSize', title: 'New Size', alignment: 'center' },
-      { name: 'diff', title: 'Diff', alignment: 'center' },
+      ...labels.map(label => ({ name: `size_${label}`, title: label, alignment: 'center' })),
+      ...diffLabels.map(label => ({ name: `diff_${label}`, title: `Δ ${baseLabel} vs ${label}`, alignment: 'center' }))
     ]
   })
 
-  Object.entries(comparisonStats)
-    .forEach(([agent, statsData], index, entries) => {
-      const diffStats = calcDiffStats(statsData)
+  const sections = [
+    ...Object.entries(comparisonStats.agents).map(([agent, byLabel]) => ({ agent, byLabel })),
+    { agent: 'npm', byLabel: comparisonStats.npm, npmSection: true }
+  ]
 
-      resultsTable.addRows([
-        {
-          agent,
-          asset: 'loader',
-          fromSize: `${filesize(statsData.from.loader.fileSize)} / ${filesize(statsData.from.loader.gzipSize)} (gzip)`,
-          toSize: `${filesize(statsData.to.loader.fileSize)} / ${filesize(statsData.to.loader.gzipSize)} (gzip)`,
-          diff: `${diffStats.loader.fileSize}% / ${diffStats.loader.gzipSize}% (gzip)`
-        },
-        {
-          agent,
-          asset: 'async-chunk',
-          fromSize: `${filesize(statsData.from['async-chunk'].fileSize)} / ${filesize(statsData.from['async-chunk'].gzipSize)} (gzip)`,
-          toSize: `${filesize(statsData.to['async-chunk'].fileSize)} / ${filesize(statsData.to['async-chunk'].gzipSize)} (gzip)`,
-          diff: `${diffStats['async-chunk'].fileSize}% / ${diffStats['async-chunk'].gzipSize}% (gzip)`
-        }
-      ])
+  sections.forEach(({ agent, byLabel, npmSection }, index) => {
+    if (npmSection) {
+      resultsTable.addRow(buildNpmRow(agent, byLabel, baseLabel, diffLabels, labels))
+    } else {
+      ASSET_KEYS.forEach(assetKey => {
+        resultsTable.addRow(buildAssetRow(agent, assetKey, byLabel, baseLabel, diffLabels, labels))
+      })
+    }
 
-      if (index < entries.length - 1) {
-        resultsTable.addRow({})
-      }
-    })
+    if (index < sections.length - 1) {
+      resultsTable.addRow({})
+    }
+  })
 
   resultsTable.printTable()
 }
 
 export async function markdownPrinter (comparisonStats, outputLocation, outputFileName) {
+  const { labels, baseLabel } = comparisonStats
+  const diffLabels = labels.filter(label => label !== baseLabel)
+
   await fs.promises.mkdir(outputLocation, { recursive: true })
 
   const outputStream = fs.createWriteStream(path.join(outputLocation, outputFileName), {
@@ -52,61 +52,124 @@ export async function markdownPrinter (comparisonStats, outputLocation, outputFi
     encoding: 'utf-8',
     flags: 'w'
   })
-  outputStream.write('| Agent | Asset | Previous Size | New Size | Diff |\n')
-  outputStream.write('|-------|-------|:-------------:|:--------:|:----:|\n')
 
-  Object.entries(comparisonStats)
-    .forEach(([agent, statsData], index, entries) => {
-      const diffStats = calcDiffStats(statsData)
+  const headerCells = ['Agent', 'Asset', ...labels, ...diffLabels.map(label => `Δ ${baseLabel} vs ${label}`)]
+  outputStream.write(`| ${headerCells.join(' | ')} |\n`)
+  outputStream.write(`|${headerCells.map(() => '---').join('|')}|\n`)
 
-      outputStream.write(`|${agent}`)
-      outputStream.write(`|loader`)
-      outputStream.write(`|${filesize(statsData.from.loader.fileSize)} / ${filesize(statsData.from.loader.gzipSize)} (gzip)`)
-      outputStream.write(`|${filesize(statsData.to.loader.fileSize)} / ${filesize(statsData.to.loader.gzipSize)} (gzip)`)
-      outputStream.write(`|${diffStats.loader.fileSize}% / ${diffStats.loader.gzipSize}% (gzip)|\n`)
-
-      outputStream.write(`|${agent}`)
-      outputStream.write(`|async-chunk`)
-      outputStream.write(`|${filesize(statsData.from['async-chunk'].fileSize)} / ${filesize(statsData.from['async-chunk'].gzipSize)} (gzip)`)
-      outputStream.write(`|${filesize(statsData.to['async-chunk'].fileSize)} / ${filesize(statsData.to['async-chunk'].gzipSize)} (gzip)`)
-      outputStream.write(`|${diffStats['async-chunk'].fileSize}% / ${diffStats['async-chunk'].gzipSize}% (gzip)|\n`)
-
-      if (index < entries.length - 1) {
-        outputStream.write('| | | | | |\n')
-      }
+  Object.entries(comparisonStats.agents)
+    .forEach(([agent, byLabel]) => {
+      ASSET_KEYS.forEach(assetKey => {
+        const row = buildAssetRow(agent, assetKey, byLabel, baseLabel, diffLabels, labels)
+        writeMarkdownRow(outputStream, row, labels, diffLabels)
+      })
     })
+
+  outputStream.write(`| ${headerCells.map(() => ' ').join(' | ')} |\n`)
+
+  const npmRow = buildNpmRow('npm-distribution', comparisonStats.npm, baseLabel, diffLabels, labels)
+  writeMarkdownRow(outputStream, npmRow, labels, diffLabels)
 
   await new Promise((resolve) => {
     outputStream.close(resolve)
   })
 }
 
+function writeMarkdownRow (outputStream, row, labels, diffLabels) {
+  const cells = [
+    row.agent,
+    row.asset,
+    ...labels.map(label => row[`size_${label}`]),
+    ...diffLabels.map(label => row[`diff_${label}`])
+  ]
+  outputStream.write(`| ${cells.join(' | ')} |\n`)
+}
+
 export async function jsonPrinter (comparisonStats, outputLocation, outputFileName) {
+  const { labels, baseLabel } = comparisonStats
+  const diffLabels = labels.filter(label => label !== baseLabel)
+
   await fs.promises.mkdir(outputLocation, { recursive: true })
 
-  const reportData = Object.entries(comparisonStats)
-    .reduce((aggregator, [agent, statsData]) => {
-      aggregator[agent] = {
-        ...statsData,
-        diff: calcDiffStats(statsData)
-      }
+  const reportData = {
+    labels,
+    baseLabel,
+    agents: Object.entries(comparisonStats.agents).reduce((aggregator, [agent, byLabel]) => {
+      aggregator[agent] = ASSET_KEYS.reduce((assets, assetKey) => {
+        assets[assetKey] = {
+          sizes: labels.reduce((byLabelSizes, label) => {
+            byLabelSizes[label] = byLabel[label][assetKey]
+            return byLabelSizes
+          }, {}),
+          diff: diffLabels.reduce((diffs, label) => {
+            diffs[label] = calcDiffStats(byLabel[label][assetKey], byLabel[baseLabel][assetKey])
+            return diffs
+          }, {})
+        }
+        return assets
+      }, {})
       return aggregator
-    }, {})
+    }, {}),
+    npm: {
+      sizes: comparisonStats.npm,
+      diff: diffLabels.reduce((diffs, label) => {
+        diffs[label] = calcNpmDiffStats(comparisonStats.npm[label], comparisonStats.npm[baseLabel])
+        return diffs
+      }, {})
+    }
+  }
 
   await fs.promises.writeFile(path.join(outputLocation, outputFileName), JSON.stringify(reportData, null, 2), {
     encoding: 'utf-8'
   })
 }
 
-function calcDiffStats (statsData) {
+function buildAssetRow (agent, assetKey, byLabel, baseLabel, diffLabels, labels) {
+  const row = { agent, asset: assetKey }
+
+  labels.forEach(label => {
+    const entry = byLabel[label][assetKey]
+    row[`size_${label}`] = `${filesize(entry.fileSize)} / ${filesize(entry.gzipSize)} (gzip)`
+  })
+
+  diffLabels.forEach(label => {
+    const diff = calcDiffStats(byLabel[label][assetKey], byLabel[baseLabel][assetKey])
+    row[`diff_${label}`] = `${diff.fileSize}% / ${diff.gzipSize}% (gzip)`
+  })
+
+  return row
+}
+
+function buildNpmRow (agent, byLabel, baseLabel, diffLabels, labels) {
+  const row = { agent, asset: 'tarball' }
+
+  labels.forEach(label => {
+    const entry = byLabel[label]
+    row[`size_${label}`] = `${filesize(entry.size)} / ${filesize(entry.unpackedSize)} (unpacked)`
+  })
+
+  diffLabels.forEach(label => {
+    const diff = calcNpmDiffStats(byLabel[label], byLabel[baseLabel])
+    row[`diff_${label}`] = `${diff.size}% / ${diff.unpackedSize}% (unpacked)`
+  })
+
+  return row
+}
+
+function calcDiffStats (fromEntry, toEntry) {
   return {
-    loader: {
-      fileSize: Math.round((((statsData.to.loader.fileSize - statsData.from.loader.fileSize) / statsData.from.loader.fileSize) + Number.EPSILON) * 10000) / 100,
-      gzipSize: Math.round((((statsData.to.loader.gzipSize - statsData.from.loader.gzipSize) / statsData.from.loader.gzipSize) + Number.EPSILON) * 10000) / 100,
-    },
-    ['async-chunk']: {
-      fileSize: Math.round((((statsData.to['async-chunk'].fileSize - statsData.from['async-chunk'].fileSize) / statsData.from['async-chunk'].fileSize) + Number.EPSILON) * 10000) / 100,
-      gzipSize: Math.round((((statsData.to['async-chunk'].gzipSize - statsData.from['async-chunk'].gzipSize) / statsData.from['async-chunk'].gzipSize) + Number.EPSILON) * 10000) / 100,
-    }
+    fileSize: calcPercentDiff(fromEntry.fileSize, toEntry.fileSize),
+    gzipSize: calcPercentDiff(fromEntry.gzipSize, toEntry.gzipSize)
   }
+}
+
+function calcNpmDiffStats (fromEntry, toEntry) {
+  return {
+    size: calcPercentDiff(fromEntry.size, toEntry.size),
+    unpackedSize: calcPercentDiff(fromEntry.unpackedSize, toEntry.unpackedSize)
+  }
+}
+
+function calcPercentDiff (fromValue, toValue) {
+  return Math.round((((toValue - fromValue) / fromValue) + Number.EPSILON) * 10000) / 100
 }

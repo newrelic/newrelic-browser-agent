@@ -205,7 +205,10 @@ function buildNpmRow (agent, byLabel, baseLabel, diffLabels, labels, colorize) {
 const CURRENT_COLUMN_COLOR = '#8e5fd1'
 
 function highlightCurrentCell (text) {
-  return `$\\textcolor{${CURRENT_COLUMN_COLOR}}{\\textbf{\\text{${text}}}}$`
+  // \textbf already switches into text mode for its argument, so nesting
+  // \text inside it (rather than inside \textcolor directly) trips
+  // "\text is only supported in math mode".
+  return `$\\textcolor{${CURRENT_COLUMN_COLOR}}{\\textbf{${text}}}$`
 }
 
 // GitHub's PR comment renderer supports KaTeX math, including KaTeX's

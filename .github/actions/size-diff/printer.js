@@ -12,7 +12,7 @@ const NBSP = ' '
 export function consolePrinter (comparisonStats) {
   const { baseLabel, displayLabels = {} } = comparisonStats
   const labels = [...comparisonStats.labels].reverse()
-  const diffLabels = labels.filter(label => label !== baseLabel)
+  const diffLabels = labels.filter(label => label !== baseLabel).reverse()
   const displayLabel = label => displayLabels[label] || label
 
   const resultsTable = new Table({
@@ -53,7 +53,7 @@ export function consolePrinter (comparisonStats) {
 export async function markdownPrinter (comparisonStats, outputLocation, outputFileName) {
   const { baseLabel, displayLabels = {} } = comparisonStats
   const labels = [...comparisonStats.labels].reverse()
-  const diffLabels = labels.filter(label => label !== baseLabel)
+  const diffLabels = labels.filter(label => label !== baseLabel).reverse()
   const displayLabel = label => displayLabels[label] || label
 
   await fs.promises.mkdir(outputLocation, { recursive: true })

@@ -88,18 +88,6 @@ function register (agentRef, target) {
   const vitals = trackMFEVitals(target.id, timings)
 
   const attrs = {}
-  Object.defineProperty(target, 'attributes', {
-    get () {
-      return {
-        ...attrs,
-        'source.id': target.id,
-        'source.name': target.name,
-        'source.type': target.type,
-        'parent.type': target.parent?.type || V2_TYPES.BA,
-        'parent.id': target.parent?.id
-      }
-    }
-  })
 
   // Only define attributes getter if it doesn't already exist
   if (!Object.prototype.hasOwnProperty.call(target, 'attributes')) {

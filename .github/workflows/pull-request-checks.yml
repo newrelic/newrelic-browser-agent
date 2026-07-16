@@ -138,7 +138,7 @@ jobs:
             display_label: 'This PR'
           - label: main
             ref: main
-            display_label: 'Release Candidate'
+            display_label: 'Main Branch'
           - label: release
             ref: ${{ needs.resolve-latest-release.outputs.tag }}
             display_label: ${{ needs.resolve-latest-release.outputs.tag }}

@@ -167,7 +167,7 @@ function buildFileSizeRow (agent, assetKey, getEntry, baseLabel, diffLabels, lab
   labels.forEach(label => {
     const entry = getEntry(label)
     const text = entry ? filesize(entry.gzipSize) : 'N/A'
-    row[`size_${label}`] = (colorize && label === baseLabel) ? highlightCurrentCell(text) : text
+    row[`size_${label}`] = (colorize && entry && label === baseLabel) ? highlightCurrentCell(text) : text
   })
 
   diffLabels.forEach(label => {
@@ -200,10 +200,12 @@ function buildNpmRow (agent, byLabel, baseLabel, diffLabels, labels, colorize) {
 // A fixed hex color renders identically regardless of the viewer's light or
 // dark GitHub theme (unlike CSS variables), and this royal purple stays
 // visually distinct from the green/orange/red used for diff cells below.
-const CURRENT_COLUMN_COLOR = '#6b3fa0'
+// `\colorbox` (background fill) is not in GitHub's allowed macro set, so
+// this uses bold `\textcolor` text instead.
+const CURRENT_COLUMN_COLOR = '#8e5fd1'
 
 function highlightCurrentCell (text) {
-  return `$\\colorbox{${CURRENT_COLUMN_COLOR}}{\\textcolor{white}{\\text{${text}}}}$`
+  return `$\\textcolor{${CURRENT_COLUMN_COLOR}}{\\textbf{\\text{${text}}}}$`
 }
 
 // GitHub's PR comment renderer supports KaTeX math, including KaTeX's

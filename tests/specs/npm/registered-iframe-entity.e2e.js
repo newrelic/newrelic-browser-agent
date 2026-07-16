@@ -123,8 +123,7 @@ describe('RegisteredIframeEntity', () => {
           'deregister',
           'log',
           'measure',
-          'recordCustomEvent',
-          'register'
+          'recordCustomEvent'
         ]
 
         const methods = {}

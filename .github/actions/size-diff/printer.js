@@ -60,7 +60,13 @@ export async function markdownPrinter (comparisonStats, outputLocation, outputFi
     flags: 'w'
   })
 
-  const headerCells = ['Agent', 'Asset', ...labels.map(displayLabel), ...diffLabels.map(label => `Δ ${displayLabel(baseLabel)} vs ${displayLabel(label)}`)]
+  const highlightedBaseLabel = highlightCurrentCell(displayLabel(baseLabel))
+  const headerCells = [
+    'Agent',
+    'Asset',
+    ...labels.map(label => label === baseLabel ? highlightedBaseLabel : displayLabel(label)),
+    ...diffLabels.map(label => `Δ ${highlightedBaseLabel} vs ${displayLabel(label)}`)
+  ]
   outputStream.write(`| ${headerCells.join(' | ')} |\n`)
   outputStream.write(`|${headerCells.map(() => '---').join('|')}|\n`)
 
@@ -198,29 +204,27 @@ function buildNpmRow (agent, byLabel, baseLabel, diffLabels, labels, colorize) {
 }
 
 // A fixed hex color renders identically regardless of the viewer's light or
-// dark GitHub theme (unlike CSS variables), and this royal purple stays
-// visually distinct from the green/orange/red used for diff cells below.
-// `\colorbox` (background fill) is not in GitHub's allowed macro set, so
-// this uses bold `\textcolor` text instead.
-const CURRENT_COLUMN_COLOR = '#8e5fd1'
+// dark GitHub theme, and this royal purple stays visually distinct from the
+// green/orange/red used for diff cells below.
+const CURRENT_COLUMN_COLOR = '8e5fd1'
 
 function highlightCurrentCell (text) {
-  // \textbf already switches into text mode for its argument, so nesting
-  // \text inside it (rather than inside \textcolor directly) trips
-  // "\text is only supported in math mode".
-  return `$\\textcolor{${CURRENT_COLUMN_COLOR}}{\\textbf{${text}}}$`
+  return colorBadge(text, CURRENT_COLUMN_COLOR)
 }
 
-// GitHub's PR comment renderer supports KaTeX math, including KaTeX's
-// `\textcolor{name}{...}` macro, so this is the only way to get colored text
-// into a markdown table cell without raw HTML (which GitHub strips `style`
-// attributes from in comments). Note: `\color{name}` only takes one argument
-// and colors the rest of the group — `\textcolor` is the two-argument form.
+// GitHub strips `style` attributes from raw HTML in comments, and its math
+// (KaTeX) renderer only supports a restricted macro subset that turned out
+// too unreliable here (disallowed `\colorbox`, dropped unit suffixes even
+// inside `\text{}`). A shields.io badge image is a well-established, robust
+// way to get colored content into a markdown table cell instead.
+function colorBadge (text, color) {
+  return `![${text}](https://img.shields.io/static/v1?label=&message=${encodeURIComponent(text)}&color=${color})`
+}
+
 function formatPercent (value, colorize) {
-  if (!colorize) return `${value}%`
-  // Wrapped in \text{} so KaTeX renders this as literal text rather than
-  // math notation — without it, `\%` can render without the percent glyph.
-  return `$\\textcolor{${percentColor(value)}}{\\text{${value}\\%}}$`
+  const text = `${value}%`
+  if (!colorize) return text
+  return colorBadge(text, percentColor(value))
 }
 
 function percentColor (value) {

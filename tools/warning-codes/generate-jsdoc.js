@@ -38,6 +38,7 @@ function parseWarningCodes (markdown) {
 
 function escapeForJsDoc (message) {
   return message
+    .replace(/\\/g, '\\\\')
     .replace(/\*/g, '\\*')
     .replace(/\|/g, '\\|')
 }

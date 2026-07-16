@@ -91,12 +91,12 @@ function register (agentRef, target) {
   Object.defineProperty(target, 'attributes', {
     get () {
       return {
+        ...attrs,
         'source.id': target.id,
         'source.name': target.name,
         'source.type': target.type,
         'parent.type': target.parent?.type || V2_TYPES.BA,
-        'parent.id': target.parent?.id,
-        ...attrs // this is abstracted out to a getter so that the other attributes cant be overridden
+        'parent.id': target.parent?.id
       }
     }
   })

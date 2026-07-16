@@ -16,6 +16,10 @@ export const args = yargs(hideBin(process.argv))
   .string('label')
   .describe('label', '(capture mode) Label identifying the ref being captured, e.g. `current`, `main`, `release`.')
 
+  .string('build-dir')
+  .describe('build-dir', '(capture mode) Path to the build directory containing the webpack *.stats.json files to capture.')
+  .default('build-dir', path.resolve(path.join(__dirname, '../../../build')))
+
   .string('npm-pack-file')
   .describe('npm-pack-file', '(capture mode) Path to the JSON output of `npm pack --json --dry-run`.')
 

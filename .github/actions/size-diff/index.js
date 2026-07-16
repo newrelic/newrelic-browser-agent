@@ -12,7 +12,7 @@ if (args.mode === 'capture') {
 }
 
 async function runCapture () {
-  const agents = await getAllLocalStats()
+  const agents = await getAllLocalStats(args.buildDir)
   const npm = await getNpmPackStats(args.npmPackFile)
 
   const capture = {

@@ -143,33 +143,49 @@ jobs:
       run:
         shell: bash
     steps:
+      # Checks out the PR branch at the job's default working directory so
+      # the size-diff action code used below is always the version being
+      # introduced by this PR, regardless of which ref is actually built
+      # (main/a release tag won't have this PR's action code yet).
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      # The ref actually being measured is checked out into ./target so it
+      # never overwrites the action code above.
       - uses: actions/checkout@v4
         with:
           ref: ${{ matrix.ref }}
+          path: target
       - uses: actions/setup-node@v4
         with:
           node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Install dependencies
+        working-directory: target
         run: npm ci
       - name: Running cdn build
+        working-directory: target
         run: npm run cdn:build:dev
       - name: Running npm build
+        working-directory: target
         run: |
           npm run npm:build:esm
           npm run npm:build:cjs
           npm run npm:build:types
       - name: Measuring npm pack size
+        working-directory: target
         run: npm pack --json --dry-run --ignore-scripts > ./build/npm-pack.json
       - name: Capturing build size stats
         uses: ./.github/actions/size-diff
         with:
           mode: capture
           label: ${{ matrix.label }}
-          npm_pack_file: ./build/npm-pack.json
-          output_file: ./build/size-stats-${{ matrix.label }}.json
+          build_dir: ${{ github.workspace }}/target/build
+          npm_pack_file: ${{ github.workspace }}/target/build/npm-pack.json
+          output_file: ${{ github.workspace }}/build/size-stats-${{ matrix.label }}.json
       - name: Get local stats
         if: matrix.label == 'current'
         id: get-stats
+        working-directory: target
         run: |
           rum=$(cat ./build/nr-rum-standard.stats.json); echo "rum=$rum" >> $GITHUB_OUTPUT;
           full=$(cat ./build/nr-full-standard.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;

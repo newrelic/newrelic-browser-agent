@@ -1,15 +1,12 @@
 import fs from 'fs'
 import path from 'path'
-import url from 'url'
 import { reportSettings } from './report-settings.js'
 
-const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
-
-export async function getAllLocalStats () {
+export async function getAllLocalStats (buildDir) {
   return (await Promise.all(
     Object.entries(reportSettings)
       .map(([name, reportSetting]) =>
-        getLocalStats(reportSetting)
+        getLocalStats(buildDir, reportSetting)
           .then(stats => ([name, stats]))
       )
   )).reduce((aggregator, [name, stats]) => {
@@ -18,8 +15,8 @@ export async function getAllLocalStats () {
   }, {})
 }
 
-async function getLocalStats (reportSetting) {
-  const statsFileName = await findLocalStatsFile(reportSetting.statsFileNameTemplate)
+async function getLocalStats (buildDir, reportSetting) {
+  const statsFileName = await findLocalStatsFile(buildDir, reportSetting.statsFileNameTemplate)
   const statsFileContent = JSON.parse(await fs.promises.readFile(statsFileName))
 
   return parseStatsFile(reportSetting, statsFileContent)
@@ -47,10 +44,8 @@ function parseStatsFile (reportSetting, statsFileContent) {
   return results
 }
 
-async function findLocalStatsFile (statsFileNameTemplate) {
-  const buildDir = path.resolve(
-    path.join(__dirname, '../../../build')
-  )
+async function findLocalStatsFile (buildDir, statsFileNameTemplate) {
+  buildDir = path.resolve(buildDir)
   const buildFiles = await fs.promises.readdir(buildDir, { withFileTypes: true })
 
   const foundFiles = buildFiles.filter(file =>
@@ -67,7 +62,19 @@ async function findLocalStatsFile (statsFileNameTemplate) {
 }
 
 export async function getNpmPackStats (npmPackJsonPath) {
-  const npmPackContent = JSON.parse(await fs.promises.readFile(npmPackJsonPath))
+  const rawOutput = await fs.promises.readFile(npmPackJsonPath, { encoding: 'utf-8' })
+
+  // `npm pack` can have lifecycle scripts (e.g. husky's `prepare`) print to
+  // stdout ahead of the JSON array despite --ignore-scripts on some npm
+  // versions, so only parse the JSON array itself.
+  const jsonStart = rawOutput.indexOf('[')
+  const jsonEnd = rawOutput.lastIndexOf(']')
+
+  if (jsonStart === -1 || jsonEnd === -1) {
+    throw new Error(`Could not find a JSON array in npm pack output ${npmPackJsonPath}.`)
+  }
+
+  const npmPackContent = JSON.parse(rawOutput.slice(jsonStart, jsonEnd + 1))
   const [packageEntry] = npmPackContent
 
   if (!packageEntry) {

@@ -1,9 +1,13 @@
 import fs from 'fs'
 import path from 'path'
 import { Table } from 'console-table-printer'
-import { filesize } from 'filesize'
 
 const ASSET_KEYS = ['loader', 'async-chunk']
+
+// A non-breaking space survives whitespace-collapsing wherever a plain ' '
+// might not (e.g. inside a rendered SVG badge), so fixed-width padding below
+// uses it instead of a regular space.
+const NBSP = ' '
 
 export function consolePrinter (comparisonStats) {
   const { baseLabel, displayLabels = {} } = comparisonStats
@@ -17,19 +21,19 @@ export function consolePrinter (comparisonStats) {
       { name: 'agent', title: 'Agent', alignment: 'left' },
       { name: 'asset', title: 'Asset', alignment: 'left' },
       ...labels.map(label => ({ name: `size_${label}`, title: displayLabel(label), alignment: 'center' })),
-      ...diffLabels.map(label => ({ name: `diff_${label}`, title: `Δ ${displayLabel(baseLabel)} vs ${displayLabel(label)}`, alignment: 'center' }))
+      { name: 'diff', title: 'Δ', alignment: 'center' }
     ]
   })
 
   const sections = [
     ...Object.entries(comparisonStats.agents).map(([agent, byLabel]) => ({ agent, byLabel })),
     ...Object.entries(comparisonStats.interfaces || {}).map(([interfaceName, byLabel]) => ({ interfaceName, byLabel, interfaceSection: true })),
-    { agent: 'npm', byLabel: comparisonStats.npm, npmSection: true }
+    { byLabel: comparisonStats.npm, npmSection: true }
   ]
 
   sections.forEach(({ agent, byLabel, npmSection, interfaceSection, interfaceName }, index) => {
     if (npmSection) {
-      resultsTable.addRow(buildNpmRow(agent, byLabel, baseLabel, diffLabels, labels))
+      resultsTable.addRow(buildNpmRow(byLabel, baseLabel, diffLabels, labels))
     } else if (interfaceSection) {
       resultsTable.addRow(buildInterfaceRow(interfaceName, byLabel, baseLabel, diffLabels, labels))
     } else {
@@ -60,12 +64,11 @@ export async function markdownPrinter (comparisonStats, outputLocation, outputFi
     flags: 'w'
   })
 
-  const highlightedBaseLabel = highlightCurrentCell(displayLabel(baseLabel))
   const headerCells = [
     'Agent',
     'Asset',
-    ...labels.map(label => label === baseLabel ? highlightedBaseLabel : displayLabel(label)),
-    ...diffLabels.map(label => `Δ ${highlightedBaseLabel} vs ${displayLabel(label)}`)
+    ...labels.map(displayLabel),
+    'Δ'
   ]
   outputStream.write(`| ${headerCells.join(' | ')} |\n`)
   outputStream.write(`|${headerCells.map(() => '---').join('|')}|\n`)
@@ -74,7 +77,7 @@ export async function markdownPrinter (comparisonStats, outputLocation, outputFi
     .forEach(([agent, byLabel]) => {
       ASSET_KEYS.forEach(assetKey => {
         const row = buildAssetRow(agent, assetKey, byLabel, baseLabel, diffLabels, labels, true)
-        writeMarkdownRow(outputStream, row, labels, diffLabels)
+        writeMarkdownRow(outputStream, row, labels)
       })
     })
 
@@ -83,25 +86,25 @@ export async function markdownPrinter (comparisonStats, outputLocation, outputFi
   Object.entries(comparisonStats.interfaces || {})
     .forEach(([interfaceName, byLabel]) => {
       const row = buildInterfaceRow(interfaceName, byLabel, baseLabel, diffLabels, labels, true)
-      writeMarkdownRow(outputStream, row, labels, diffLabels)
+      writeMarkdownRow(outputStream, row, labels)
     })
 
   outputStream.write(`| ${headerCells.map(() => ' ').join(' | ')} |\n`)
 
-  const npmRow = buildNpmRow('npm-distribution', comparisonStats.npm, baseLabel, diffLabels, labels, true)
-  writeMarkdownRow(outputStream, npmRow, labels, diffLabels)
+  const npmRow = buildNpmRow(comparisonStats.npm, baseLabel, diffLabels, labels, true)
+  writeMarkdownRow(outputStream, npmRow, labels)
 
   await new Promise((resolve) => {
     outputStream.close(resolve)
   })
 }
 
-function writeMarkdownRow (outputStream, row, labels, diffLabels) {
+function writeMarkdownRow (outputStream, row, labels) {
   const cells = [
     row.agent,
     row.asset,
     ...labels.map(label => row[`size_${label}`]),
-    ...diffLabels.map(label => row[`diff_${label}`])
+    row.diff
   ]
   outputStream.write(`| ${cells.join(' | ')} |\n`)
 }
@@ -160,56 +163,114 @@ export async function jsonPrinter (comparisonStats, outputLocation, outputFileNa
 }
 
 function buildAssetRow (agent, assetKey, byLabel, baseLabel, diffLabels, labels, colorize) {
-  return buildFileSizeRow(agent, assetKey, label => byLabel[label] && byLabel[label][assetKey], baseLabel, diffLabels, labels, colorize)
+  return buildRow({
+    agent,
+    asset: assetKey,
+    getEntry: label => byLabel[label] && byLabel[label][assetKey],
+    metrics: [entry => entry.gzipSize],
+    baseLabel,
+    diffLabels,
+    labels,
+    colorize
+  })
 }
 
 function buildInterfaceRow (interfaceName, byLabel, baseLabel, diffLabels, labels, colorize) {
-  return buildFileSizeRow('npm-interface', interfaceName, label => byLabel[label], baseLabel, diffLabels, labels, colorize)
+  return buildRow({
+    agent: 'npm-interface',
+    asset: interfaceName,
+    getEntry: label => byLabel[label],
+    metrics: [entry => entry.gzipSize],
+    baseLabel,
+    diffLabels,
+    labels,
+    colorize
+  })
 }
 
-function buildFileSizeRow (agent, assetKey, getEntry, baseLabel, diffLabels, labels, colorize) {
-  const row = { agent, asset: assetKey }
+function buildNpmRow (byLabel, baseLabel, diffLabels, labels, colorize) {
+  return buildRow({
+    agent: 'npm-distribution',
+    asset: 'tarball',
+    getEntry: label => byLabel[label],
+    metrics: [entry => entry.size],
+    baseLabel,
+    diffLabels,
+    labels,
+    colorize
+  })
+}
+
+// Shared row builder for the asset/interface/npm rows. `metrics` is a list
+// of accessors run against a label's entry -- always a single accessor here
+// since loader/async-chunk stay on separate rows, but kept as a list so npm
+// (`size`) and interface (`gzipSize`) rows share the same formatting/diff
+// logic without a second code path.
+function buildRow ({ agent, asset, getEntry, metrics, baseLabel, diffLabels, labels, colorize }) {
+  const row = { agent, asset }
 
   labels.forEach(label => {
     const entry = getEntry(label)
-    const text = entry ? filesize(entry.gzipSize) : 'N/A'
-    row[`size_${label}`] = (colorize && entry && label === baseLabel) ? highlightCurrentCell(text) : text
+    const text = entry ? metrics.map(metric => formatFixedSize(metric(entry))).join(' + ') : 'N/A'
+
+    if (!colorize || !entry) {
+      row[`size_${label}`] = text
+      return
+    }
+
+    if (label === baseLabel) {
+      const severity = worstDiff(getEntry, metrics, baseLabel, diffLabels)
+      row[`size_${label}`] = sizeBadge(text, percentColor(severity))
+    } else {
+      row[`size_${label}`] = sizeBadge(text, 'white')
+    }
   })
 
-  diffLabels.forEach(label => {
-    const entry = getEntry(label)
-    const baseEntry = getEntry(baseLabel)
-    const diff = (entry && baseEntry) ? calcDiffStats(entry, baseEntry) : null
-    row[`diff_${label}`] = diff ? formatPercent(diff.gzipSize, colorize) : 'N/A'
-  })
+  row.diff = diffLabels.map(label => {
+    const value = worstDiffForLabel(getEntry, metrics, baseLabel, label)
+    if (value === null) return 'N/A'
+    return formatPercent(value, colorize)
+  }).join(' / ')
 
   return row
 }
 
-function buildNpmRow (agent, byLabel, baseLabel, diffLabels, labels, colorize) {
-  const row = { agent, asset: 'tarball' }
+function worstDiffForLabel (getEntry, metrics, baseLabel, label) {
+  const entry = getEntry(label)
+  const baseEntry = getEntry(baseLabel)
+  if (!entry || !baseEntry) return null
 
-  labels.forEach(label => {
-    const entry = byLabel[label]
-    const text = filesize(entry.size)
-    row[`size_${label}`] = (colorize && label === baseLabel) ? highlightCurrentCell(text) : text
-  })
-
-  diffLabels.forEach(label => {
-    const diff = calcNpmDiffStats(byLabel[label], byLabel[baseLabel])
-    row[`diff_${label}`] = formatPercent(diff.size, colorize)
-  })
-
-  return row
+  return Math.max(...metrics.map(metric => calcPercentDiff(metric(entry), metric(baseEntry))))
 }
 
-// A fixed hex color renders identically regardless of the viewer's light or
-// dark GitHub theme, and this royal purple stays visually distinct from the
-// green/orange/red used for diff cells below.
-const CURRENT_COLUMN_COLOR = '8e5fd1'
+function worstDiff (getEntry, metrics, baseLabel, diffLabels) {
+  const diffs = diffLabels
+    .map(label => worstDiffForLabel(getEntry, metrics, baseLabel, label))
+    .filter(value => value !== null)
 
-function highlightCurrentCell (text) {
-  return colorBadge(text, CURRENT_COLUMN_COLOR)
+  return diffs.length ? Math.max(...diffs) : 0
+}
+
+// Fixed-width size text: 3 integer digits, a period, 3 decimal digits, a
+// space, and the unit (B/KB/MB) -- 10 characters total, so every value in a
+// column lines up regardless of magnitude.
+function formatFixedSize (bytes) {
+  let value, unit
+  if (bytes < 1000) {
+    value = bytes
+    unit = 'B'
+  } else if (bytes < 1000000) {
+    value = bytes / 1000
+    unit = 'KB'
+  } else {
+    value = bytes / 1000000
+    unit = 'MB'
+  }
+
+  const [intPart, decPart] = value.toFixed(3).split('.')
+  const numeric = `${intPart.padStart(3, NBSP)}.${decPart}`
+  const text = `${numeric} ${unit}`
+  return text.length < 10 ? text.padEnd(10, NBSP) : text
 }
 
 // GitHub strips `style` attributes from raw HTML in comments, and its math
@@ -217,14 +278,14 @@ function highlightCurrentCell (text) {
 // too unreliable here (disallowed `\colorbox`, dropped unit suffixes even
 // inside `\text{}`). A shields.io badge image is a well-established, robust
 // way to get colored content into a markdown table cell instead.
-function colorBadge (text, color) {
+function sizeBadge (text, color) {
   return `![${text}](https://img.shields.io/static/v1?label=&message=${encodeURIComponent(text)}&color=${color})`
 }
 
 function formatPercent (value, colorize) {
   const text = `${value}%`
   if (!colorize) return text
-  return colorBadge(text, percentColor(value))
+  return sizeBadge(text, percentColor(value))
 }
 
 function percentColor (value) {

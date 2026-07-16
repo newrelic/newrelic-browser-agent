@@ -575,6 +575,104 @@ describe('Register API - MFE Vitals Tracking', () => {
     validateVitals(eventB, { expectLCP: true })
   })
 
+  it('only one of two instances sharing an id should claim a single shared DOM tree', async () => {
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+      init: { feature_flags: ['register'] }
+    }))
+      .then(() => browser.waitForAgentLoad())
+
+    // Two instances registered for the same id, before any matching DOM tree exists
+    await browser.execute(function () {
+      window.mfeInstanceA = newrelic.register({ id: 'shared-single-tree-mfe', name: 'Instance A' })
+      window.mfeInstanceB = newrelic.register({ id: 'shared-single-tree-mfe', name: 'Instance B' })
+    })
+
+    // Only ONE DOM tree is ever rendered for this shared id
+    await browser.execute(function () {
+      const tree = document.createElement('div')
+      tree.dataset.nrMfeId = 'shared-single-tree-mfe'
+      tree.textContent = 'Shared tree content'
+      tree.style.width = '100px'
+      tree.style.height = '100px'
+      document.body.appendChild(tree)
+    })
+
+    await browser.pause(300)
+
+    await browser.execute(function () {
+      window.mfeInstanceA.deregister()
+      window.mfeInstanceB.deregister()
+    })
+
+    const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+    const timingEvents = getMFETimingEvents(insightsHarvests, 'shared-single-tree-mfe')
+
+    // Both instances still report their own timing event...
+    expect(timingEvents.length).toBe(2)
+
+    const eventA = timingEvents.find(e => e['source.name'] === 'Instance A')
+    const eventB = timingEvents.find(e => e['source.name'] === 'Instance B')
+
+    expect(eventA).toBeDefined()
+    expect(eventB).toBeDefined()
+
+    // ...but since there's only one DOM tree to claim, exactly one of them should have
+    // observed FCP from it, and the other should have never observed anything at all.
+    const claimedCount = [eventA, eventB].filter(e => e['nr.vitals.fcp.value'] !== undefined).length
+    expect(claimedCount).toBe(1)
+  })
+
+  it.withBrowsersMatching(supportsLargestContentfulPaint)('should track a single MFE instance rendered across two separate DOM trees sharing the same id', async () => {
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+      init: { feature_flags: ['register'] }
+    }))
+      .then(() => browser.waitForAgentLoad())
+
+    // A single instance registered once, before either matching DOM tree exists
+    await browser.execute(function () {
+      window.singleMfe = newrelic.register({ id: 'single-instance-dual-tree-mfe', name: 'Single Instance' })
+    })
+
+    // First DOM tree for this id
+    await browser.execute(function () {
+      const treeA = document.createElement('div')
+      treeA.dataset.nrMfeId = 'single-instance-dual-tree-mfe'
+      treeA.textContent = 'Tree A content'
+      treeA.style.width = '100px'
+      treeA.style.height = '100px'
+      document.body.appendChild(treeA)
+    })
+
+    await browser.pause(300)
+
+    // A second, unrelated DOM tree elsewhere on the page, sharing the same id
+    await browser.execute(function () {
+      const treeB = document.createElement('div')
+      treeB.dataset.nrMfeId = 'single-instance-dual-tree-mfe'
+      treeB.textContent = 'Tree B content'
+      treeB.style.width = '200px'
+      treeB.style.height = '200px'
+      document.body.appendChild(treeB)
+    })
+
+    await browser.pause(300)
+
+    await browser.execute(function () {
+      window.singleMfe.deregister()
+    })
+
+    const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+    const timingEvents = getMFETimingEvents(insightsHarvests, 'single-instance-dual-tree-mfe')
+
+    // A single instance registered once should only ever report a single timing event,
+    // regardless of how many DOM trees on the page share its id.
+    expect(timingEvents.length).toBe(1)
+    const timing = timingEvents[0]
+
+    // The instance should have detected FCP and LCP from whichever tree it claimed first
+    validateVitals(timing, { expectFCP: true, expectLCP: true })
+  })
+
   // it('should capture comprehensive metadata for all vitals', async () => {
   //   await browser.url(await browser.testHandle.assetURL('instrumented.html', {
   //     init: { feature_flags: ['register'] }

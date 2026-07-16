@@ -12,6 +12,12 @@ inputs:
   build_dir:
     description: '(capture mode) Path to the build directory containing the webpack *.stats.json files to capture.'
     required: false
+  target_dir:
+    description: '(capture mode) Path to the checked-out source tree (containing package.json and src/) being measured.'
+    required: false
+  display_label:
+    description: '(capture mode) Optional human-readable label to display in reports instead of `label`, e.g. a resolved release tag.'
+    required: false
   npm_pack_file:
     description: '(capture mode) Path to the JSON output of `npm pack --json --dry-run`.'
     required: false
@@ -35,6 +41,8 @@ runs:
           --mode capture \
           --label ${{ inputs.label }} \
           --build-dir ${{ inputs.build_dir }} \
+          --target-dir ${{ inputs.target_dir }} \
+          --display-label "${{ inputs.display_label }}" \
           --npm-pack-file ${{ inputs.npm_pack_file }} \
           --output-file ${{ inputs.output_file }}
       shell: bash

@@ -135,10 +135,13 @@ jobs:
         include:
           - label: current
             ref: ${{ github.ref }}
+            display_label: ''
           - label: main
             ref: main
+            display_label: ''
           - label: release
             ref: ${{ needs.resolve-latest-release.outputs.tag }}
+            display_label: ${{ needs.resolve-latest-release.outputs.tag }}
     defaults:
       run:
         shell: bash
@@ -164,7 +167,7 @@ jobs:
         run: npm ci
       - name: Running cdn build
         working-directory: target
-        run: npm run cdn:build:dev
+        run: npm run cdn:build:prod
       - name: Running npm build
         working-directory: target
         run: |
@@ -179,7 +182,9 @@ jobs:
         with:
           mode: capture
           label: ${{ matrix.label }}
+          display_label: ${{ matrix.display_label }}
           build_dir: ${{ github.workspace }}/target/build
+          target_dir: ${{ github.workspace }}/target
           npm_pack_file: ${{ github.workspace }}/target/build/npm-pack.json
           output_file: ${{ github.workspace }}/build/size-stats-${{ matrix.label }}.json
       - name: Get local stats
@@ -259,7 +264,7 @@ jobs:
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "results<<$EOF" >> "$GITHUB_OUTPUT"
           echo "## Asset Size Report <br><br>" >> "$GITHUB_OUTPUT"
-          echo "Comparing this pull request's build size against \`main\` and the latest release: <br><br>" >> "$GITHUB_OUTPUT"
+          echo "Comparing this branch build size against main and the latest release: <br><br>" >> "$GITHUB_OUTPUT"
           cat ./build/size_report.md >> "$GITHUB_OUTPUT"
           echo "$EOF" >> "$GITHUB_OUTPUT"
       - name: Comment pull request

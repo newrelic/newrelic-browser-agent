@@ -6,27 +6,31 @@ import { filesize } from 'filesize'
 const ASSET_KEYS = ['loader', 'async-chunk']
 
 export function consolePrinter (comparisonStats) {
-  const { labels, baseLabel } = comparisonStats
+  const { labels, baseLabel, displayLabels = {} } = comparisonStats
   const diffLabels = labels.filter(label => label !== baseLabel)
+  const displayLabel = label => displayLabels[label] || label
 
   const resultsTable = new Table({
-    title: `Build Size Stats: ${labels.join(' / ')}`,
+    title: `Build Size Stats: ${labels.map(displayLabel).join(' / ')}`,
     columns: [
       { name: 'agent', title: 'Agent', alignment: 'left' },
       { name: 'asset', title: 'Asset', alignment: 'left' },
-      ...labels.map(label => ({ name: `size_${label}`, title: label, alignment: 'center' })),
-      ...diffLabels.map(label => ({ name: `diff_${label}`, title: `Δ ${baseLabel} vs ${label}`, alignment: 'center' }))
+      ...labels.map(label => ({ name: `size_${label}`, title: displayLabel(label), alignment: 'center' })),
+      ...diffLabels.map(label => ({ name: `diff_${label}`, title: `Δ ${displayLabel(baseLabel)} vs ${displayLabel(label)}`, alignment: 'center' }))
     ]
   })
 
   const sections = [
     ...Object.entries(comparisonStats.agents).map(([agent, byLabel]) => ({ agent, byLabel })),
+    ...Object.entries(comparisonStats.interfaces || {}).map(([interfaceName, byLabel]) => ({ interfaceName, byLabel, interfaceSection: true })),
     { agent: 'npm', byLabel: comparisonStats.npm, npmSection: true }
   ]
 
-  sections.forEach(({ agent, byLabel, npmSection }, index) => {
+  sections.forEach(({ agent, byLabel, npmSection, interfaceSection, interfaceName }, index) => {
     if (npmSection) {
       resultsTable.addRow(buildNpmRow(agent, byLabel, baseLabel, diffLabels, labels))
+    } else if (interfaceSection) {
+      resultsTable.addRow(buildInterfaceRow(interfaceName, byLabel, baseLabel, diffLabels, labels))
     } else {
       ASSET_KEYS.forEach(assetKey => {
         resultsTable.addRow(buildAssetRow(agent, assetKey, byLabel, baseLabel, diffLabels, labels))
@@ -42,8 +46,9 @@ export function consolePrinter (comparisonStats) {
 }
 
 export async function markdownPrinter (comparisonStats, outputLocation, outputFileName) {
-  const { labels, baseLabel } = comparisonStats
+  const { labels, baseLabel, displayLabels = {} } = comparisonStats
   const diffLabels = labels.filter(label => label !== baseLabel)
+  const displayLabel = label => displayLabels[label] || label
 
   await fs.promises.mkdir(outputLocation, { recursive: true })
 
@@ -53,7 +58,7 @@ export async function markdownPrinter (comparisonStats, outputLocation, outputFi
     flags: 'w'
   })
 
-  const headerCells = ['Agent', 'Asset', ...labels, ...diffLabels.map(label => `Δ ${baseLabel} vs ${label}`)]
+  const headerCells = ['Agent', 'Asset', ...labels.map(displayLabel), ...diffLabels.map(label => `Δ ${displayLabel(baseLabel)} vs ${displayLabel(label)}`)]
   outputStream.write(`| ${headerCells.join(' | ')} |\n`)
   outputStream.write(`|${headerCells.map(() => '---').join('|')}|\n`)
 
@@ -63,6 +68,14 @@ export async function markdownPrinter (comparisonStats, outputLocation, outputFi
         const row = buildAssetRow(agent, assetKey, byLabel, baseLabel, diffLabels, labels)
         writeMarkdownRow(outputStream, row, labels, diffLabels)
       })
+    })
+
+  outputStream.write(`| ${headerCells.map(() => ' ').join(' | ')} |\n`)
+
+  Object.entries(comparisonStats.interfaces || {})
+    .forEach(([interfaceName, byLabel]) => {
+      const row = buildInterfaceRow(interfaceName, byLabel, baseLabel, diffLabels, labels)
+      writeMarkdownRow(outputStream, row, labels, diffLabels)
     })
 
   outputStream.write(`| ${headerCells.map(() => ' ').join(' | ')} |\n`)
@@ -86,7 +99,7 @@ function writeMarkdownRow (outputStream, row, labels, diffLabels) {
 }
 
 export async function jsonPrinter (comparisonStats, outputLocation, outputFileName) {
-  const { labels, baseLabel } = comparisonStats
+  const { labels, baseLabel, displayLabels = {} } = comparisonStats
   const diffLabels = labels.filter(label => label !== baseLabel)
 
   await fs.promises.mkdir(outputLocation, { recursive: true })
@@ -94,6 +107,7 @@ export async function jsonPrinter (comparisonStats, outputLocation, outputFileNa
   const reportData = {
     labels,
     baseLabel,
+    displayLabels,
     agents: Object.entries(comparisonStats.agents).reduce((aggregator, [agent, byLabel]) => {
       aggregator[agent] = ASSET_KEYS.reduce((assets, assetKey) => {
         assets[assetKey] = {
@@ -108,6 +122,19 @@ export async function jsonPrinter (comparisonStats, outputLocation, outputFileNa
         }
         return assets
       }, {})
+      return aggregator
+    }, {}),
+    interfaces: Object.entries(comparisonStats.interfaces || {}).reduce((aggregator, [interfaceName, byLabel]) => {
+      aggregator[interfaceName] = {
+        sizes: labels.reduce((byLabelSizes, label) => {
+          byLabelSizes[label] = byLabel[label] || null
+          return byLabelSizes
+        }, {}),
+        diff: diffLabels.reduce((diffs, label) => {
+          diffs[label] = (byLabel[label] && byLabel[baseLabel]) ? calcDiffStats(byLabel[label], byLabel[baseLabel]) : null
+          return diffs
+        }, {})
+      }
       return aggregator
     }, {}),
     npm: {
@@ -125,16 +152,26 @@ export async function jsonPrinter (comparisonStats, outputLocation, outputFileNa
 }
 
 function buildAssetRow (agent, assetKey, byLabel, baseLabel, diffLabels, labels) {
+  return buildFileSizeRow(agent, assetKey, label => byLabel[label] && byLabel[label][assetKey], baseLabel, diffLabels, labels)
+}
+
+function buildInterfaceRow (interfaceName, byLabel, baseLabel, diffLabels, labels) {
+  return buildFileSizeRow('npm-interface', interfaceName, label => byLabel[label], baseLabel, diffLabels, labels)
+}
+
+function buildFileSizeRow (agent, assetKey, getEntry, baseLabel, diffLabels, labels) {
   const row = { agent, asset: assetKey }
 
   labels.forEach(label => {
-    const entry = byLabel[label][assetKey]
-    row[`size_${label}`] = `${filesize(entry.fileSize)} / ${filesize(entry.gzipSize)} (gzip)`
+    const entry = getEntry(label)
+    row[`size_${label}`] = entry ? `${filesize(entry.fileSize)} / ${filesize(entry.gzipSize)} (gzip)` : 'N/A'
   })
 
   diffLabels.forEach(label => {
-    const diff = calcDiffStats(byLabel[label][assetKey], byLabel[baseLabel][assetKey])
-    row[`diff_${label}`] = `${diff.fileSize}% / ${diff.gzipSize}% (gzip)`
+    const entry = getEntry(label)
+    const baseEntry = getEntry(baseLabel)
+    const diff = (entry && baseEntry) ? calcDiffStats(entry, baseEntry) : null
+    row[`diff_${label}`] = diff ? `${diff.fileSize}% / ${diff.gzipSize}% (gzip)` : 'N/A'
   })
 
   return row

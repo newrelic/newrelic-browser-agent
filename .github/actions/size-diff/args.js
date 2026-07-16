@@ -20,6 +20,13 @@ export const args = yargs(hideBin(process.argv))
   .describe('build-dir', '(capture mode) Path to the build directory containing the webpack *.stats.json files to capture.')
   .default('build-dir', path.resolve(path.join(__dirname, '../../../build')))
 
+  .string('target-dir')
+  .describe('target-dir', '(capture mode) Path to the checked-out source tree (containing package.json and src/) being measured.')
+  .default('target-dir', path.resolve(path.join(__dirname, '../../../')))
+
+  .string('display-label')
+  .describe('display-label', '(capture mode) Optional human-readable label to display in reports instead of --label, e.g. a resolved release tag.')
+
   .string('npm-pack-file')
   .describe('npm-pack-file', '(capture mode) Path to the JSON output of `npm pack --json --dry-run`.')
 

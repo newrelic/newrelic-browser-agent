@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { reportSettings } from './report-settings.js'
-import { getAllLocalStats, getNpmPackStats } from './get-stats.js'
+import { getAllLocalStats, getNpmPackStats, getInterfaceStats } from './get-stats.js'
 import { consolePrinter, markdownPrinter, jsonPrinter } from './printer.js'
 import { args, parseStatsFileArgs } from './args.js'
 
@@ -14,11 +14,14 @@ if (args.mode === 'capture') {
 async function runCapture () {
   const agents = await getAllLocalStats(args.buildDir)
   const npm = await getNpmPackStats(args.npmPackFile)
+  const interfaces = await getInterfaceStats(args.targetDir)
 
   const capture = {
     label: args.label,
+    displayLabel: args.displayLabel || args.label,
     agents,
-    npm
+    npm,
+    interfaces
   }
 
   await fs.promises.mkdir(path.dirname(args.outputFile), { recursive: true })
@@ -38,6 +41,11 @@ async function runCompare () {
   const labels = captures.map(({ label }) => label)
   const baseLabel = labels[0]
 
+  const displayLabels = captures.reduce((byLabel, { label, capture }) => {
+    byLabel[label] = capture.displayLabel || label
+    return byLabel
+  }, {})
+
   const agents = Object.keys(reportSettings).reduce((aggregator, agentName) => {
     aggregator[agentName] = captures.reduce((byLabel, { label, capture }) => {
       byLabel[label] = capture.agents[agentName]
@@ -51,7 +59,17 @@ async function runCompare () {
     return byLabel
   }, {})
 
-  const comparisonStats = { labels, baseLabel, agents, npm }
+  const interfaceNames = [...new Set(captures.flatMap(({ capture }) => Object.keys(capture.interfaces || {})))]
+
+  const interfaces = interfaceNames.reduce((aggregator, interfaceName) => {
+    aggregator[interfaceName] = captures.reduce((byLabel, { label, capture }) => {
+      byLabel[label] = capture.interfaces[interfaceName]
+      return byLabel
+    }, {})
+    return aggregator
+  }, {})
+
+  const comparisonStats = { labels, baseLabel, displayLabels, agents, npm, interfaces }
 
   if (args.format.includes('terminal')) {
     consolePrinter(comparisonStats)

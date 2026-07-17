@@ -316,18 +316,22 @@ if (needsReview.length === 0) {
 
     let prText
     if (assignees.length > 0) {
-      const assigneeMentions = assignees.filter((login) => login !== authorLogin).map(mentionFor).join(' ')
-      prText = assigneeMentions ? `${assigneeMentions} ${prLink}` : prLink
+      const assigneeMentions = assignees.filter((login) => login !== authorLogin).map(mentionFor)
+      prText = assigneeMentions.length > 0
+        ? `${prLink}\n*Assigned to:*\n${assigneeMentions.join('\n')}`
+        : prLink
     } else {
       const availableReviewers = Object.keys(githubToSlack).filter((login) => login !== authorLogin).map(mentionFor).join(' ')
-      prText = `${prLink}\n*No assignees yet. ${availableReviewers} Please take a look and assign yourself.*`
+      prText = `${prLink}\n*🔴 No assignees yet. ${availableReviewers} Please take a look and assign yourself.*`
     }
     blocks.push(sectionBlock(prText))
 
     const createdDate = new Date(pr.createdAt)
     const formattedDate = createdDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    const prAgeHours = (Date.now() - createdDate) / (1000 * 60 * 60)
+    const ageIndicator = mttmHours === null ? '' : (prAgeHours <= mttmHours ? '🟢 ' : '🔴 ')
 
-    let statusText = `Open since ${formattedDate}`
+    let statusText = `${ageIndicator}Open since ${formattedDate}`
     if (hasUnaddressedFeedback) {
       statusText += ` • 🟠 This PR has been reviewed without new commits, ${authorLogin ? mentionFor(authorLogin) : 'author'} please take a look.`
     } else if (reviewerActivity) {

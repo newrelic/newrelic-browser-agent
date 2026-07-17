@@ -8,9 +8,9 @@ inputs:
     required: true
 
 outputs:
-  message:
-    description: 'Generated daily dispatch message'
-    value: ${{ steps.dispatch-message.outputs.message }}
+  payload:
+    description: 'Generated daily dispatch Slack payload (JSON: { text, blocks })'
+    value: ${{ steps.dispatch-message.outputs.payload }}
 
 runs:
   using: "composite"
@@ -23,10 +23,10 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        message="$(node $GITHUB_ACTION_PATH/index.js)"
+        payload="$(node $GITHUB_ACTION_PATH/index.js)"
         {
-          echo 'message<<EOF'
-          printf '%s\n' "$message"
+          echo 'payload<<EOF'
+          printf '%s\n' "$payload"
           echo 'EOF'
         } >> "$GITHUB_OUTPUT"
       shell: bash

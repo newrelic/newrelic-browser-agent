@@ -1,7 +1,14 @@
 import { args } from './args.js'
 import chalk from 'chalk'
 
-async function postToSlack (text) {
+const slackPayload = process.env.SLACK_PAYLOAD
+if (!slackPayload) {
+  throw new Error('SLACK_PAYLOAD environment variable is required')
+}
+
+const { text, blocks } = JSON.parse(slackPayload)
+
+async function postToSlack (body) {
   const channels = [
     args.notificationsChannelUrl,
     args.demPlatformOpsChannelUrl,
@@ -15,7 +22,7 @@ async function postToSlack (text) {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ text })
+        body: JSON.stringify(body)
       })
 
       if (!notificationRequest.ok) {
@@ -24,9 +31,9 @@ async function postToSlack (text) {
 
       console.log(chalk.green('Successfully notified channel ' + channel))
     } catch (error) {
-      console.log(chalk.red(`Failed to post ${text} to ` + channel))
+      console.log(chalk.red(`Failed to post payload to ` + channel))
     }
   }
 }
 
-await postToSlack(args.message)
+await postToSlack({ text, blocks })

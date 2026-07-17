@@ -25,12 +25,14 @@ jobs:
       
       - name: Build daily dispatch
         id: dispatch
-        uses: ./.github/actions/pr-review-reminder
+        uses: ./.github/actions/daily-dispatch
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
-          browser_agent_dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
-          message: ${{ steps.dispatch.outputs.message }}
+          # TEMP: testing against the notifications channel instead of browser-agent-dev.
+          # Revert to browser_agent_dev_channel_url before merging.
+          notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
+          payload: ${{ steps.dispatch.outputs.payload }}

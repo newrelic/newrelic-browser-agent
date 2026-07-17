@@ -371,7 +371,7 @@ if (activeFailedRuns.length === 0) {
 } else {
   blocks.push(sectionBlock(`*⚠️ Failed Workflows (Last 24 Hours)*\n${activeFailedRuns.length} workflow${activeFailedRuns.length === 1 ? '' : 's'} failed:`))
   for (const run of activeFailedRuns.slice(0, 10)) { // Limit to 10 most recent
-    blocks.push(contextBlock(`${linkForBranch(run.head_branch)} — <${run.html_url}|${escapeSlack(run.name)}>`))
+    blocks.push(sectionBlock(`${linkForBranch(run.head_branch)} — <${run.html_url}|${escapeSlack(run.name)}>`))
   }
   textLines.push(`Failed Workflows: ${activeFailedRuns.length}`)
 }
@@ -385,7 +385,7 @@ if (issues.length === 0) {
   const maxIssuesShown = 15
   blocks.push(sectionBlock(`*🐛 Open Issues*\n${issues.length} open issue${issues.length === 1 ? '' : 's'}:`))
   for (const issue of issues.slice(0, maxIssuesShown)) {
-    blocks.push(contextBlock(`<${issue.url}|#${issue.number} ${escapeSlack(issue.title)}>`))
+    blocks.push(sectionBlock(`<${issue.url}|#${issue.number} ${escapeSlack(issue.title)}>`))
   }
   if (issues.length > maxIssuesShown) {
     blocks.push(contextBlock(`_...and ${issues.length - maxIssuesShown} more_`))

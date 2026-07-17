@@ -291,15 +291,18 @@ if (needsReview.length === 0) {
     const assignees = pr.assignees.nodes.map((assignee) => assignee.login)
     const authorLogin = pr.author?.login
 
-    // Find the most recent comment/review from a non-author
+    // Only count comments/reviews from our tracked engineers as "reviewer activity" -
+    // bot/team/other-contributor activity shouldn't drive these messages or get mentioned.
+    const isTrackedReviewer = (login) => !!login && login !== authorLogin && login in githubToSlack
+
     const reviewerActivity = pr.timelineItems.nodes
       .flatMap((item) => {
-        if (item.author?.login && item.author.login !== authorLogin && item.createdAt) {
+        if (isTrackedReviewer(item.author?.login) && item.createdAt) {
           return [new Date(item.createdAt)]
         }
         if (item.__typename === 'PullRequestReviewThread' && item.comments?.nodes) {
           return item.comments.nodes
-            .filter((comment) => comment.author?.login && comment.author.login !== authorLogin)
+            .filter((comment) => isTrackedReviewer(comment.author?.login))
             .map((comment) => new Date(comment.createdAt))
         }
         return []
@@ -313,16 +316,16 @@ if (needsReview.length === 0) {
     const hasUnaddressedFeedback = reviewerActivity && (!lastCommitDate || lastCommitDate <= reviewerActivity)
 
     const prLink = `<${pr.url}|#${pr.number} ${escapeSlack(pr.title)}>`
+    const assigneeMentions = assignees.filter((login) => login !== authorLogin).map(mentionFor)
 
     let prText
     if (assignees.length > 0) {
-      const assigneeMentions = assignees.filter((login) => login !== authorLogin).map(mentionFor)
       prText = assigneeMentions.length > 0
         ? `${prLink}\n*Assigned to:*\n${assigneeMentions.join('\n')}`
         : prLink
     } else {
       const availableReviewers = Object.keys(githubToSlack).filter((login) => login !== authorLogin).map(mentionFor).join(' ')
-      prText = `${prLink}\n*🔴 No assignees yet. ${availableReviewers} Please take a look and assign yourself.*`
+      prText = `${prLink}\n${availableReviewers} please take a look.`
     }
     blocks.push(sectionBlock(prText))
 
@@ -335,10 +338,16 @@ if (needsReview.length === 0) {
     if (hasUnaddressedFeedback) {
       statusText += ` • 🟠 This PR has been reviewed without new commits, ${authorLogin ? mentionFor(authorLogin) : 'author'} please take a look.`
     } else if (reviewerActivity) {
-      // Only reachable when reviewerActivity is truthy, i.e. there is at least one reviewer comment.
-      statusText += ' • 🟠 has new commits since the last reviewer comment'
+      // Only reachable when reviewerActivity is truthy, i.e. there is at least one tracked reviewer comment.
+      if (assigneeMentions.length > 0) {
+        statusText += ` • 🟠 ${assigneeMentions.join(' ')} please take a look.`
+      }
+      // No assignees: skip this message entirely - the "No assignees yet" segment below covers it.
     } else {
       statusText += ' • no review activity yet'
+    }
+    if (assignees.length === 0) {
+      statusText += ' • 🔴 No assignees yet'
     }
     blocks.push(contextBlock(statusText))
     blocks.push(dividerBlock())

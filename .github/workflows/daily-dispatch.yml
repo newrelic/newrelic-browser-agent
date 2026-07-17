@@ -32,7 +32,5 @@ jobs:
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
-          # TEMP: testing against the notifications channel instead of browser-agent-dev.
-          # Revert to browser_agent_dev_channel_url before merging.
-          notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
+          browser_agent_dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
           payload: ${{ steps.dispatch.outputs.payload }}

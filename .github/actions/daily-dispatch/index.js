@@ -312,24 +312,15 @@ if (needsReview.length === 0) {
 
     const hasUnaddressedFeedback = reviewerActivity && (!lastCommitDate || lastCommitDate <= reviewerActivity)
 
-    let mentionLogins
+    const prLink = `<${pr.url}|#${pr.number} ${escapeSlack(pr.title)}>`
+
+    let prText
     if (assignees.length > 0) {
-      mentionLogins = assignees.filter((login) => login !== authorLogin)
+      const assigneeMentions = assignees.filter((login) => login !== authorLogin).map(mentionFor).join(' ')
+      prText = assigneeMentions ? `${assigneeMentions} ${prLink}` : prLink
     } else {
-      mentionLogins = Object.keys(githubToSlack).filter((login) => login !== authorLogin)
-    }
-
-    // If there's reviewer/comment activity newer than the last commit, the author
-    // needs to go address it - make sure they're tagged even if not an assignee.
-    if (hasUnaddressedFeedback && authorLogin && !mentionLogins.includes(authorLogin)) {
-      mentionLogins.push(authorLogin)
-    }
-
-    const mentions = mentionLogins.map(mentionFor).join(' ')
-
-    let prText = `${mentions} <${pr.url}|#${pr.number} ${escapeSlack(pr.title)}>`
-    if (assignees.length === 0) {
-      prText += '\n*No assignees yet. Please take a look and assign yourself.*'
+      const availableReviewers = Object.keys(githubToSlack).filter((login) => login !== authorLogin).map(mentionFor).join(' ')
+      prText = `${prLink}\n*No assignees yet. ${availableReviewers} Please take a look and assign yourself.*`
     }
     blocks.push(sectionBlock(prText))
 
@@ -338,9 +329,10 @@ if (needsReview.length === 0) {
 
     let statusText = `Open since ${formattedDate}`
     if (hasUnaddressedFeedback) {
-      statusText += ' • has reviewer feedback awaiting a response'
+      statusText += ` • 🟠 This PR has been reviewed without new commits, ${authorLogin ? mentionFor(authorLogin) : 'author'} please take a look.`
     } else if (reviewerActivity) {
-      statusText += ' • has new commits since the last reviewer comment'
+      // Only reachable when reviewerActivity is truthy, i.e. there is at least one reviewer comment.
+      statusText += ' • 🟠 has new commits since the last reviewer comment'
     } else {
       statusText += ' • no review activity yet'
     }

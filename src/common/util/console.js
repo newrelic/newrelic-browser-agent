@@ -88,7 +88,7 @@ import { dispatchGlobalEvent } from '../dispatch/global-event'
  * | 70 | A session replay payload failed to send and is being retried. Recording is paused during the retry period, and will resume when a successful harvest is made. Some replay activity may be missed during retry phases. |
  * | 71 | An invalid feature mode was detected and set to "off". |
  *
- * @param {1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33|34|35|36|37|38|39|40|41|42|43|44|45|46|47|48|49|50|51|52|53|54|55|56|57|58|59|60|61|62|63|64|65|66|67|68|69|70|71} code The warning code to emit, which will be used to link to the warning code documentation
+ * @param {number} code The warning code to emit, which will be used to link to the warning code documentation
  * @param {*} [secondary] Secondary data to include, usually an extra message, error or object
  * @returns
  */

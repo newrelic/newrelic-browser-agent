@@ -79,9 +79,8 @@ export async function markdownPrinter (comparisonStats, outputLocation, outputFi
         const row = buildAssetRow(agent, assetKey, byLabel, baseLabel, diffLabels, true)
         writeMarkdownRow(outputStream, row, baseLabel, diffLabels)
       })
+      outputStream.write(`| ${headerCells.map(() => ' ').join(' | ')} |\n`)
     })
-
-  outputStream.write(`| ${headerCells.map(() => ' ').join(' | ')} |\n`)
 
   Object.entries(comparisonStats.interfaces || {})
     .forEach(([interfaceName, byLabel]) => {

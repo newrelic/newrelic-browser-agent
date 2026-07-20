@@ -272,10 +272,10 @@ describe('prepareHarvest', () => {
       customStringAttribute: 'customStringAttribute',
       customNumAttribute: 2,
       customBooleanAttribute: true,
-      nullCustomAttribute: null,
-      [AJAX_ID]: expect.any(String) // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
+      nullCustomAttribute: null
     }
-    fakeAgent.info.jsAttributes = expectedCustomAttributes
+    fakeAgent.info.jsAttributes = { ...expectedCustomAttributes }
+    expectedCustomAttributes[AJAX_ID] = expect.any(String) // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
 
     const serializedPayload = ajaxAggregate.makeHarvestPayload(false)
     // serializedPayload from ajax comes back as an array of bodies now, so we just need to decode each one and flatten

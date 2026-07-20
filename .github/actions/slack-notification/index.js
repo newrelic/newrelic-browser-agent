@@ -8,6 +8,24 @@ if (!slackPayload) {
 
 const { text, blocks } = JSON.parse(slackPayload)
 
+const dashboardUrl = process.env.SLACK_DASHBOARD_URL
+if (dashboardUrl) {
+  blocks.push({
+    type: 'section',
+    text: { type: 'mrkdwn', text: `📊 <${dashboardUrl}|View live metrics dashboard>` }
+  })
+}
+
+const imageUrl = process.env.SLACK_IMAGE_URL
+if (imageUrl) {
+  blocks.push({
+    type: 'image',
+    title: { type: 'plain_text', text: '📊 Metrics Dashboard' },
+    image_url: imageUrl,
+    alt_text: 'Daily Dispatch metrics dashboard snapshot'
+  })
+}
+
 async function postToSlack (body) {
   const channels = [
     args.notificationsChannelUrl,

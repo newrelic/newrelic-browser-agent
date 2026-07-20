@@ -15,6 +15,12 @@ inputs:
   payload:
     description: 'JSON payload to post to Slack channels: { text, blocks }'
     required: true
+  image_url:
+    description: 'Optional image URL to append as an image block (e.g. a dashboard snapshot)'
+    required: false
+  dashboard_url:
+    description: 'Optional link to a live dashboard, appended above the image block'
+    required: false
 
 runs:
   using: "composite"
@@ -25,6 +31,8 @@ runs:
     - name: Send Slack notification
       env:
         SLACK_PAYLOAD: ${{ inputs.payload }}
+        SLACK_IMAGE_URL: ${{ inputs.image_url }}
+        SLACK_DASHBOARD_URL: ${{ inputs.dashboard_url }}
       run: |
         node $GITHUB_ACTION_PATH/index.js \
           --notifications-channel-url "${{ inputs.notifications_channel_url }}" \

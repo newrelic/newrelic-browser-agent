@@ -19,7 +19,7 @@ describe('addCustomAttributes in bel-serializer', () => {
 
   test('should obfuscate attribute values but not attribute keys', () => {
     const attrs = { hello: 'world' }
-    const attrParts = addCustomAttributes(attrs, addString)
+    const attrParts = addCustomAttributes(attrs, { addKey: (str) => addString(str, false), addVal: addString })
 
     expect(attrParts).toEqual([[5, "'hello,'foobar"]])
   })

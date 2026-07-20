@@ -156,7 +156,7 @@ export class Aggregate extends AggregateBase {
   serializer (eventBuffer) {
     if (!eventBuffer.length) return
 
-    const { addString, addStringWithTruncation } = createStringAdders(getAddStringContext, this.obfuscator)
+    const { addString, addStringRaw, addStringWithTruncation } = createStringAdders(getAddStringContext, this.obfuscator)
 
     let payload = 'bel.7;'
 
@@ -173,16 +173,16 @@ export class Aggregate extends AggregateBase {
         numeric(event.endTime - event.startTime),
         numeric(0), // callbackEnd
         numeric(0), // no callbackDuration for non-SPA events
-        addString(event.method),
+        addStringRaw(event.method),
         numeric(event.status),
         addString(event.domain),
         addString(event.path),
         numeric(event.requestSize),
         numeric(event.responseSize),
         event.type === 'fetch' ? 1 : '',
-        addString(0), // nodeId
-        nullable(event.spanId, addString, true) + // guid
-        nullable(event.traceId, addString, true) + // traceId
+        addStringRaw(0), // nodeId
+        nullable(event.spanId, addStringRaw, true) + // guid
+        nullable(event.traceId, addStringRaw, true) + // traceId
         nullable(event.spanTimestamp, numeric, false) // timestamp
       ]
 
@@ -192,12 +192,15 @@ export class Aggregate extends AggregateBase {
       const jsAttributes = this.agentRef.info.jsAttributes
 
       // Regular attributes: obfuscate only
-      const regularAttrs = addCustomAttributes({
+      let regularAttrs = addCustomAttributes({
         ...(jsAttributes || {}),
-        [AJAX_ID]: event[AJAX_ID], // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
         ...(event.targetAttributes || {}), // used to supply the version 2 attributes, either MFE target or duplication attributes for the main agent app
         ...(event.gql || {})
-      }, addString)
+      }, { addKey: addStringRaw, addVal: addString })
+
+      regularAttrs.push(...addCustomAttributes({
+        [AJAX_ID]: event[AJAX_ID] // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
+      }, { addKey: addStringRaw, addVal: addStringRaw }))
 
       // Payload attributes: obfuscate then truncate
       const payloadAttrs = addCustomAttributes({
@@ -206,7 +209,7 @@ export class Aggregate extends AggregateBase {
         ...(event.requestQuery ? { requestQuery: event.requestQuery } : {}),
         ...(event.responseBody ? { responseBody: event.responseBody } : {}),
         ...(event.responseHeaders ? { responseHeaders: event.responseHeaders } : {})
-      }, addStringWithTruncation)
+      }, { addKey: addStringRaw, addVal: addStringWithTruncation })
 
       const attrParts = [...regularAttrs, ...payloadAttrs]
       fields.unshift(numeric(attrParts.length))

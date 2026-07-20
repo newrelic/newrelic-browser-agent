@@ -131,6 +131,86 @@ test('sends INP node with right val', () => {
   expect(inpNode.attributes.find(attr => attr.key === 'cls').value).toEqual(0.1119)
 })
 
+test('does not obfuscate timing names or attribute keys', async () => {
+  const localAgent = setupAgent({
+    init: {
+      obfuscate: [
+        { regex: /lcp/ig, replacement: 'CORRUPTED_LCP', eventFilter: ['PageViewTiming'] },
+        { regex: /fcp/ig, replacement: 'CORRUPTED_FCP', eventFilter: ['PageViewTiming'] },
+        { regex: /fi/ig, replacement: 'CORRUPTED_FI', eventFilter: ['PageViewTiming'] },
+        { regex: /sensitive/g, replacement: 'OBFUSCATED', eventFilter: ['PageViewTiming'] },
+        { regex: /e/ig, replacement: 'E', eventFilter: ['PageViewTiming'] }
+      ]
+    },
+    info: {
+      jsAttributes: { sensitiveCustomKey: 'sensitiveCustomValue' }
+    }
+  })
+
+  const localInstrument = new Timings(localAgent)
+  await new Promise(process.nextTick)
+  const localAggregate = localInstrument.featAggregate
+  localAggregate.ee.emit('rumresp', {})
+  await new Promise(resolve => setTimeout(resolve, 100))
+
+  const harvestCall = getHarvestCalls(localAgent)[0]
+  expect(harvestCall.results.value.payload.body).not.toContain('CORRUPTED')
+  const decodedPayloads = qp.decode(harvestCall.results.value.payload.body)
+  const findTimings = (timingName) => decodedPayloads.find(n => n.name === timingName)
+
+  const lcp = findTimings(VITAL_NAMES.LARGEST_CONTENTFUL_PAINT)
+  const checkLcpAttrs = (obj) => expect(lcp.attributes).toEqual(expect.arrayContaining([expect.objectContaining(obj)]))
+  checkLcpAttrs({ key: 'timeToFirstByte' })
+  checkLcpAttrs({ key: 'resourceLoadDelay' })
+  checkLcpAttrs({ key: 'resourceLoadDuration' })
+  checkLcpAttrs({ key: 'resourceLoadTime' })
+  checkLcpAttrs({ key: 'elementRenderDelay' })
+
+  const fcp = findTimings(VITAL_NAMES.FIRST_CONTENTFUL_PAINT)
+  const checkFcpAttrs = (obj) => expect(fcp.attributes).toEqual(expect.arrayContaining([expect.objectContaining(obj)]))
+  checkFcpAttrs({ key: 'timeToFirstByte' })
+  checkFcpAttrs({ key: 'firstByteToFCP' })
+  checkFcpAttrs({ key: 'loadState' })
+
+  const fi = findTimings(VITAL_NAMES.FIRST_INTERACTION)
+  const checkFiAttrs = (obj) => expect(fi.attributes).toEqual(expect.arrayContaining([expect.objectContaining(obj)]))
+  checkFiAttrs({ key: 'type', value: 'pointer' })
+  checkFiAttrs({ key: 'eventTarget', value: 'button' })
+  checkFiAttrs({ key: 'loadState', value: 'complete' })
+
+  const inp = findTimings(VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)
+  const checkInpAttrs = (obj) => expect(inp.attributes).toEqual(expect.arrayContaining([expect.objectContaining(obj)]))
+  checkInpAttrs({ key: 'metricId' })
+  checkInpAttrs({ key: 'eventTarget', value: 'button' })
+  checkInpAttrs({ key: 'eventTime' })
+  checkInpAttrs({ key: 'interactionTarget', value: 'button' })
+  checkInpAttrs({ key: 'interactionTime' })
+  checkInpAttrs({ key: 'interactionType', value: 'pointer' })
+  checkInpAttrs({ key: 'inputDelay' })
+  checkInpAttrs({ key: 'nextPaintTime' })
+  checkInpAttrs({ key: 'processingDuration' })
+  checkInpAttrs({ key: 'presentationDelay' })
+  checkInpAttrs({ key: 'loadState', value: 'complete' })
+
+  const globalAttrs = []
+  globalAttrs.push({ key: 'pageUrl' })
+  globalAttrs.push({ key: 'net-type', value: 'cellular' })
+  globalAttrs.push({ key: 'net-etype', value: '3g' })
+  globalAttrs.push({ key: 'net-rtt' })
+  globalAttrs.push({ key: 'net-dlink' })
+  globalAttrs.push({ key: 'cls' })
+  globalAttrs.push({ key: 'webdriverDetected' })
+  globalAttrs.push({ key: 'sensitiveCustomKey', value: 'OBFUSCATEDCustomValuE' })
+  globalAttrs.forEach(obj => {
+    checkLcpAttrs(obj)
+    checkFcpAttrs(obj)
+    checkFiAttrs(obj)
+    checkInpAttrs(obj)
+  })
+
+  resetAgent(localAgent)
+})
+
 function findTimingNode (name) {
   const harvestCalls = getHarvestCalls(mainAgent)
   const harvest = harvestCalls.find(call => call.featureName === FEATURE_NAMES.pageViewTiming && call.results.value.payload.body.includes(name))

@@ -23,6 +23,7 @@ import { loadTime } from '../../../common/vitals/load-time'
 import { webdriverDetected } from '../../../common/util/webdriver-detection'
 import { cleanURL } from '../../../common/url/clean-url'
 import { EVENT_TYPES } from '../../../common/constants/events'
+import { createStringAdders } from '../../../common/payloads/payloads'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -125,14 +126,15 @@ export class Aggregate extends AggregateBase {
     })
   }
 
-  appendGlobalCustomAttributes (timing) {
+  appendGlobalCustomAttributes (timing, serializers) {
+    const { addVal } = serializers
     var timingAttributes = timing.attrs || {}
 
     var reservedAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elTag', 'elUrl', 'net-type',
       'net-etype', 'net-rtt', 'net-dlink']
     Object.entries(this.agentRef.info.jsAttributes || {}).forEach(([key, val]) => {
       if (reservedAttributes.indexOf(key) < 0) {
-        timingAttributes[key] = val
+        timingAttributes[key] = addVal(val)
       }
     })
     timingAttributes.webdriverDetected = webdriverDetected
@@ -146,7 +148,8 @@ export class Aggregate extends AggregateBase {
   // serialize array of timing data
   serializer (eventBuffer) {
     if (!eventBuffer?.length) return ''
-    var addString = getAddStringContext(this.obfuscator)
+    const { addStringRaw } = createStringAdders(getAddStringContext, this.obfuscator)
+    const obfuscateOnly = (val) => typeof val === 'string' ? (this.obfuscator?.obfuscateString(val) ?? val) : val
 
     var payload = 'bel.6;'
 
@@ -154,12 +157,14 @@ export class Aggregate extends AggregateBase {
       var timing = eventBuffer[i]
 
       payload += 'e,'
-      payload += addString(timing.name) + ','
+      payload += addStringRaw(timing.name) + ','
       payload += nullable(timing.value, numeric, false) + ','
 
-      this.appendGlobalCustomAttributes(timing)
+      this.appendGlobalCustomAttributes(timing, { addVal: obfuscateOnly })
 
-      var attrParts = addCustomAttributes(timing.attrs, addString)
+      var attrParts = addCustomAttributes(timing.attrs, {
+        addKey: addStringRaw, addVal: addStringRaw
+      })
       if (attrParts && attrParts.length > 0) {
         payload += numeric(attrParts.length) + ';' + attrParts.join(';')
       }

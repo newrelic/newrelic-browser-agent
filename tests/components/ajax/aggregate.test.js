@@ -290,6 +290,78 @@ describe('prepareHarvest', () => {
     })
   })
 
+  test('does not obfuscate reserved/system fields', async () => {
+    const mockEvent = {
+      startTime: 1000,
+      endTime: 2000,
+      method: 'GET',
+      status: 200,
+      domain: 'example.com',
+      path: '/api/data',
+      requestSize: 123,
+      responseSize: 456,
+      type: 'XMLHttpRequest',
+      callbackDuration: 50,
+      customField1: 'customValue1',
+      customField2: 'customValue2',
+      requestHeaders: {
+        sensitiveRequestHeader1: 'sensitiveRequestHeaderValue1'
+      },
+      requestQuery: 'sensitiveRequestQuery',
+      requestBody: 'sensitiveRequestData',
+      responseHeaders: {
+        sensitiveResponseHeader1: 'sensitiveResponseHeaderValue1'
+      },
+      responseBody: 'sensitiveResponseBody',
+      spanId: 'sensitiveSpanId',
+      traceId: 'sensitiveTraceId',
+      'ajaxRequest.id': 'sensitiveAjaxRequestId',
+      spanTimestamp: 1111
+    }
+    ajaxAggregate.events.add(mockEvent)
+
+    const origObfuscate = fakeAgent.init.obfuscate
+    fakeAgent.init.obfuscate = [
+      { regex: /sensitive/g, replacement: 'OBFUSCATED', eventFilter: ['AjaxRequest'] },
+      { regex: /a/g, replacement: 'AAA', eventFilter: ['AjaxRequest'] },
+      { regex: /request/ig, replacement: 'REQUEST', eventFilter: ['AjaxRequest'] },
+      { regex: /response/ig, replacement: 'RESPONSE', eventFilter: ['AjaxRequest'] }
+    ]
+    // set regex to something recognizable?
+    // mock events.get to return a known event with reserved fields and some custom fields
+    // mock first, then setup agent/agg?
+    const serializedPayload = ajaxAggregate.makeHarvestPayload(false)
+    const actualEvent = qp.decode(serializedPayload.body)[0]
+    expect(actualEvent).toEqual(expect.objectContaining({
+      type: 'ajax',
+      start: 1000,
+      end: 2000,
+      callbackEnd: 2000,
+      callbackDuration: 0,
+      method: 'GET',
+      status: 200,
+      domain: 'exAAAmple.com',
+      path: '/AAApi/dAAAtAAA',
+      requestBodySize: 123,
+      responseBodySize: 456,
+      requestedWith: 'XMLHttpRequest',
+      nodeId: '0',
+      guid: 'sensitiveSpanId',
+      traceId: 'sensitiveTraceId',
+      timestamp: 1111
+    }))
+    const checkChildren = (expectedObject) => expect(actualEvent.children).toEqual(expect.arrayContaining([expect.objectContaining(expectedObject)]))
+
+    checkChildren({ key: 'ajaxRequest.id', value: 'sensitiveAjaxRequestId' })
+    checkChildren({ key: 'requestHeaders', value: '{"OBFUSCATEDREQUESTHeAAAder1":"OBFUSCATEDREQUESTHeAAAderVAAAlue1"}' })
+    checkChildren({ key: 'requestQuery', value: 'OBFUSCATEDREQUESTQuery' })
+    checkChildren({ key: 'requestBody', value: 'OBFUSCATEDREQUESTDAAAtAAA' })
+    checkChildren({ key: 'responseHeaders', value: '{"OBFUSCATEDRESPONSEHeAAAder1":"OBFUSCATEDRESPONSEHeAAAderVAAAlue1"}' })
+    checkChildren({ key: 'responseBody', value: 'OBFUSCATEDRESPONSEBody' })
+
+    fakeAgent.init.obfuscate = origObfuscate
+  })
+
   test('correctly exits if maxPayload is too small', async () => {
     // Ensure soft nav is NOT present so events buffer in ajaxEvents
     delete getNREUMInitializedAgent(fakeAgent.agentIdentifier).features

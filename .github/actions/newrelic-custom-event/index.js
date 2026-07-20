@@ -21,11 +21,11 @@ if (!attributesJson) {
 const attributes = JSON.parse(attributesJson)
 const event = { eventType, ...attributes }
 
-const response = await fetch(`https://insights-collector.newrelic.com/v1/accounts/${accountId}/events`, {
+const response = await fetch(`https://staging-insights-collector.newrelic.com/v1/accounts/${accountId}/events`, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-Insert-Key': insertKey
+    'Api-Key': insertKey
   },
   body: JSON.stringify(event)
 })

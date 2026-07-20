@@ -47,7 +47,6 @@ function buildJsDocBlock (codes) {
   const tableRows = codes
     .map(({ code, message }) => ` * | ${code} | ${escapeForJsDoc(message)} |`)
     .join('\n')
-  const union = codes.map(({ code }) => code).join('|')
 
   return `${START_MARKER}
 /**
@@ -60,7 +59,7 @@ function buildJsDocBlock (codes) {
  * |------|---------|
 ${tableRows}
  *
- * @param {${union}} code The warning code to emit, which will be used to link to the warning code documentation
+ * @param {number} code The warning code to emit, which will be used to link to the warning code documentation
  * @param {*} [secondary] Secondary data to include, usually an extra message, error or object
  * @returns
  */

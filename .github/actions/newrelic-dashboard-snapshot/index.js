@@ -35,7 +35,14 @@ const response = await fetch('https://staging-api.newrelic.com/graphql', {
   body: JSON.stringify({ query: mutation })
 })
 
-const body = await response.json()
+const rawBody = await response.text()
+
+let body
+try {
+  body = JSON.parse(rawBody)
+} catch {
+  throw new Error(`Dashboard snapshot request failed (${response.status}): ${rawBody}`)
+}
 
 if (!response.ok || body.errors) {
   throw new Error(`Dashboard snapshot request failed (${response.status}): ${JSON.stringify(body.errors ?? body)}`)

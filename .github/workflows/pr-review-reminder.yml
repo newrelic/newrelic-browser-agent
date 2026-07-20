@@ -27,7 +27,7 @@ concurrency:
 jobs:
   notify:
     name: Notify Slack
-    runs-on: ubuntu-latest
+    runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
       - name: Checkout repository

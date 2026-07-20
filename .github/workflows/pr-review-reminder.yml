@@ -19,6 +19,7 @@ permissions:
   contents: read
   pull-requests: read
   actions: read
+  id-token: write
 
 concurrency:
   group: daily-dispatch
@@ -48,7 +49,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     outputs:
-      snapshot_url: ${{ steps.snapshot.outputs.snapshot_url }}
+      image_url: ${{ steps.publish-image.outputs.image_url }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -69,6 +70,26 @@ jobs:
           api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_BROWSER }}
           dashboard_guid: 'NTUwMzUyfFZJWnxEQVNIQk9BUkR8MTIyMjM5NA'
 
+      - name: Upload snapshot image to S3
+        id: s3-upload-image
+        if: steps.snapshot.outputs.snapshot_dir != ''
+        continue-on-error: true
+        uses: ./.github/actions/s3-upload
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          local_dir: ${{ steps.snapshot.outputs.snapshot_dir }}
+          bucket_dir: slack/images
+
+      - name: Set image URL
+        id: publish-image
+        if: steps.s3-upload-image.outputs.results != ''
+        run: |
+          KEY=$(echo '${{ steps.s3-upload-image.outputs.results }}' | jq -r '.[0].Key')
+          echo "image_url=https://staging-js-agent.newrelic.com/$KEY" >> "$GITHUB_OUTPUT"
+
   notify:
     name: Notify Slack
     needs: [dispatch, publish-metrics]
@@ -87,4 +108,4 @@ jobs:
           browser_agent_dev_channel_url: ${{ (inputs.slack_channel || 'browser_agent_dev') == 'browser_agent_dev' && secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL || '' }}
           payload: ${{ needs.dispatch.outputs.payload }}
           dashboard_url: 'https://staging.onenr.io/08wp2gMXZjO'
-          image_url: ${{ needs.publish-metrics.outputs.snapshot_url }}
+          image_url: ${{ needs.publish-metrics.outputs.image_url }}

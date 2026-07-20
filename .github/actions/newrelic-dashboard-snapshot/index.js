@@ -1,4 +1,5 @@
-import { appendFileSync } from 'node:fs'
+import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs'
+import { dirname } from 'node:path'
 import chalk from 'chalk'
 
 const apiKey = process.env.NR_API_KEY
@@ -55,9 +56,42 @@ if (!snapshotUrl) {
 
 console.log(chalk.green(`Generated dashboard snapshot: ${snapshotUrl}`))
 
+// The snapshot renders on first access, so retry a few times until it's actually an image -
+// the mutation returning a URL doesn't guarantee the PNG behind it is ready yet.
+const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+const snapshotPath = process.env.NR_SNAPSHOT_OUTPUT_PATH || `./slack-dashboard-image/${timestamp}.png`
+const maxAttempts = 5
+let imageBuffer
+
+for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+  const imageResponse = await fetch(snapshotUrl)
+  const contentType = imageResponse.headers.get('content-type') ?? ''
+
+  if (imageResponse.ok && contentType.startsWith('image/')) {
+    imageBuffer = Buffer.from(await imageResponse.arrayBuffer())
+    break
+  }
+
+  console.log(`Snapshot not ready yet (attempt ${attempt}/${maxAttempts}, status ${imageResponse.status}, content-type ${contentType})`)
+  if (attempt < maxAttempts) {
+    await new Promise((resolve) => setTimeout(resolve, 5000))
+  }
+}
+
+if (!imageBuffer) {
+  throw new Error(`Snapshot image never became available at ${snapshotUrl}`)
+}
+
+mkdirSync(dirname(snapshotPath), { recursive: true })
+writeFileSync(snapshotPath, imageBuffer)
+console.log(chalk.green(`Saved dashboard snapshot image to ${snapshotPath}`))
+
 const githubOutput = process.env.GITHUB_OUTPUT
 if (githubOutput) {
   appendFileSync(githubOutput, `snapshot_url<<EOF\n${snapshotUrl}\nEOF\n`)
+  appendFileSync(githubOutput, `snapshot_path<<EOF\n${snapshotPath}\nEOF\n`)
+  appendFileSync(githubOutput, `snapshot_dir<<EOF\n${dirname(snapshotPath)}\nEOF\n`)
 } else {
   console.log(snapshotUrl)
+  console.log(snapshotPath)
 }

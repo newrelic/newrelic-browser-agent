@@ -26,6 +26,12 @@ outputs:
   snapshot_url:
     description: 'PNG snapshot URL (includes an access token) for the dashboard'
     value: ${{ steps.snapshot.outputs.snapshot_url }}
+  snapshot_path:
+    description: 'Local filesystem path to the downloaded PNG snapshot'
+    value: ${{ steps.snapshot.outputs.snapshot_path }}
+  snapshot_dir:
+    description: 'Local directory containing only the downloaded PNG snapshot, suitable as s3-upload local_dir'
+    value: ${{ steps.snapshot.outputs.snapshot_dir }}
 
 runs:
   using: "composite"

@@ -17,41 +17,53 @@ if (dashboardUrl) {
 }
 
 const imageUrl = process.env.SLACK_IMAGE_URL
-if (imageUrl) {
-  blocks.push({
-    type: 'image',
-    title: { type: 'plain_text', text: '📊 Metrics Dashboard' },
-    image_url: imageUrl,
-    alt_text: 'Daily Dispatch metrics dashboard snapshot'
+
+const channels = [
+  args.notificationsChannelUrl,
+  args.demPlatformOpsChannelUrl,
+  args.browserAgentDevChannelUrl
+].filter(url => !!url)
+
+async function postToSlack (channel, body) {
+  const notificationRequest = await fetch(channel, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
   })
-}
 
-async function postToSlack (body) {
-  const channels = [
-    args.notificationsChannelUrl,
-    args.demPlatformOpsChannelUrl,
-    args.browserAgentDevChannelUrl
-  ].filter(url => !!url)
-
-  for (const channel of channels) {
-    try {
-      const notificationRequest = await fetch(channel, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-      })
-
-      if (!notificationRequest.ok) {
-        throw new Error('Notification failed for channel ' + channel)
-      }
-
-      console.log(chalk.green('Successfully notified channel ' + channel))
-    } catch (error) {
-      console.log(chalk.red(`Failed to post payload to ` + channel))
-    }
+  if (!notificationRequest.ok) {
+    const responseText = await notificationRequest.text()
+    throw new Error(`Notification failed for channel ${channel} (${notificationRequest.status}): ${responseText}`)
   }
 }
 
-await postToSlack({ text, blocks })
+for (const channel of channels) {
+  try {
+    await postToSlack(channel, { text, blocks })
+    console.log(chalk.green('Successfully notified channel ' + channel))
+  } catch (error) {
+    console.log(chalk.red(`Failed to post payload to ${channel}: ${error.message}`))
+    continue
+  }
+
+  // Post the dashboard snapshot as a follow-up message so a bad/unreachable
+  // image URL can't fail (or take down) the primary notification above.
+  if (imageUrl) {
+    try {
+      await postToSlack(channel, {
+        text: 'Metrics dashboard snapshot',
+        blocks: [{
+          type: 'image',
+          title: { type: 'plain_text', text: '📊 Metrics Dashboard' },
+          image_url: imageUrl,
+          alt_text: 'Daily Dispatch metrics dashboard snapshot'
+        }]
+      })
+      console.log(chalk.green('Successfully posted dashboard snapshot to channel ' + channel))
+    } catch (error) {
+      console.log(chalk.red(`Failed to post dashboard snapshot to ${channel}: ${error.message}`))
+    }
+  }
+}

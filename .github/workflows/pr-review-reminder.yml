@@ -25,19 +25,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  notify:
-    name: Notify Slack
-    runs-on: Browser-Agent-Assigned-IP-Linux
+  dispatch:
+    name: Build daily dispatch
+    runs-on: ubuntu-latest
     timeout-minutes: 5
+    outputs:
+      payload: ${{ steps.dispatch.outputs.payload }}
+      metrics: ${{ steps.dispatch.outputs.metrics }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Build daily dispatch
         id: dispatch
         uses: ./.github/actions/daily-dispatch
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-metrics:
+    name: Publish metrics to New Relic
+    needs: [dispatch]
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 5
+    outputs:
+      snapshot_url: ${{ steps.snapshot.outputs.snapshot_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Publish metrics to New Relic
         uses: ./.github/actions/newrelic-custom-event
@@ -45,7 +59,7 @@ jobs:
           insert_key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           account_id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
           event_type: Br0ws3rMetrics
-          attributes: ${{ steps.dispatch.outputs.metrics }}
+          attributes: ${{ needs.dispatch.outputs.metrics }}
 
       - name: Generate dashboard snapshot
         id: snapshot
@@ -55,12 +69,22 @@ jobs:
           api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_BROWSER }}
           dashboard_guid: 'NTUwMzUyfFZJWnxEQVNIQk9BUkR8MTIyMjM5NA'
 
+  notify:
+    name: Notify Slack
+    needs: [dispatch, publish-metrics]
+    if: ${{ !cancelled() && needs.dispatch.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
           notifications_channel_url: ${{ (inputs.slack_channel || 'browser_agent_dev') == 'notifications' && secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL || '' }}
           dem_platform_ops_channel_url: ${{ (inputs.slack_channel || 'browser_agent_dev') == 'dem_platform_ops' && secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL || '' }}
           browser_agent_dev_channel_url: ${{ (inputs.slack_channel || 'browser_agent_dev') == 'browser_agent_dev' && secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL || '' }}
-          payload: ${{ steps.dispatch.outputs.payload }}
+          payload: ${{ needs.dispatch.outputs.payload }}
           dashboard_url: 'https://staging.onenr.io/08wp2gMXZjO'
-          image_url: ${{ steps.snapshot.outputs.snapshot_url }}
+          image_url: ${{ needs.publish-metrics.outputs.snapshot_url }}

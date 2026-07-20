@@ -59,22 +59,20 @@ describe('wrap-websocket', () => {
     expect(WebSocket.CLOSED).toEqual(3)
   })
 
-  // This test is skipped because testing the no-WebSocket scenario requires complex module mocking
-  // that interferes with other tests. The functionality is covered by integration tests.
-  it.skip('should not wrap if no WS global', async () => {
+  it('should not wrap if no WS global', async () => {
     // Save original WebSocket
     const savedWebSocket = global.WebSocket
     global.WebSocket = undefined
 
-    jest.spyOn(nreumModule, 'gosNREUMOriginals').mockImplementation(() => ({ o: { WS: undefined } }))
     jest.resetModules()
+    jest.spyOn(await import('../../../src/common/window/nreum'), 'gosNREUMOriginals').mockImplementation(() => ({ o: { WS: undefined } }))
 
     const { wrapWebSocket } = await import('../../../src/common/wrap/wrap-websocket')
     const testEE = ee.get(Math.random().toString(36))
     const result = wrapWebSocket(testEE, null)
 
-    // Should return the EE without wrapping
-    expect(result).toBe(testEE.get('websockets'))
+    // Should return the sharedEE unchanged, without wrapping
+    expect(result).toBe(testEE)
     expect(global.WebSocket).toBeUndefined()
 
     // Restore

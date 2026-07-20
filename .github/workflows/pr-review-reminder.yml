@@ -4,6 +4,16 @@ on:
   schedule:
     - cron: '0 15 * * 1-5'
   workflow_dispatch:
+    inputs:
+      slack_channel:
+        description: 'Slack channel to send the dispatch to'
+        required: true
+        type: choice
+        default: browser_agent_dev
+        options:
+          - browser_agent_dev
+          - notifications
+          - dem_platform_ops
 
 permissions:
   contents: read
@@ -32,7 +42,9 @@ jobs:
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
-          browser_agent_dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
+          notifications_channel_url: ${{ (inputs.slack_channel || 'browser_agent_dev') == 'notifications' && secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL || '' }}
+          dem_platform_ops_channel_url: ${{ (inputs.slack_channel || 'browser_agent_dev') == 'dem_platform_ops' && secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL || '' }}
+          browser_agent_dev_channel_url: ${{ (inputs.slack_channel || 'browser_agent_dev') == 'browser_agent_dev' && secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL || '' }}
           payload: ${{ steps.dispatch.outputs.payload }}
 
       - name: Publish metrics to New Relic

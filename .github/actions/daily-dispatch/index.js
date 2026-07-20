@@ -1,5 +1,5 @@
 import * as github from '@actions/github'
-import { readFileSync } from 'node:fs'
+import { readFileSync, appendFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const githubToken = process.env.GITHUB_TOKEN
@@ -32,6 +32,23 @@ const escapeSlack = (value) => value
 
 const mentionFor = (login) => `<@${githubToSlack[login] ?? login}>`
 const hasBlockedLabel = (labels) => labels.nodes.some((label) => label.name.toLowerCase() === 'blocked')
+
+// Only comments/reviews from our tracked engineers count as "reviewer activity" -
+// bot/team/other-contributor activity shouldn't drive messaging or metrics.
+const isTrackedReviewer = (login, authorLogin) => !!login && login !== authorLogin && login in githubToSlack
+
+const reviewerCommentEvents = (pr) => pr.timelineItems.nodes.flatMap((item) => {
+  const authorLogin = pr.author?.login
+  if (isTrackedReviewer(item.author?.login, authorLogin) && item.createdAt) {
+    return [new Date(item.createdAt)]
+  }
+  if (item.__typename === 'PullRequestReviewThread' && item.comments?.nodes) {
+    return item.comments.nodes
+      .filter((comment) => isTrackedReviewer(comment.author?.login, authorLogin))
+      .map((comment) => new Date(comment.createdAt))
+  }
+  return []
+})
 
 const headerBlock = (text) => ({ type: 'header', text: { type: 'plain_text', text, emoji: true } })
 const sectionBlock = (text) => ({ type: 'section', text: { type: 'mrkdwn', text } })
@@ -72,7 +89,7 @@ do {
                 login
               }
             }
-            commits(last: 1) {
+            commits(last: 100) {
               nodes {
                 commit {
                   committedDate
@@ -240,6 +257,59 @@ const linkForBranch = (branch) => {
   return `<https://github.com/${owner}/${repo}/tree/${encodeURIComponent(branch)}|${escapeSlack(branch)}>`
 }
 
+// Compute Br0ws3rMetrics custom event attributes
+const upcomingVersionMatch = releasePR?.title.match(/(\d+\.\d+\.\d+)/)
+const upcomingVersion = upcomingVersionMatch ? upcomingVersionMatch[1] : ''
+
+// Mean time to cycle: the gap between a reviewer comment and the next commit,
+// or between a commit and the next reviewer comment - i.e. every alternation
+// between "reviewer spoke" and "author pushed" across each open PR's timeline.
+const cycleIntervalsHours = []
+
+for (const pr of prs) {
+  const commitEvents = pr.commits.nodes.map((node) => ({
+    type: 'commit',
+    date: new Date(node.commit.committedDate)
+  }))
+  const commentEvents = reviewerCommentEvents(pr).map((date) => ({ type: 'comment', date }))
+
+  const events = [...commitEvents, ...commentEvents].sort((a, b) => a.date - b.date)
+
+  for (let i = 1; i < events.length; i++) {
+    if (events[i - 1].type !== events[i].type) {
+      cycleIntervalsHours.push((events[i].date - events[i - 1].date) / (1000 * 60 * 60))
+    }
+  }
+}
+
+const meanTimeToCycleHours = cycleIntervalsHours.length > 0
+  ? cycleIntervalsHours.reduce((sum, hours) => sum + hours, 0) / cycleIntervalsHours.length
+  : 0
+
+const metrics = {
+  meanTimeToMergeHours: mttmHours === null ? 0 : Math.round(mttmHours * 100) / 100,
+  meanTimeToCycleHours: Math.round(meanTimeToCycleHours * 100) / 100,
+  openPrCount: prs.length,
+  openIssueCount: issues.length,
+  currentVersion,
+  upcomingVersion,
+  failedWorkflowCount: activeFailedRuns.length,
+}
+
+for (const login of Object.keys(githubToSlack)) {
+  metrics[`prsReviewedBy.${login}`] = prs.filter((pr) =>
+    pr.timelineItems.nodes.some((item) => {
+      if (item.author?.login === login) return true
+      if (item.__typename === 'PullRequestReviewThread' && item.comments?.nodes) {
+        return item.comments.nodes.some((comment) => comment.author?.login === login)
+      }
+      return false
+    })
+  ).length
+
+  metrics[`prsCreatedBy.${login}`] = prs.filter((pr) => pr.author?.login === login).length
+}
+
 // Build the daily dispatch Slack Block Kit payload
 const blocks = []
 const textLines = ['Browser Agent Daily Dispatch']
@@ -291,26 +361,10 @@ if (needsReview.length === 0) {
     const assignees = pr.assignees.nodes.map((assignee) => assignee.login)
     const authorLogin = pr.author?.login
 
-    // Only count comments/reviews from our tracked engineers as "reviewer activity" -
-    // bot/team/other-contributor activity shouldn't drive these messages or get mentioned.
-    const isTrackedReviewer = (login) => !!login && login !== authorLogin && login in githubToSlack
-
-    const reviewerActivity = pr.timelineItems.nodes
-      .flatMap((item) => {
-        if (isTrackedReviewer(item.author?.login) && item.createdAt) {
-          return [new Date(item.createdAt)]
-        }
-        if (item.__typename === 'PullRequestReviewThread' && item.comments?.nodes) {
-          return item.comments.nodes
-            .filter((comment) => isTrackedReviewer(comment.author?.login))
-            .map((comment) => new Date(comment.createdAt))
-        }
-        return []
-      })
-      .sort((a, b) => b - a)[0]
+    const reviewerActivity = reviewerCommentEvents(pr).sort((a, b) => b - a)[0]
 
     const lastCommitDate = pr.commits.nodes.length > 0
-      ? new Date(pr.commits.nodes[0].commit.committedDate)
+      ? new Date(pr.commits.nodes[pr.commits.nodes.length - 1].commit.committedDate)
       : null
 
     const hasUnaddressedFeedback = reviewerActivity && (!lastCommitDate || lastCommitDate <= reviewerActivity)
@@ -398,4 +452,14 @@ if (issues.length === 0) {
   textLines.push(`Open Issues: ${issues.length}`)
 }
 
-console.log(JSON.stringify({ text: textLines.join(' | '), blocks }))
+const payload = JSON.stringify({ text: textLines.join(' | '), blocks })
+const metricsJson = JSON.stringify(metrics)
+
+const githubOutput = process.env.GITHUB_OUTPUT
+if (githubOutput) {
+  appendFileSync(githubOutput, `payload<<EOF\n${payload}\nEOF\n`)
+  appendFileSync(githubOutput, `metrics<<EOF\n${metricsJson}\nEOF\n`)
+} else {
+  console.log(payload)
+  console.log(metricsJson)
+}

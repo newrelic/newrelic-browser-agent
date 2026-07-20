@@ -2,7 +2,7 @@ name: Daily Dispatch
 
 on:
   schedule:
-    - cron: '0 15 * * *'
+    - cron: '0 15 * * 1-5'
   workflow_dispatch:
 
 permissions:
@@ -34,3 +34,11 @@ jobs:
         with:
           browser_agent_dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
           payload: ${{ steps.dispatch.outputs.payload }}
+
+      - name: Publish metrics to New Relic
+        uses: ./.github/actions/newrelic-custom-event
+        with:
+          insert_key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          account_id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          event_type: Br0ws3rMetrics
+          attributes: ${{ steps.dispatch.outputs.metrics }}

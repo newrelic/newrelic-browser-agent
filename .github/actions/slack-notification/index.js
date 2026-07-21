@@ -5,6 +5,7 @@ async function postToSlack (text) {
   const channels = [
     args.notificationsChannelUrl,
     args.demPlatformOpsChannelUrl,
+    args.browserAgentDevChannelUrl
   ].filter(url => !!url)
 
   for (const channel of channels) {

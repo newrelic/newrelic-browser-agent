@@ -102,22 +102,22 @@ export class Aggregate extends AggregateBase {
       [AJAX_ID]: generateUuid() // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
     }
 
-    event.gql = params.gql = parseGQL({
+    event.gql = parseGQL({
       body: ctx.requestBody,
       query: ctx.parsedOrigin?.search
     })
-    if (event.gql) event.gql.operationHasErrors = params.gql.operationHasErrors = hasGQLErrors(ctx.responseBody)
+    if (event.gql) event.gql.operationHasErrors = hasGQLErrors(ctx.responseBody)
 
     const capturePayloadSetting = this.agentRef.init.ajax.capture_payloads
     const shouldCapturePayload = canCapturePayload(capturePayloadSetting, params.status, event.gql?.operationHasErrors)
 
     if (shouldCapturePayload) {
       // Store raw data; obfuscation and truncation will happen in the serializer
-      params.requestQuery = event.requestQuery = parseQueryString(ctx.parsedOrigin?.search)
-      params.requestHeaders = event.requestHeaders = ctx.requestHeaders
-      params.responseHeaders = event.responseHeaders = ctx.responseHeaders
-      if (isLikelyHumanReadable(ctx.requestHeaders, ctx.requestBody)) params.requestBody = event.requestBody = ctx.requestBody
-      if (isLikelyHumanReadable(ctx.responseHeaders, ctx.responseBody)) params.responseBody = event.responseBody = ctx.responseBody
+      event.requestQuery = parseQueryString(ctx.parsedOrigin?.search)
+      event.requestHeaders = ctx.requestHeaders
+      event.responseHeaders = ctx.responseHeaders
+      if (isLikelyHumanReadable(ctx.requestHeaders, ctx.requestBody)) event.requestBody = ctx.requestBody
+      if (isLikelyHumanReadable(ctx.responseHeaders, ctx.responseBody)) event.responseBody = ctx.responseBody
     }
 
     if (ctx.dt) {

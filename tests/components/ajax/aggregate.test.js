@@ -5,7 +5,7 @@ import * as handleModule from '../../../src/common/event-emitter/handle'
 import { Instrument as Ajax } from '../../../src/features/ajax/instrument'
 import { resetAgent, setupAgent } from '../setup-agent'
 import { EventContext } from '../../../src/common/event-emitter/event-context'
-import { AJAX_ID } from '../../../src/features/ajax/constants'
+import { AJAX_ID, CAPTURE_PAYLOAD_SETTINGS } from '../../../src/features/ajax/constants'
 
 const ajaxArguments = [
   { // params
@@ -99,6 +99,62 @@ describe('storeXhr', () => {
       FEATURE_NAMES.softNav,
       expect.any(Object)
     )
+  })
+
+  describe('data shapes', () => {
+    beforeEach(() => {
+      fakeAgent.features = {}
+    })
+
+    test('timeslice metric params should have expected keys', () => {
+      fakeAgent.features[FEATURE_NAMES.jserrors] = {} // Set to truthy object to simulate jserrors being present
+      fakeAgent.init.ajax.capture_payloads = CAPTURE_PAYLOAD_SETTINGS.ALL
+
+      context.requestHeaders = { 'content-type': 'application/json' }
+      context.requestBody = 'fooBody'
+      context.responseHeaders = { 'content-type': 'application/json' }
+      context.responseBody = 'barBody'
+      ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
+
+      const expectedParams = ['method', 'status', 'host', 'hostname', 'pathname']
+      const actualParams = Object.keys(fakeAgent.sharedAggregator.get(['xhr']).xhr[0].params)
+      expect(actualParams).toEqual(expect.arrayContaining(expectedParams))
+      expect(actualParams).toHaveLength(expectedParams.length)
+    })
+
+    test('ajax event has expected keys', () => {
+      fakeAgent.features[FEATURE_NAMES.jserrors] = {} // Set to truthy object to simulate jserrors being present
+      fakeAgent.init.ajax.capture_payloads = CAPTURE_PAYLOAD_SETTINGS.ALL
+
+      context.requestHeaders = { 'content-type': 'application/json' }
+      context.requestBody = 'fooBody'
+      context.responseHeaders = { 'content-type': 'application/json' }
+      context.responseBody = 'barBody'
+      ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
+
+      const expectedEventKeys = ['method', 'status', 'domain', 'path', 'requestSize', 'responseSize', 'type', 'startTime', 'endTime', 'callbackDuration', 'ajaxRequest.id', 'gql', 'requestQuery', 'requestHeaders', 'responseHeaders', 'requestBody', 'responseBody']
+      const actualEvent = Object.keys(ajaxAggregate.events.get()[0])
+      expect(actualEvent).toEqual(expect.arrayContaining(expectedEventKeys))
+      expect(actualEvent).toHaveLength(expectedEventKeys.length)
+    })
+
+    test('session trace bstXhrAgg params has expected keys', () => {
+      fakeAgent.features[FEATURE_NAMES.jserrors] = {} // Set to truthy object to simulate jserrors being present
+      fakeAgent.init.ajax.capture_payloads = CAPTURE_PAYLOAD_SETTINGS.ALL
+
+      context.requestHeaders = { 'content-type': 'application/json' }
+      context.requestBody = 'fooBody'
+      context.responseHeaders = { 'content-type': 'application/json' }
+      context.responseBody = 'barBody'
+      ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
+
+      const bstXhrCalls = jest.mocked(handleModule.handle).mock.calls.filter(call => call[0] === 'bstXhrAgg')
+      expect(bstXhrCalls).toHaveLength(1)
+      const expectedParams = ['method', 'status', 'host', 'hostname', 'pathname']
+      const actualParams = Object.keys(bstXhrCalls[0][1][2])
+      expect(actualParams).toEqual(expect.arrayContaining(expectedParams))
+      expect(actualParams).toHaveLength(expectedParams.length)
+    })
   })
 })
 

@@ -184,6 +184,8 @@
     "start": "npm-run-all --parallel cdn:watch test-server",
     "lint": "eslint -c .eslintrc.js --ext .js,.cjs,.mjs .",
     "lint:fix": "npm run lint -- --fix",
+    "generate:warning-codes": "node tools/warning-codes/generate-jsdoc.js",
+    "check:warning-codes": "node tools/warning-codes/check-usage.js",
     "test": " NODE_OPTIONS=--max-old-space-size=8192 jest",
     "test:unit": "jest --selectProjects unit",
     "test:component": "jest --selectProjects component",

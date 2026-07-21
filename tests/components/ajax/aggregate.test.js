@@ -327,11 +327,10 @@ describe('prepareHarvest', () => {
       { regex: /request/ig, replacement: 'REQUEST', eventFilter: ['AjaxRequest'] },
       { regex: /response/ig, replacement: 'RESPONSE', eventFilter: ['AjaxRequest'] }
     ]
-    // set regex to something recognizable?
-    // mock events.get to return a known event with reserved fields and some custom fields
-    // mock first, then setup agent/agg?
+
     const serializedPayload = ajaxAggregate.makeHarvestPayload(false)
     const actualEvent = qp.decode(serializedPayload.body)[0]
+
     expect(actualEvent).toEqual(expect.objectContaining({
       type: 'ajax',
       start: 1000,
@@ -350,8 +349,8 @@ describe('prepareHarvest', () => {
       traceId: 'sensitiveTraceId',
       timestamp: 1111
     }))
-    const checkChildren = (expectedObject) => expect(actualEvent.children).toEqual(expect.arrayContaining([expect.objectContaining(expectedObject)]))
 
+    const checkChildren = (expectedObject) => expect(actualEvent.children).toEqual(expect.arrayContaining([expect.objectContaining(expectedObject)]))
     checkChildren({ key: 'ajaxRequest.id', value: 'sensitiveAjaxRequestId' })
     checkChildren({ key: 'requestHeaders', value: '{"OBFUSCATEDREQUESTHeAAAder1":"OBFUSCATEDREQUESTHeAAAderVAAAlue1"}' })
     checkChildren({ key: 'requestQuery', value: 'OBFUSCATEDREQUESTQuery' })

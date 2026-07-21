@@ -11,7 +11,7 @@ const ajaxArguments = [
   { // params
     method: 'PUT',
     status: 200,
-    host: 'https://example.com',
+    host: 'example.com:443',
     hostname: 'example.com',
     pathname: '/pathname'
   },
@@ -118,8 +118,7 @@ describe('storeXhr', () => {
 
       const expectedParams = ['method', 'status', 'host', 'hostname', 'pathname']
       const actualParams = Object.keys(fakeAgent.sharedAggregator.get(['xhr']).xhr[0].params)
-      expect(actualParams).toEqual(expect.arrayContaining(expectedParams))
-      expect(actualParams).toHaveLength(expectedParams.length)
+      expect(actualParams.sort()).toEqual(expectedParams.sort())
     })
 
     test('ajax event has expected keys', () => {
@@ -133,9 +132,8 @@ describe('storeXhr', () => {
       ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
       const expectedEventKeys = ['method', 'status', 'domain', 'path', 'requestSize', 'responseSize', 'type', 'startTime', 'endTime', 'callbackDuration', 'ajaxRequest.id', 'gql', 'requestQuery', 'requestHeaders', 'responseHeaders', 'requestBody', 'responseBody']
-      const actualEvent = Object.keys(ajaxAggregate.events.get()[0])
-      expect(actualEvent).toEqual(expect.arrayContaining(expectedEventKeys))
-      expect(actualEvent).toHaveLength(expectedEventKeys.length)
+      const actualEventKeys = Object.keys(ajaxAggregate.events.get()[0])
+      expect(actualEventKeys.sort()).toEqual(expectedEventKeys.sort())
     })
 
     test('session trace bstXhrAgg params has expected keys', () => {
@@ -152,9 +150,95 @@ describe('storeXhr', () => {
       expect(bstXhrCalls).toHaveLength(1)
       const expectedParams = ['method', 'status', 'host', 'hostname', 'pathname']
       const actualParams = Object.keys(bstXhrCalls[0][1][2])
-      expect(actualParams).toEqual(expect.arrayContaining(expectedParams))
-      expect(actualParams).toHaveLength(expectedParams.length)
+      expect(actualParams.sort()).toEqual(expectedParams.sort())
     })
+  })
+
+  test('captures payload when proxy beacon hostname and pathname does not match', async () => {
+    fakeAgent = setupAgent({
+      init: {
+        ajax: { block_internal: false, capture_payloads: CAPTURE_PAYLOAD_SETTINGS.ALL },
+        proxy: { beacon: 'example.com/foobar' }
+      }
+    })
+
+    const ajaxInstrument = new Ajax(fakeAgent)
+    await new Promise(process.nextTick)
+    ajaxAggregate = ajaxInstrument.featAggregate
+    ajaxAggregate.ee.emit('rumresp', [])
+    ajaxAggregate.drain()
+
+    context = new EventContext()
+    fakeAgent.features[FEATURE_NAMES.jserrors] = {} // Set to truthy object to simulate jserrors being present
+
+    context.requestHeaders = { 'content-type': 'application/json' }
+    context.requestBody = 'fooBody'
+    context.responseHeaders = { 'content-type': 'application/json' }
+    context.responseBody = 'barBody'
+    ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
+
+    const expectedEventKeys = ['method', 'status', 'domain', 'path', 'requestSize', 'responseSize', 'type', 'startTime', 'endTime', 'callbackDuration', 'ajaxRequest.id', 'gql', 'requestQuery', 'requestHeaders', 'responseHeaders', 'requestBody', 'responseBody']
+    const actualEvent = Object.keys(ajaxAggregate.events.get()[0])
+    expect(actualEvent.sort()).toEqual(expectedEventKeys.sort())
+  })
+
+  test('excludes internal payloads matches beacon hostname', async () => {
+    fakeAgent = setupAgent({
+      init: { ajax: { block_internal: false, capture_payloads: CAPTURE_PAYLOAD_SETTINGS.ALL } },
+      info: { beacon: 'example.com' }
+    })
+
+    const ajaxInstrument = new Ajax(fakeAgent)
+    await new Promise(process.nextTick)
+    ajaxAggregate = ajaxInstrument.featAggregate
+    ajaxAggregate.ee.emit('rumresp', [])
+    ajaxAggregate.drain()
+
+    context = new EventContext()
+    fakeAgent.features[FEATURE_NAMES.jserrors] = {} // Set to truthy object to simulate jserrors being present
+
+    context.requestHeaders = { 'content-type': 'application/json' }
+    context.requestBody = 'fooBody'
+    context.responseHeaders = { 'content-type': 'application/json' }
+    context.responseBody = 'barBody'
+    ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
+
+    const expectedEventKeys = ['method', 'status', 'domain', 'path', 'requestSize', 'responseSize', 'type', 'startTime', 'endTime', 'callbackDuration', 'ajaxRequest.id', 'gql']
+    const actualEvent = Object.keys(ajaxAggregate.events.get()[0])
+    expect(actualEvent.sort()).toEqual(expectedEventKeys.sort())
+  })
+
+  test('excludes internal payloads matches proxy beacon hostname and pathname', async () => {
+    fakeAgent = setupAgent({
+      init: {
+        ajax: { block_internal: false, capture_payloads: CAPTURE_PAYLOAD_SETTINGS.ALL },
+        proxy: { beacon: 'example.com/foobar' }
+      }
+    })
+
+    const ajaxInstrument = new Ajax(fakeAgent)
+    await new Promise(process.nextTick)
+    ajaxAggregate = ajaxInstrument.featAggregate
+    ajaxAggregate.ee.emit('rumresp', [])
+    ajaxAggregate.drain()
+
+    context = new EventContext()
+    fakeAgent.features[FEATURE_NAMES.jserrors] = {} // Set to truthy object to simulate jserrors being present
+
+    context.requestHeaders = { 'content-type': 'application/json' }
+    context.requestBody = 'fooBody'
+    context.responseHeaders = { 'content-type': 'application/json' }
+    context.responseBody = 'barBody'
+
+    const origPathname = ajaxArguments[0].pathname
+    ajaxArguments[0].pathname = '/foobar/baz' // Starts with the proxy beacon pathname
+    ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
+
+    const expectedEventKeys = ['method', 'status', 'domain', 'path', 'requestSize', 'responseSize', 'type', 'startTime', 'endTime', 'callbackDuration', 'ajaxRequest.id', 'gql']
+    const actualEvent = Object.keys(ajaxAggregate.events.get()[0])
+    expect(actualEvent.sort()).toEqual(expectedEventKeys.sort())
+
+    ajaxArguments[0].pathname = origPathname
   })
 })
 
@@ -169,7 +253,7 @@ describe('prepareHarvest', () => {
       end: 30,
       callbackEnd: 30,
       callbackDuration: 0,
-      domain: 'https://example.com',
+      domain: 'example.com:443',
       path: '/pathname',
       method: 'PUT',
       status: 200,

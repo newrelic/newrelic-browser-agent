@@ -87,6 +87,8 @@ async function main () {
 }
 
 main().catch(err => {
-  console.error(`LLM code review failed: ${err.message}`)
+  const detail = err.code ?? err.cause?.code ?? err.cause?.message ?? 'unknown'
+  console.error(`LLM code review failed: ${err.message} (detail: ${detail})`)
+  if (err.stack) console.error(err.stack)
   core.setOutput('review', '')
 })

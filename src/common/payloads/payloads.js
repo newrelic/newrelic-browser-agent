@@ -13,6 +13,7 @@ import { CAPTURE_PAYLOAD_SETTINGS } from '../../features/ajax/constants'
  * @param {Object} event - An object representing the AJAX event
  * @param {number} event.statusCode - The HTTP status code
  * @param {boolean} event.hasGQLErrors - Whether the response contains GraphQL errors
+ * @param {string} event.payloadHost - The host of the AJAX payload (includes port)
  * @param {string} event.payloadHostname - The hostname of the AJAX payload
  * @param {string} [event.payloadPathname=''] - The pathname of the AJAX payload
  * @param {string[]} [beacons=[]] - Array of beacon hostnames to avoid capturing
@@ -21,13 +22,15 @@ import { CAPTURE_PAYLOAD_SETTINGS } from '../../features/ajax/constants'
 export function canCapturePayload (captureMode, {
   statusCode,
   hasGQLErrors,
+  payloadHost,
   payloadHostname,
   payloadPathname = ''
 }, beacons = []) {
   if (payloadHostname) {
     const payloadUrl = payloadHostname + payloadPathname
+    const payloadUrlWithPort = payloadHost + payloadPathname
     if (beacons.some((b) => {
-      return b === payloadUrl || payloadUrl.startsWith(b + '/')
+      return b === payloadUrl || payloadUrl.startsWith(b + '/') || b === payloadUrlWithPort || payloadUrlWithPort.startsWith(b + '/')
     })) return false
   }
   if (captureMode === CAPTURE_PAYLOAD_SETTINGS.ALL) return true

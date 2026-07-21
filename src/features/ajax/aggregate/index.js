@@ -113,6 +113,7 @@ export class Aggregate extends AggregateBase {
       statusCode: event.status,
       hasGQLErrors: event.gql?.operationHasErrors,
       payloadHostname: params.hostname,
+      payloadHost: params.host,
       payloadPathname: params.pathname
     }, this.agentRef.beacons)
 

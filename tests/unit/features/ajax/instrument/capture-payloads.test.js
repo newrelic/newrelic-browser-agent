@@ -104,6 +104,32 @@ describe('canCapturePayload logic', () => {
       const actual = canCapturePayload('all', event, beacons)
       expect(actual).toBe(true)
     })
+
+    test('canCapturePayload returns false for host + pathname matching a beacon with port', () => {
+      const beacons = ['example.com:8080/path']
+      const event = {
+        statusCode: 200,
+        hasGQLErrors: false,
+        payloadHost: 'example.com:8080',
+        payloadHostname: 'example.com',
+        payloadPathname: '/path'
+      }
+      const actual = canCapturePayload('all', event, beacons)
+      expect(actual).toBe(false)
+    })
+
+    test('canCapturePayload returns true for host + pathname NOT matching a beacon with port', () => {
+      const beacons = ['example.com:58467/path']
+      const event = {
+        statusCode: 200,
+        hasGQLErrors: false,
+        payloadHost: 'example.com:58466',
+        payloadHostname: 'example.com',
+        payloadPathname: '/path'
+      }
+      const actual = canCapturePayload('all', event, beacons)
+      expect(actual).toBe(true)
+    })
   })
 
   describe('failures mode (default)', () => {

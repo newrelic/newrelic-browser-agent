@@ -92,7 +92,7 @@ export function shouldDuplicate (target, aggregateInstance) {
  * @returns {Array} An array of targets found from the stack trace. If no targets are found or allowed, returns an array with undefined.
  */
 export function findTargetsFromStackTrace (agentRef) {
-  if (!agentRef?.init.api.register.enabled) return [undefined]
+  if (!agentRef?.init.api.register.enabled || !agentRef?.runtime?.registeredEntities?.length) return [undefined]
 
   const targets = []
   try {

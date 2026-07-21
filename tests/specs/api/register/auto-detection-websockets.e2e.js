@@ -43,9 +43,14 @@ describe('Register API - Auto-Detection - WebSockets', () => {
     await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html', {
       init: {
         api: {
-          allow_registered_children: true
+          register: {
+            enabled: true
+          }
         },
         logging: {
+          enabled: true
+        },
+        web_sockets: {
           enabled: true
         }
       }
@@ -94,8 +99,13 @@ describe('Register API - Auto-Detection - WebSockets', () => {
     await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html', {
       init: {
         api: {
-          allow_registered_children: true,
-          duplicate_registered_data: true
+          register: {
+            enabled: true,
+            duplicate_data_to_container: true
+          }
+        },
+        web_sockets: {
+          enabled: true
         }
       },
       loader: 'spa'

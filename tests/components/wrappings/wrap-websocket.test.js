@@ -169,7 +169,6 @@ describe('wrap-websocket', () => {
     let expectNrData = {
       timestamp: expect.any(Number),
       currentUrl: expect.any(String),
-      targets: [],
       socketId: expect.any(String),
       requestedUrl: 'ws://foo.com/websocket',
       requestedProtocols: '',
@@ -239,7 +238,7 @@ describe('wrap-websocket', () => {
     })
     expect(ws.nrData.closedAt).toBeGreaterThanOrEqual(ws.nrData.openedAt)
 
-    expect(emitSpy).toHaveBeenCalledWith('ws', [expectNrData], ws)
+    expect(emitSpy).toHaveBeenCalledWith('ws', [expectNrData, ws.targets], ws)
   })
 
   it('captures targets from stack trace when WebSocket is created', async () => {
@@ -267,14 +266,14 @@ describe('wrap-websocket', () => {
     const testWs = new window.WebSocket('ws://test.com/socket')
 
     expect(findTargetsFromStackTrace).toHaveBeenCalledWith(agentRef)
-    expect(testWs.nrData.targets).toEqual(mockTargets)
+    expect(testWs.targets).toEqual(mockTargets)
 
     // Clean up the module mock
     jest.dontMock('../../../src/common/v2/utils')
   })
 
   it('defaults to empty array when findTargetsFromStackTrace returns nothing', () => {
-    expect(ws.nrData.targets).toEqual([])
+    expect(ws.targets).toEqual([])
   })
 
   it('tracks send metrics for multiple calls with all 5 data types', () => {

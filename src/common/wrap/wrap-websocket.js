@@ -61,7 +61,8 @@ export function wrapWebSocket (sharedEE, agentRef) {
     constructor (...args) {
       super(...args)
       /** @type {WebSocketData} */
-      this.nrData = new WebSocketData(args[0], args[1], findTargetsFromStackTrace(agentRef))
+      this.nrData = new WebSocketData(args[0], args[1])
+      this.targets = findTargetsFromStackTrace(agentRef)
 
       this.addEventListener('open', () => {
         this.nrData.openedAt = now()
@@ -91,7 +92,7 @@ export function wrapWebSocket (sharedEE, agentRef) {
         this.nrData.connectedDuration = this.nrData.closedAt - this.nrData.openedAt
 
         openWebSockets.delete(this) // remove from tracking set since it's now closed
-        wsEE.emit('ws', [this.nrData], this)
+        wsEE.emit('ws', [this.nrData, this.targets], this)
       })
     }
 
@@ -189,17 +190,13 @@ class WebSocketData {
   /**
    * @param {string} requestedUrl - The URL passed to WebSocket constructor
    * @param {string|string[]} [requestedProtocols] - The protocols passed to WebSocket constructor
-   * @param {import("../../loaders/api/register-api-types").RegisterAPITarget[]} [targets=[]] - The registered entity targets associated with this WebSocket; defaults to an empty array if not provided
    */
-  constructor (requestedUrl, requestedProtocols, targets = []) {
+  constructor (requestedUrl, requestedProtocols) {
     /** @type {number} Timestamp when the WebSocket was constructed (relative time); will be time corrected later when timeKeeper is available */
     this.timestamp = now()
 
     /** @type {string} Most current URL when WebSocket was created; relevant for SPA */
     this.currentUrl = cleanURL(window.location.href)
-
-    /** @type {import("../../loaders/api/register-api-types").RegisterAPITarget[]} The registered entity targets associated with this WebSocket */
-    this.targets = targets.length ? targets : [undefined] // set to undefined if empty for v1 container payloads
 
     /*
      * pageUrl will be set by addEvent later; unlike timestamp and currentUrl, it's not sensitive to *when* it is set.

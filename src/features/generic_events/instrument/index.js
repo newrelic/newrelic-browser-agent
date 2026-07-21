@@ -55,9 +55,9 @@ export class Instrument extends InstrumentBase {
 
     let historyEE
     if (websocketsEnabled) { // this can apply outside browser scope such as in worker
-      const websocketsEE = wrapWebSocket(this.ee)
-      websocketsEE.on('ws', (nrData) => {
-        handle('ws-complete', [nrData], undefined, this.featureName, this.ee)
+      const websocketsEE = wrapWebSocket(this.ee, agentRef)
+      websocketsEE.on('ws', (nrData, targets) => {
+        handle('ws-complete', [nrData, targets], undefined, this.featureName, this.ee)
       })
     }
     if (securityPolicyViolationEnabled) {

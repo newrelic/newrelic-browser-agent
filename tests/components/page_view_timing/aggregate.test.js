@@ -139,6 +139,7 @@ test('does not obfuscate timing names or attribute keys', async () => {
         { regex: /fcp/ig, replacement: 'CORRUPTED_FCP', eventFilter: ['PageViewTiming'] },
         { regex: /fi/ig, replacement: 'CORRUPTED_FI', eventFilter: ['PageViewTiming'] },
         { regex: /sensitive/g, replacement: 'OBFUSCATED', eventFilter: ['PageViewTiming'] },
+        { regex: /localhost/g, replacement: 'OBFUSCATED', eventFilter: ['PageViewTiming'] },
         { regex: /e/ig, replacement: 'E', eventFilter: ['PageViewTiming'] }
       ]
     },
@@ -155,6 +156,7 @@ test('does not obfuscate timing names or attribute keys', async () => {
 
   const harvestCall = getHarvestCalls(localAgent)[0]
   expect(harvestCall.results.value.payload.body).not.toContain('CORRUPTED')
+
   const decodedPayloads = qp.decode(harvestCall.results.value.payload.body)
   const findTimings = (timingName) => decodedPayloads.find(n => n.name === timingName)
 
@@ -193,7 +195,7 @@ test('does not obfuscate timing names or attribute keys', async () => {
   checkInpAttrs({ key: 'loadState', value: 'complete' })
 
   const globalAttrs = []
-  globalAttrs.push({ key: 'pageUrl' })
+  globalAttrs.push({ key: 'pageUrl', value: 'http://OBFUSCATED/' })
   globalAttrs.push({ key: 'net-type', value: 'cellular' })
   globalAttrs.push({ key: 'net-etype', value: '3g' })
   globalAttrs.push({ key: 'net-rtt' })

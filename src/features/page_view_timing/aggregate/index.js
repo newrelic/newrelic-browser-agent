@@ -148,7 +148,7 @@ export class Aggregate extends AggregateBase {
   // serialize array of timing data
   serializer (eventBuffer) {
     if (!eventBuffer?.length) return ''
-    const { addStringRaw } = createStringAdders(getAddStringContext, this.obfuscator)
+    const { addString, addStringRaw } = createStringAdders(getAddStringContext, this.obfuscator)
     const obfuscateOnly = (val) => typeof val === 'string' ? (this.obfuscator?.obfuscateString(val) ?? val) : val
 
     var payload = 'bel.6;'
@@ -162,9 +162,11 @@ export class Aggregate extends AggregateBase {
 
       this.appendGlobalCustomAttributes(timing, { addVal: obfuscateOnly })
 
-      var attrParts = addCustomAttributes(timing.attrs, {
+      const { pageUrl, ...systemReservedAttrs } = timing.attrs || {}
+      var attrParts = addCustomAttributes(systemReservedAttrs, {
         addKey: addStringRaw, addVal: addStringRaw
       })
+      if (pageUrl) attrParts.push(...addCustomAttributes({ pageUrl }, { addKey: addStringRaw, addVal: addString }))
       if (attrParts && attrParts.length > 0) {
         payload += numeric(attrParts.length) + ';' + attrParts.join(';')
       }

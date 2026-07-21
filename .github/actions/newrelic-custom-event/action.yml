@@ -1,0 +1,32 @@
+# This composite action publishes a custom event to New Relic via the Event API.
+
+name: 'New Relic Custom Event'
+
+inputs:
+  insert_key:
+    description: 'New Relic Insert API key (or license key) for the target account'
+    required: true
+  account_id:
+    description: 'New Relic account ID to publish the event to'
+    required: true
+  event_type:
+    description: 'Custom event type name'
+    required: true
+  attributes:
+    description: 'JSON object of event attributes'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
+    - name: Publish custom event
+      env:
+        NR_INSERT_KEY: ${{ inputs.insert_key }}
+        NR_ACCOUNT_ID: ${{ inputs.account_id }}
+        NR_EVENT_TYPE: ${{ inputs.event_type }}
+        NR_ATTRIBUTES: ${{ inputs.attributes }}
+      run: node $GITHUB_ACTION_PATH/index.js
+      shell: bash

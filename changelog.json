@@ -4,6 +4,23 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "b0cb098d0ea36d1d35212355bc51051f3c02c1ae",
+          "message": "Keep Ajax payload out of unrelated events",
+          "issues": [
+            "1809"
+          ]
+        }
+      ],
+      "version": "1.318.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "1abf6fb8-d436-44e6-af58-c448f2094f29",
+      "createTime": "2026-07-13T18:27:47.421Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "aa4d2f330fb832e0bbbdd8ed88702621f7564abf",
           "message": "Add websocket init config",
@@ -4086,5 +4103,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-07-08T00:40:49.669Z"
+  "updateTime": "2026-07-13T18:27:47.421Z"
 }

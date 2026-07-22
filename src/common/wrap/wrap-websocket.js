@@ -34,7 +34,7 @@ export function wrapWebSocket (sharedEE, agentRef) {
         ws.nrData.connectedDuration = unloadTime - ws.nrData.openedAt
       }
 
-      wsEE.emit('ws', [ws.nrData], ws)
+      wsEE.emit('ws', [ws.nrData, ws.targets], ws)
     })
   })
 

@@ -436,7 +436,7 @@ describe('wrap-websocket', () => {
         closeCode: 1001,
         closeReason: 'Page navigating away',
         closeWasClean: false
-      })], ws)
+      }), []], ws)
 
       const emittedData = emitSpy.mock.calls[0][1][0]
       expect(emittedData.connectedDuration).toBeDefined()

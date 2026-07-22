@@ -1,0 +1,111 @@
+name: Daily Dispatch
+
+on:
+  schedule:
+    - cron: '0 15 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      slack_channel:
+        description: 'Slack channel to send the dispatch to'
+        required: true
+        type: choice
+        default: browser_agent_dev
+        options:
+          - browser_agent_dev
+          - notifications
+          - dem_platform_ops
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+  id-token: write
+
+concurrency:
+  group: daily-dispatch
+  cancel-in-progress: true
+
+jobs:
+  dispatch:
+    name: Build daily dispatch
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      payload: ${{ steps.dispatch.outputs.payload }}
+      metrics: ${{ steps.dispatch.outputs.metrics }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build daily dispatch
+        id: dispatch
+        uses: ./.github/actions/daily-dispatch
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-metrics:
+    name: Publish metrics to New Relic
+    needs: [dispatch]
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 5
+    outputs:
+      image_url: ${{ steps.publish-image.outputs.image_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Publish metrics to New Relic
+        uses: ./.github/actions/newrelic-custom-event
+        with:
+          insert_key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          account_id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          event_type: Br0ws3rMetrics
+          attributes: ${{ needs.dispatch.outputs.metrics }}
+
+      - name: Generate dashboard snapshot
+        id: snapshot
+        continue-on-error: true
+        uses: ./.github/actions/newrelic-dashboard-snapshot
+        with:
+          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_BROWSER }}
+          dashboard_guid: 'NTUwMzUyfFZJWnxEQVNIQk9BUkR8MTIyMjM5NA'
+
+      - name: Upload snapshot image to S3
+        id: s3-upload-image
+        if: steps.snapshot.outputs.snapshot_dir != ''
+        continue-on-error: true
+        uses: ./.github/actions/s3-upload
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          local_dir: ${{ steps.snapshot.outputs.snapshot_dir }}
+          bucket_dir: slack/images
+
+      - name: Set image URL
+        id: publish-image
+        if: steps.s3-upload-image.outputs.results != ''
+        run: |
+          KEY=$(echo '${{ steps.s3-upload-image.outputs.results }}' | jq -r '.[0].Key')
+          echo "image_url=https://staging-js-agent.newrelic.com/$KEY" >> "$GITHUB_OUTPUT"
+
+  notify:
+    name: Notify Slack
+    needs: [dispatch, publish-metrics]
+    if: ${{ !cancelled() && needs.dispatch.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Send Slack notification
+        uses: ./.github/actions/slack-notification
+        with:
+          notifications_channel_url: ${{ (inputs.slack_channel || 'browser_agent_dev') == 'notifications' && secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL || '' }}
+          dem_platform_ops_channel_url: ${{ (inputs.slack_channel || 'browser_agent_dev') == 'dem_platform_ops' && secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL || '' }}
+          browser_agent_dev_channel_url: ${{ (inputs.slack_channel || 'browser_agent_dev') == 'browser_agent_dev' && secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL || '' }}
+          payload: ${{ needs.dispatch.outputs.payload }}
+          dashboard_url: 'https://staging.onenr.io/08wp2gMXZjO'
+          image_url: ${{ needs.publish-metrics.outputs.image_url }}

@@ -9,9 +9,18 @@ inputs:
   dem_platform_ops_channel_url:
     description: 'Slack API URL for the dem platform ops release channel'
     required: false
-  message:
-    description: 'The message to post to Slack channels'
+  browser_agent_dev_channel_url:
+    description: 'Slack API URL for the browser-agent-dev channel'
+    required: false
+  payload:
+    description: 'JSON payload to post to Slack channels: { text, blocks }'
     required: true
+  image_url:
+    description: 'Optional image URL to append as an image block (e.g. a dashboard snapshot)'
+    required: false
+  dashboard_url:
+    description: 'Optional link to a live dashboard, appended above the image block'
+    required: false
 
 runs:
   using: "composite"
@@ -20,9 +29,13 @@ runs:
       run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
       shell: bash
     - name: Send Slack notification
+      env:
+        SLACK_PAYLOAD: ${{ inputs.payload }}
+        SLACK_IMAGE_URL: ${{ inputs.image_url }}
+        SLACK_DASHBOARD_URL: ${{ inputs.dashboard_url }}
       run: |
         node $GITHUB_ACTION_PATH/index.js \
           --notifications-channel-url "${{ inputs.notifications_channel_url }}" \
           --dem-platform-ops-channel-url "${{ inputs.dem_platform_ops_channel_url }}" \
-          --message "${{ inputs.message }}"
+          --browser-agent-dev-channel-url "${{ inputs.browser_agent_dev_channel_url }}"
       shell: bash

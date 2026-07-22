@@ -1,14 +1,32 @@
-# This composite action is used to upload files to an S3 bucket.
+# This composite action captures and compares build size stats for the browser agent.
 
-name: 'S3 File Upload'
+name: 'Build Size Stats'
 
 inputs:
-  compare_from:
-    description: 'Version to compare sizes against. Valid values are `dev` or any version number for a release.'
+  mode:
+    description: 'Either `capture` (normalize the current local build into a single stats file) or `compare` (diff previously captured stats files).'
     required: true
-  compare_to:
-    description: 'Version to compare sizes for. Valid values are `local` or any version number for a release.'
-    required: true
+  label:
+    description: '(capture mode) Label identifying the ref being captured, e.g. `current`, `main`, `release`.'
+    required: false
+  build_dir:
+    description: '(capture mode) Path to the build directory containing the webpack *.stats.json files to capture.'
+    required: false
+  target_dir:
+    description: '(capture mode) Path to the checked-out source tree (containing package.json and src/) being measured.'
+    required: false
+  display_label:
+    description: '(capture mode) Optional human-readable label to display in reports instead of `label`, e.g. a resolved release tag.'
+    required: false
+  npm_pack_file:
+    description: '(capture mode) Path to the JSON output of `npm pack --json --dry-run`.'
+    required: false
+  output_file:
+    description: '(capture mode) Path to write the normalized capture stats file to.'
+    required: false
+  stats_files:
+    description: '(compare mode) Newline-separated list of `label=path` pairs. The first entry is treated as the base column that others are diffed against.'
+    required: false
 
 runs:
   using: "composite"
@@ -16,19 +34,42 @@ runs:
     - name: Install dependencies
       run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
       shell: bash
-    - name: Run action script
-      id: action-script
+    - name: Run capture
+      if: inputs.mode == 'capture'
       run: |
         node $GITHUB_ACTION_PATH/index.js \
-          --compare-from ${{ inputs.compare_from }} \
-          --compare-to ${{ inputs.compare_to }} \
+          --mode capture \
+          --label ${{ inputs.label }} \
+          --build-dir ${{ inputs.build_dir }} \
+          --target-dir ${{ inputs.target_dir }} \
+          --display-label "${{ inputs.display_label }}" \
+          --npm-pack-file ${{ inputs.npm_pack_file }} \
+          --output-file ${{ inputs.output_file }}
+      shell: bash
+    - name: Run compare
+      if: inputs.mode == 'compare'
+      run: |
+        STATS_FILE_ARGS=()
+        while IFS= read -r line; do
+          [ -z "$line" ] && continue
+          STATS_FILE_ARGS+=(--stats-file "$line")
+        done <<< "${{ inputs.stats_files }}"
+
+        node $GITHUB_ACTION_PATH/index.js \
+          --mode compare \
+          "${STATS_FILE_ARGS[@]}" \
           --format terminal json markdown
       shell: bash
+    - name: Archive capture stats
+      if: inputs.mode == 'capture'
+      uses: actions/upload-artifact@v4
+      with:
+        name: size-stats-${{ inputs.label }}
+        path: ${{ inputs.output_file }}
     - name: Archive asset size report results
+      if: inputs.mode == 'compare'
       uses: actions/upload-artifact@v4
       with:
         name: asset-size-report
         path: |
           build/size_report.*
-          build/*.stats.html
-          build/*.stats.json

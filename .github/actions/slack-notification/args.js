@@ -13,8 +13,8 @@ export const args = yargs(hideBin(process.argv))
   .describe('dem-platform-ops-channel-url', 'Webhook URL to slack #dem-platform-ops')
   .default('dem-platform-ops-channel-url', '')
 
-  .string('message')
-  .describe('message', 'The message to post to Slack channels')
-  .demandOption('message', 'Message is required')
+  .string('browser-agent-dev-channel-url')
+  .describe('browser-agent-dev-channel-url', 'Webhook URL to slack #browser-agent-dev')
+  .default('browser-agent-dev-channel-url', '')
 
   .argv

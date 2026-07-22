@@ -1,0 +1,29 @@
+# This composite action builds a daily team dispatch with version info, PRs, issues, and workflow status.
+
+name: 'Daily Dispatch'
+
+inputs:
+  github_token:
+    description: 'GitHub token used to query repository data'
+    required: true
+
+outputs:
+  payload:
+    description: 'Generated daily dispatch Slack payload (JSON: { text, blocks })'
+    value: ${{ steps.dispatch-message.outputs.payload }}
+  metrics:
+    description: 'Br0ws3rMetrics attributes JSON for the New Relic custom event'
+    value: ${{ steps.dispatch-message.outputs.metrics }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
+    - name: Build dispatch message
+      id: dispatch-message
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+      run: node $GITHUB_ACTION_PATH/index.js
+      shell: bash

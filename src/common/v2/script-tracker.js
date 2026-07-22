@@ -23,7 +23,7 @@ try {
 }
 
 /** @type {(entry: PerformanceEntry) => boolean} - A shared function to determine if a performance entry is a valid script or link resource for evaluation */
-const validEntryCriteria = entry => entry.initiatorType === 'script' || (['link', 'fetch'].includes(entry.initiatorType) && entry.name.endsWith('.js'))
+const validEntryCriteria = entry => entry.initiatorType === 'script' || (['link', 'fetch'].includes(entry.initiatorType) && cleanURL(entry.name).endsWith('.js'))
 
 /** @type {Map<string, ScriptCorrelation>} - Central registry for script correlations containing both DOM and Performance data */
 export const scriptCorrelations = new Map()

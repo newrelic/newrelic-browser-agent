@@ -11,6 +11,7 @@ import { FEATURE_NAMES } from '../features/features'
 import { stringify } from '../../common/util/stringify'
 import { registerHandler } from '../../common/event-emitter/register-handler'
 import { drain } from '../../common/drain/drain'
+import { isBrowserScope } from '../../common/constants/runtime'
 
 /**
  * Retrieves the registered entity associated with the iframeInterfaceId from the event data, and validates that the origin of the message event matches the expected origin for that entity.
@@ -184,7 +185,7 @@ function sendResponse (event, payload) {
  * @param {Object} agent The agent instance
  */
 export function setupIframeMFEMessageListener (agent) {
-  if (typeof window === 'undefined' || !window.addEventListener) return
+  if (!isBrowserScope || !window.addEventListener || agent.runtime.listeningForIframeMessages) return
 
   registerHandler('iframe-message', async (event) => {
     if (!event.data) return
@@ -213,4 +214,5 @@ export function setupIframeMFEMessageListener (agent) {
   }, 'IFRAME', agent.ee)
 
   drain(agent, 'IFRAME', true) // drain any buffered iframe messages that were received before the listener was set up
+  agent.runtime.listeningForIframeMessages = true
 }

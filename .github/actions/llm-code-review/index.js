@@ -53,11 +53,12 @@ async function main () {
     return
   }
 
-  const requestUrl = `${args.ncBaseUrl}/v1/chat/completions`
+  const requestUrl = `${args.ncBaseUrl}/v1/messages`
   const requestBody = JSON.stringify({
     model: args.ncModel,
+    max_tokens: 4096,
+    system: REVIEW_SYSTEM_PROMPT,
     messages: [
-      { role: 'system', content: REVIEW_SYSTEM_PROMPT },
       { role: 'user', content: filtered }
     ]
   })
@@ -95,7 +96,7 @@ async function main () {
   console.log(`DEBUG Nerd Completion response body:\n${rawBody}`)
 
   const body = JSON.parse(rawBody)
-  const review = body?.choices?.[0]?.message?.content
+  const review = body?.content?.[0]?.text
 
   if (!review) {
     console.error('Nerd Completion response did not contain review content.')

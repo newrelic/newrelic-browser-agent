@@ -31,9 +31,9 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           pr_number: ${{ github.event.number }}
-          nc_base_url: ${{ vars.NERD_COMPLETION_BASE_URL }}
+          nc_base_url: ${{ secrets.NERD_COMPLETION_BASE_URL }}
           nc_api_token: ${{ secrets.NERD_COMPLETION_API_TOKEN }}
-          nc_model: ${{ vars.NERD_COMPLETION_MODEL }}
+          nc_model: ${{ secrets.NERD_COMPLETION_MODEL }}
       - name: Comment pull request
         if: steps.llm-review.outputs.review != ''
         uses: ./.github/actions/comment-pull-request

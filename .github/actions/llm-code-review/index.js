@@ -16,7 +16,6 @@ function filterDiff (diff) {
   const lines = diff.split('\n')
   const kept = []
 
-  
   let skippingFile = false
 
   for (const line of lines) {

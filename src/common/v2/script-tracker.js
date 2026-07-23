@@ -244,8 +244,8 @@ export function findScriptTimings () {
     // Get correlation data
     timings.correlation = findCorrelation(mfeScriptUrl)
 
-    // Use correlation's performance entry if available, otherwise wait for the buffered observer to surface it.
-    const performanceEntry = timings.correlation?.performance.value
+    // Use correlation's performance entry if available, otherwise check the live performance API before falling back to the buffered observer.
+    const performanceEntry = timings.correlation?.performance.value || globalScope.performance?.getEntriesByType('resource')?.find(e => entryMatchesUrl(e, mfeScriptUrl))
 
     if (performanceEntry) {
       applyPerformanceEntry(timings, performanceEntry)

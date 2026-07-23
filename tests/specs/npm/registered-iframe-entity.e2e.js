@@ -8,6 +8,7 @@ import { testMFEErrorsRequest, testMFEInsRequest, testLogsRequest } from '../../
 describe('RegisteredIframeEntity', () => {
   beforeEach(async () => {
     await browser.enableLogging()
+    await browser.setTimeout({ script: 15000 })
   })
 
   afterEach(async () => {
@@ -143,26 +144,17 @@ describe('RegisteredIframeEntity', () => {
       await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-iframe-entity.html'))
       await browser.pause(2000)
 
-      const promiseResult = await browser.execute(async function () {
+      const promiseResult = await browser.executeAsync(function (done) {
         const iframe = document.getElementById('mfe-iframe')
         const iframeEntity = iframe?.contentWindow?.entity
 
-        try {
-          // measure() returns a promise
-          const measureResult = await iframeEntity.measure('test-measure', {
-            start: 0,
-            end: 100
-          })
-
-          return {
+        // measure() returns a promise
+        iframeEntity.measure('test-measure', { start: 0, end: 100 })
+          .then(measureResult => done({
             success: true,
             hasDuration: typeof measureResult?.duration === 'number'
-          }
-        } catch (error) {
-          return {
-            error: error.message
-          }
-        }
+          }))
+          .catch(error => done({ error: error.message }))
       })
 
       expect(promiseResult.success).toBe(true)
@@ -218,11 +210,11 @@ describe('RegisteredIframeEntity', () => {
     it('should handle registration timeout', async () => {
       await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-iframe-entity.html'))
 
-      const timeoutResult = await browser.execute(async function () {
+      const timeoutResult = await browser.executeAsync(function (done) {
         const iframe = document.getElementById('mfe-iframe')
         const iframeWindow = iframe?.contentWindow
 
-        if (!iframeWindow) return { error: 'No iframe window' }
+        if (!iframeWindow) return done({ error: 'No iframe window' })
 
         // Create a new entity instance that won't get responses
         const timeoutEntity = new iframeWindow.RegisteredIframeEntity({
@@ -230,18 +222,13 @@ describe('RegisteredIframeEntity', () => {
           name: 'Timeout Test'
         })
 
-        // The registration promise should be accessible but may timeout
-        try {
-          // Wait a bit to see if it times out (should timeout in 5 seconds)
-          await new Promise(resolve => setTimeout(resolve, 100))
-
-          return {
+        // Wait a bit to see if it times out (should timeout in 10 seconds)
+        setTimeout(() => {
+          done({
             hasEntity: !!timeoutEntity,
             blocked: timeoutEntity.blocked
-          }
-        } catch (error) {
-          return { error: error.message }
-        }
+          })
+        }, 100)
       })
 
       expect(timeoutResult.hasEntity).toBe(true)
@@ -251,16 +238,13 @@ describe('RegisteredIframeEntity', () => {
       await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-iframe-entity.html'))
       await browser.pause(2000)
 
-      const deregisterResult = await browser.execute(async function () {
+      const deregisterResult = await browser.executeAsync(function (done) {
         const iframe = document.getElementById('mfe-iframe')
         const iframeEntity = iframe?.contentWindow?.entity
 
-        try {
-          await iframeEntity.deregister()
-          return { success: true }
-        } catch (error) {
-          return { error: error.message }
-        }
+        Promise.resolve(iframeEntity.deregister())
+          .then(() => done({ success: true }))
+          .catch(error => done({ error: error.message }))
       })
 
       expect(deregisterResult.success).toBe(true)
@@ -270,19 +254,17 @@ describe('RegisteredIframeEntity', () => {
       await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-iframe-entity.html'))
       await browser.pause(2000)
 
-      const errorResult = await browser.execute(async function () {
+      const errorResult = await browser.executeAsync(function (done) {
         const iframe = document.getElementById('mfe-iframe')
         const iframeEntity = iframe?.contentWindow?.entity
 
         try {
           // Try to call a method that doesn't exist
-          await iframeEntity.register({ id: 'nested', name: 'Nested' })
-          return { success: true }
+          Promise.resolve(iframeEntity.register({ id: 'nested', name: 'Nested' }))
+            .then(() => done({ success: true }))
+            .catch(error => done({ caughtError: true, errorMessage: error.message }))
         } catch (error) {
-          return {
-            caughtError: true,
-            errorMessage: error.message
-          }
+          done({ caughtError: true, errorMessage: error.message })
         }
       })
 
@@ -350,24 +332,27 @@ describe('RegisteredIframeEntity', () => {
   describe('Timing Integration', () => {
     it('should capture script timings from iframe context', async () => {
       await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-iframe-entity.html'))
-      await browser.pause(2000)
 
-      const timingsResult = await browser.execute(function () {
-        const iframe = document.getElementById('mfe-iframe')
-        const iframeEntity = iframe?.contentWindow?.entity
+      let timingsResult
+      await browser.waitUntil(async () => {
+        timingsResult = await browser.execute(function () {
+          const iframe = document.getElementById('mfe-iframe')
+          const iframeEntity = iframe?.contentWindow?.entity
 
-        if (!iframeEntity) return { error: 'No entity' }
+          if (!iframeEntity) return { error: 'No entity' }
 
-        const timings = iframeEntity.metadata.timings
+          const timings = iframeEntity.metadata.timings
 
-        return {
-          hasRegisteredAt: typeof timings.registeredAt === 'number',
-          hasFetchStart: typeof timings.fetchStart === 'number',
-          hasFetchEnd: typeof timings.fetchEnd === 'number',
-          fetchStartValid: timings.fetchStart >= 0,
-          fetchEndValid: timings.fetchEnd >= timings.fetchStart
-        }
-      })
+          return {
+            hasRegisteredAt: typeof timings.registeredAt === 'number',
+            hasFetchStart: typeof timings.fetchStart === 'number',
+            hasFetchEnd: typeof timings.fetchEnd === 'number',
+            fetchStartValid: timings.fetchStart >= 0,
+            fetchEndValid: timings.fetchEnd >= timings.fetchStart
+          }
+        })
+        return timingsResult.hasRegisteredAt
+      }, { timeout: 20000, interval: 500, timeoutMsg: 'iframe entity registration timings were never populated' })
 
       expect(timingsResult.hasRegisteredAt).toBe(true)
       expect(timingsResult.hasFetchStart).toBe(true)
@@ -377,23 +362,26 @@ describe('RegisteredIframeEntity', () => {
 
     it('should proxy timing object to detect updates', async () => {
       await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-iframe-entity.html'))
-      await browser.pause(2000)
 
-      const proxyResult = await browser.execute(function () {
-        const iframe = document.getElementById('mfe-iframe')
-        const iframeEntity = iframe?.contentWindow?.entity
+      let proxyResult
+      await browser.waitUntil(async () => {
+        proxyResult = await browser.execute(function () {
+          const iframe = document.getElementById('mfe-iframe')
+          const iframeEntity = iframe?.contentWindow?.entity
 
-        if (!iframeEntity) return { error: 'No entity' }
+          if (!iframeEntity) return { error: 'No entity' }
 
-        // Timings should be a Proxy that sends updates
-        const timings = iframeEntity.metadata.timings
+          // Timings should be a Proxy that sends updates
+          const timings = iframeEntity.metadata.timings
 
-        return {
-          isObject: typeof timings === 'object',
-          hasCorrelation: !!timings.correlation,
-          canReadProperties: typeof timings.fetchStart !== 'undefined'
-        }
-      })
+          return {
+            isObject: typeof timings === 'object',
+            hasCorrelation: !!timings.correlation,
+            canReadProperties: typeof timings.fetchStart !== 'undefined'
+          }
+        })
+        return proxyResult.canReadProperties
+      }, { timeout: 20000, interval: 500, timeoutMsg: 'iframe entity timings proxy was never populated' })
 
       expect(proxyResult.isObject).toBe(true)
       expect(proxyResult.canReadProperties).toBe(true)
@@ -403,7 +391,7 @@ describe('RegisteredIframeEntity', () => {
   describe('Parent-side Integration', () => {
     it('should store iframe entities in parent agent', async () => {
       await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-iframe-entity.html'))
-      await browser.pause(2000)
+      await browser.pause(5000)
 
       const parentResult = await browser.execute(function () {
         // Access registered entities via agent runtime

@@ -322,8 +322,8 @@ export class RegisteredIframeEntity {
       resolvers.reject = reject
     })
     this.#pendingMessages.set(messageId, resolvers)
-    // Timeout after 5 seconds
-    setTimeout(() => this.#closePending({ messageId, error: 'Timed out' }), 5000)
+    // Timeout after 10 seconds
+    setTimeout(() => this.#closePending({ messageId, error: 'Timed out' }), 10000)
     return pending
   }
 

@@ -1,3 +1,13 @@
+declare global {
+  interface Window {
+    NREUM: {
+      info: {
+        beacon: string;
+      };
+    };
+  }
+}
+
 export function LoremIpsumLazy() {
   return (
     <div id="lazy-loaded-content" style={{ marginTop: '20px', padding: '15px', border: '2px solid #4CAF50', borderRadius: '8px' }}>
@@ -14,6 +24,14 @@ export function LoremIpsumLazy() {
       <button id="lazy-button" onClick={() => {
         console.log("log from lazy")
         fetch('/json')
+        const bamServer = window.NREUM.info.beacon
+        const socket = new WebSocket(`ws://${bamServer}/websocket/pre?param=shouldbedropped`)
+        socket.addEventListener('open', (event) => {
+          socket.send('loremipsumlazy!')
+        })
+        socket.addEventListener('message', (event) => {
+          socket.close() // clean by flag
+        })
         throw new Error('lazy test');
       }}>Click Me To Throw An Error From Lazy Loaded Module</button>
     </div>

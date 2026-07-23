@@ -51,29 +51,48 @@ async function main () {
     return
   }
 
-  const response = await fetchRetry(`${args.ncBaseUrl}/v1/chat/completions`, {
+  const requestUrl = `${args.ncBaseUrl}/v1/chat/completions`
+  const requestBody = JSON.stringify({
+    model: args.ncModel,
+    messages: [
+      { role: 'system', content: REVIEW_SYSTEM_PROMPT },
+      { role: 'user', content: filtered }
+    ]
+  })
+
+  // DEBUG: prints a copy-pasteable curl command for manually reproducing this request.
+  // The token is masked by GitHub Actions log redaction since it comes from a secret,
+  // but the placeholder here also guards against redaction failing.
+  console.log('DEBUG curl for Nerd Completion request:')
+  console.log(`curl -s -o - -w '\\nHTTP_STATUS:%{http_code}\\n' -X POST '${requestUrl}' \\
+  -H 'Authorization: Bearer ***REDACTED***' \\
+  -H 'Content-Type: application/json' \\
+  -d '${requestBody.replace(/'/g, "'\\''")}'`)
+
+  const response = await fetchRetry(requestUrl, {
     retry: 3,
     method: 'POST',
     headers: {
       Authorization: `Bearer ${args.ncApiToken}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      model: args.ncModel,
-      messages: [
-        { role: 'system', content: REVIEW_SYSTEM_PROMPT },
-        { role: 'user', content: filtered }
-      ]
-    })
+    body: requestBody
   })
 
+  console.log(`DEBUG Nerd Completion response status: ${response?.status} ${response?.statusText}`)
+
   if (!response?.ok) {
+    const errorBody = await response?.text().catch(() => '<unreadable body>')
     console.error(`Nerd Completion request failed with status ${response?.status}. ${response?.statusText}`)
+    console.log(`DEBUG Nerd Completion error response body:\n${errorBody}`)
     core.setOutput('review', '')
     return
   }
 
-  const body = await response.json()
+  const rawBody = await response.text()
+  console.log(`DEBUG Nerd Completion response body:\n${rawBody}`)
+
+  const body = JSON.parse(rawBody)
   const review = body?.choices?.[0]?.message?.content
 
   if (!review) {

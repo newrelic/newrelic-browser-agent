@@ -8,6 +8,7 @@ import { now } from '../timing/now'
 import { cleanURL } from '../url/clean-url'
 import { chrome, chromeEval, gecko } from '../util/browser-stack-matchers'
 import { ScriptCorrelation } from './script-correlation'
+import { timingFactory } from './timing-factory'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPITimings} RegisterAPITimings
@@ -22,7 +23,7 @@ try {
 }
 
 /** @type {(entry: PerformanceEntry) => boolean} - A shared function to determine if a performance entry is a valid script or link resource for evaluation */
-const validEntryCriteria = entry => entry.initiatorType === 'script' || (['link', 'fetch'].includes(entry.initiatorType) && entry.name.endsWith('.js'))
+const validEntryCriteria = entry => entry.initiatorType === 'script' || (['link', 'fetch'].includes(entry.initiatorType) && cleanURL(entry.name).endsWith('.js'))
 
 /** @type {Map<string, ScriptCorrelation>} - Central registry for script correlations containing both DOM and Performance data */
 export const scriptCorrelations = new Map()
@@ -197,6 +198,26 @@ function applyPerformanceEntry (timings, entry) {
 }
 
 /**
+ * Subscribes to late resource timing emissions for a script URL.
+ * @param {RegisterAPITimings} timings - The timings object to update
+ * @param {string} mfeScriptUrl - The script URL to match
+ */
+function subscribeToLatePerformanceEntry (timings, mfeScriptUrl) {
+  if (!globalScope.PerformanceObserver?.supportedEntryTypes?.includes('resource')) return
+
+  poSubscribers.push({
+    addedAt: now(),
+    test: (entry) => {
+      if (entryMatchesUrl(entry, mfeScriptUrl)) {
+        applyPerformanceEntry(timings, entry)
+        return true
+      }
+      return false
+    }
+  })
+}
+
+/**
  * Uses the stack of the initiator function, returns script timing information if a script can be found with the resource timing API matching the URL found in the stack.
  * @returns {RegisterAPITimings} Object containing script fetch start and end times, and the asset URL if found
  */
@@ -223,35 +244,29 @@ export function findScriptTimings () {
     // Get correlation data
     timings.correlation = findCorrelation(mfeScriptUrl)
 
-    // Use correlation's performance entry if available, otherwise check live performance API
-    const performanceEntry = timings.correlation?.performance.value || performance.getEntriesByType('resource').find(e => entryMatchesUrl(e, mfeScriptUrl))
+    // Use correlation's performance entry if available, otherwise check the live performance API before falling back to the buffered observer.
+    const performanceEntry = timings.correlation?.performance.value || globalScope.performance?.getEntriesByType('resource')?.find(e => entryMatchesUrl(e, mfeScriptUrl))
 
     if (performanceEntry) {
       applyPerformanceEntry(timings, performanceEntry)
-    } else if (wasPreloaded(mfeScriptUrl)) {
-      // Handle preloaded scripts that may report late
-      timings.asset = mfeScriptUrl
-      timings.type = 'preload'
+    } else {
+      const isPreloaded = wasPreloaded(mfeScriptUrl)
 
-      // Subscribe to late performance observer callbacks
-      poSubscribers.push({
-        addedAt: now(),
-        test: (entry) => {
-          if (entryMatchesUrl(entry, mfeScriptUrl)) {
-            applyPerformanceEntry(timings, entry)
-            return true
-          }
-          return false
-        }
-      })
+      // Handle preloaded scripts and any late resource emissions through the shared buffered observer.
+      if (isPreloaded) {
+        timings.asset = mfeScriptUrl
+        timings.type = 'preload'
+      }
+
+      subscribeToLatePerformanceEntry(timings, mfeScriptUrl)
     }
 
     /*
      * Use getters here because the correlation data may arrive after this function returns the timing object, and we want to provide the most up-to-date timing information possible when the getters are accessed at harvest time.
      * The getters will fall back to fetchEnd if correlation data isn't available yet, which is our best approximation for script execution start when actual script timings can not be determined.
     */
-    Object.defineProperty(timings, 'scriptStart', { get: () => timings.correlation?.script.start || timings.fetchEnd })
-    Object.defineProperty(timings, 'scriptEnd', { get: () => timings.correlation?.script.end || timings.registeredAt })
+    Object.defineProperty(timings, 'scriptStart', timingFactory(() => timings.correlation?.script.start || timings.fetchEnd))
+    Object.defineProperty(timings, 'scriptEnd', timingFactory(() => timings.correlation?.script.end || timings.registeredAt))
   } catch (error) {
     // Don't let stack parsing errors break anything
   }

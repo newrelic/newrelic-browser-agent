@@ -78,7 +78,7 @@ function register (agentRef, target) {
   target.blocked = false
   if (typeof target.tags !== 'object' || target.tags === null || Array.isArray(target.tags)) target.tags = {}
   target.parent ??= {
-    get id () { return agentRef.runtime.appMetadata.agents[0].entityGuid }, // getter because this is asyncronously set
+    get id () { return agentRef.runtime.appMetadata.agents?.[0].entityGuid }, // getter because this is asyncronously set
     type: V2_TYPES.BA
   }
 

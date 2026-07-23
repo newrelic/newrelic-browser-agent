@@ -109,10 +109,12 @@ export function trackMFEVitals (id, timings) {
 
   const vitals = {
     fcp: {
-      get value () { return getTimeRelativeToScriptStart(fcpObservedAt) }
+      get value () { return getTimeRelativeToScriptStart(fcpObservedAt) },
+      set value (v) { fcpObservedAt = v }
     },
     lcp: {
-      get value () { return getTimeRelativeToScriptStart(lcpObservedAt) }
+      get value () { return getTimeRelativeToScriptStart(lcpObservedAt) },
+      set value (v) { lcpObservedAt = v }
     },
     cls: {
       value: null

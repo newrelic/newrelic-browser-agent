@@ -132,7 +132,7 @@ describe('script-tracker', () => {
       expect(result.fetchEnd).toBe(0)
     })
 
-    test('finds script timing from performance.getEntriesByType', () => {
+    test('finds script timing from buffered PerformanceObserver callback', () => {
       // Setup: Mock resource entry for external script
       const mockResourceEntry = {
         name: 'https://cdn.example.com/mfe-app.js',
@@ -143,18 +143,17 @@ describe('script-tracker', () => {
 
       mockNavigationEntry = { name: 'https://example.com/' }
 
-      global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'resource') {
-          return [mockResourceEntry]
-        }
-        return []
-      })
-
       // Stack trace references the external script
       mockStack = `Error
     at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
     at Object.register (${scriptTrackerModule.thisFile}:5:10)
     at main (https://cdn.example.com/mfe-app.js:15:20)`
+
+      if (performanceObserverCallback) {
+        performanceObserverCallback({
+          getEntries: () => [mockResourceEntry]
+        })
+      }
 
       const result = scriptTrackerModule.findScriptTimings()
 
@@ -433,18 +432,17 @@ describe('script-tracker', () => {
 
       mockNavigationEntry = { name: 'https://example.com/' }
 
-      global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'resource') {
-          return [mockResourceEntry]
-        }
-        return []
-      })
-
       // Stack contains full URL matching the resource entry exactly
       mockStack = `Error
     at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
     at register (${scriptTrackerModule.thisFile}:2:2)
     at func (https://cdn.example.com/path/app.js:5:10)`
+
+      if (performanceObserverCallback) {
+        performanceObserverCallback({
+          getEntries: () => [mockResourceEntry]
+        })
+      }
 
       const result = scriptTrackerModule.findScriptTimings()
 
@@ -464,16 +462,15 @@ describe('script-tracker', () => {
 
       mockNavigationEntry = { name: 'https://example.com/' }
 
-      global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'resource') {
-          return [mockResourceEntry]
-        }
-        return []
-      })
-
       // Stack has same absolute URL
       mockStack = `Error
     at func (https://cdn.example.com/path/app.js:5:10)`
+
+      if (performanceObserverCallback) {
+        performanceObserverCallback({
+          getEntries: () => [mockResourceEntry]
+        })
+      }
 
       const result = scriptTrackerModule.findScriptTimings()
 
@@ -492,18 +489,17 @@ describe('script-tracker', () => {
 
       mockNavigationEntry = { name: 'https://example.com/' }
 
-      global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'resource') {
-          return [mockResourceEntry]
-        }
-        return []
-      })
-
       // Gecko/Firefox format: function@url:line:column (no "at" prefix)
       mockStack = `Error
 findScriptTimings@${scriptTrackerModule.thisFile}:1:1
 register@${scriptTrackerModule.thisFile}:2:2
 init@https://cdn.example.com/gecko-app.js:20:10`
+
+      if (performanceObserverCallback) {
+        performanceObserverCallback({
+          getEntries: () => [mockResourceEntry]
+        })
+      }
 
       const result = scriptTrackerModule.findScriptTimings()
 
@@ -523,18 +519,17 @@ init@https://cdn.example.com/gecko-app.js:20:10`
 
       mockNavigationEntry = { name: 'https://example.com/' }
 
-      global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'resource') {
-          return [mockResourceEntry]
-        }
-        return []
-      })
-
       // Chrome/V8 format: "at function (url:line:column)"
       mockStack = `Error
     at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
     at Object.register (${scriptTrackerModule.thisFile}:2:2)
     at init (https://cdn.example.com/chrome-app.js:30:5)`
+
+      if (performanceObserverCallback) {
+        performanceObserverCallback({
+          getEntries: () => [mockResourceEntry]
+        })
+      }
 
       const result = scriptTrackerModule.findScriptTimings()
 
@@ -555,16 +550,15 @@ init@https://cdn.example.com/gecko-app.js:20:10`
 
       mockNavigationEntry = { name: 'https://example.com/' }
 
-      global.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'resource') {
-          return [mockResourceEntry]
-        }
-        return []
-      })
-
       // Stack URL includes same query parameters
       mockStack = `Error
     at test (https://cdn.example.com/app.js?v=1.2.3&cache=bust:10:5)`
+
+      if (performanceObserverCallback) {
+        performanceObserverCallback({
+          getEntries: () => [mockResourceEntry]
+        })
+      }
 
       const result = scriptTrackerModule.findScriptTimings()
 
@@ -780,6 +774,12 @@ init@https://cdn.example.com/gecko-app.js:20:10`
     at mfe5-module (https://staging-one.nr-assets.net/nerdpacks/browser-entity-preview~b21d8a93.js:1:3275)
     at Generator.<anonymous> (https://staging-one.nr-assets.net/platform/one-vbp-543fd763.js:1:32670)
     at Generator.next (https://staging-one.nr-assets.net/platform/one-vbp-543fd763.js:1:33653)`
+
+      // findScriptTimings correlates via the buffered PerformanceObserver callback, not a
+      // direct getEntriesByType('resource') call -- fire it to populate the correlation map.
+      if (performanceObserverCallback) {
+        performanceObserverCallback({ getEntries: () => [mfeChunkEntry, runtimeEntry] })
+      }
 
       const result = scriptTrackerModule.findScriptTimings()
 

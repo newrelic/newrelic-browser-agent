@@ -1,0 +1,43 @@
+# This composite action fetches a pull request's diff and sends it to
+# New Relic's internal Nerd Completion LLM gateway for an automated review.
+
+name: 'LLM Code Review'
+
+inputs:
+  token:
+    description: "The github token to use for fetching the pull request diff."
+    required: true
+  pr_number:
+    description: "Pull request number to review."
+    required: true
+  nc_base_url:
+    description: "Base URL of the Nerd Completion gateway."
+    required: true
+  nc_api_token:
+    description: "Bearer token used to authenticate with Nerd Completion."
+    required: true
+  nc_model:
+    description: "Model alias to request from Nerd Completion."
+    required: true
+
+outputs:
+  review:
+    description: "The review text returned by Nerd Completion, or empty if the review could not be generated."
+    value: ${{ steps.action-script.outputs.review }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
+    - name: Run action script
+      id: action-script
+      run: |
+        node $GITHUB_ACTION_PATH/index.js \
+          --github-token ${{ inputs.token }} \
+          --pr-number ${{ inputs.pr_number }} \
+          --nc-base-url ${{ inputs.nc_base_url }} \
+          --nc-api-token ${{ inputs.nc_api_token }} \
+          --nc-model ${{ inputs.nc_model }}
+      shell: bash

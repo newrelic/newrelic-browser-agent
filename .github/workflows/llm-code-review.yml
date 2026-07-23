@@ -1,0 +1,44 @@
+# This workflow sends the pull request diff to New Relic's internal
+# Nerd Completion LLM gateway and posts the resulting review as a PR
+# comment. It runs on the self-hosted runner because Nerd Completion
+# is only reachable from inside New Relic's network.
+
+name: 'LLM Code Review'
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  llm-review:
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 10
+    continue-on-error: true
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Run LLM code review
+        id: llm-review
+        uses: ./.github/actions/llm-code-review
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pr_number: ${{ github.event.number }}
+          nc_base_url: ${{ secrets.NERD_COMPLETION_BASE_URL }}
+          nc_api_token: ${{ secrets.NERD_COMPLETION_API_TOKEN }}
+          nc_model: ${{ secrets.NERD_COMPLETION_MODEL }}
+      - name: Comment pull request
+        if: steps.llm-review.outputs.review != ''
+        uses: ./.github/actions/comment-pull-request
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pr_number: ${{ github.event.number }}
+          comment: ${{ steps.llm-review.outputs.review }}
+          comment_tag: <!-- nerd_completion_code_review -->

@@ -29,6 +29,8 @@ export async function fetchRetry (url, options) {
         retryLimit--
       }
     } catch (error) {
+      console.error(`fetchRetry: attempt failed for ${url} (code=${error.code ?? 'n/a'}): ${error.message}`)
+
       if (retryLimit <= 1) {
         throw error
       }

@@ -1,0 +1,51 @@
+# This composite action generates a PNG snapshot URL of a New Relic dashboard via NerdGraph.
+
+name: 'New Relic Dashboard Snapshot'
+
+inputs:
+  api_key:
+    description: 'New Relic User API key with read access to the dashboard'
+    required: true
+  dashboard_guid:
+    description: 'Entity GUID of the dashboard to snapshot'
+    required: true
+  width:
+    description: 'Snapshot width in pixels'
+    required: false
+    default: '1600'
+  height:
+    description: 'Snapshot height in pixels'
+    required: false
+    default: '1200'
+  delay_seconds:
+    description: 'Seconds to wait before querying, so recently-published data is synthesized into the dashboard'
+    required: false
+    default: '30'
+
+outputs:
+  snapshot_url:
+    description: 'PNG snapshot URL (includes an access token) for the dashboard'
+    value: ${{ steps.snapshot.outputs.snapshot_url }}
+  snapshot_path:
+    description: 'Local filesystem path to the downloaded PNG snapshot'
+    value: ${{ steps.snapshot.outputs.snapshot_path }}
+  snapshot_dir:
+    description: 'Local directory containing only the downloaded PNG snapshot, suitable as s3-upload local_dir'
+    value: ${{ steps.snapshot.outputs.snapshot_dir }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
+    - name: Generate dashboard snapshot
+      id: snapshot
+      env:
+        NR_API_KEY: ${{ inputs.api_key }}
+        NR_DASHBOARD_GUID: ${{ inputs.dashboard_guid }}
+        NR_SNAPSHOT_WIDTH: ${{ inputs.width }}
+        NR_SNAPSHOT_HEIGHT: ${{ inputs.height }}
+        NR_SNAPSHOT_DELAY_SECONDS: ${{ inputs.delay_seconds }}
+      run: node $GITHUB_ACTION_PATH/index.js
+      shell: bash

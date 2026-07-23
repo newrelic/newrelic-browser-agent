@@ -109,7 +109,13 @@ export class Aggregate extends AggregateBase {
     if (event.gql) event.gql.operationHasErrors = hasGQLErrors(ctx.responseBody)
 
     const capturePayloadSetting = this.agentRef.init.ajax.capture_payloads
-    const shouldCapturePayload = canCapturePayload(capturePayloadSetting, params.status, event.gql?.operationHasErrors)
+    const shouldCapturePayload = canCapturePayload(capturePayloadSetting, {
+      statusCode: event.status,
+      hasGQLErrors: event.gql?.operationHasErrors,
+      payloadHostname: params.hostname,
+      payloadHost: params.host,
+      payloadPathname: params.pathname
+    }, this.agentRef.beacons)
 
     if (shouldCapturePayload) {
       // Store raw data; obfuscation and truncation will happen in the serializer

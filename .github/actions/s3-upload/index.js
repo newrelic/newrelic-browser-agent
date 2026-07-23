@@ -30,9 +30,7 @@ const uploadCommandParams = (await fs.promises.readdir(args.input, { withFileTyp
     const params = {
       Bucket: args.bucket,
       Key: file.name,
-      Body: fs.createReadStream(path.resolve(args.input, file.name), {
-        encoding: 'utf-8'
-      }),
+      Body: fs.createReadStream(path.resolve(args.input, file.name)),
       ContentType: mime.lookup(file.name) || 'application/javascript',
       CacheControl: getAssetCacheHeader(args.dir, file.name)
     }

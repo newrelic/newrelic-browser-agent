@@ -8,9 +8,12 @@ inputs:
     required: true
 
 outputs:
-  message:
-    description: 'Generated daily dispatch message'
-    value: ${{ steps.dispatch-message.outputs.message }}
+  payload:
+    description: 'Generated daily dispatch Slack payload (JSON: { text, blocks })'
+    value: ${{ steps.dispatch-message.outputs.payload }}
+  metrics:
+    description: 'Br0ws3rMetrics attributes JSON for the New Relic custom event'
+    value: ${{ steps.dispatch-message.outputs.metrics }}
 
 runs:
   using: "composite"
@@ -22,11 +25,5 @@ runs:
       id: dispatch-message
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
-      run: |
-        message="$(node $GITHUB_ACTION_PATH/index.js)"
-        {
-          echo 'message<<EOF'
-          printf '%s\n' "$message"
-          echo 'EOF'
-        } >> "$GITHUB_OUTPUT"
+      run: node $GITHUB_ACTION_PATH/index.js
       shell: bash

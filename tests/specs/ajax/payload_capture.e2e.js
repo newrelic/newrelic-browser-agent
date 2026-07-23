@@ -230,3 +230,52 @@ describe('capture_payloads', () => {
     })
   })
 })
+
+describe('capture_payloads - beacon exclusion', () => {
+  let ajaxEventsCapture
+
+  beforeEach(async () => {
+    ajaxEventsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testAjaxEventsRequest })
+  })
+
+  it('does not capture agent payloads even when mode is "all"', async () => {
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+      init: { ajax: { capture_payloads: 'all', block_internal: false } },
+      loader: 'full'
+    }))
+    await browser.waitForAgentLoad()
+
+    await browser.execute(function (beaconHost, beaconPort) {
+      fetch('/echo-body', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'regular request' })
+      })
+      fetch('http://' + beaconHost + ':' + beaconPort + '/debug', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret: 'beacon payload' })
+      })
+    }, browser.testHandle.bamServerConfig.host, browser.testHandle.bamServerConfig.port)
+
+    const eventsHarvests = await ajaxEventsCapture.waitForResult({ totalCount: 2, timeout: 15000 })
+    const ajaxEvents = eventsHarvests.flatMap(h => h.request.body)
+
+    const regularEvents = ajaxEvents.filter(e => e.path === '/echo-body')
+    const beaconEvents = ajaxEvents.filter(e => e.path !== '/echo-body')
+
+    expect(regularEvents.length).toBeGreaterThan(0)
+    expect(beaconEvents.length).toBeGreaterThan(0)
+
+    regularEvents.forEach(event => {
+      const keys = event.children.map(x => x.key)
+      expect(keys).toEqual(expect.arrayContaining(['ajaxRequest.id', 'requestHeaders', 'requestBody', 'responseHeaders', 'responseBody']))
+    })
+
+    beaconEvents.forEach(event => {
+      const keys = event.children.map(x => x.key)
+      expect(keys).toEqual(expect.arrayContaining(['ajaxRequest.id']))
+      expect(keys).not.toEqual(expect.arrayContaining(['requestHeaders', 'requestBody', 'responseHeaders', 'responseBody']))
+    })
+  })
+})

@@ -5,13 +5,11 @@ function createRegExpFn (agentType, assetType) {
     assetType = `-${assetType}`
   }
 
-  return (version) => {
-    if (typeof version !== 'string' || version.trim() === '') {
-      return new RegExp(`nr${assetType}-${agentType}.min.js`)
-    } else {
-      return new RegExp(`nr${assetType}-${agentType}(?:\\.[\\w\\d]{8})?-${version}.min.js`)
-    }
-  }
+  // Prod builds (`cdn:build:prod`) insert a `-<version>` segment into asset
+  // filenames (e.g. `nr-loader-full-1.318.0.min.js`); dev builds don't. The
+  // optional group below tolerates either, anchored so it can't spill into a
+  // sibling bundle's name (e.g. `nr-full-recorder-1.318.0.min.js`).
+  return () => new RegExp(`^nr${assetType}-${agentType}(-\\d+\\.\\d+\\.\\d+)?\\.min\\.js$`)
 }
 
 export const reportSettings = {

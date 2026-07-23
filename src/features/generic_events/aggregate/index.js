@@ -252,20 +252,22 @@ export class Aggregate extends AggregateBase {
       }, this.featureName, this.ee)
 
       if (agentRef.init.feature_flags.includes('websockets') || agentRef.init.web_sockets?.enabled) {
-        registerHandler('ws-complete', (nrData) => {
-          const event = {
-            ...nrData,
-            eventType: EVENT_TYPES.WS,
-            timestamp: this.#toEpoch(nrData.timestamp),
-            openedAt: this.#toEpoch(nrData.openedAt),
-            closedAt: this.#toEpoch(nrData.closedAt)
-          }
+        registerHandler('ws-complete', (nrData, targets = [undefined]) => {
+          targets.forEach(target => {
+            const event = {
+              ...nrData,
+              eventType: EVENT_TYPES.WS,
+              timestamp: this.#toEpoch(nrData.timestamp),
+              openedAt: this.#toEpoch(nrData.openedAt),
+              closedAt: this.#toEpoch(nrData.closedAt)
+            }
 
-          // Report supportability metrics for WebSocket completion
-          this.reportSupportabilityMetric('WebSocket/Completed/Seen')
-          this.reportSupportabilityMetric('WebSocket/Completed/Bytes', stringify(event).length)
+            // Report supportability metrics for WebSocket completion
+            this.reportSupportabilityMetric('WebSocket/Completed/Seen')
+            this.reportSupportabilityMetric('WebSocket/Completed/Bytes', stringify(event).length)
 
-          this.addEvent(event)
+            this.addEvent(event, target)
+          })
         }, this.featureName, this.ee)
       }
       if (!agentRef.init.feature_flags.includes('no_spv')) {

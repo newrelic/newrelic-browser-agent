@@ -1,7 +1,9 @@
+import qp from '@newrelic/nr-querypack'
 import { resetAgent, setupAgent } from '../setup-agent'
 import { Instrument as SoftNav } from '../../../src/features/soft_navigations/instrument'
 import * as loadTimeModule from '../../../src/common/vitals/load-time'
 import { INTERACTION_STATUS, NO_LONG_TASK_WINDOW, POPSTATE_MERGE_WINDOW, POPSTATE_TRIGGER } from '../../../src/features/soft_navigations/constants'
+import { AJAX_ID } from '../../../src/features/ajax/constants'
 
 let mainAgent
 
@@ -398,6 +400,111 @@ describe('back up buffer is cleared when', () => { // prevent mem leak
 
     softNavAggregate.interactionsToHarvest.reloadSave() // backup buffer does not duplicate retrying data
     expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(1)
+  })
+})
+
+describe('obfuscation checks should preserve keys and system values', () => {
+  let localAgent, localAggregate
+
+  beforeEach(async () => {
+    localAgent = setupAgent({
+      init: {
+        soft_navigations: { enabled: true },
+        obfuscate: [
+          { regex: /sensitive/g, replacement: 'OBFUSCATED', eventFilter: ['AjaxRequest', 'BrowserInteraction'] },
+          { regex: /ajax/ig, replacement: 'AJAX', eventFilter: ['AjaxRequest'] },
+          { regex: /request/ig, replacement: 'REQUEST', eventFilter: ['AjaxRequest'] },
+          { regex: /response/ig, replacement: 'RESPONSE', eventFilter: ['AjaxRequest'] }
+        ]
+      }
+    })
+    const localInstrument = new SoftNav(localAgent)
+    await localInstrument.onAggregateImported
+    localAggregate = localInstrument.featAggregate
+
+    localAggregate.ee.emit('rumresp', [{ spa: 1 }])
+    await new Promise(process.nextTick)
+  })
+
+  afterEach(() => {
+    resetAgent(localAgent)
+  })
+
+  test('for ajax nodes', async () => {
+    const ajaxEvent = {
+      startTime: 1000,
+      endTime: 2000,
+      method: 'GET',
+      status: 200,
+      domain: 'example.com',
+      path: '/api/data',
+      requestSize: 123,
+      responseSize: 456,
+      type: 'XMLHttpRequest',
+      callbackDuration: 0,
+      spanId: 'sensitiveSpanId',
+      traceId: 'sensitiveTraceId',
+      spanTimestamp: 3000,
+      [AJAX_ID]: 'sensitiveAjaxRequestId',
+      requestHeaders: { sensitiveRequestHeader1: 'sensitiveRequestHeaderValue1' },
+      requestQuery: 'sensitiveRequestQuery',
+      requestBody: 'sensitiveRequestData',
+      responseHeaders: { sensitiveResponseHeader1: 'sensitiveResponseHeaderValue1' },
+      responseBody: 'sensitiveResponseBody'
+    }
+
+    localAggregate.ee.emit('ajax', [ajaxEvent, {}])
+    localAggregate.initialPageLoadInteraction.done(performance.now() + 200)
+    await new Promise(process.nextTick)
+
+    const serializedPayload = localAggregate.makeHarvestPayload(false)
+    const decoded = qp.decode(serializedPayload.body)
+    const iplInteraction = decoded[0]
+    const ajaxNode = iplInteraction.children.find(c => c.type === 'ajax')
+
+    expect(ajaxNode).toEqual(expect.objectContaining({
+      start: 1000,
+      end: 2000,
+      callbackEnd: 2000,
+      callbackDuration: 0,
+      method: 'GET',
+      status: 200,
+      domain: 'example.com',
+      path: '/api/data',
+      requestBodySize: 123,
+      responseBodySize: 456,
+      requestedWith: 'XMLHttpRequest',
+      nodeId: expect.any(String), // the actual value doesn't matter for this test; bel-node nodeSeen is a singleton the value may change
+      guid: 'sensitiveSpanId',
+      traceId: 'sensitiveTraceId',
+      timestamp: 3000,
+      type: 'ajax'
+    }))
+
+    const checkChildren = (expectedObject) => expect(ajaxNode.children).toEqual(expect.arrayContaining([expect.objectContaining(expectedObject)]))
+    checkChildren({ key: 'ajaxRequest.id', value: 'sensitiveAjaxRequestId' }) // reserved/system field keys
+
+    // keys should not be obfuscated
+    checkChildren({ key: 'requestHeaders', value: '{"OBFUSCATEDREQUESTHeader1":"OBFUSCATEDREQUESTHeaderValue1"}' })
+    checkChildren({ key: 'requestQuery', value: 'OBFUSCATEDREQUESTQuery' })
+    checkChildren({ key: 'requestBody', value: 'OBFUSCATEDREQUESTData' })
+    checkChildren({ key: 'responseHeaders', value: '{"OBFUSCATEDRESPONSEHeader1":"OBFUSCATEDRESPONSEHeaderValue1"}' })
+    checkChildren({ key: 'responseBody', value: 'OBFUSCATEDRESPONSEBody' })
+  })
+
+  test('for browser interaction nodes', async () => {
+    localAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
+    localAggregate.interactionInProgress.customAttributes.sensitiveFoo = 'sensitiveFooValue'
+    localAggregate.interactionInProgress.forceSave = true
+    localAggregate.interactionInProgress.done(performance.now())
+    await new Promise(process.nextTick)
+
+    const serializedPayload = localAggregate.makeHarvestPayload(false)
+    const decoded = qp.decode(serializedPayload.body)
+    const browserInteraction = decoded[0]
+    expect(browserInteraction.type).toBe('interaction')
+    const checkChildren = (expectedObject) => expect(browserInteraction.children).toEqual(expect.arrayContaining([expect.objectContaining(expectedObject)]))
+    checkChildren({ key: 'sensitiveFoo', value: 'OBFUSCATEDFooValue' })
   })
 })
 

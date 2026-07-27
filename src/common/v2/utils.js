@@ -30,6 +30,13 @@ export function getRegisteredTargetsFromId (id, agentRef) {
 
 /**
  * Returns the registered target(s) associated with a given filename if found in the resource timing API during registration. Returns an empty array if no target is found.
+ * Multiple registrations that resolve to the same underlying script asset AND represent the same logical MFE (i.e.
+ * share the same customer-supplied `target.id`) are collapsed to a single target via
+ * {@link dedupeRegisteredEntitiesByAsset}, since auto-instrumented events (AJAX, JS errors, logs, WebSockets) should
+ * only be reported once per real occurrence when the same MFE was registered many times over -- not once per
+ * duplicate registration. Distinct MFEs (different `target.id`) that happen to share a script (e.g. two different
+ * MFEs both registered from the same inline `<script>` block) are intentionally NOT collapsed, since each is a
+ * genuinely different entity that should still receive its own copy of the matched event.
  * @param {string} filename
  * @param {*} agentRef
  * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget[]}
@@ -37,7 +44,52 @@ export function getRegisteredTargetsFromId (id, agentRef) {
 export function getRegisteredTargetsFromFilename (filename, agentRef) {
   if (!filename || !agentRef?.init.api.register.enabled) return []
   const registeredEntities = agentRef.runtime.registeredEntities
-  return registeredEntities?.filter(entity => entity.metadata.timings?.asset?.endsWith(filename)).map(entity => entity.metadata.target) || []
+  const matches = registeredEntities?.filter(entity => entity.metadata.timings?.asset?.endsWith(filename))
+  return dedupeRegisteredEntitiesByAsset(matches).map(entity => entity.metadata.target)
+}
+
+/**
+ * Collapses a list of registered entities down to one canonical entity per unique, defined `metadata.timings.asset` +
+ * `target.id` combination. Entities whose asset could not be resolved (undefined -- e.g. inline scripts or scripts
+ * not found in the resource timing buffer) are never deduped against each other or against resolved entities, since
+ * there is no signal that they represent the same underlying script. Entities that share an asset but have different
+ * `target.id`s are never deduped against each other either, since a differing id means the customer registered
+ * genuinely distinct MFEs (not duplicate registrations of the same one).
+ *
+ * Canonical selection per asset+id: prefer an entity whose target has not been deregistered (`target.blocked ===
+ * false`) over one that has; otherwise the first-encountered entity wins, for determinism.
+ * @param {Array} entities registered entities (each with `metadata.timings.asset` and `metadata.target`)
+ * @returns {Array} deduped list of entities, preserving relative order of first occurrence
+ */
+export function dedupeRegisteredEntitiesByAsset (entities) {
+  if (!entities?.length) return entities || []
+
+  const byKey = new Map() // `${asset}::${id}` -> canonical entity
+  const result = []
+
+  for (const entity of entities) {
+    const asset = entity.metadata?.timings?.asset
+    if (!asset) {
+      // can't safely dedupe unresolved-asset entities -- always keep as-is
+      result.push(entity)
+      continue
+    }
+
+    const key = `${asset}::${entity.metadata?.target?.id}`
+    const existing = byKey.get(key)
+    if (!existing) {
+      byKey.set(key, entity)
+      result.push(entity)
+    } else if (existing.metadata.target?.blocked && !entity.metadata.target?.blocked) {
+      // swap in a non-deregistered target as the canonical one for this asset+id
+      const idx = result.indexOf(existing)
+      if (idx !== -1) result[idx] = entity
+      byKey.set(key, entity)
+    }
+    // else: existing canonical entity wins (already non-blocked, or both blocked -- first wins); drop this duplicate
+  }
+
+  return result
 }
 
 /**
@@ -104,8 +156,30 @@ export function findTargetsFromStackTrace (agentRef) {
   } catch (err) {
     // Silent catch to prevent errors from propagating
   }
-  if (!targets.length) targets.push(undefined) // if we can't find any targets from the stack trace, return an array with undefined to signify the container agent is the target
-  return targets
+
+  const deduped = dedupeTargetsByInstance(targets)
+  if (!deduped.length) deduped.push(undefined) // if we can't find any targets from the stack trace, return an array with undefined to signify the container agent is the target
+  return deduped
+}
+
+/**
+ * Removes duplicate targets from an array, keyed by `target.instance`. This guards against the same canonical
+ * target re-entering the array via multiple matched stack-frame URLs (e.g. a recursive call whose stack contains the
+ * same file at multiple depths). Entries with no `instance` (i.e. `undefined`, meaning "the container agent")
+ * naturally collapse to a single entry too, which is the desired behavior.
+ * @param {Array} targets
+ * @returns {Array} deduped list of targets, preserving relative order of first occurrence
+ */
+export function dedupeTargetsByInstance (targets) {
+  const seen = new Set()
+  const result = []
+  for (const target of targets) {
+    const key = target?.instance
+    if (seen.has(key)) continue
+    seen.add(key)
+    result.push(target)
+  }
+  return result
 }
 
 /**

@@ -1,0 +1,31 @@
+name: Repo Pulse
+
+on:
+  pull_request:
+    types: [closed]
+  workflow_run:
+    types: [completed]
+  issues:
+    types: [opened, closed, labeled]
+  create: {} # tag creation (also fires for branches — repo-pulse.yml filters to tags only)
+  delete: {} # tag deletion (same filtering)
+  fork: {}
+  watch:
+    types: [started] # this is GitHub's event name for starring a repo
+  release: {}
+  deployment: {}
+  deployment_status: {}
+  schedule:
+    - cron: "0 6 * * *" # daily snapshot — adjust to taste
+  workflow_dispatch: {} # lets you trigger a snapshot on demand from the Actions tab
+
+jobs:
+  pulse:
+    uses: newrelic-experimental/repo-pulse/.github/workflows/repo-pulse.yml@v1
+    with:
+      new-relic-account-id: 550352
+      # window-days: 1  # workflow_dispatch snapshots only; scheduled runs derive it from the cron expression above
+      new-relic-region: STAGING
+      runner-label: Browser-Agent-Assigned-IP-Linux
+    secrets:
+      new-relic-insert-key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_BROWSER }}

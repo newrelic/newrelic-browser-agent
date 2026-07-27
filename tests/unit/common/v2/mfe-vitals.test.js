@@ -13,6 +13,22 @@ describe('trackMFEVitals', () => {
   let mutationCallbacks
   let performanceCallbacks
   let timings
+  let mfeTarget
+
+  const createMockElem = (opts = {}) => {
+    return {
+      // defaults
+      textContent: '',
+      nodeType: 1,
+      tagName: 'DIV',
+      nodeName: 'DIV',
+      parentElement: null,
+      parentNode: null,
+      dataset: {},
+      // overrides
+      ...opts
+    }
+  }
   const clockBaseline = 11
 
   beforeEach(async () => {
@@ -60,6 +76,13 @@ describe('trackMFEVitals', () => {
           return { dataset: { nrMfeId: 'test-mfe' } }
         }
         return null
+      }),
+      querySelectorAll: jest.fn((selector) => {
+        // By default, simulate that MFE container exists
+        if (selector.includes('data-nr-mfe-id')) {
+          return [{ dataset: { nrMfeId: 'test-mfe' } }]
+        }
+        return []
       })
     }
 
@@ -103,31 +126,36 @@ describe('trackMFEVitals', () => {
     // Import after mocking
     const module = await import('../../../../src/common/v2/mfe-vitals')
     trackMFEVitals = module.trackMFEVitals
+
+    mfeTarget = {
+      id: 'test-mfe',
+      name: 'Test MFE',
+      instance: 'abcdefg'
+    }
   })
 
   describe('FCP tracking', () => {
     it('should track FCP when contentful element is added to MFE', () => {
-      const vitals = trackMFEVitals('test-mfe', timings)
+      const vitals = trackMFEVitals(mfeTarget, timings)
       // The collector seeds FCP as soon as it sees the MFE marker on the page.
       expect(vitals.fcp.value).toBe(clockBaseline - 1)
 
       // Create a mock element with text content inside MFE container
-      const mockContainer = {
+      const mockContainer = createMockElem({
         nodeType: 1,
         dataset: { nrMfeId: 'test-mfe' },
         tagName: 'DIV',
-        nodeName: 'DIV',
-        parentNode: null
-      }
+        nodeName: 'DIV'
+      })
 
-      const mockElement = {
+      const mockElement = createMockElem({
         textContent: 'Hello world',
         nodeType: 1,
         tagName: 'DIV',
         nodeName: 'DIV',
         parentElement: mockContainer,
         parentNode: mockContainer
-      }
+      })
 
       // Simulate mutation observer detecting new node
       mutationCallbacks.forEach(cb => cb([{
@@ -139,24 +167,24 @@ describe('trackMFEVitals', () => {
     })
 
     it('should use scriptStart as the timestamp anchor for FCP', () => {
-      const vitals = trackMFEVitals('test-mfe', timings)
+      const vitals = trackMFEVitals(mfeTarget, timings)
 
-      const mockContainer = {
+      const mockContainer = createMockElem({
         nodeType: 1,
         dataset: { nrMfeId: 'test-mfe' },
         tagName: 'DIV',
         nodeName: 'DIV',
         parentNode: null
-      }
+      })
 
-      const mockElement = {
+      const mockElement = createMockElem({
         textContent: 'Content',
         nodeType: 1,
         tagName: 'P',
         nodeName: 'P',
         parentElement: mockContainer,
         parentNode: mockContainer
-      }
+      })
 
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
 
@@ -166,17 +194,17 @@ describe('trackMFEVitals', () => {
 
   describe('LCP tracking', () => {
     it('should track LCP as a relative timestamp', () => {
-      const vitals = trackMFEVitals('test-mfe', timings)
+      const vitals = trackMFEVitals(mfeTarget, timings)
 
-      const mockContainer = {
+      const mockContainer = createMockElem({
         nodeType: 1,
         dataset: { nrMfeId: 'test-mfe' },
         tagName: 'DIV',
         nodeName: 'DIV',
         parentNode: null
-      }
+      })
 
-      const mockElement = {
+      const mockElement = createMockElem({
         textContent: 'Large content',
         nodeType: 1,
         tagName: 'IMG',
@@ -186,8 +214,9 @@ describe('trackMFEVitals', () => {
         complete: true,
         parentElement: mockContainer,
         parentNode: mockContainer,
-        getBoundingClientRect: jest.fn(() => ({ width: 800, height: 600 }))
-      }
+        getBoundingClientRect: jest.fn(() => ({ width: 800, height: 600 })),
+        dataset: {}
+      })
 
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
 
@@ -196,17 +225,17 @@ describe('trackMFEVitals', () => {
     })
 
     it('should update LCP when larger element is added', () => {
-      const vitals = trackMFEVitals('test-mfe', timings)
+      const vitals = trackMFEVitals(mfeTarget, timings)
 
-      const mockContainer = {
+      const mockContainer = createMockElem({
         nodeType: 1,
         dataset: { nrMfeId: 'test-mfe' },
         tagName: 'DIV',
         nodeName: 'DIV',
         parentNode: null
-      }
+      })
 
-      const smallElement = {
+      const smallElement = createMockElem({
         textContent: 'Small',
         nodeType: 1,
         tagName: 'DIV',
@@ -214,13 +243,14 @@ describe('trackMFEVitals', () => {
         id: 'small',
         parentElement: mockContainer,
         parentNode: mockContainer,
-        getBoundingClientRect: jest.fn(() => ({ width: 100, height: 100 }))
-      }
+        getBoundingClientRect: jest.fn(() => ({ width: 100, height: 100 })),
+        dataset: {}
+      })
 
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [smallElement] }]))
       const firstLcp = vitals.lcp.value
 
-      const largeElement = {
+      const largeElement = createMockElem({
         textContent: 'Large',
         nodeType: 1,
         tagName: 'DIV',
@@ -229,7 +259,7 @@ describe('trackMFEVitals', () => {
         parentElement: mockContainer,
         parentNode: mockContainer,
         getBoundingClientRect: jest.fn(() => ({ width: 800, height: 600 }))
-      }
+      })
 
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [largeElement] }]))
 
@@ -238,22 +268,22 @@ describe('trackMFEVitals', () => {
     })
 
     it('should extract URL from element background image', () => {
-      const vitals = trackMFEVitals('test-mfe', timings)
+      const vitals = trackMFEVitals(mfeTarget, timings)
 
       const mockGlobalScope = require('../../../../src/common/constants/runtime').globalScope
       mockGlobalScope.getComputedStyle = jest.fn(() => ({
         backgroundImage: 'url("https://example.com/bg.png?v=1")'
       }))
 
-      const mockContainer = {
+      const mockContainer = createMockElem({
         nodeType: 1,
         dataset: { nrMfeId: 'test-mfe' },
         tagName: 'DIV',
         nodeName: 'DIV',
         parentNode: null
-      }
+      })
 
-      const mockElement = {
+      const mockElement = createMockElem({
         textContent: 'Content',
         nodeType: 1,
         tagName: 'DIV',
@@ -262,7 +292,7 @@ describe('trackMFEVitals', () => {
         parentElement: mockContainer,
         parentNode: mockContainer,
         getBoundingClientRect: jest.fn(() => ({ width: 800, height: 600 }))
-      }
+      })
 
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
 
@@ -271,25 +301,26 @@ describe('trackMFEVitals', () => {
 
     describe('ResizeObserver-based measurement', () => {
       it('should use ResizeObserver to measure element sizes without layout thrashing', () => {
-        trackMFEVitals('test-mfe', timings)
+        trackMFEVitals(mfeTarget, timings)
 
-        const mockContainer = {
+        const mockContainer = createMockElem({
           nodeType: 1,
           dataset: { nrMfeId: 'test-mfe' },
           tagName: 'DIV',
           nodeName: 'DIV',
           parentNode: null
-        }
+        })
 
-        const mockElement = {
+        const mockElement = createMockElem({
           textContent: 'Content',
           nodeType: 1,
           tagName: 'DIV',
           nodeName: 'DIV',
           parentElement: mockContainer,
           parentNode: mockContainer,
-          getBoundingClientRect: jest.fn(() => ({ width: 500, height: 400 }))
-        }
+          getBoundingClientRect: jest.fn(() => ({ width: 500, height: 400 })),
+          dataset: {}
+        })
 
         mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
 
@@ -300,17 +331,17 @@ describe('trackMFEVitals', () => {
       })
 
       it('should ignore elements with zero dimensions', () => {
-        const vitals = trackMFEVitals('test-mfe', timings)
+        const vitals = trackMFEVitals(mfeTarget, timings)
 
-        const mockContainer = {
+        const mockContainer = createMockElem({
           nodeType: 1,
           dataset: { nrMfeId: 'test-mfe' },
           tagName: 'DIV',
           nodeName: 'DIV',
           parentNode: null
-        }
+        })
 
-        const zeroSizeElement = {
+        const zeroSizeElement = createMockElem({
           textContent: 'Hidden content',
           nodeType: 1,
           tagName: 'DIV',
@@ -318,7 +349,7 @@ describe('trackMFEVitals', () => {
           parentElement: mockContainer,
           parentNode: mockContainer,
           getBoundingClientRect: jest.fn(() => ({ width: 0, height: 0 }))
-        }
+        })
 
         mutationCallbacks.forEach(cb => cb([{ addedNodes: [zeroSizeElement] }]))
 
@@ -327,25 +358,26 @@ describe('trackMFEVitals', () => {
       })
 
       it('should track same element only once', () => {
-        trackMFEVitals('test-mfe', timings)
+        trackMFEVitals(mfeTarget, timings)
 
-        const mockContainer = {
+        const mockContainer = createMockElem({
           nodeType: 1,
           dataset: { nrMfeId: 'test-mfe' },
           tagName: 'DIV',
           nodeName: 'DIV',
           parentNode: null
-        }
+        })
 
-        const mockElement = {
+        const mockElement = createMockElem({
           textContent: 'Content',
           nodeType: 1,
           tagName: 'DIV',
           nodeName: 'DIV',
           parentElement: mockContainer,
           parentNode: mockContainer,
-          getBoundingClientRect: jest.fn(() => ({ width: 300, height: 200 }))
-        }
+          getBoundingClientRect: jest.fn(() => ({ width: 300, height: 200 })),
+          dataset: {}
+        })
 
         // Add same element twice
         mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
@@ -359,17 +391,17 @@ describe('trackMFEVitals', () => {
 
     describe('Image and video load event handling', () => {
       it('should capture LCP immediately for already-loaded images', () => {
-        const vitals = trackMFEVitals('test-mfe', timings)
+        const vitals = trackMFEVitals(mfeTarget, timings)
 
-        const mockContainer = {
+        const mockContainer = createMockElem({
           nodeType: 1,
           dataset: { nrMfeId: 'test-mfe' },
           tagName: 'DIV',
           nodeName: 'DIV',
           parentNode: null
-        }
+        })
 
-        const loadedImage = {
+        const loadedImage = createMockElem({
           nodeType: 1,
           tagName: 'IMG',
           nodeName: 'IMG',
@@ -378,7 +410,7 @@ describe('trackMFEVitals', () => {
           parentElement: mockContainer,
           parentNode: mockContainer,
           getBoundingClientRect: jest.fn(() => ({ width: 800, height: 600 }))
-        }
+        })
 
         mutationCallbacks.forEach(cb => cb([{ addedNodes: [loadedImage] }]))
 
@@ -387,18 +419,18 @@ describe('trackMFEVitals', () => {
       })
 
       it('should wait for load event on unloaded images', () => {
-        const vitals = trackMFEVitals('test-mfe', timings)
+        const vitals = trackMFEVitals(mfeTarget, timings)
 
-        const mockContainer = {
+        const mockContainer = createMockElem({
           nodeType: 1,
           dataset: { nrMfeId: 'test-mfe' },
           tagName: 'DIV',
           nodeName: 'DIV',
           parentNode: null
-        }
+        })
 
         const loadListeners = []
-        const unloadedImage = {
+        const unloadedImage = createMockElem({
           nodeType: 1,
           tagName: 'IMG',
           nodeName: 'IMG',
@@ -410,7 +442,7 @@ describe('trackMFEVitals', () => {
           addEventListener: jest.fn((event, handler, options) => {
             if (event === 'load') loadListeners.push({ handler, options })
           })
-        }
+        })
 
         mutationCallbacks.forEach(cb => cb([{ addedNodes: [unloadedImage] }]))
 
@@ -426,18 +458,18 @@ describe('trackMFEVitals', () => {
       })
 
       it('should wait for loadeddata event on video elements', () => {
-        const vitals = trackMFEVitals('test-mfe', timings)
+        const vitals = trackMFEVitals(mfeTarget, timings)
 
-        const mockContainer = {
+        const mockContainer = createMockElem({
           nodeType: 1,
           dataset: { nrMfeId: 'test-mfe' },
           tagName: 'DIV',
           nodeName: 'DIV',
           parentNode: null
-        }
+        })
 
         const loadeddataListeners = []
-        const unloadedVideo = {
+        const unloadedVideo = createMockElem({
           nodeType: 1,
           tagName: 'VIDEO',
           nodeName: 'VIDEO',
@@ -449,7 +481,7 @@ describe('trackMFEVitals', () => {
           addEventListener: jest.fn((event, handler, options) => {
             if (event === 'loadeddata') loadeddataListeners.push({ handler, options })
           })
-        }
+        })
 
         mutationCallbacks.forEach(cb => cb([{ addedNodes: [unloadedVideo] }]))
 
@@ -463,17 +495,17 @@ describe('trackMFEVitals', () => {
       })
 
       it('should use once:true for image load listeners to prevent memory leaks', () => {
-        trackMFEVitals('test-mfe', timings)
+        trackMFEVitals(mfeTarget, timings)
 
-        const mockContainer = {
+        const mockContainer = createMockElem({
           nodeType: 1,
           dataset: { nrMfeId: 'test-mfe' },
           tagName: 'DIV',
           nodeName: 'DIV',
           parentNode: null
-        }
+        })
 
-        const unloadedImage = {
+        const unloadedImage = createMockElem({
           nodeType: 1,
           tagName: 'IMG',
           nodeName: 'IMG',
@@ -483,7 +515,7 @@ describe('trackMFEVitals', () => {
           parentNode: mockContainer,
           getBoundingClientRect: jest.fn(() => ({ width: 600, height: 400 })),
           addEventListener: jest.fn()
-        }
+        })
 
         mutationCallbacks.forEach(cb => cb([{ addedNodes: [unloadedImage] }]))
 
@@ -495,17 +527,17 @@ describe('trackMFEVitals', () => {
       })
 
       it('should use once:true for video loadeddata listeners to prevent memory leaks', () => {
-        trackMFEVitals('test-mfe', timings)
+        trackMFEVitals(mfeTarget, timings)
 
-        const mockContainer = {
+        const mockContainer = createMockElem({
           nodeType: 1,
           dataset: { nrMfeId: 'test-mfe' },
           tagName: 'DIV',
           nodeName: 'DIV',
           parentNode: null
-        }
+        })
 
-        const unloadedVideo = {
+        const unloadedVideo = createMockElem({
           nodeType: 1,
           tagName: 'VIDEO',
           nodeName: 'VIDEO',
@@ -515,7 +547,7 @@ describe('trackMFEVitals', () => {
           parentNode: mockContainer,
           getBoundingClientRect: jest.fn(() => ({ width: 1920, height: 1080 })),
           addEventListener: jest.fn()
-        }
+        })
 
         mutationCallbacks.forEach(cb => cb([{ addedNodes: [unloadedVideo] }]))
 
@@ -527,17 +559,17 @@ describe('trackMFEVitals', () => {
       })
 
       it('should observe already-loaded videos immediately', () => {
-        trackMFEVitals('test-mfe', timings)
+        trackMFEVitals(mfeTarget, timings)
 
-        const mockContainer = {
+        const mockContainer = createMockElem({
           nodeType: 1,
           dataset: { nrMfeId: 'test-mfe' },
           tagName: 'DIV',
           nodeName: 'DIV',
           parentNode: null
-        }
+        })
 
-        const loadedVideo = {
+        const loadedVideo = createMockElem({
           nodeType: 1,
           tagName: 'VIDEO',
           nodeName: 'VIDEO',
@@ -547,7 +579,7 @@ describe('trackMFEVitals', () => {
           parentNode: mockContainer,
           getBoundingClientRect: jest.fn(() => ({ width: 1920, height: 1080 })),
           addEventListener: jest.fn()
-        }
+        })
 
         mutationCallbacks.forEach(cb => cb([{ addedNodes: [loadedVideo] }]))
 
@@ -561,18 +593,17 @@ describe('trackMFEVitals', () => {
 
     describe('Disconnect on user interaction', () => {
       it('should disconnect LCP observer on pointerdown within MFE', () => {
-        trackMFEVitals('test-mfe', timings)
+        trackMFEVitals(mfeTarget, timings)
         const pointerListeners = mockEventListeners.pointerdown || []
         expect(pointerListeners.length).toBeGreaterThan(0)
 
-        const mockTarget = {
+        const mockTarget = createMockElem({
           nodeType: 1,
           dataset: { nrMfeId: 'test-mfe' },
           tagName: 'BUTTON',
           nodeName: 'BUTTON',
-          parentElement: null,
-          parentNode: null
-        }
+          parentElement: null
+        })
 
         // Trigger pointerdown event within MFE
         pointerListeners[0].handler({ target: mockTarget })
@@ -583,19 +614,19 @@ describe('trackMFEVitals', () => {
       })
 
       it('should disconnect LCP observer on keydown within MFE', () => {
-        trackMFEVitals('test-mfe', timings)
+        trackMFEVitals(mfeTarget, timings)
 
         const keyListeners = mockEventListeners.keydown || []
         expect(keyListeners.length).toBeGreaterThan(0)
 
-        const mockTarget = {
+        const mockTarget = createMockElem({
           nodeType: 1,
           dataset: { nrMfeId: 'test-mfe' },
           tagName: 'INPUT',
           nodeName: 'INPUT',
           parentElement: null,
           parentNode: null
-        }
+        })
 
         // Trigger keydown event within MFE
         keyListeners[0].handler({ target: mockTarget })
@@ -605,18 +636,18 @@ describe('trackMFEVitals', () => {
       })
 
       it('should not disconnect LCP observer for interactions outside MFE', () => {
-        trackMFEVitals('test-mfe', timings)
+        trackMFEVitals(mfeTarget, timings)
 
         const pointerListeners = mockEventListeners.pointerdown || []
 
-        const outsideTarget = {
+        const outsideTarget = createMockElem({
           nodeType: 1,
           dataset: { nrMfeId: 'different-mfe' },
           tagName: 'DIV',
           nodeName: 'DIV',
           parentElement: null,
           parentNode: null
-        }
+        })
 
         // Trigger event outside MFE
         pointerListeners[0].handler({ target: outsideTarget })
@@ -626,18 +657,18 @@ describe('trackMFEVitals', () => {
       })
 
       it('should remove interaction listeners after LCP disconnect', () => {
-        trackMFEVitals('test-mfe', timings)
+        trackMFEVitals(mfeTarget, timings)
 
         const mockGlobalScope = require('../../../../src/common/constants/runtime').globalScope
 
-        const mockTarget = {
+        const mockTarget = createMockElem({
           nodeType: 1,
           dataset: { nrMfeId: 'test-mfe' },
           tagName: 'BUTTON',
           nodeName: 'BUTTON',
           parentElement: null,
           parentNode: null
-        }
+        })
 
         // Trigger interaction
         mockEventListeners.pointerdown[0].handler({ target: mockTarget })
@@ -659,9 +690,9 @@ describe('trackMFEVitals', () => {
 
   describe('CLS tracking', () => {
     it('should accumulate CLS from matching layout shifts', () => {
-      const vitals = trackMFEVitals('test-mfe', timings)
+      const vitals = trackMFEVitals(mfeTarget, timings)
 
-      const mockNode = {
+      const mockNode = createMockElem({
         nodeType: 1,
         dataset: { nrMfeId: 'test-mfe' },
         tagName: 'DIV',
@@ -670,7 +701,7 @@ describe('trackMFEVitals', () => {
         className: 'shift-element',
         parentElement: null,
         parentNode: null
-      }
+      })
 
       // Simulate layout shift entry
       const shiftEntry = {
@@ -686,9 +717,9 @@ describe('trackMFEVitals', () => {
     })
 
     it('should update largest shift when bigger shift occurs', () => {
-      const vitals = trackMFEVitals('test-mfe', timings)
+      const vitals = trackMFEVitals(mfeTarget, timings)
 
-      const mockNode1 = {
+      const mockNode1 = createMockElem({
         nodeType: 1,
         dataset: { nrMfeId: 'test-mfe' },
         tagName: 'DIV',
@@ -696,9 +727,9 @@ describe('trackMFEVitals', () => {
         id: 'small-shift',
         parentElement: null,
         parentNode: null
-      }
+      })
 
-      const mockNode2 = {
+      const mockNode2 = createMockElem({
         nodeType: 1,
         dataset: { nrMfeId: 'test-mfe' },
         tagName: 'IMG',
@@ -707,7 +738,7 @@ describe('trackMFEVitals', () => {
         className: 'hero',
         parentElement: null,
         parentNode: null
-      }
+      })
 
       performanceCallbacks['layout-shift']({
         getEntries: () => [
@@ -735,16 +766,16 @@ describe('trackMFEVitals', () => {
     })
 
     it('should ignore shifts with recent input', () => {
-      const vitals = trackMFEVitals('test-mfe', timings)
+      const vitals = trackMFEVitals(mfeTarget, timings)
 
-      const mockNode = {
+      const mockNode = createMockElem({
         nodeType: 1,
         dataset: { nrMfeId: 'test-mfe' },
         tagName: 'DIV',
         nodeName: 'DIV',
         parentElement: null,
         parentNode: null
-      }
+      })
 
       performanceCallbacks['layout-shift']({
         getEntries: () => [
@@ -762,21 +793,21 @@ describe('trackMFEVitals', () => {
     })
 
     it('should be null when MFE container is not found in DOM', () => {
-      // Override querySelector to return null (MFE not in DOM)
+      // Override querySelectorAll to return no matches (MFE not in DOM)
       const mockGlobalScope = require('../../../../src/common/constants/runtime').globalScope
-      mockGlobalScope.document.querySelector = jest.fn(() => null)
+      mockGlobalScope.document.querySelectorAll = jest.fn(() => [])
 
-      const vitals = trackMFEVitals('missing-mfe', timings)
+      const vitals = trackMFEVitals(mfeTarget, timings)
 
-      expect(vitals.cls.value).toBeNull()
+      expect(vitals.cls.value).toBeUndefined()
     })
   })
 
   describe('INP tracking', () => {
     it('should track the longest interaction duration', () => {
-      const vitals = trackMFEVitals('test-mfe', timings)
+      const vitals = trackMFEVitals(mfeTarget, timings)
 
-      const mockTarget = {
+      const mockTarget = createMockElem({
         nodeType: 1,
         dataset: { nrMfeId: 'test-mfe' },
         tagName: 'BUTTON',
@@ -785,7 +816,7 @@ describe('trackMFEVitals', () => {
         className: 'btn primary',
         parentElement: null,
         parentNode: null
-      }
+      })
 
       const eventEntry = {
         interactionId: 123,
@@ -803,9 +834,9 @@ describe('trackMFEVitals', () => {
     })
 
     it('should update INP when longer interaction occurs', () => {
-      const vitals = trackMFEVitals('test-mfe', timings)
+      const vitals = trackMFEVitals(mfeTarget, timings)
 
-      const mockTarget1 = {
+      const mockTarget1 = createMockElem({
         nodeType: 1,
         dataset: { nrMfeId: 'test-mfe' },
         tagName: 'INPUT',
@@ -813,9 +844,9 @@ describe('trackMFEVitals', () => {
         id: 'field1',
         parentElement: null,
         parentNode: null
-      }
+      })
 
-      const mockTarget2 = {
+      const mockTarget2 = createMockElem({
         nodeType: 1,
         dataset: { nrMfeId: 'test-mfe' },
         tagName: 'BUTTON',
@@ -823,7 +854,7 @@ describe('trackMFEVitals', () => {
         id: 'field2',
         parentElement: null,
         parentNode: null
-      }
+      })
 
       performanceCallbacks.event({
         getEntries: () => [
@@ -857,16 +888,15 @@ describe('trackMFEVitals', () => {
     })
 
     it('should handle missing processingStart/End gracefully', () => {
-      const vitals = trackMFEVitals('test-mfe', timings)
+      const vitals = trackMFEVitals(mfeTarget, timings)
 
-      const mockTarget = {
+      const mockTarget = createMockElem({
         nodeType: 1,
         dataset: { nrMfeId: 'test-mfe' },
         tagName: 'DIV',
         nodeName: 'DIV',
-        parentElement: null,
-        parentNode: null
-      }
+        parentElement: null
+      })
 
       const eventEntry = {
         interactionId: 123,
@@ -885,16 +915,16 @@ describe('trackMFEVitals', () => {
     })
 
     it('should ignore events without interactionId', () => {
-      const vitals = trackMFEVitals('test-mfe', timings)
+      const vitals = trackMFEVitals(mfeTarget, timings)
 
-      const mockTarget = {
+      const mockTarget = createMockElem({
         nodeType: 1,
         dataset: { nrMfeId: 'test-mfe' },
         tagName: 'DIV',
         nodeName: 'DIV',
         parentElement: null,
         parentNode: null
-      }
+      })
 
       performanceCallbacks.event({
         getEntries: () => [
@@ -907,7 +937,7 @@ describe('trackMFEVitals', () => {
         ]
       })
 
-      expect(vitals.inp.value).toBeNull()
+      expect(vitals.inp.value).toBeUndefined()
     })
   })
 
@@ -915,43 +945,44 @@ describe('trackMFEVitals', () => {
     it('should only track elements within the specified MFE', () => {
       const mockGlobalScope = require('../../../../src/common/constants/runtime').globalScope
       mockGlobalScope.document.querySelector = jest.fn(() => null)
+      mockGlobalScope.document.querySelectorAll = jest.fn(() => [])
 
-      const vitals = trackMFEVitals('mfe-a', timings)
+      const vitals = trackMFEVitals(mfeTarget, timings)
 
-      const mfeBContainer = {
+      const mfeBContainer = createMockElem({
         nodeType: 1,
         dataset: { nrMfeId: 'mfe-b' },
         tagName: 'DIV',
         nodeName: 'DIV',
         parentNode: null
-      }
+      })
 
-      const mfeBElement = {
+      const mfeBElement = createMockElem({
         textContent: 'MFE B content',
         nodeType: 1,
         tagName: 'DIV',
         nodeName: 'DIV',
         parentElement: mfeBContainer,
         parentNode: mfeBContainer
-      }
+      })
 
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [mfeBElement] }]))
 
-      expect(vitals.fcp.value).toBeNull()
+      expect(vitals.fcp.value).toBeUndefined()
     })
 
     it('should track nested elements within MFE', () => {
-      const vitals = trackMFEVitals('nested-mfe', timings)
+      const vitals = trackMFEVitals(mfeTarget, timings)
 
-      const parentElement = {
+      const parentElement = createMockElem({
         nodeType: 1,
         dataset: { nrMfeId: 'nested-mfe' },
         tagName: 'SECTION',
         nodeName: 'SECTION',
         parentNode: null
-      }
+      })
 
-      const childElement = {
+      const childElement = createMockElem({
         textContent: 'Child content',
         nodeType: 1,
         tagName: 'P',
@@ -959,7 +990,7 @@ describe('trackMFEVitals', () => {
         parentElement,
         parentNode: parentElement,
         getBoundingClientRect: jest.fn(() => ({ width: 400, height: 300 }))
-      }
+      })
 
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [childElement] }]))
 
@@ -973,20 +1004,20 @@ describe('trackMFEVitals', () => {
   describe('Performance optimizations', () => {
     describe('MFE root scoping', () => {
       it('should observe from MFE root when it already exists', () => {
-        const mockRoot = {
+        const mockRoot = createMockElem({
           nodeType: 1,
           dataset: { nrMfeId: 'test-mfe' },
           tagName: 'DIV',
           nodeName: 'DIV'
-        }
-
-        const mockGlobalScope = require('../../../../src/common/constants/runtime').globalScope
-        mockGlobalScope.document.querySelector = jest.fn((selector) => {
-          if (selector === '[data-nr-mfe-id="test-mfe"]') return mockRoot
-          return null
         })
 
-        trackMFEVitals('test-mfe', timings)
+        const mockGlobalScope = require('../../../../src/common/constants/runtime').globalScope
+        mockGlobalScope.document.querySelectorAll = jest.fn((selector) => {
+          if (selector === '[data-nr-mfe-id="test-mfe"]') return [mockRoot]
+          return []
+        })
+
+        trackMFEVitals(mfeTarget, timings)
 
         // MutationObserver should observe the root, not document
         const mutationObserverInstance = mockMutationObserver.mock.instances[0]
@@ -998,9 +1029,9 @@ describe('trackMFEVitals', () => {
 
       it('should switch from document to root observation when root appears', () => {
         const mockGlobalScope = require('../../../../src/common/constants/runtime').globalScope
-        mockGlobalScope.document.querySelector = jest.fn(() => null)
+        mockGlobalScope.document.querySelectorAll = jest.fn(() => [])
 
-        trackMFEVitals('dynamic-mfe', timings)
+        trackMFEVitals(mfeTarget, timings)
 
         // Initially observes document
         const mutationObserverInstance = mockMutationObserver.mock.instances[0]
@@ -1010,12 +1041,12 @@ describe('trackMFEVitals', () => {
         )
 
         // Now the MFE root appears
-        const mfeRoot = {
+        const mfeRoot = createMockElem({
           nodeType: 1,
-          dataset: { nrMfeId: 'dynamic-mfe' },
+          dataset: { nrMfeId: 'test-mfe' },
           tagName: 'DIV',
           nodeName: 'DIV'
-        }
+        })
 
         // Simulate mutation observer detecting the root being added
         mutationCallbacks.forEach(cb => cb([{ addedNodes: [mfeRoot] }]))
@@ -1029,12 +1060,12 @@ describe('trackMFEVitals', () => {
       })
 
       it('should skip isInMFE checks when observing from root', () => {
-        const mockRoot = {
+        const mockRoot = createMockElem({
           nodeType: 1,
           dataset: { nrMfeId: 'scoped-mfe' },
           tagName: 'DIV',
           nodeName: 'DIV'
-        }
+        })
 
         const mockGlobalScope = require('../../../../src/common/constants/runtime').globalScope
         mockGlobalScope.document.querySelector = jest.fn((selector) => {
@@ -1042,16 +1073,17 @@ describe('trackMFEVitals', () => {
           return null
         })
 
-        const vitals = trackMFEVitals('scoped-mfe', timings)
+        const vitals = trackMFEVitals(mfeTarget, timings)
 
         // Add element directly under root (no parent hierarchy needed for test)
-        const mockElement = {
+        const mockElement = createMockElem({
           textContent: 'Content',
           nodeType: 1,
           tagName: 'DIV',
           nodeName: 'DIV',
-          getBoundingClientRect: jest.fn(() => ({ width: 300, height: 200 }))
-        }
+          getBoundingClientRect: jest.fn(() => ({ width: 300, height: 200 })),
+          dataset: {}
+        })
 
         // When observing from root, all mutations are implicitly in the MFE
         mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
@@ -1063,7 +1095,7 @@ describe('trackMFEVitals', () => {
 
   describe('disconnect functionality', () => {
     it('should disconnect all observers', () => {
-      const vitals = trackMFEVitals('test-mfe', timings)
+      const vitals = trackMFEVitals(mfeTarget, timings)
 
       vitals.disconnect()
 
@@ -1088,7 +1120,7 @@ describe('trackMFEVitals', () => {
     })
 
     it('should handle disconnect errors gracefully', () => {
-      const vitals = trackMFEVitals('test-mfe', timings)
+      const vitals = trackMFEVitals(mfeTarget, timings)
 
       // Override disconnect to throw
       mockMutationObserver.mock.instances.forEach(instance => {
@@ -1101,35 +1133,40 @@ describe('trackMFEVitals', () => {
 
   describe('edge cases', () => {
     it('should return empty vitals when id is missing', () => {
-      const vitals = trackMFEVitals('', timings)
+      const mockGlobalScope = require('../../../../src/common/constants/runtime').globalScope
+      mockGlobalScope.document.querySelector = jest.fn(() => null)
+      mockGlobalScope.document.querySelectorAll = jest.fn(() => [])
+
+      const vitals = trackMFEVitals({ instance: 'abcdefg' }, timings)
 
       // The collector still returns the vitals shell, but the value getters are never populated.
       expect(Object.getOwnPropertyDescriptor(vitals.fcp, 'value')?.get).toEqual(expect.any(Function))
       expect(Object.getOwnPropertyDescriptor(vitals.lcp, 'value')?.get).toEqual(expect.any(Function))
-      expect(vitals.cls.value).toBeNull()
-      expect(vitals.inp.value).toBeNull()
+      expect(vitals.cls.value).toBeUndefined()
+      expect(vitals.inp.value).toBeUndefined()
     })
 
     it('should handle elements without id or className', () => {
-      const vitals = trackMFEVitals('test-mfe', timings)
+      const vitals = trackMFEVitals(mfeTarget, timings)
 
-      const mockContainer = {
+      const mockContainer = createMockElem({
         nodeType: 1,
         dataset: { nrMfeId: 'test-mfe' },
         tagName: 'DIV',
         nodeName: 'DIV',
         parentNode: null
-      }
+      })
 
-      const mockElement = {
+      const mockElement = createMockElem({
         textContent: 'No ID or class',
         nodeType: 1,
         tagName: 'SPAN',
         nodeName: 'SPAN',
         parentElement: mockContainer,
         parentNode: mockContainer,
-        getBoundingClientRect: jest.fn(() => ({ width: 200, height: 100 }))
-      }
+        getBoundingClientRect: jest.fn(() => ({ width: 200, height: 100 })),
+        dataset: {}
+      })
 
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
 
@@ -1137,17 +1174,17 @@ describe('trackMFEVitals', () => {
     })
 
     it('should handle elements with className as object', () => {
-      const vitals = trackMFEVitals('test-mfe', timings)
+      const vitals = trackMFEVitals(mfeTarget, timings)
 
-      const mockContainer = {
+      const mockContainer = createMockElem({
         nodeType: 1,
         dataset: { nrMfeId: 'test-mfe' },
         tagName: 'DIV',
         nodeName: 'DIV',
         parentNode: null
-      }
+      })
 
-      const mockElement = {
+      const mockElement = createMockElem({
         textContent: 'SVG element',
         nodeType: 1,
         tagName: 'svg',
@@ -1155,8 +1192,9 @@ describe('trackMFEVitals', () => {
         className: { baseVal: 'icon' }, // SVG className is an object
         parentElement: mockContainer,
         parentNode: mockContainer,
-        getBoundingClientRect: jest.fn(() => ({ width: 50, height: 50 }))
-      }
+        getBoundingClientRect: jest.fn(() => ({ width: 50, height: 50 })),
+        dataset: {}
+      })
 
       mutationCallbacks.forEach(cb => cb([{ addedNodes: [mockElement] }]))
 

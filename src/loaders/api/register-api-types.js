@@ -53,4 +53,12 @@
  * @property {string} type - The type of timing associated with the registered entity, 'script' or 'link' if found with the performance resource API, 'fetch' for dynamic imports, 'inline' if found to be associated with the root document URL, or 'unknown' if no associated resource could be found.
  */
 
+/**
+ * @typedef {Object} RegisterAPIVitals
+ * @property {number} [fcp] - The first contentful paint timing for the registered entity.
+ * @property {number} [lcp] - The largest contentful paint timing for the registered entity.
+ * @property {number} [cls] - The cumulative layout shift score for the registered entity.
+ * @property {number} [inp] - The interaction to next paint timing for the registered entity.
+ */
+
 export default {}

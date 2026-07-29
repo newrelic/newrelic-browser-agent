@@ -5,6 +5,55 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "21f38a9af35f5204a47be02bfa2a73d41d8ba1f6",
+          "message": "MFE vitals improvements",
+          "issues": [
+            "1813"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "746d05504c451b954cd0d2b86b92415c22293f2a",
+          "message": "Automatically Detect MFE Web Sockets",
+          "issues": [
+            "1726"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "ba069fcea5f381db698044b84064bbba97676cec",
+          "message": "Avoid capturing agent AJAX payloads",
+          "issues": [
+            "1812"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "c5d9a773470d670cb27b63777dd035934f1dbfd9",
+          "message": "Do not obfuscate attribute keys",
+          "issues": [
+            "1810"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "b0cb098d0ea36d1d35212355bc51051f3c02c1ae",
+          "message": "Keep Ajax payload out of unrelated events",
+          "issues": [
+            "1809"
+          ]
+        }
+      ],
+      "version": "1.319.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "1ba28c88-4b13-4937-9987-013b9921ce0d",
+      "createTime": "2026-07-28T00:10:55.833Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "aa4d2f330fb832e0bbbdd8ed88702621f7564abf",
           "message": "Add websocket init config",
           "issues": [
@@ -4086,5 +4135,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-07-08T00:40:49.669Z"
+  "updateTime": "2026-07-28T00:10:55.833Z"
 }

@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.319.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.318.0...v1.319.0) (2026-07-28)
+
+
+### Features
+
+* Automatically Detect MFE Web Sockets ([#1726](https://github.com/newrelic/newrelic-browser-agent/issues/1726)) ([746d055](https://github.com/newrelic/newrelic-browser-agent/commit/746d05504c451b954cd0d2b86b92415c22293f2a))
+* Do not obfuscate attribute keys ([#1810](https://github.com/newrelic/newrelic-browser-agent/issues/1810)) ([c5d9a77](https://github.com/newrelic/newrelic-browser-agent/commit/c5d9a773470d670cb27b63777dd035934f1dbfd9))
+* MFE vitals improvements ([#1813](https://github.com/newrelic/newrelic-browser-agent/issues/1813)) ([21f38a9](https://github.com/newrelic/newrelic-browser-agent/commit/21f38a9af35f5204a47be02bfa2a73d41d8ba1f6))
+
+
+### Bug Fixes
+
+* Avoid capturing agent AJAX payloads ([#1812](https://github.com/newrelic/newrelic-browser-agent/issues/1812)) ([ba069fc](https://github.com/newrelic/newrelic-browser-agent/commit/ba069fcea5f381db698044b84064bbba97676cec))
+* Keep Ajax payload out of unrelated events ([#1809](https://github.com/newrelic/newrelic-browser-agent/issues/1809)) ([b0cb098](https://github.com/newrelic/newrelic-browser-agent/commit/b0cb098d0ea36d1d35212355bc51051f3c02c1ae))
+
 ## [1.318.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.317.0...v1.318.0) (2026-07-08)
 
 

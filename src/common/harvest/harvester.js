@@ -64,7 +64,7 @@ export class Harvester {
     const payload = aggregateInst.makeHarvestPayload(shouldRetryOnFail, localOpts)
 
     if (!payload) return output
-    const filteredPayload = this.agentRef.runtime.beforeHarvest?.(payload) // execute any user-defined beforeHarvest callback if it exists
+    const filteredPayload = this.agentRef.runtime.beforeHarvest?.({ feature: aggregateInst.featureName, payload }) // execute any user-defined beforeHarvest callback if it exists
     if (filteredPayload === null) {
       aggregateInst.postHarvestCleanup({ sent: false })
       return output // if the beforeHarvest callback returns null, skip sending this harvest

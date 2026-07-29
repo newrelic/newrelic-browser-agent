@@ -149,14 +149,14 @@ describe('triggerHarvestFor', () => {
   })
 
   describe('beforeHarvest hook', () => {
-    test('is invoked with the harvest payload so the payload can be inspected', () => {
-      const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent }
+    test('is invoked with the feature name and harvest payload so the payload can be inspected', () => {
+      const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent, featureName: 'jserrors' }
       fakeAgent.runtime.beforeHarvest = jest.fn()
 
       const result = harvester.triggerHarvestFor(fakeAggregate)
 
       expect(fakeAgent.runtime.beforeHarvest).toHaveBeenCalledTimes(1)
-      expect(fakeAgent.runtime.beforeHarvest).toHaveBeenCalledWith('fakePayload')
+      expect(fakeAgent.runtime.beforeHarvest).toHaveBeenCalledWith({ feature: 'jserrors', payload: 'fakePayload' })
       expect(result).toEqual({ payload: 'fakePayload', ranSend: true, endpointVersion: 1 }) // returning undefined sends the original payload
     })
 
@@ -191,12 +191,12 @@ describe('triggerHarvestFor', () => {
   describe('observation_mode', () => {
     test('does not send but still runs cleanup and the beforeHarvest hook when enabled', () => {
       fakeAgent.init.observation_mode.enabled = true
-      const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent, postHarvestCleanup: jest.fn() }
+      const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent, postHarvestCleanup: jest.fn(), featureName: 'jserrors' }
       fakeAgent.runtime.beforeHarvest = jest.fn()
 
       const result = harvester.triggerHarvestFor(fakeAggregate)
 
-      expect(fakeAgent.runtime.beforeHarvest).toHaveBeenCalledWith('fakePayload') // hook can still inspect data even though nothing is sent
+      expect(fakeAgent.runtime.beforeHarvest).toHaveBeenCalledWith({ feature: 'jserrors', payload: 'fakePayload' }) // hook can still inspect data even though nothing is sent
       expect(result).toEqual({ payload: 'fakePayload', ranSend: false, endpointVersion: 1 })
       expect(fakeAggregate.postHarvestCleanup).toHaveBeenCalledTimes(1)
       expect(fakeAggregate.postHarvestCleanup).toHaveBeenCalledWith({ sent: false })

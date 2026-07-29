@@ -66,7 +66,9 @@ describe('observation_mode', () => {
 
     await browser.execute(function () {
       window.observedActionNames = []
-      newrelic.beforeHarvest(function (payload) {
+      window.observedFeatures = []
+      newrelic.beforeHarvest(function ({ feature, payload }) {
+        window.observedFeatures.push(feature)
         ;(payload?.body?.ins || []).forEach(function (action) {
           window.observedActionNames.push(action.actionName)
         })
@@ -78,5 +80,8 @@ describe('observation_mode', () => {
       const observedActionNames = await browser.execute(function () { return window.observedActionNames })
       return observedActionNames.includes('observationModeInspected')
     }, { timeout: HARVEST_TIMEOUT, timeoutMsg: 'beforeHarvest never observed the page action payload' })
+
+    const observedFeatures = await browser.execute(function () { return window.observedFeatures })
+    expect(observedFeatures).toContain('generic_events')
   })
 })

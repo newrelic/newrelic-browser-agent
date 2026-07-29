@@ -198,3 +198,19 @@ test('should abort early when info remains invalid after late config check', asy
   expect(setupAgentSession).not.toHaveBeenCalled()
   expect(mockAggregate).not.toHaveBeenCalled()
 })
+
+test('should not abort on invalid info when observation_mode is enabled', async () => {
+  jest.mocked(isValid).mockReturnValue(false)
+  agentBase.init.observation_mode = { enabled: true }
+
+  const instrument = new InstrumentBase(agentBase, featureName)
+  const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
+  instrument.importAggregator(agentBase, () => importPromise, aggregateArgs)
+
+  const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
+  await windowLoadCallback()
+
+  expect(warn).not.toHaveBeenCalledWith(43)
+  expect(agentBase.ee.abort).not.toHaveBeenCalled()
+  expect(mockAggregate).toHaveBeenCalledWith(agentBase, aggregateArgs)
+})

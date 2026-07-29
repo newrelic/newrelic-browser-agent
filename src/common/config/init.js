@@ -72,6 +72,7 @@ const InitModelFn = () => {
     logging: { enabled: true, autoStart: true },
     metrics: { enabled: true, autoStart: true },
     obfuscate: undefined,
+    observation_mode: { enabled: false },
     page_action: { enabled: true },
     page_view_event: { enabled: true, autoStart: true },
     page_view_timing: { enabled: true, autoStart: true },

@@ -96,7 +96,7 @@ export class InstrumentBase extends FeatureBase {
       await this.deferred
 
       this.#checkConfiguration(agentRef) // check for late-appearing 'info' config on the page
-      if (!isValid(agentRef.info)) { // if there still isn't valid info, then we can't proceed with session setup or importing the aggregates
+      if (!isValid(agentRef.info) && !agentRef.init?.observation_mode?.enabled) { // if there still isn't valid info, then we can't proceed with session setup or importing the aggregates (observation_mode never talks to the network, so no credentials are required)
         warn(43)
         agentRef.ee.abort()
         this.loadedSuccessfully(false)

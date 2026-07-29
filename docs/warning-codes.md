@@ -143,3 +143,5 @@
 `A session replay payload failed to send and is being retried. Recording is paused during the retry period, and will resume when a successful harvest is made. Some replay activity may be missed during retry phases.`
 ### 71
 `An invalid feature mode was detected and set to "off".`
+### 72
+`A callback function must be supplied to beforeHarvest.`

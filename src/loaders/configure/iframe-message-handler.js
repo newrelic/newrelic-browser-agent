@@ -45,7 +45,7 @@ function handleTimingUpdate (event, agent) {
   const entity = getValidEntity(event, agent)
   if (!entity) return
 
-  if (entity.metadata?.timings) {
+  if (entity.metadata.timings) {
     const { property, value } = event.data
     if (isSafeProperty(entity.metadata.timings, property)) entity.metadata.timings[property] = value
   }

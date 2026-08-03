@@ -63,7 +63,7 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
   // Warn--once per endpoint--if the agent tries to send large payloads
   if (endpoint !== BLOBS && stringBody.length > 750000 && (warnings[endpoint] = (warnings[endpoint] || 0) + 1) === 1) warn(28, endpoint)
 
-  const headers = [{ key: 'content-type', value: 'text/plain' }]
+  const headers = [{ key: 'content-type', value: 'text/plain' }, ...(localOpts.headers || [])]
 
   /* Since workers don't support sendBeacon right now, they can only use XHR method.
       Because they still do permit synch XHR, the idea is that at final harvest time (worker is closing),
@@ -191,7 +191,6 @@ function baseQueryString (agentRef, qs, endpoint, harvesterObfuscator) {
     transactionNameParam(),
     param('ct', agentRef.runtime.customTransaction),
     '&rst=' + now(),
-    '&ck=0', // ck param DEPRECATED - still expected by backend
     '&s=' + (session?.state.value || '0'), // the 0 id encaps all untrackable and default traffic
     param('ref', ref),
     param('ptid', (agentRef.runtime.ptid ? '' + agentRef.runtime.ptid : ''))

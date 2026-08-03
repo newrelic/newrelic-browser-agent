@@ -39,7 +39,7 @@ export class Connector {
     this.makeConnectRequest()
   }
 
-  makeConnectRequest () {
+  makeConnectRequest (retryHeaders) {
     this.#connectStartTime = now()
     return send(this.#agentRef, {
       endpoint: `connect/2/${this.#agentRef.info.licenseKey}`,
@@ -47,10 +47,11 @@ export class Connector {
         body: {},
         qs: {
           a: this.#agentRef.info.applicationID,
-          v: VERSION
+          v: VERSION,
+          s: this.#agentRef.runtime.session?.state.value || '0'
         }
       },
-      localOpts: { sendEmptyBody: true },
+      localOpts: { sendEmptyBody: true, headers: retryHeaders },
       raw: true,
       featureName: 'connect',
       cbFinished: this.#processConnectResponse.bind(this)
@@ -78,7 +79,11 @@ export class Connector {
     if (shouldRetry && ++this.#numOfAttempts < MAX_CONNECT_ATTEMPTS) {
       // We use an exponential backoff calculation for the retry to avoid thundering herd, skipping any further processing.
       const delay = Math.floor(Math.random() * CONNECT_RETRY_BASE_MS * (2 ** (this.#numOfAttempts - 1)))
-      setTimeout(this.makeConnectRequest.bind(this), delay)
+      const retryHeaders = [
+        { key: 'X-Retry-Count', value: this.#numOfAttempts },
+        { key: 'X-Previous-Status', value: status }
+      ]
+      setTimeout(() => this.makeConnectRequest(retryHeaders), delay)
       return
     }
 

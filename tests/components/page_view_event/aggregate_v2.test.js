@@ -53,6 +53,82 @@ describe('PageViewEvent aggregate v2', () => {
     sendSpy.mockRestore()
   })
 
+  test('forwards igp from the connect response as a query param on the v2 PageView harvest', async () => {
+    const sendSpy = jest.spyOn(sendModule, 'send').mockImplementation(() => true)
+
+    const agent = setupAgent({
+      init: { feature_flags: ['rum_v2'] },
+      runtime: {
+        activatedFeatures: {},
+        appMetadata: {} // clear setupAgent's default so Connector's guard actually applies the connect response below
+      }
+    })
+    agent.info.errorBeacon = 'fake-beacon'
+
+    const pveInst = new PageViewEvent(agent)
+    await new Promise(process.nextTick)
+    const pveAggregate = pveInst.featAggregate
+
+    const connectCall = sendSpy.mock.calls.find(call => call[1].featureName === 'connect')
+    connectCall[1].cbFinished({
+      sent: true,
+      status: 200,
+      retry: false,
+      xhr: { status: 200 },
+      responseText: JSON.stringify({
+        app: { agents: [{ entityGuid: 'guid' }], nrServerTime: Date.now(), igp: 'opaque-igp-token' },
+        config: {}
+      })
+    })
+
+    expect(pveAggregate.queryStringsBuilder().igp).toEqual('opaque-igp-token')
+
+    sendSpy.mockRestore()
+  })
+
+  test('outgoing v2 PageView harvest XHR URL includes the igp forwarded from connect', async () => {
+    // Let `send()` run for real so it builds the actual URL; only stub the actual network dispatch (`.send()`).
+    // `.open()` is left to run for real -- jsdom's XHR requires it to have actually run before `setRequestHeader` is called.
+    const openSpy = jest.spyOn(XMLHttpRequest.prototype, 'open')
+    jest.spyOn(XMLHttpRequest.prototype, 'send').mockImplementation(() => {})
+    const sendSpy = jest.spyOn(sendModule, 'send')
+
+    const agent = setupAgent({
+      init: { feature_flags: ['rum_v2'] },
+      runtime: {
+        activatedFeatures: {},
+        appMetadata: {} // clear setupAgent's default so Connector's guard actually applies the connect response below
+      }
+    })
+    agent.info.errorBeacon = 'fake-beacon'
+
+    const pveInst = new PageViewEvent(agent)
+    await new Promise(process.nextTick)
+    const pveAggregate = pveInst.featAggregate
+
+    const connectCall = sendSpy.mock.calls.find(call => call[1].featureName === 'connect')
+    connectCall[1].cbFinished({
+      sent: true,
+      status: 200,
+      retry: false,
+      xhr: { status: 200 },
+      responseText: JSON.stringify({
+        app: { agents: [{ entityGuid: 'guid' }], nrServerTime: Date.now(), igp: 'opaque-igp-token' },
+        config: {}
+      })
+    })
+
+    pveAggregate.events.add({ ja: {} })
+    agent.runtime.harvester.triggerHarvestFor(pveAggregate)
+
+    const harvestUrl = openSpy.mock.calls.map(call => call[1]).find(url => url.includes('/rum/2/'))
+    expect(harvestUrl).toContain('igp=opaque-igp-token')
+
+    openSpy.mockRestore()
+    XMLHttpRequest.prototype.send.mockRestore()
+    sendSpy.mockRestore()
+  })
+
   test('builds query timestamp from corrected origin time', async () => {
     const agent = setupAgent({
       init: { feature_flags: ['rum_v2'] },

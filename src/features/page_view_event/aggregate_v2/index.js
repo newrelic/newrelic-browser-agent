@@ -60,6 +60,7 @@ export class Aggregate extends AggregateBase {
     const queryParameters = {
       at: info.atts,
       af: getActivatedFeaturesFlags(this.agentRef).join(','),
+      igp: this.agentRef.runtime.appMetadata.igp,
       ...measures,
       fp: firstPaint.current.value,
       fcp: firstContentfulPaint.current.value

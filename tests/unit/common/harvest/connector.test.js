@@ -63,10 +63,10 @@ describe('Connector', () => {
       endpoint: 'connect/2/license-key',
       raw: true,
       featureName: 'connect',
-      localOpts: { sendEmptyBody: true },
+      localOpts: { sendEmptyBody: true, headers: undefined },
       payload: {
         body: {},
-        qs: { a: 'app-id', v: VERSION }
+        qs: { a: 'app-id', v: VERSION, s: '0' }
       },
       cbFinished: expect.any(Function)
     }))
@@ -197,6 +197,18 @@ describe('Connector', () => {
     })
 
     expect(timeoutSpy).toHaveBeenCalledTimes(1)
+
+    jest.runAllTimers()
+
+    expect(send).toHaveBeenLastCalledWith(agent, expect.objectContaining({
+      localOpts: {
+        sendEmptyBody: true,
+        headers: [
+          { key: 'X-Retry-Count', value: 1 },
+          { key: 'X-Previous-Status', value: 429 }
+        ]
+      }
+    }))
 
     timeoutSpy.mockRestore()
     jest.useRealTimers()

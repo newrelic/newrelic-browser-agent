@@ -1,5 +1,6 @@
 import { resetAgent, setupAgent } from '../setup-agent'
 import { Instrument as SoftNav } from '../../../src/features/soft_navigations/instrument'
+import { Harvester } from '../../../src/common/harvest/harvester'
 import * as loadTimeModule from '../../../src/common/vitals/load-time'
 import { INTERACTION_STATUS, NO_LONG_TASK_WINDOW, POPSTATE_MERGE_WINDOW, POPSTATE_TRIGGER } from '../../../src/features/soft_navigations/constants'
 
@@ -11,11 +12,11 @@ beforeAll(() => {
       soft_navigations: { enabled: true }
     }
   })
-  mainAgent.runtime.harvester = {
-    triggerHarvestFor: jest.fn(),
-    startTimer: jest.fn(),
-    initializedAggregates: []
-  }
+  // The agent's real bootstrap flow (ensureRuntimeBootstrap) always replaces `runtime.harvester` with a fresh
+  // Harvester once a feature imports its aggregate, so stub out its behavior at the prototype level instead of
+  // assigning a plain object here (which would just get discarded).
+  jest.spyOn(Harvester.prototype, 'triggerHarvestFor').mockImplementation(() => ({ ranSend: false }))
+  jest.spyOn(Harvester.prototype, 'startTimer').mockImplementation(() => {})
 })
 
 let softNavAggregate

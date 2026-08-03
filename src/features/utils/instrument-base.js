@@ -226,8 +226,8 @@ async function ensureRuntimeBootstrap (agentRef, ee, featureName) {
       import(/* webpackChunkName: "connector" */ '../../common/harvest/connector'),
       import(/* webpackChunkName: "harvester" */ '../../common/harvest/harvester')
     ])
-    if (!agentRef.runtime.connector) agentRef.runtime.connector = new Connector(agentRef)
-    if (!agentRef.runtime.harvester) agentRef.runtime.harvester = new Harvester(agentRef)
+    agentRef.runtime.connector = new Connector(agentRef)
+    agentRef.runtime.harvester = new Harvester(agentRef)
   })()
 
   runtimeBootstrapPromises.set(agentRef, bootstrapPromise)

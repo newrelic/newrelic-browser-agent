@@ -7,8 +7,7 @@ describe('PageViewEvent aggregate v2', () => {
     const agent = setupAgent({
       init: { feature_flags: ['rum_v2'] },
       runtime: {
-        activatedFeatures: {},
-        connector: {}
+        activatedFeatures: {}
       }
     })
 
@@ -18,7 +17,7 @@ describe('PageViewEvent aggregate v2', () => {
     expect(pveInst.featAggregate.harvestEndpointVersion).toEqual(2)
   })
 
-  test('only sends once consent is granted and harvester runs', async () => {
+  test('only sends telemetry once consent is granted and harvester runs', async () => {
     const sendSpy = jest.spyOn(sendModule, 'send').mockImplementation(() => true)
 
     const agent = setupAgent({
@@ -28,7 +27,6 @@ describe('PageViewEvent aggregate v2', () => {
       },
       runtime: {
         activatedFeatures: {},
-        connector: {},
         consented: false
       }
     })
@@ -40,6 +38,9 @@ describe('PageViewEvent aggregate v2', () => {
 
     // Ensure there is payload ready before we trigger harvest checks.
     pveAggregate.events.add({ ja: {} })
+
+    // The rum_v2 Connector fires its own connect request during bootstrap; only the harvest calls below are under test.
+    sendSpy.mockClear()
 
     expect(agent.runtime.harvester.triggerHarvestFor(pveAggregate).ranSend).toEqual(false)
     expect(sendSpy).not.toHaveBeenCalled()
@@ -56,8 +57,7 @@ describe('PageViewEvent aggregate v2', () => {
     const agent = setupAgent({
       init: { feature_flags: ['rum_v2'] },
       runtime: {
-        activatedFeatures: {},
-        connector: {}
+        activatedFeatures: {}
       }
     })
 
@@ -73,8 +73,7 @@ describe('PageViewEvent aggregate v2', () => {
     const agent = setupAgent({
       init: { feature_flags: ['rum_v2'] },
       runtime: {
-        activatedFeatures: {},
-        connector: {}
+        activatedFeatures: {}
       }
     })
 

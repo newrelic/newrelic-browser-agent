@@ -144,7 +144,10 @@ test('does not obfuscate timing names or attribute keys', async () => {
       ]
     },
     info: {
-      jsAttributes: { sensitiveCustomKey: 'sensitiveCustomValue' }
+      jsAttributes: {
+        sensitiveCustomKey: 'sensitiveCustomValue',
+        nested: { sensitiveCustomKey: 'sensitiveCustomValue' }
+      }
     }
   })
 
@@ -203,6 +206,7 @@ test('does not obfuscate timing names or attribute keys', async () => {
   globalAttrs.push({ key: 'cls' })
   globalAttrs.push({ key: 'webdriverDetected' })
   globalAttrs.push({ key: 'sensitiveCustomKey', value: 'OBFUSCATEDCustomValuE' })
+  globalAttrs.push({ key: 'nested', value: '{"OBFUSCATEDCustomKEy":"OBFUSCATEDCustomValuE"}' })
   globalAttrs.forEach(obj => {
     checkLcpAttrs(obj)
     checkFcpAttrs(obj)

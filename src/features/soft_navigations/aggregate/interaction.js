@@ -9,6 +9,7 @@ import { now } from '../../../common/timing/now'
 import { cleanURL } from '../../../common/url/clean-url'
 import { NODE_TYPE, INTERACTION_STATUS, INTERACTION_TYPE, API_TRIGGER_NAME, IPL_TRIGGER_NAME, NO_LONG_TASK_WINDOW } from '../constants'
 import { BelNode } from './bel-node'
+import { createStringAdders } from '../../../common/payloads/payloads'
 
 /**
  * link https://github.com/newrelic/nr-querypack/blob/main/schemas/bel/7.qpschema
@@ -139,8 +140,7 @@ export class Interaction extends BelNode {
    */
   serialize (firstStartTimeOfPayload, agentRef, interactionObfuscator, ajaxObfuscator) {
     const isFirstIxnOfPayload = firstStartTimeOfPayload === undefined
-    const addString = getAddStringContext(interactionObfuscator)
-    const addStringRaw = (str) => addString(str, false)
+    const { addString, addStringRaw } = createStringAdders(getAddStringContext, interactionObfuscator)
     const nodeList = []
     let ixnType
     if (this.trigger === IPL_TRIGGER_NAME) ixnType = INTERACTION_TYPE.INITIAL_PAGE_LOAD

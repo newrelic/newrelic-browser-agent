@@ -94,6 +94,8 @@ export class Aggregate extends AggregateBase {
       attrs.cls = cumulativeLayoutShift.current.value
     }
 
+    attrs.webdriverDetected = webdriverDetected
+
     const timing = {
       name,
       value,
@@ -126,18 +128,13 @@ export class Aggregate extends AggregateBase {
     })
   }
 
-  appendGlobalCustomAttributes (timing, serializers) {
-    const { addVal } = serializers
-    var timingAttributes = timing.attrs || {}
+  #getGlobalCustomAttributes () {
+    const reservedAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elTag', 'elUrl', 'net-type',
+      'net-etype', 'net-rtt', 'net-dlink', 'webdriverDetected']
 
-    var reservedAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elTag', 'elUrl', 'net-type',
-      'net-etype', 'net-rtt', 'net-dlink']
-    Object.entries(this.agentRef.info.jsAttributes || {}).forEach(([key, val]) => {
-      if (reservedAttributes.indexOf(key) < 0) {
-        timingAttributes[key] = addVal(val)
-      }
-    })
-    timingAttributes.webdriverDetected = webdriverDetected
+    return Object.fromEntries(
+      Object.entries(this.agentRef.info.jsAttributes || {}).filter(([key]) => !reservedAttributes.includes(key))
+    )
   }
 
   preHarvestChecks () {
@@ -149,7 +146,8 @@ export class Aggregate extends AggregateBase {
   serializer (eventBuffer) {
     if (!eventBuffer?.length) return ''
     const { addString, addStringRaw } = createStringAdders(getAddStringContext, this.obfuscator)
-    const obfuscateOnly = (val) => typeof val === 'string' ? (this.obfuscator?.obfuscateString(val) ?? val) : val
+    const keepOrigValue = { addKey: addStringRaw, addVal: addStringRaw }
+    const obfuscateValue = { addKey: addStringRaw, addVal: addString }
 
     var payload = 'bel.6;'
 
@@ -160,13 +158,13 @@ export class Aggregate extends AggregateBase {
       payload += addStringRaw(timing.name) + ','
       payload += nullable(timing.value, numeric, false) + ','
 
-      this.appendGlobalCustomAttributes(timing, { addVal: obfuscateOnly })
+      const userAttrs = this.#getGlobalCustomAttributes()
 
       const { pageUrl, ...systemReservedAttrs } = timing.attrs || {}
-      var attrParts = addCustomAttributes(systemReservedAttrs, {
-        addKey: addStringRaw, addVal: addStringRaw
-      })
-      if (pageUrl) attrParts.push(...addCustomAttributes({ pageUrl }, { addKey: addStringRaw, addVal: addString }))
+      var attrParts = addCustomAttributes(systemReservedAttrs, keepOrigValue)
+      attrParts.push(...addCustomAttributes(userAttrs, obfuscateValue))
+      if (pageUrl) attrParts.push(...addCustomAttributes({ pageUrl }, obfuscateValue))
+
       if (attrParts && attrParts.length > 0) {
         payload += numeric(attrParts.length) + ';' + attrParts.join(';')
       }

@@ -13,6 +13,7 @@ beforeAll(() => {
   })
   mainAgent.runtime.harvester = {
     triggerHarvestFor: jest.fn(),
+    startTimer: jest.fn(),
     initializedAggregates: []
   }
 })

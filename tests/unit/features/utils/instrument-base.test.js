@@ -46,7 +46,8 @@ beforeEach(() => {
     runtime: {
       loaderType: 'browser-test',
       harvester: {
-        initializedAggregates: []
+        initializedAggregates: [],
+        startTimer: jest.fn()
       }
     }
   }

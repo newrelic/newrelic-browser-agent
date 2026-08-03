@@ -19,7 +19,12 @@ module.exports.testAssetRequest = function testAssetRequest (request) {
 
 module.exports.testRumRequest = function testRumRequest (request) {
   const url = new URL(request.url, 'resolve://')
-  return url.pathname === `/1/${this.testId}`
+  return url.pathname === `/1/${this.testId}` || url.pathname === `/rum/2/${this.testId}`
+}
+
+module.exports.testConnectRequest = function testConnectRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  return url.pathname === `/connect/2/${this.testId}`
 }
 
 module.exports.testEventsRequest = function testEventsRequest (request) {

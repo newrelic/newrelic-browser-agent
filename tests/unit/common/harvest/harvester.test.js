@@ -1,5 +1,6 @@
 import { Harvester } from '../../../../src/common/harvest/harvester'
 import { send } from '../../../../src/common/harvest/send'
+import { RUM } from '../../../../src/loaders/features/features'
 
 let mockEolCb
 jest.mock('../../../../src/common/unload/eol', () => ({
@@ -85,6 +86,7 @@ describe('On EOL harvest', () => {
 describe('send', () => {
   beforeAll(() => {
     fakeAgent.info.errorBeacon = 'test'
+    fakeAgent.info.licenseKey = 'license-key'
     fakeAgent.init.proxy = {}
     fakeAgent.runtime = { obfuscator: { obfuscateString: jest.fn() } }
   })
@@ -106,6 +108,57 @@ describe('send', () => {
   })
   test('does send if sendEmptyBody', () => {
     expect(send(fakeAgent, { endpoint: 'someEndpoint', targetApp: 'someApp', payload: { body: '' }, localOpts: { sendEmptyBody: true }, submitMethod: jest.fn() })).toEqual(true)
+  })
+
+  test('formats v1 rum URL without endpoint segment', () => {
+    const submitMethod = jest.fn()
+
+    send(fakeAgent, {
+      endpoint: RUM,
+      payload: { body: { foo: 'bar' } },
+      localOpts: {},
+      submitMethod,
+      endpointVersion: 1
+    })
+
+    expect(submitMethod).toHaveBeenCalledWith(expect.objectContaining({
+      url: expect.stringContaining('https://test/1/license-key?')
+    }))
+    expect(submitMethod).toHaveBeenCalledWith(expect.objectContaining({
+      url: expect.not.stringContaining('/rum/1/license-key')
+    }))
+  })
+
+  test('formats v2 rum URL with endpoint segment', () => {
+    const submitMethod = jest.fn()
+
+    send(fakeAgent, {
+      endpoint: RUM,
+      payload: { body: { foo: 'bar' } },
+      localOpts: {},
+      submitMethod,
+      endpointVersion: 2
+    })
+
+    expect(submitMethod).toHaveBeenCalledWith(expect.objectContaining({
+      url: expect.stringContaining('https://test/rum/2/license-key?')
+    }))
+  })
+
+  test('does not append a question mark for raw requests with no query params', () => {
+    const submitMethod = jest.fn()
+
+    send(fakeAgent, {
+      endpoint: 'connect/2/license-key',
+      payload: { body: { apps: [{ appId: 'app-id' }] } },
+      localOpts: {},
+      submitMethod,
+      raw: true
+    })
+
+    expect(submitMethod).toHaveBeenCalledWith(expect.objectContaining({
+      url: 'https://test/connect/2/license-key'
+    }))
   })
 })
 

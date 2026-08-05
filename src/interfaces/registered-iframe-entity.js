@@ -220,8 +220,6 @@ export class RegisteredIframeEntity {
         return
       }
 
-      // Always sync metadata if provided to keep instance up to date
-      // if (event.data.metadata) Object.assign(this.metadata, event.data.metadata)
       this.#closePending(event.data)
     })
   }

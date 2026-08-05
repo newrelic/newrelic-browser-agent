@@ -84,6 +84,30 @@ export class RegisteredIframeEntity {
 
     // Store the registration promise so other methods can wait for it
     this.#registrationPromise = this.#register(opts)
+    this.#registrationPromise
+      .then(() => {
+        const timings = findScriptTimings()
+        // Send initial timing values
+        for (const [key, value] of Object.entries(timings)) {
+          if (key !== 'correlation') {
+            this.#postTimingToAgent(key, value)
+          }
+        }
+        // Proxy the timings object to watch for updates to fetchStart, fetchEnd, asset, type
+        this.metadata.timings = new Proxy(timings, {
+          set: (target, key, value) => {
+            const changed = target[key] !== value
+            target[key] = value
+
+            // Send updates for these 4 properties when they change
+            if (changed && this.metadata.target.id && key !== 'correlation') {
+              this.#postTimingToAgent(key, value)
+            }
+            return true
+          }
+        })
+      })
+      .catch(() => {})
 
     this.#setupErrorListeners()
     this.#setupVitalsListeners()
@@ -102,27 +126,6 @@ export class RegisteredIframeEntity {
     try {
       const response = await this.#postMethodToAgent(REGISTER, [opts])
       if (response.metadata) Object.assign(this.metadata, response.metadata)
-
-      const timings = findScriptTimings()
-      // Send initial timing values
-      for (const [key, value] of Object.entries(timings)) {
-        if (key !== 'correlation') {
-          this.#postTimingToAgent(key, value)
-        }
-      }
-      // Proxy the timings object to watch for updates to fetchStart, fetchEnd, asset, type
-      this.metadata.timings = new Proxy(timings, {
-        set: (target, key, value) => {
-          const changed = target[key] !== value
-          target[key] = value
-
-          // Send updates for these 4 properties when they change
-          if (changed && this.metadata.target.id && key !== 'correlation') {
-            this.#postTimingToAgent(key, value)
-          }
-          return true
-        }
-      })
       return response
     } catch (err) {
       warn(73, err)

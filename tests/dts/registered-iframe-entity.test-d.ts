@@ -45,8 +45,8 @@ expectType<RegisteredIframeEntity>(registeredIframeEntityWithComplexTags)
 expectType<{ [x: string]: any; } | undefined>(registeredIframeEntityWithObjectTags.metadata.target?.tags)
 expectType<{ [x: string]: any; } | undefined>(registeredIframeEntityWithComplexTags.metadata.target?.tags)
 
-// blocked is only ever set when construction fails (not an iframe window) or registration errors out
-expectType<boolean | undefined>(registeredIframeEntityWithString.blocked)
+// blocked reflects metadata.target.blocked and is always a real boolean (defaults to false)
+expectType<boolean>(registeredIframeEntityWithString.blocked)
 
 // Test error cases for constructor with wrong parameters
 expectError(new RegisteredIframeEntity({})) // Missing required id and name

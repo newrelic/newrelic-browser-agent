@@ -59,6 +59,21 @@ export class RegisteredIframeEntity {
   #resourceObserver = null
   /** @private Original target descriptor (serializable) for postMessage */
   #targetDescriptor = null
+  /**
+   * Whether this entity is blocked from sending further calls to the container. Backed by
+   * `this.metadata.target.blocked` (rather than an independent field) so that this always
+   * reflects the container's blocked state too, including future syncs from response metadata --
+   * there is only ever one source of truth for "blocked", not one flag per side.
+   * @returns {boolean}
+   */
+  get blocked () {
+    return !!this.metadata.target.blocked
+  }
+
+  set blocked (value) {
+    this.metadata.target.blocked = value
+  }
+
   /** @private Parent window origin for secure postMessage */
   #parentOrigin = (() => {
     try {
@@ -384,13 +399,20 @@ export class RegisteredIframeEntity {
    * Deregister the registered entity (this), which blocks its use and captures end of life timings.
    * @returns {Promise<void>}
    */
-  deregister () {
+  async deregister () {
     try {
       this.#resourceObserver?.disconnect()
     } catch (err) { }
 
     this.#resourceObserver = null
-    return this.#postMethodToAgent('deregister', [])
+    try {
+      const response = await this.#postMethodToAgent('deregister', [])
+      if (response?.metadata) Object.assign(this.metadata, response.metadata)
+    } finally {
+      // Always end up blocked locally, even if the round trip to the container never resolved --
+      // deregistering is a one-way decision and further local calls should stop regardless.
+      this.blocked = true
+    }
   }
 
   /**

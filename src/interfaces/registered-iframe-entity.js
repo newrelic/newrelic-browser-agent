@@ -127,6 +127,7 @@ export class RegisteredIframeEntity {
     } catch (err) {
       warn(73, err)
       this.blocked = true
+      throw err
     }
   }
 
@@ -265,7 +266,7 @@ export class RegisteredIframeEntity {
 
     const timestamp = now()
     try {
-      await (bypassRegistration ? Promise.resolve() : this.#registrationPromise)
+      await (bypassRegistration ? Promise.resolve() : this.#registrationPromise.catch((err) => { throw err }))
       const messageId = ++this.#messageIdCounter
       const pending = needsResponse ? this.#openPending(messageId) : Promise.resolve()
       globalScope.parent.postMessage({

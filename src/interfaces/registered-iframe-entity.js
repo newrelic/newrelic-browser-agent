@@ -111,9 +111,10 @@ export class RegisteredIframeEntity {
     this.#registrationPromise
       .then(() => {
         const timings = findScriptTimings()
-        // Send initial timing values
+        // Send initial timing values, skipping ones still at their "not yet known" default
+        // (e.g. reportedAt: undefined, fetchStart: 0) to avoid pointless postMessage calls
         for (const [key, value] of Object.entries(timings)) {
-          if (key !== 'correlation') {
+          if (key !== 'correlation' && value) {
             this.#postTimingToAgent(key, value)
           }
         }

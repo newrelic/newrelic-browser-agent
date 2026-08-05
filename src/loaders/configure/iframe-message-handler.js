@@ -6,6 +6,7 @@ import { warn } from '../../common/util/console'
 import { getRegisteredEntityByIframeInterfaceId } from '../../common/v2/utils'
 import { IFRAME_TIMING_UPDATE, IFRAME_API, IFRAME_API_RESPONSE, IFRAME_VITALS_UPDATE, IFRAME_AJAX } from '../../common/constants/iframe-constants'
 import { REGISTER } from '../api/constants'
+import { pendingOriginTimestamps } from '../api/register'
 import { handle } from '../../common/event-emitter/handle'
 import { FEATURE_NAMES } from '../features/features'
 import { stringify } from '../../common/util/stringify'
@@ -106,7 +107,7 @@ function isValidOrigin (event, entity) {
  * @returns {Promise<{entity: Object|null, result: any}>}
  */
 export async function handleMethodCall (event, agent) {
-  const { method, args, target, iframeInterfaceId } = event.data
+  const { method, args, target, iframeInterfaceId, timestamp } = event.data
   const output = { entity: null, result: null }
   // Registration of a new entity needs to be handled differently than method calls on existing entities
   if (method === REGISTER) {
@@ -153,6 +154,11 @@ export async function handleMethodCall (event, agent) {
     return output
   }
 
+  // Prime the timestamp used by this call's underlying report() with the timestamp
+  // captured inside the iframe at call time, rather than letting report() fall back
+  // to the time this message happens to be processed by the container (which can lag
+  // behind due to the registration handshake or buffered/drained messages).
+  pendingOriginTimestamps.set(entity, timestamp)
   output.result = await methodFn.apply(entity, args || [])
   return output
 }

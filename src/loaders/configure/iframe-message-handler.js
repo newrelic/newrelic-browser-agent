@@ -13,6 +13,18 @@ import { stringify } from '../../common/util/stringify'
 import { registerHandler } from '../../common/event-emitter/register-handler'
 import { drain } from '../../common/drain/drain'
 import { isBrowserScope } from '../../common/constants/runtime'
+import { now } from '../../common/timing/now'
+
+/**
+ * Per-entity offset (approximately iframe timeOrigin - container timeOrigin) used to convert
+ * timing values captured with the iframe's own `now()` into container-page-relative values.
+ * Without this, values like `registeredAt`/`fetchStart` are reported as if they were relative to
+ * the container page's origin, when they're actually relative to the iframe's own (later) origin --
+ * skewing any timeline built from them by however long the iframe took to load. Keyed by entity via
+ * a WeakMap rather than a property on entity.metadata, since entity.metadata is also the object
+ * returned directly to non-iframe register() callers, for whom this offset is meaningless.
+ */
+const clockOffsets = new WeakMap()
 
 /**
  * Retrieves the registered entity associated with the iframeInterfaceId from the event data, and validates that the origin of the message event matches the expected origin for that entity.
@@ -48,7 +60,11 @@ function handleTimingUpdate (event, agent) {
 
   if (entity.metadata.timings) {
     const { property, value } = event.data
-    if (isSafeProperty(entity.metadata.timings, property)) entity.metadata.timings[property] = value
+    if (isSafeProperty(entity.metadata.timings, property)) {
+      const offset = clockOffsets.get(entity) || 0
+      // guard: `asset`/`type` are strings, not timing values -- only numeric values need the offset
+      entity.metadata.timings[property] = typeof value === 'number' ? value + offset : value
+    }
   }
 }
 
@@ -133,6 +149,10 @@ export async function handleMethodCall (event, agent) {
     output.entity = agent[REGISTER](freshTarget)
     output.entity.metadata.target.iframeInterfaceId = iframeInterfaceId
     output.entity.metadata.target.iframeOrigin = event.origin
+    // `timestamp` is the iframe's own now() captured when this REGISTER message was sent (see
+    // #postMessageToParent); comparing it to our now() approximates the gap between the two
+    // frames' timeOrigins (modulo negligible postMessage transit time).
+    clockOffsets.set(output.entity, now() - timestamp)
 
     return output
   }

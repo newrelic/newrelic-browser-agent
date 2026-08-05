@@ -75,3 +75,106 @@ describe('handleMethodCall', () => {
     expect(mockWarn).toHaveBeenCalledWith(35, 'doesNotExist')
   })
 })
+
+describe('clock offset correction for iframe timings', () => {
+  let setupIframeMFEMessageListener
+  let capturedHandler
+  let mockAgent
+  let registeredEntity
+  let mockNow
+  const origin = 'https://iframe.example.com'
+
+  beforeEach(async () => {
+    jest.resetModules()
+    jest.clearAllMocks()
+
+    jest.doMock('../../../../src/common/util/console', () => ({ warn: jest.fn() }))
+    jest.doMock('../../../../src/common/drain/drain', () => ({ drain: jest.fn() }))
+    jest.doMock('../../../../src/common/event-emitter/register-handler', () => ({
+      registerHandler: jest.fn((type, handler) => { capturedHandler = handler })
+    }))
+
+    registeredEntity = {
+      metadata: {
+        target: {},
+        timings: { fetchStart: 0, registeredAt: 0, asset: undefined, type: 'unknown' },
+        vitals: {}
+      }
+    }
+
+    jest.doMock('../../../../src/common/v2/utils', () => ({
+      getRegisteredEntityByIframeInterfaceId: jest.fn(() => registeredEntity)
+    }))
+
+    mockNow = jest.fn()
+    jest.doMock('../../../../src/common/timing/now', () => ({ now: mockNow }))
+
+    mockAgent = {
+      init: { api: { register: { iframe_domains: [] } } },
+      runtime: { listeningForIframeMessages: false },
+      ee: {},
+      register: jest.fn(() => registeredEntity)
+    }
+
+    const module = await import('../../../../src/loaders/configure/iframe-message-handler')
+    setupIframeMFEMessageListener = module.setupIframeMFEMessageListener
+    setupIframeMFEMessageListener(mockAgent)
+  })
+
+  it('offsets numeric timing values by the gap between the container and iframe clocks captured at registration', async () => {
+    mockNow.mockReturnValueOnce(130) // container's now() when processing REGISTER
+    await capturedHandler({
+      origin,
+      source: { postMessage: jest.fn() },
+      data: {
+        type: 'newrelic-iframe-api',
+        messageId: 1,
+        method: 'register',
+        args: [{ id: 'my-id', name: 'my-name' }],
+        iframeInterfaceId: 'abc123',
+        timestamp: 100 // iframe's own now() when it sent REGISTER
+      }
+    })
+    // clockOffset = 130 - 100 = 30
+
+    capturedHandler({
+      origin,
+      data: {
+        type: 'newrelic-iframe-timing-update',
+        iframeInterfaceId: 'abc123',
+        property: 'fetchStart',
+        value: 50 // iframe-relative value
+      }
+    })
+
+    expect(registeredEntity.metadata.timings.fetchStart).toBe(80) // 50 + 30
+  })
+
+  it('leaves non-numeric timing values (asset/type) untouched', async () => {
+    mockNow.mockReturnValueOnce(130)
+    await capturedHandler({
+      origin,
+      source: { postMessage: jest.fn() },
+      data: {
+        type: 'newrelic-iframe-api',
+        messageId: 1,
+        method: 'register',
+        args: [{ id: 'my-id', name: 'my-name' }],
+        iframeInterfaceId: 'abc123',
+        timestamp: 100
+      }
+    })
+
+    capturedHandler({
+      origin,
+      data: {
+        type: 'newrelic-iframe-timing-update',
+        iframeInterfaceId: 'abc123',
+        property: 'asset',
+        value: 'https://iframe.example.com/app.js'
+      }
+    })
+
+    expect(registeredEntity.metadata.timings.asset).toBe('https://iframe.example.com/app.js')
+  })
+})

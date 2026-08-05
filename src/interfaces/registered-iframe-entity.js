@@ -6,7 +6,7 @@
 // libraries
 import { onCLS, onFCP, onINP, onLCP } from 'web-vitals'
 // internal
-import { globalScope } from '../common/constants/runtime'
+import { globalScope, isBrowserScope } from '../common/constants/runtime'
 import { isIFrameWindow } from '../common/dom/iframe'
 import { now } from '../common/timing/now'
 import { warn } from '../common/util/console'
@@ -77,7 +77,7 @@ export class RegisteredIframeEntity {
     // Store original descriptor for postMessage (before any function merging)
     this.metadata.target = this.#targetDescriptor = opts
 
-    if (!isIFrameWindow(window)) {
+    if (!isBrowserScope || !isIFrameWindow(globalScope)) {
       warn(72)
       this.blocked = true
       return

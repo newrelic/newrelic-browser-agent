@@ -12,6 +12,7 @@ import { now } from '../common/timing/now'
 import { warn } from '../common/util/console'
 import { findScriptTimings } from '../common/v2/script-tracker'
 import { addUrl } from '../common/url/add-url'
+import { generateUuid } from '../common/ids/unique-id'
 import { IFRAME_TIMING_UPDATE, IFRAME_API, IFRAME_API_RESPONSE, IFRAME_VITALS_UPDATE, IFRAME_AJAX } from '../common/constants/iframe-constants'
 import { castErrorEvent, castError, castPromiseRejectionEvent } from '../features/jserrors/shared/cast-error'
 
@@ -49,7 +50,7 @@ export class RegisteredIframeEntity {
   /** @private Map to store pending promise resolvers keyed by message ID */
   #pendingMessages = new Map()
   /** @private Unique ID for this iframe interface instance to correlate messages */
-  #iframeInterfaceId = Math.random()
+  #iframeInterfaceId = generateUuid()
   /** @private Counter for generating unique message IDs */
   #messageIdCounter = 0
   /** @private Promise that resolves when registration with parent completes */

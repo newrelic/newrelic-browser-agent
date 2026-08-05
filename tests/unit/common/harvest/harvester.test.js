@@ -22,11 +22,11 @@ beforeEach(() => {
   mockEolCb = undefined
 })
 
-test('Harvester does not start timer loop on initialization', () => {
+test('Harvester does not subscribe to EOL or start timer loop on initialization', () => {
   jest.spyOn(global, 'setTimeout')
 
   const harvester = new Harvester(fakeAgent)
-  expect(mockEolCb).not.toBeUndefined()
+  expect(mockEolCb).toBeUndefined()
   expect(harvester.agentRef).toEqual(fakeAgent)
   expect(global.setTimeout).not.toHaveBeenCalled()
 })
@@ -54,24 +54,28 @@ test('On harvest interval, triggerHarvest runs for every aggregate', () => {
 })
 
 describe('On EOL harvest', () => {
-  test('triggerHarvestFor runs for every aggregate', () => {
+  test('triggerHarvestFor runs for every aggregate', async () => {
     const harvester = new Harvester(fakeAgent)
     harvester.triggerHarvestFor = jest.fn()
+    harvester.startTimer() // EOL is only subscribed once the timer starts
 
     expect(harvester.initializedAggregates.length).toEqual(0)
     harvester.initializedAggregates.push({ harvestOpts: {} }, { harvestOpts: {} })
     mockEolCb()
+    await null // the actual harvest work is deferred to a microtask -- see Harvester#startTimer
     expect(harvester.triggerHarvestFor).toHaveBeenCalledTimes(2)
     expect(harvester.triggerHarvestFor).toHaveBeenLastCalledWith(expect.any(Object), { isFinalHarvest: true })
   })
 
-  test('all aggregates beforeUnload provided are called prior to triggering harvest', () => {
+  test('all aggregates beforeUnload provided are called prior to triggering harvest', async () => {
     const harvester = new Harvester(fakeAgent)
     harvester.triggerHarvestFor = jest.fn(() => performance.now())
+    harvester.startTimer() // EOL is only subscribed once the timer starts
 
     const secondBeforeUnload = jest.fn(() => performance.now())
     harvester.initializedAggregates.push({ harvestOpts: { } }, { harvestOpts: { beforeUnload: secondBeforeUnload } })
     mockEolCb()
+    await null // the actual harvest work is deferred to a microtask -- see Harvester#startTimer
     expect(harvester.triggerHarvestFor).toHaveBeenCalledTimes(2)
     expect(secondBeforeUnload).toHaveBeenCalledTimes(1)
 

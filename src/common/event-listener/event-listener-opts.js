@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 export function eventListenerOpts (useCapture, abortSignal) {
@@ -15,6 +15,6 @@ export function windowAddEventListener (event, listener, capture = false, abortS
   window.addEventListener(event, listener, eventListenerOpts(capture, abortSignal))
 }
 /** Do not use this within the worker context. */
-export function documentAddEventListener (event, listener, capture = false, abortSignal) {
+export function documentAddEventListener (event, listener, abortSignal, capture = false) {
   document.addEventListener(event, listener, eventListenerOpts(capture, abortSignal))
 }

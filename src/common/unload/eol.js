@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { globalScope, isWorkerScope, isBrowserScope } from '../constants/runtime'
@@ -22,9 +22,9 @@ if (isWorkerScope) {
  * This is used, for example, to submit a final harvest and send all remaining data on best-effort.
  * @param {function} cb - func to run before or during the last reliable event or time of an env's life span
  */
-export function subscribeToEOL (cb, capturePhase) {
+export function subscribeToEOL (cb) {
   if (isBrowserScope) {
-    subscribeToVisibilityChange(cb, true, capturePhase) // when user switches tab or hides window, esp. mobile scenario
+    subscribeToVisibilityChange(cb, true) // when user switches tab or hides window, esp. mobile scenario
   } else if (isWorkerScope) {
     globalScope.cleanupTasks.push(cb) // close() should run these tasks before quitting thread
   }

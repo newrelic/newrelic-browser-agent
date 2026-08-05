@@ -30,6 +30,7 @@ beforeEach(() => {
   featureName = faker.string.uuid()
   agentBase = {
     agentIdentifier,
+    features: {},
     ee: {
       abort: jest.fn()
     },

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -11,7 +11,7 @@ import { documentAddEventListener, windowAddEventListener } from '../event-liste
  * @returns void
  */
 export function subscribeToVisibilityChange (cb, toHiddenOnly = false, capture, abortSignal) {
-  documentAddEventListener('visibilitychange', handleVisibilityChange, capture, abortSignal)
+  documentAddEventListener('visibilitychange', handleVisibilityChange, abortSignal, capture)
 
   function handleVisibilityChange () {
     if (toHiddenOnly) { // trigger cb on change to hidden state only

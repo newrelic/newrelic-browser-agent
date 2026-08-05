@@ -22,22 +22,31 @@ export class Harvester {
   constructor (agentRef) {
     this.agentRef = agentRef
 
-    // Create obfuscator for harvest metadata (referrer URL, etc.)
     // No event type specified - applies to all harvests regardless of feature
     this.obfuscator = new Obfuscator(agentRef)
-
-    subscribeToEOL(() => { // do one last harvest round or check
-      this.initializedAggregates.forEach(aggregateInst => { // let all features wrap up things needed to do before ANY harvest in case there's last minute cross-feature data dependencies
-        if (typeof aggregateInst.harvestOpts.beforeUnload === 'function') aggregateInst.harvestOpts.beforeUnload()
-      })
-      this.initializedAggregates.forEach(aggregateInst => this.triggerHarvestFor(aggregateInst, { isFinalHarvest: true }))
-      /* This callback should run in bubble phase, so that CWV api, like "onLCP", is called before the final harvest so that emitted timings are part of last outgoing. */
-    }, false)
   }
 
   startTimer (harvestInterval = this.agentRef.init.harvest.interval) {
     if (this.#started) return
     this.#started = true
+
+    subscribeToEOL(() => {
+      /* Deferred to a microtask so this runs after the ENTIRE synchronous 'visibilitychange' dispatch completes --
+      including any other same-event listeners (e.g. web-vitals' CWV APIs like onINP, which only report their final
+      value from within their own 'visibilitychange' listener). Whichever listener registered first still runs
+      first, but our actual harvest work no longer happens inline within that race -- it always happens after the
+      whole dispatch settles, so a listener that runs later in the same dispatch (regardless of registration order)
+      still gets to add its data before we snapshot the buffer.
+      This alone was sufficient to stop losing INP, which only ever reports via its own 'visibilitychange' listener.
+      It was NOT, on its own, sufficient for CLS -- see the `capture=true` note on page_view_timing's own CLS
+      listener for the other half of that fix. */
+      queueMicrotask(() => {
+        this.initializedAggregates.forEach(aggregateInst => { // let all features wrap up things needed to do before ANY harvest in case there's last minute cross-feature data dependencies
+          if (typeof aggregateInst.harvestOpts.beforeUnload === 'function') aggregateInst.harvestOpts.beforeUnload()
+        })
+        this.initializedAggregates.forEach(aggregateInst => this.triggerHarvestFor(aggregateInst, { isFinalHarvest: true }))
+      })
+    })
 
     const onHarvestInterval = () => {
       this.initializedAggregates.forEach(aggregateInst => this.triggerHarvestFor(aggregateInst))

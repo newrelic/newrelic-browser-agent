@@ -128,7 +128,7 @@ export class InstrumentBase extends FeatureBase {
 
         this.featAggregate = new Aggregate(agentRef, argsObjFromInstrument)
 
-        agentRef.runtime.harvester.initializedAggregates.push(this.featAggregate) // "subscribe" the feature to future harvest intervals (PVE will start the timer)
+        agentRef.runtime.harvester.initializedAggregates.push(this.featAggregate) // "subscribe" the feature to future harvest intervals
         this.loadedSuccessfully(true)
       } catch (e) {
         warn(34, e)
@@ -137,8 +137,6 @@ export class InstrumentBase extends FeatureBase {
         drain(this.agentRef, this.featureName, true)
         this.loadedSuccessfully(false)
       }
-
-      agentRef.runtime.harvester.startTimer()
     }
 
     // For regular web pages, we want to wait and lazy-load the aggregator only after all page resources are loaded.
@@ -228,6 +226,14 @@ async function ensureRuntimeBootstrap (agentRef, ee, featureName) {
     ])
     agentRef.runtime.connector = new Connector(agentRef)
     agentRef.runtime.harvester = new Harvester(agentRef)
+
+    /* Only start the harvest timer (and its EOL 'visibilitychange' listener, see Harvester#startTimer) once every feature has
+    finished attempting to load its aggregate, so Harvester's listener always registers after any aggregate-level listeners
+    that need to run first (e.g. web-vitals' CWV APIs like onINP/onLCP, subscribed when the page_view_timing aggregate loads).
+    Deliberately not awaited here: every feature awaits this same bootstrap promise before attempting its OWN aggregate load,
+    so blocking on all features' `onAggregateImported` here would cause deadlock. */
+    Promise.all(Object.values(agentRef.features).map(feature => feature.onAggregateImported))
+      .then(() => agentRef.runtime.harvester.startTimer())
   })()
 
   runtimeBootstrapPromises.set(agentRef, bootstrapPromise)

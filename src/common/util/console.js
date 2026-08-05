@@ -87,6 +87,13 @@ import { dispatchGlobalEvent } from '../dispatch/global-event'
  * | 69 | More than one Browser agent is running on the page |
  * | 70 | A session replay payload failed to send and is being retried. Recording is paused during the retry period, and will resume when a successful harvest is made. Some replay activity may be missed during retry phases. |
  * | 71 | An invalid feature mode was detected and set to "off". |
+ * | 72 | RegisteredIframeEntity failed to transmit API data from an iframe to window context |
+ * | 73 | RegisteredIframeEntity failed to register with window context |
+ * | 74 | RegisteredIframeEntity rejected message from unauthorized origin |
+ * | 75 | RegisteredIframeEntity rejected message with mismatched iframeInterfaceId |
+ * | 76 | Agent rejected post message, could not match with existing entity |
+ * | 77 | Agent rejected post message, could not validate origin |
+ * | 78 | RegisteredIframeEntity could not determine parent origin and will not register, to avoid trusting messages from any origin |
  *
  * @param {number} code The warning code to emit, which will be used to link to the warning code documentation
  * @param {*} [secondary] Secondary data to include, usually an extra message, error or object

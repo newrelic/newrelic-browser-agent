@@ -83,6 +83,14 @@ export class RegisteredIframeEntity {
       return
     }
 
+    if (this.#parentOrigin === '*') {
+      // If the parent's origin cannot be determined, fail closed rather than allow postMessage
+      // traffic to/from any origin -- see #isAllowedOrigin, which would otherwise trust everyone.
+      warn(78)
+      this.blocked = true
+      return
+    }
+
     // Store the registration promise so other methods can wait for it
     this.#registrationPromise = this.#register(opts)
     this.#registrationPromise
@@ -208,15 +216,20 @@ export class RegisteredIframeEntity {
       // Validate message structure
       if (event.data?.type !== IFRAME_API_RESPONSE) return
 
-      // Validate origin if we have specific allowed origins
-      if (!this.#isAllowedOrigin(event.origin)) {
-        warn(74, event.origin)
+      // Validate iframeInterfaceId first to confirm this message actually claims to be addressed
+      // to this instance -- messageIds are only unique per-instance, so we must not act on one
+      // (including rejecting) until we know it's actually meant for us.
+      if (event.data.iframeInterfaceId !== this.#iframeInterfaceId) {
+        warn(75)
         return
       }
 
-      // Validate iframeInterfaceId to prevent spoofing (message must be for this instance)
-      if (event.data.iframeInterfaceId !== this.#iframeInterfaceId) {
-        warn(75)
+      // Validate origin now that we know the message claims to be for us. Reject the pending
+      // call immediately rather than leaving it to time out, since we know exactly which
+      // messageId this response was for.
+      if (!this.#isAllowedOrigin(event.origin)) {
+        warn(74, event.origin)
+        this.#closePending({ messageId: event.data.messageId, error: 'Rejected message from unauthorized origin' })
         return
       }
 

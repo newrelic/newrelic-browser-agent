@@ -155,3 +155,5 @@
 `Agent rejected post message, could not match with existing entity`
 ### 77
 `Agent rejected post message, could not validate origin`
+### 78
+`RegisteredIframeEntity could not determine parent origin and will not register, to avoid trusting messages from any origin`

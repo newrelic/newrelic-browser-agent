@@ -192,7 +192,11 @@ export class RegisteredIframeEntity {
    * @param {PerformanceResourceTiming} resource
    */
   #processResourceEntry (resource) {
-    if (!(resource.initiatorType in AJAX_INITIATOR_TYPES) || resource.responseStatus === 0) return
+    if (!(resource.initiatorType in AJAX_INITIATOR_TYPES)) return
+    // Cross-origin requests without a Timing-Allow-Origin response header report responseStatus (and
+    // transferSize) as 0 per spec -- that's a browser privacy restriction, not evidence the request
+    // failed, so it should still be reported rather than dropped. status: 0 is already the established
+    // "unknown" convention elsewhere in the ajax feature (see features/ajax/instrument/index.js).
     const params = { status: resource.responseStatus }
     const metrics = { rxSize: resource.transferSize, duration: Math.floor(resource.duration), cbTime: 0 }
     addUrl(params, resource.name)

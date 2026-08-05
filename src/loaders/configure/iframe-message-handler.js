@@ -105,7 +105,7 @@ function isValidOrigin (event, entity) {
  * @param {Object} agent - The browser agent instance
  * @returns {Promise<{entity: Object|null, result: any}>}
  */
-async function handleMethodCall (event, agent) {
+export async function handleMethodCall (event, agent) {
   const { method, args, target, iframeInterfaceId } = event.data
   const output = { entity: null, result: null }
   // Registration of a new entity needs to be handled differently than method calls on existing entities
@@ -143,6 +143,10 @@ async function handleMethodCall (event, agent) {
   }
 
   output.entity = entity
+  if (!isSafeProperty(entity, method)) {
+    warn(35, method)
+    return output
+  }
   const methodFn = entity[method]
   if (typeof methodFn !== 'function') {
     warn(35, method)

@@ -84,7 +84,7 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
 
     // Set up iframe postMessage listener for registered entities
     if (agent.init.api.register.allow_iframe_bridge) {
-      globalScope.addEventListener('message', async (event) => {
+      globalScope.addEventListener('message', (event) => {
         handle('iframe-message', [event], undefined, 'IFRAME', agent.ee)
       })
     }

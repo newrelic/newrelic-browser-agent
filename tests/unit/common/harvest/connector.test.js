@@ -45,6 +45,8 @@ describe('Connector', () => {
 
     expect(send).not.toHaveBeenCalled()
     expect(agent.runtime.timeKeeper).toBeUndefined()
+    expect(activateFeatures).not.toHaveBeenCalled()
+    expect(agent.ee.abort).not.toHaveBeenCalled()
   })
 
   test('sends connect payload to connect endpoint', () => {

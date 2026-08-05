@@ -1,5 +1,5 @@
 import { supportsCumulativeLayoutShift, supportsFirstPaint, supportsInteractionToNextPaint, supportsLargestContentfulPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { testTimingEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testConnectRequest, testTimingEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 const loadersToTest = ['rum', 'spa']
 
@@ -180,6 +180,66 @@ describe('pvt timings tests', () => {
           expect(timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'cls'))).toBeTruthy()
         })
       })
+    })
+
+    ;[
+      ['v1', {}],
+      ['rum_v2', { feature_flags: ['rum_v2'] }]
+    ].forEach(([label, init]) => {
+      /**
+       * Regression coverage for an INP/CLS-loss bug: Harvester's EOL harvest is triggered from a 'visibilitychange'
+       * listener, which races against any OTHER 'visibilitychange' listener registered by a feature's own aggregate
+       * -- namely web-vitals' onINP, which (unlike onCLS) only ever reports its final value from within its own
+       * 'visibilitychange' listener. If Harvester's listener ran first and snapshotted the buffer before onINP
+       * added its data, INP was lost for good on that unload. The fix required both: (1) deferring Harvester's
+       * actual harvest work to a microtask so it always runs after the whole synchronous 'visibilitychange'
+       * dispatch settles (see Harvester#startTimer), and (2) `capture: true` on this file's own CLS-flush listener
+       * (see the subscribeToVisibilityChange call above) -- confirmed only via real-browser testing, since jsdom's
+       * simplified event dispatch doesn't reproduce whatever made that flag necessary. Neither fix is gated behind
+       * rum_v2 -- both apply unconditionally -- so this runs under v1 too, to prove the fix (which predates rum_v2)
+       * wasn't accidentally scoped to only the v2 path. rum_v2 additionally routes bootstrap through a Connector
+       * that does its own async connect/2 round trip before aggregates finish loading -- the v2 case here proves
+       * that extra async work doesn't reopen the ordering race.
+       */
+      it.withBrowsersMatching([supportsCumulativeLayoutShift, supportsInteractionToNextPaint])(
+        `sends pageHide, CLS & INP together in a single EoL harvest (${label})`,
+        async () => {
+          const connectCapture = init.feature_flags?.includes('rum_v2')
+            ? await browser.testHandle.createNetworkCaptures('bamServer', { test: testConnectRequest })
+            : undefined
+
+          await browser.url(await browser.testHandle.assetURL('cls-pagehide.html', { loader: 'spa', init }))
+            .then(() => browser.waitForAgentLoad())
+
+          // Under rum_v2, Connector's connect/2 round trip must complete (and features must activate) before any
+          // of this can happen.
+          if (connectCapture) await connectCapture.waitForResult({ totalCount: 1 })
+
+          const [timingsHarvests] = await Promise.all([
+            timingsCapture.waitForResult({ timeout: 10000 }),
+            $('#btn1').click().then(() => browser.waitUntil(
+              () => browser.execute(function () { return window.contentAdded === true }),
+              { timeout: 10000, timeoutMsg: 'contentAdded was never set' }
+            ))
+          ])
+
+          // pageHide only ever fires once, on the EoL 'visibilitychange' dispatch that cls-pagehide.html triggers
+          // itself -- so the harvest containing it IS the EoL harvest. An unrelated periodic tick could still land
+          // its own harvest in the same wait window (e.g. under load), which is fine; what regressed before was CLS/
+          // INP landing in a SEPARATE harvest from pageHide instead of this same one, so that's the actual check --
+          // not merely counting harvests (which an unrelated tick would make an unreliable proxy) or flattening
+          // across all of them (which would hide exactly this failure mode).
+          const eolHarvest = timingsHarvests.find(harvest => harvest.request.body.some(e => e.name === 'pageHide'))
+          expect(eolHarvest).toBeTruthy()
+          const names = eolHarvest.request.body.map(e => e.name)
+
+          expect(names).toEqual(expect.arrayContaining(['pageHide', 'cls', 'inp']))
+
+          const pageHide = eolHarvest.request.body.find(e => e.name === 'pageHide')
+          const cls = pageHide.attributes.find(a => a.key === 'cls')
+          expect(cls.value).toBeGreaterThan(0)
+        }
+      )
     })
   })
 

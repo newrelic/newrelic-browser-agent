@@ -24,7 +24,7 @@ module.exports.testRumRequest = function testRumRequest (request) {
 
 module.exports.testConnectRequest = function testConnectRequest (request) {
   const url = new URL(request.url, 'resolve://')
-  return url.pathname === `/connect/2/${this.testId}`
+  return url.pathname === `/browser/connect/2/${this.testId}`
 }
 
 module.exports.testEventsRequest = function testEventsRequest (request) {

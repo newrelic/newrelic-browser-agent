@@ -24,7 +24,7 @@ const legacyAttributionConfig = {
  * it's really just a normal harvester-driven harvest now. Compare against tests/specs/rum/*.e2e.js, which cover the
  * v1-only behaviors this file intentionally does NOT reproduce for v2 (fsh, and RUM failure blocking every other
  * feature). Retry/backoff on a retryable status is generic Harvester behavior (already covered in the harvesting
- * e2e group) and isn't re-tested here; Connector's OWN retry/backoff for the connect/2 call -- a genuinely new
+ * e2e group) and isn't re-tested here; Connector's OWN retry/backoff for the browser/connect/2 call -- a genuinely new
  * logical unit, not shared with the harvester -- is covered separately in tests/specs/connector/index.e2e.js.
  */
 describe('page_view_event v2 (rum_v2) harvest behavior', () => {
@@ -43,7 +43,7 @@ describe('page_view_event v2 (rum_v2) harvest behavior', () => {
     // Under v1 (src/features/page_view_event/aggregate/index.js), sendRum's queryParameters includes tt/us/ac/pr/
     // xx/ua straight from loader config, plus fsh derived from whether a cached RUM response already existed when
     // PVE queried it. aggregate_v2's queryStringsBuilder (src/features/page_view_event/aggregate_v2/index.js)
-    // does not build any of these -- fsh is meaningless under v2 since Connector's connect/2 call already writes
+    // does not build any of these -- fsh is meaningless under v2 since Connector's browser/connect/2 call already writes
     // cachedRumResponse to session storage before ANY aggregate, including PVE-v2 itself, ever harvests (even on
     // a page's first-ever load); the loader-config attribution params (tt/us/ac/pr/xx/ua) aren't read at all.
     const connectCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testConnectRequest })
@@ -60,7 +60,7 @@ describe('page_view_event v2 (rum_v2) harvest behavior', () => {
     // af (activated feature flags) is still built by aggregate_v2 the same way v1 did.
     expect(rumHarvest.request.query.af).toBeTruthy()
 
-    // igp is v2-only -- sourced from Connector's connect/2 response (app.igp) rather than any loader/legacy RUM
+    // igp is v2-only -- sourced from Connector's browser/connect/2 response (app.igp) rather than any loader/legacy RUM
     // concept -- and must survive the query string's URI encode/decode round trip unchanged.
     const [connectHarvest] = await connectCapture.waitForResult({ totalCount: 1 })
     const connectReplyBody = JSON.parse(connectHarvest.reply.body)
@@ -80,7 +80,7 @@ describe('page_view_event v2 (rum_v2) harvest behavior', () => {
     const firstIgp = firstRumHarvest.request.query.igp
     expect(firstIgp).toBeTruthy()
 
-    // If session caching were broken and a second connect/2 call actually went out on reload, it would land here
+    // If session caching were broken and a second browser/connect/2 call actually went out on reload, it would land here
     // and get back a DIFFERENT igp than the first -- so this is a real regression check on the caching itself, not
     // just an assertion that happens to pass because the mock server would otherwise always reply with same igp.
     const decoyIgp = 'decoy-igp-should-never-be-used'

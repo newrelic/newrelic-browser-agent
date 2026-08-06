@@ -48,7 +48,7 @@ module.exports = fp(async function (fastify) {
   })
   fastify.route({
     method: ['GET', 'POST'],
-    url: '/connect/2/:testId',
+    url: '/browser/connect/2/:testId',
     handler: async function (request, reply) {
       return reply
         .header('content-type', 'application/json')

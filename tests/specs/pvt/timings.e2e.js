@@ -198,7 +198,7 @@ describe('pvt timings tests', () => {
        * simplified event dispatch doesn't reproduce whatever made that flag necessary. Neither fix is gated behind
        * rum_v2 -- both apply unconditionally -- so this runs under v1 too, to prove the fix (which predates rum_v2)
        * wasn't accidentally scoped to only the v2 path. rum_v2 additionally routes bootstrap through a Connector
-       * that does its own async connect/2 round trip before aggregates finish loading -- the v2 case here proves
+       * that does its own async browser/connect/2 round trip before aggregates finish loading -- the v2 case here proves
        * that extra async work doesn't reopen the ordering race.
        */
       it.withBrowsersMatching([supportsCumulativeLayoutShift, supportsInteractionToNextPaint])(
@@ -211,7 +211,7 @@ describe('pvt timings tests', () => {
           await browser.url(await browser.testHandle.assetURL('cls-pagehide.html', { loader: 'spa', init }))
             .then(() => browser.waitForAgentLoad())
 
-          // Under rum_v2, Connector's connect/2 round trip must complete (and features must activate) before any
+          // Under rum_v2, Connector's browser/connect/2 round trip must complete (and features must activate) before any
           // of this can happen.
           if (connectCapture) await connectCapture.waitForResult({ totalCount: 1 })
 

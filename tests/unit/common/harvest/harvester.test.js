@@ -153,7 +153,7 @@ describe('send', () => {
     const submitMethod = jest.fn()
 
     send(fakeAgent, {
-      endpoint: 'connect/2/license-key',
+      endpoint: 'browser/connect/2/license-key',
       payload: { body: { apps: [{ appId: 'app-id' }] } },
       localOpts: {},
       submitMethod,
@@ -161,7 +161,7 @@ describe('send', () => {
     })
 
     expect(submitMethod).toHaveBeenCalledWith(expect.objectContaining({
-      url: 'https://test/connect/2/license-key'
+      url: 'https://test/browser/connect/2/license-key'
     }))
   })
 })

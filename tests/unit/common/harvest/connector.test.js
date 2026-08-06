@@ -62,7 +62,7 @@ describe('Connector', () => {
     new Connector(agent)
 
     expect(send).toHaveBeenCalledWith(agent, expect.objectContaining({
-      endpoint: 'connect/2/license-key',
+      endpoint: 'browser/connect/2/license-key',
       raw: true,
       featureName: 'connect',
       localOpts: { sendEmptyBody: true, headers: undefined },

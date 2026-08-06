@@ -3,16 +3,16 @@ import { testConnectRequest, testMetricsRequest, testRumRequest } from '../../..
 const rumV2Config = { init: { feature_flags: ['rum_v2'] } }
 
 // A custom connect matcher that excludes CORS preflight (OPTIONS) requests. The retry tests below add a
-// non-simple header, which triggers a preflight to the same /connect/2/:testId path -- with the path-only
-// testConnectRequest matcher, that preflight would either be miscounted as an extra connect attempt in a
-// capture, OR (worse, for scheduleReply) get hijacked into returning the SCHEDULED FAILURE status itself,
+// non-simple header, which triggers a preflight to the same /browser/connect/2/:testId path -- with the
+// path-only testConnectRequest matcher, that preflight would either be miscounted as an extra connect attempt in
+// a capture, OR (worse, for scheduleReply) get hijacked into returning the SCHEDULED FAILURE status itself,
 // which fails the preflight and silently blocks the real retry POST from ever being sent. So this matcher is
 // used for both capturing AND scheduling replies in any test here that involves a retry. Test-handle serializes
 // `test` functions across a process boundary (see expect-tests.js), so this must stay self-contained rather
 // than delegating to the imported matcher.
 function testConnectPostRequest (request) {
   const url = new URL(request.url, 'resolve://')
-  return url.pathname === `/connect/2/${this.testId}` && request.method === 'POST'
+  return url.pathname === `/browser/connect/2/${this.testId}` && request.method === 'POST'
 }
 
 describe('Connector (rum_v2 browser connect)', () => {

@@ -42,7 +42,7 @@ export class Connector {
   makeConnectRequest (retryHeaders) {
     this.#connectStartTime = now()
     return send(this.#agentRef, {
-      endpoint: `connect/2/${this.#agentRef.info.licenseKey}`,
+      endpoint: `browser/connect/2/${this.#agentRef.info.licenseKey}`,
       payload: {
         body: {},
         qs: {

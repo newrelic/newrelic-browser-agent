@@ -106,8 +106,13 @@ function handleAjax (event, agent) {
  * @returns {boolean}
  */
 function isValidOrigin (event, entity) {
-  if (!entity || !event.origin) return false
+  if (!entity) return false
   try {
+    // "null" is the literal serialization the spec uses for every opaque origin (sandboxed iframes
+    // without allow-same-origin, data:/javascript: URLs, etc.) -- it does not uniquely identify a
+    // single origin, so treating two "null" origins as a match would let an unrelated opaque-origin
+    // frame impersonate the one that actually registered.
+    if (event.origin === 'null' || entity.metadata.target.iframeOrigin === 'null') return false
     return event.origin === entity.metadata.target.iframeOrigin
   } catch (e) {
     warn(77, e)
@@ -127,6 +132,15 @@ export async function handleMethodCall (event, agent) {
   const output = { entity: null, result: null }
   // Registration of a new entity needs to be handled differently than method calls on existing entities
   if (method === REGISTER) {
+    // "null" is the opaque-origin serialization (sandboxed iframes, data:/javascript: URLs) -- it
+    // doesn't identify a single origin, so an entity registered from one can never be safely
+    // distinguished from another later on (see isValidOrigin). Reject up front rather than
+    // registering an entity that would silently fail every subsequent call.
+    if (event.origin === 'null') {
+      warn(74, event.origin)
+      return output
+    }
+
     const iframeDomains = agent.init.api.register.iframe_domains
     if (iframeDomains.length && !iframeDomains.includes(event.origin)) {
       warn(74, event.origin)

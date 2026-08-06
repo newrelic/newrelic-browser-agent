@@ -81,9 +81,15 @@ function handleVitalsUpdate (event, agent) {
 
   if (!entity.metadata?.vitals) return
 
+  const offset = clockOffsets.get(entity) || 0
   event.data.entries?.forEach(({ property, value }) => {
     if (isSafeProperty(entity.metadata.vitals, property) && (!!Number(value) || value === 0)) {
-      entity.metadata.vitals[property].value = value
+      // fcp/lcp are absolute iframe-clock timestamps that get compared against timings.scriptStart
+      // (which handleTimingUpdate stores container-relative) -- they need the same clock offset
+      // applied here, or the subtraction mixes two different clock bases and can go negative.
+      // cls/inp are plain scores/durations, not timestamps, so they must stay unadjusted.
+      const needsOffset = property === 'fcp' || property === 'lcp'
+      entity.metadata.vitals[property].value = needsOffset ? value + offset : value
     }
   })
 }

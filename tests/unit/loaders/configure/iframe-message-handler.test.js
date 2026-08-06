@@ -172,4 +172,59 @@ describe('clock offset correction for iframe timings', () => {
 
     expect(registeredEntity.metadata.timings.asset).toBe('https://iframe.example.com/app.js')
   })
+
+  it('offsets fcp/lcp vitals by the same clock gap applied to timings, since both are compared against timings.scriptStart', async () => {
+    mockNow.mockReturnValueOnce(130) // container's now() when processing REGISTER
+    await capturedHandler({
+      origin,
+      source: { postMessage: jest.fn() },
+      data: {
+        type: 'newrelic-iframe-api',
+        messageId: 1,
+        entries: [{ method: 'register', args: [{ id: 'my-id', name: 'my-name' }] }],
+        iframeInterfaceId: 'abc123',
+        timestamp: 100 // iframe's own now() when it sent REGISTER
+      }
+    })
+    // clockOffset = 130 - 100 = 30
+    registeredEntity.metadata.vitals = { fcp: { value: null }, lcp: { value: null }, cls: { value: null }, inp: { value: null } }
+
+    capturedHandler({
+      origin,
+      data: {
+        type: 'newrelic-iframe-vitals-update',
+        iframeInterfaceId: 'abc123',
+        entries: [{ property: 'fcp', value: 45 }] // iframe-relative value
+      }
+    })
+
+    expect(registeredEntity.metadata.vitals.fcp.value).toBe(75) // 45 + 30
+  })
+
+  it('leaves cls/inp vitals unadjusted, since they are scores/durations rather than clock timestamps', async () => {
+    mockNow.mockReturnValueOnce(130)
+    await capturedHandler({
+      origin,
+      source: { postMessage: jest.fn() },
+      data: {
+        type: 'newrelic-iframe-api',
+        messageId: 1,
+        entries: [{ method: 'register', args: [{ id: 'my-id', name: 'my-name' }] }],
+        iframeInterfaceId: 'abc123',
+        timestamp: 100
+      }
+    })
+    registeredEntity.metadata.vitals = { fcp: { value: null }, lcp: { value: null }, cls: { value: null }, inp: { value: null } }
+
+    capturedHandler({
+      origin,
+      data: {
+        type: 'newrelic-iframe-vitals-update',
+        iframeInterfaceId: 'abc123',
+        entries: [{ property: 'cls', value: 0.12 }]
+      }
+    })
+
+    expect(registeredEntity.metadata.vitals.cls.value).toBe(0.12)
+  })
 })

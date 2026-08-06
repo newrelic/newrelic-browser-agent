@@ -116,8 +116,15 @@ export class InstrumentBase extends FeatureBase {
       }
 
       if (agentRef.init.api.register.allow_iframe_bridge) {
-        const { setupIframeMFEMessageListener } = await import(/* webpackChunkName: "iframe-message-handler" */ '../../loaders/configure/iframe-message-handler')
-        setupIframeMFEMessageListener(agentRef)
+        try {
+          // This chunk doesn't exist in the lite build (see webpack IgnorePlugin config) since none
+          // of lite's features wire up agent.register -- guard against that rather than letting an
+          // unhandled rejection surface if this flag is ever set on a lite page.
+          const { setupIframeMFEMessageListener } = await import(/* webpackChunkName: "iframe-message-handler" */ '../../loaders/configure/iframe-message-handler')
+          setupIframeMFEMessageListener(agentRef)
+        } catch (e) {
+          warn(23, e)
+        }
       }
 
       /**

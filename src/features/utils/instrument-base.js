@@ -227,12 +227,14 @@ async function ensureRuntimeBootstrap (agentRef, ee, featureName) {
     agentRef.runtime.connector = new Connector(agentRef)
     agentRef.runtime.harvester = new Harvester(agentRef)
 
-    /* Only start the harvest timer (and its EOL 'visibilitychange' listener, see Harvester#startTimer) once every feature has
-    finished attempting to load its aggregate, so Harvester's listener always registers after any aggregate-level listeners
-    that need to run first (e.g. web-vitals' CWV APIs like onINP/onLCP, subscribed when the page_view_timing aggregate loads).
-    Deliberately not awaited here: every feature awaits this same bootstrap promise before attempting its OWN aggregate load,
-    so blocking on all features' `onAggregateImported` here would cause deadlock. */
-    Promise.all(Object.values(agentRef.features).map(feature => feature.onAggregateImported))
+    /* Wait for auto-started features' aggregates to load before starting the harvest timer, so Harvester's EOL
+    listener registers after aggregate-level listeners like web-vitals' CWV APIs. Not awaited here to avoid
+    deadlock, since every feature awaits this same bootstrap promise before its own aggregate load.
+    Only auto-started features are waited on: an autoStart:false feature only registers in drainRegistry once
+    `start` is called, so filtering on that registry excludes any feature that's never started instead of
+    blocking startTimer() forever. */
+    const autoStartedFeatures = Object.values(agentRef.features).filter(feature => agentRef.runtime.drainRegistry.has(feature.featureName))
+    Promise.all(autoStartedFeatures.map(feature => feature.onAggregateImported))
       .then(() => agentRef.runtime.harvester.startTimer())
   })()
 

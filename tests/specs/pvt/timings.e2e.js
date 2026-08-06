@@ -208,7 +208,7 @@ describe('pvt timings tests', () => {
             ? await browser.testHandle.createNetworkCaptures('bamServer', { test: testConnectRequest })
             : undefined
 
-          await browser.url(await browser.testHandle.assetURL('cls-pagehide.html', { loader: 'spa', init }))
+          await browser.url(await browser.testHandle.assetURL('cls-lcp.html', { loader: 'spa', init }))
             .then(() => browser.waitForAgentLoad())
 
           // Under rum_v2, Connector's browser/connect/2 round trip must complete (and features must activate) before any
@@ -217,18 +217,25 @@ describe('pvt timings tests', () => {
 
           const [timingsHarvests] = await Promise.all([
             timingsCapture.waitForResult({ timeout: 10000 }),
-            $('#btn1').click().then(() => browser.waitUntil(
-              () => browser.execute(function () { return window.contentAdded === true }),
-              { timeout: 10000, timeoutMsg: 'contentAdded was never set' }
-            ))
+            // cls-lcp.html triggers a real layout shift (cls) and LCP a moment after load regardless of this click;
+            // the click itself is what produces the first interaction (fi/inp).
+            $('#btn1').click()
+              .then(() => browser.waitUntil(
+                () => browser.execute(function () { return window.contentAdded === true }),
+                { timeout: 10000, timeoutMsg: 'contentAdded was never set' }
+              ))
+              // real navigation away, rather than the page faking a 'visibilitychange' dispatch itself -- this is what
+              // actually fires the browser's own EoL 'visibilitychange'/'pagehide' sequence, the same way pageHide is
+              // triggered in the "interaction related timings" describe block above.
+              .then(async () => browser.url(await browser.testHandle.assetURL('/')))
           ])
 
-          // pageHide only ever fires once, on the EoL 'visibilitychange' dispatch that cls-pagehide.html triggers
-          // itself -- so the harvest containing it IS the EoL harvest. An unrelated periodic tick could still land
-          // its own harvest in the same wait window (e.g. under load), which is fine; what regressed before was CLS/
-          // INP landing in a SEPARATE harvest from pageHide instead of this same one, so that's the actual check --
-          // not merely counting harvests (which an unrelated tick would make an unreliable proxy) or flattening
-          // across all of them (which would hide exactly this failure mode).
+          // pageHide only ever fires once, on the real EoL navigation above -- so the harvest containing it IS the
+          // EoL harvest. An unrelated periodic tick could still land its own harvest in the same wait window (e.g.
+          // under load), which is fine; what regressed before was CLS/INP landing in a SEPARATE harvest from
+          // pageHide instead of this same one, so that's the actual check -- not merely counting harvests (which an
+          // unrelated tick would make an unreliable proxy) or flattening across all of them (which would hide
+          // exactly this failure mode).
           const eolHarvest = timingsHarvests.find(harvest => harvest.request.body.some(e => e.name === 'pageHide'))
           expect(eolHarvest).toBeTruthy()
           const names = eolHarvest.request.body.map(e => e.name)

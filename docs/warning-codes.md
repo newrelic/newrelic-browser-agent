@@ -2,37 +2,37 @@
 # New Relic Browser Agent Warning Codes
 
 ### 1
-`An error occurred while setting a property of a Configurable`
+`An error occurred while setting a property of a Configurable.`
 ### 2
-`An error occurred while setting a Configurable`
+`An error occurred while setting a Configurable.`
 ### 3
-`Setting a Configurable requires an object as input`
+`Setting a Configurable requires an object as input.`
 ### 4
-`Setting a Configurable requires a model to set its initial properties`
+`Setting a Configurable requires a model to set its initial properties.`
 ### 5
 `An invalid session_replay.mask_selector was provided. * will be used.`
 ### 6
-`An invalid session_replay.block_selector was provided and will not be used`
+`An invalid session_replay.block_selector was provided and will not be used.`
 ### 7
-`An invalid session_replay.mask_input_option was provided and will not be used`
+`An invalid session_replay.mask_input_option was provided and will not be used.`
 ### 8
-`Shared context requires an object as input`
+`Shared context requires an object as input.`
 ### 9
-`An error occurred while setting SharedContext`
+`An error occurred while setting SharedContext.`
 ### 10
-`Failed to read from storage API`
+`Failed to read from storage API.`
 ### 11
-`Failed to write to the storage API`
+`Failed to write to the storage API.`
 ### 12
 `An obfuscation replacement rule was detected missing a "regex" value.`
 ### 13
-`An obfuscation replacement rule contains a "regex" value with an invalid type (must be a string or RegExp)`
+`An obfuscation replacement rule contains a "regex" value with an invalid type (must be a string or RegExp).`
 ### 14
-`An obfuscation replacement rule contains a "replacement" value with an invalid type (must be a string)`
+`An obfuscation replacement rule contains a "replacement" value with an invalid type (must be a string).`
 ### 15
-`An error occurred while intercepting XHR`
+`An error occurred while intercepting XHR.`
 ### 16
-`Could not cast log message to string`
+`Could not cast log message to string.`
 ### 17
 `Could not calculate New Relic server time. Agent shutting down.`
 ### 18
@@ -46,7 +46,7 @@
 ### 22
 `Failed to initialize all enabled instrument classes (agent aborted) -`
 ### 23
-`An unexpected issue occurred`
+`An unexpected issue occurred.`
 ### 24
 `Something prevented the agent from instrumenting.`
 ### 25
@@ -58,15 +58,15 @@
 ### 28
 `The Browser Agent is attempting to send a very large payload. This is usually tied to large amounts of custom attributes. Please check your configurations.`
 ### 29
-`Failed to wrap logger: invalid argument(s)`
+`Failed to wrap logger: invalid argument(s).`
 ### 30
-`Invalid log level`
+`Invalid log level.`
 ### 31
-`Ignored log: Log is larger than maximum payload size`
+`Ignored log: Log is larger than maximum payload size.`
 ### 32
-`Ignored log: Invalid message`
+`Ignored log: Invalid message.`
 ### 33
-`Session Replay Aborted`
+`Session Replay Aborted.`
 ### 34
 `Downloading and initializing a feature failed...`
 ### 35
@@ -84,7 +84,7 @@
 ### 41
 `Failed to execute setUserId. Non-null value must be a string type.`
 ### 42
-`Failed to execute setApplicationVersion. Expected <String | null>`
+`Failed to execute setApplicationVersion. Expected <String | null>.`
 ### 43
 `Agent not configured properly.`
 ### 44
@@ -102,58 +102,58 @@
 ### 50
 `Failed to connect. Cannot allow registered API.`
 ### 51
-`Container agent is not available to register with. Can not connect`
+`Container agent is not available to register with. Can not connect.`
 ### 52
 `Unexpected problem encountered. There should be at least one app for harvest!`
 ### 53
-`Did not receive a valid entityGuid from connection response`
+`Did not receive a valid entityGuid from connection response.`
 ### 54
-`An experimental feature is being used. Support can not be offered for issues`
+`An experimental feature is being used. Support can not be offered for issues.`
 ### 55
-`Register API has been disabled on the container agent`
+`Register API has been disabled on the container agent.`
 ### 56
-`Could not find a matching entity to store data`
+`Could not find a matching entity to store data.`
 ### 57
 `Failed to execute measure. Arguments must have valid types.`
 ### 58
 `Failed to execute measure. Resulting duration must be non-negative.`
 ### 59
-`Session replay harvested before a session trace payload could be sent. This could be problematic for replays that rely on a trace`
+`Session replay harvested before a session trace payload could be sent. This could be problematic for replays that rely on a trace.`
 ### 60
-`Session trace aborted`
+`Session trace aborted.`
 ### 61
 `Timestamps must be non-negative and end time cannot be before start time.`
 ### 62 
-`Timestamp must be a unix timestamp greater than the page origin time`
+`Timestamp must be a unix timestamp greater than the page origin time.`
 ### 63
-`A single event was larger than the maximum allowed payload size`
+`A single event was larger than the maximum allowed payload size.`
 ### 64
 `Required globals have been mutated before being accessed by the browser agent. This can cause issues and should be avoided.`
 ### 65
-`Consent API argument must be boolean or undefined`
+`Consent API argument must be boolean or undefined.`
 ### 66
-`A new agent session has started`
+`A new agent session has started.`
 ### 67
 `The "spa" feature has been deprecated and disabled. Please use/import "soft_navigations" instead for tracking of BrowserInteraction data.`
 ### 68
 `API has been deregistered and can no longer be used. Call "register" API again with credentials to start over.`
 ### 69
-`More than one Browser agent is running on the page`
+`More than one Browser agent is running on the page.`
 ### 70
 `A session replay payload failed to send and is being retried. Recording is paused during the retry period, and will resume when a successful harvest is made. Some replay activity may be missed during retry phases.`
 ### 71
 `An invalid feature mode was detected and set to "off".`
 ### 72
-`RegisteredIframeEntity failed to transmit API data from an iframe to window context`
+`RegisteredIframeEntity failed to transmit API data from an iframe to window context.`
 ### 73
-`RegisteredIframeEntity failed to register with window context`
+`RegisteredIframeEntity failed to register with window context.`
 ### 74
-`RegisteredIframeEntity rejected message from unauthorized origin`
+`RegisteredIframeEntity rejected message from unauthorized origin.`
 ### 75
-`RegisteredIframeEntity rejected message with mismatched iframeInterfaceId`
+`RegisteredIframeEntity rejected message with mismatched iframeInterfaceId.`
 ### 76
-`Agent rejected post message, could not match with existing entity`
+`Agent rejected post message, could not match with existing entity.`
 ### 77
-`Agent rejected post message, could not validate origin`
+`Agent rejected post message, could not validate origin.`
 ### 78
-`RegisteredIframeEntity could not determine parent origin and will not register, to avoid trusting messages from any origin`
+`RegisteredIframeEntity could not determine parent origin and will not register, to avoid trusting messages from any origin.`

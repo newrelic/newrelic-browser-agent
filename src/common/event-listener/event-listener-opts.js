@@ -15,6 +15,6 @@ export function windowAddEventListener (event, listener, capture = false, abortS
   window.addEventListener(event, listener, eventListenerOpts(capture, abortSignal))
 }
 /** Do not use this within the worker context. */
-export function documentAddEventListener (event, listener, abortSignal, capture = false) {
+export function documentAddEventListener (event, listener, capture = false, abortSignal) {
   document.addEventListener(event, listener, eventListenerOpts(capture, abortSignal))
 }

@@ -11,7 +11,7 @@ import { documentAddEventListener, windowAddEventListener } from '../event-liste
  * @returns void
  */
 export function subscribeToVisibilityChange (cb, toHiddenOnly = false, capture, abortSignal) {
-  documentAddEventListener('visibilitychange', handleVisibilityChange, abortSignal, capture)
+  documentAddEventListener('visibilitychange', handleVisibilityChange, capture, abortSignal)
 
   function handleVisibilityChange () {
     if (toHiddenOnly) { // trigger cb on change to hidden state only

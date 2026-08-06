@@ -58,14 +58,15 @@ function handleTimingUpdate (event, agent) {
   const entity = getValidEntity(event, agent)
   if (!entity) return
 
-  if (entity.metadata.timings) {
-    const { property, value } = event.data
+  if (!entity.metadata.timings) return
+
+  const offset = clockOffsets.get(entity) || 0
+  event.data.entries?.forEach(({ property, value }) => {
     if (isSafeProperty(entity.metadata.timings, property)) {
-      const offset = clockOffsets.get(entity) || 0
       // guard: `asset`/`type` are strings, not timing values -- only numeric values need the offset
       entity.metadata.timings[property] = typeof value === 'number' ? value + offset : value
     }
-  }
+  })
 }
 
 /**
@@ -78,12 +79,13 @@ function handleVitalsUpdate (event, agent) {
   const entity = getValidEntity(event, agent)
   if (!entity) return
 
-  if (entity.metadata?.vitals) {
-    const { property, value } = event.data
+  if (!entity.metadata?.vitals) return
+
+  event.data.entries?.forEach(({ property, value }) => {
     if (isSafeProperty(entity.metadata.vitals, property) && (!!Number(value) || value === 0)) {
       entity.metadata.vitals[property].value = value
     }
-  }
+  })
 }
 
 /**
@@ -95,8 +97,10 @@ function handleVitalsUpdate (event, agent) {
 function handleAjax (event, agent) {
   const entity = getValidEntity(event, agent)
   if (!entity) return
-  const { params, metrics, start, end, initiatorType } = event.data
-  handle('xhr', [params, metrics, start, end, initiatorType, entity.metadata.target], undefined, FEATURE_NAMES.ajax, agent.ee)
+  const { entries } = event.data
+  entries?.forEach(({ params, metrics, start, end, initiatorType }) => {
+    handle('xhr', [params, metrics, start, end, initiatorType, entity.metadata.target], undefined, FEATURE_NAMES.ajax, agent.ee)
+  })
 }
 
 /**
@@ -128,7 +132,11 @@ function isValidOrigin (event, entity) {
  * @returns {Promise<{entity: Object|null, result: any}>}
  */
 export async function handleMethodCall (event, agent) {
-  const { method, args, target, iframeInterfaceId, timestamp } = event.data
+  const { target, iframeInterfaceId, timestamp } = event.data
+  // Method calls are always sent one-at-a-time (each has its own postMessage response), so only
+  // the first entry is ever populated -- but the payload shape stays consistent with every other
+  // iframe message type (timing/vitals/ajax), which all wrap their data in an `entries` array.
+  const [{ method, args } = {}] = event.data.entries || []
   const output = { entity: null, result: null }
   // Registration of a new entity needs to be handled differently than method calls on existing entities
   if (method === REGISTER) {
@@ -246,7 +254,7 @@ export function setupIframeMFEMessageListener (agent) {
         return
       case IFRAME_API:
         try {
-          if (!event.source || !event.data.messageId || !event.data.method) return
+          if (!event.source || !event.data.messageId || !event.data.entries?.[0]?.method) return
           const { entity, result } = await handleMethodCall(event, agent)
           const metadata = entity ? serializeMetadata(entity) : undefined
           sendResponse(event, { result, metadata })

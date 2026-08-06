@@ -182,8 +182,7 @@ export class RegisteredIframeEntity {
       vitalFn(({ value }) => {
         this.metadata.vitals[property].value = value
         this.#postMessageToParent(IFRAME_VITALS_UPDATE, {
-          property,
-          value
+          entries: [{ property, value }]
         })
       }, { reportAllChanges: property === 'cls' || property === 'inp' })
     })
@@ -197,17 +196,24 @@ export class RegisteredIframeEntity {
     if (!globalScope.PerformanceObserver?.supportedEntryTypes?.includes('resource')) return
 
     this.#resourceObserver = new globalScope.PerformanceObserver(list => {
-      list.getEntries().forEach(resource => this.#processResourceEntry(resource))
+      // Batched into a single postMessage per observer callback rather than one per entry --
+      // with buffered: true this callback can fire with dozens of pre-existing entries at once,
+      // and each postMessage carries its own await/registration/dispatch overhead independent of
+      // payload size, so sending them individually multiplies that overhead for no benefit.
+      const entries = list.getEntries().map(resource => this.#buildAjaxPayload(resource)).filter(Boolean)
+      if (!entries.length) return
+      this.#postMessageToParent(IFRAME_AJAX, { entries })
     })
     this.#resourceObserver.observe({ type: 'resource', buffered: true })
   }
 
   /**
-   * Reports a single resource timing entry as an AJAX event, if it looks like a network request.
+   * Builds the AJAX event payload for a single resource timing entry, if it looks like a network request.
    * @private
    * @param {PerformanceResourceTiming} resource
+   * @returns {object|undefined}
    */
-  #processResourceEntry (resource) {
+  #buildAjaxPayload (resource) {
     if (!(resource.initiatorType in AJAX_INITIATOR_TYPES)) return
     // Cross-origin requests without a Timing-Allow-Origin response header report responseStatus (and
     // transferSize) as 0 per spec -- that's a browser privacy restriction, not evidence the request
@@ -217,13 +223,13 @@ export class RegisteredIframeEntity {
     const metrics = { rxSize: resource.transferSize, duration: Math.floor(resource.duration), cbTime: 0 }
     addUrl(params, resource.name)
 
-    this.#postMessageToParent(IFRAME_AJAX, {
+    return {
       params,
       metrics,
       start: resource.startTime,
       end: resource.responseEnd,
       initiatorType: AJAX_INITIATOR_TYPES[resource.initiatorType]
-    })
+    }
   }
 
   /**
@@ -326,8 +332,7 @@ export class RegisteredIframeEntity {
    */
   #postTimingToAgent (property, value) {
     this.#postMessageToParent(IFRAME_TIMING_UPDATE, {
-      property,
-      value
+      entries: [{ property, value }]
     })
   }
 
@@ -340,8 +345,7 @@ export class RegisteredIframeEntity {
    */
   async #postMethodToAgent (method, args) {
     return await this.#postMessageToParent(IFRAME_API, {
-      method,
-      args
+      entries: [{ method, args }]
     }, method === REGISTER, true)
   }
 

@@ -9,12 +9,11 @@ describe('handleMethodCall', () => {
   let mockEntity
   let mockGetRegisteredEntity
 
-  const buildEvent = (overrides = {}) => ({
+  const buildEvent = ({ method = 'noticeError', args = [], ...overrides } = {}) => ({
     origin: 'https://iframe.example.com',
     data: {
       iframeInterfaceId: 'abc123',
-      method: 'noticeError',
-      args: [],
+      entries: [{ method, args }],
       ...overrides
     }
   })
@@ -129,8 +128,7 @@ describe('clock offset correction for iframe timings', () => {
       data: {
         type: 'newrelic-iframe-api',
         messageId: 1,
-        method: 'register',
-        args: [{ id: 'my-id', name: 'my-name' }],
+        entries: [{ method: 'register', args: [{ id: 'my-id', name: 'my-name' }] }],
         iframeInterfaceId: 'abc123',
         timestamp: 100 // iframe's own now() when it sent REGISTER
       }
@@ -142,8 +140,7 @@ describe('clock offset correction for iframe timings', () => {
       data: {
         type: 'newrelic-iframe-timing-update',
         iframeInterfaceId: 'abc123',
-        property: 'fetchStart',
-        value: 50 // iframe-relative value
+        entries: [{ property: 'fetchStart', value: 50 }] // iframe-relative value
       }
     })
 
@@ -158,8 +155,7 @@ describe('clock offset correction for iframe timings', () => {
       data: {
         type: 'newrelic-iframe-api',
         messageId: 1,
-        method: 'register',
-        args: [{ id: 'my-id', name: 'my-name' }],
+        entries: [{ method: 'register', args: [{ id: 'my-id', name: 'my-name' }] }],
         iframeInterfaceId: 'abc123',
         timestamp: 100
       }
@@ -170,8 +166,7 @@ describe('clock offset correction for iframe timings', () => {
       data: {
         type: 'newrelic-iframe-timing-update',
         iframeInterfaceId: 'abc123',
-        property: 'asset',
-        value: 'https://iframe.example.com/app.js'
+        entries: [{ property: 'asset', value: 'https://iframe.example.com/app.js' }]
       }
     })
 

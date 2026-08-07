@@ -24,6 +24,7 @@ import { setupSetUserIdAPI } from './api/setUserId'
 import { setupSetApplicationVersionAPI } from './api/setApplicationVersion'
 import { setupStartAPI } from './api/start'
 import { setupConsentAPI } from './api/consent'
+import { setupBeforeHarvestAPI } from './api/beforeHarvest'
 
 /**
  * @typedef {Object} AgentOptions
@@ -71,6 +72,7 @@ export class Agent extends AgentBase {
     setupSetApplicationVersionAPI(this)
     setupStartAPI(this)
     setupConsentAPI(this)
+    setupBeforeHarvestAPI(this)
 
     this.run()
   }

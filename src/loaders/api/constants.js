@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 export const prefix = 'api-'
@@ -8,6 +8,7 @@ export const spaPrefix = prefix + 'ixn-'
 export const ADD_PAGE_ACTION = 'addPageAction'
 export const ADD_TO_TRACE = 'addToTrace'
 export const ADD_RELEASE = 'addRelease'
+export const BEFORE_HARVEST = 'beforeHarvest'
 export const FINISHED = 'finished'
 export const INTERACTION = 'interaction'
 export const LOG = 'log'

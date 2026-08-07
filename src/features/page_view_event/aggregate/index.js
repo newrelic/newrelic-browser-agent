@@ -141,8 +141,11 @@ export class Aggregate extends AggregateBase {
     return eventBuffer[0]
   }
 
-  postHarvestCleanup ({ sent, status, responseText, xhr, retry }) {
+  postHarvestCleanup ({ sent, status, responseText, xhr, retry } = {}) {
     const rumEndTime = now()
+
+    if (this.agentRef.init.observation_mode?.enabled) return this.activateWithSyntheticRumResponse(rumEndTime)
+
     let app, flags
     const hasCachedRumResponse = !!this.agentRef.runtime.session?.state.cachedRumResponse
     try {
@@ -250,5 +253,49 @@ export class Aggregate extends AggregateBase {
     this.drain()
     this.agentRef.runtime.harvester.startTimer()
     activateFeatures(flags, this.agentRef)
+  }
+
+  /**
+   * observation_mode never sends the RUM call, so no real response will ever arrive. Act as though a fully-entitled
+   * response was received so the agent still activates and runs locally instead of staying dark forever.
+   * @param {number} rumEndTime
+   */
+  activateWithSyntheticRumResponse (rumEndTime) {
+    super.postHarvestCleanup({ sent: false }) // nothing was sent; no retry, just clear the snapshot
+
+    const { app, ...flags } = buildObservationModeRumResponse()
+    try {
+      this.agentRef.runtime.timeKeeper.processRumRequest(null, this.rumStartTime, rumEndTime, app.nrServerTime)
+    } catch (error) {
+      warn(17, error) // best-effort; observation_mode should never block the agent from running locally
+    }
+
+    if (!Object.keys(this.agentRef.runtime.appMetadata).length) this.agentRef.runtime.appMetadata = app
+    this.drain()
+    this.agentRef.runtime.harvester.startTimer()
+    activateFeatures(flags, this.agentRef)
+  }
+}
+
+/**
+ * Builds a synthetic, fully-entitled RUM response used to activate features under observation_mode, where the real
+ * RUM call is never actually sent.
+ */
+function buildObservationModeRumResponse () {
+  return {
+    loaded: 1,
+    st: 1,
+    err: 1,
+    ins: 1,
+    spa: 1,
+    sr: 1,
+    sts: 1,
+    srs: 1,
+    log: 1,
+    logapi: 1,
+    app: {
+      agents: [{ entityGuid: undefined }], // must be a single entry -- [] throws in consumers that read appMetadata.agents[0].entityGuid directly
+      nrServerTime: Date.now()
+    }
   }
 }

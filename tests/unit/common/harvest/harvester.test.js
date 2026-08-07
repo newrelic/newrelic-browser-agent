@@ -114,6 +114,7 @@ describe('triggerHarvestFor', () => {
     fakeAgent.runtime = {
       registeredEntities: []
     }
+    fakeAgent.init.observation_mode = { enabled: false }
   })
   let harvester
   beforeEach(() => {
@@ -122,6 +123,8 @@ describe('triggerHarvestFor', () => {
   afterEach(() => {
     jest.clearAllMocks()
     fakeAgent.runtime.registeredEntities = []
+    delete fakeAgent.runtime.beforeHarvest
+    fakeAgent.init.observation_mode.enabled = false
   })
   test('fails if aggregate is blocked', () => {
     expect(harvester.triggerHarvestFor({ blocked: true })).toEqual({ payload: undefined, ranSend: false, endpointVersion: 1 })
@@ -143,5 +146,81 @@ describe('triggerHarvestFor', () => {
   test('uses aggregate harvest endpoint version for harvests - v2', () => {
     const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent, featureName: 'jserrors', harvestEndpointVersion: 2 }
     expect(harvester.triggerHarvestFor(fakeAggregate, { })).toEqual({ payload: 'fakePayload', ranSend: true, endpointVersion: 2 })
+  })
+
+  describe('beforeHarvest hook', () => {
+    test('is invoked with the feature name and harvest payload so the payload can be inspected', () => {
+      const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent, featureName: 'jserrors' }
+      fakeAgent.runtime.beforeHarvest = jest.fn()
+
+      const result = harvester.triggerHarvestFor(fakeAggregate)
+
+      expect(fakeAgent.runtime.beforeHarvest).toHaveBeenCalledTimes(1)
+      expect(fakeAgent.runtime.beforeHarvest).toHaveBeenCalledWith({ feature: 'jserrors', payload: 'fakePayload' })
+      expect(result).toEqual({ payload: 'fakePayload', ranSend: true, endpointVersion: 1 }) // returning undefined sends the original payload
+    })
+
+    test('modifies the payload that gets sent when it returns a value', () => {
+      const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent }
+      fakeAgent.runtime.beforeHarvest = jest.fn().mockReturnValue('modifiedPayload')
+
+      const result = harvester.triggerHarvestFor(fakeAggregate)
+
+      expect(result).toEqual({ payload: 'modifiedPayload', ranSend: true, endpointVersion: 1 })
+    })
+
+    test('cancels the harvest without sending or retrying when it returns null', () => {
+      const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent, postHarvestCleanup: jest.fn() }
+      fakeAgent.runtime.beforeHarvest = jest.fn().mockReturnValue(null)
+
+      const result = harvester.triggerHarvestFor(fakeAggregate)
+
+      expect(result).toEqual({ payload: undefined, ranSend: false, endpointVersion: 1 })
+      expect(fakeAggregate.postHarvestCleanup).toHaveBeenCalledTimes(1)
+      expect(fakeAggregate.postHarvestCleanup).toHaveBeenCalledWith({ sent: false })
+    })
+
+    test('is not required to be defined', () => {
+      const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent }
+      expect(fakeAgent.runtime.beforeHarvest).toBeUndefined()
+
+      expect(() => harvester.triggerHarvestFor(fakeAggregate)).not.toThrow()
+    })
+  })
+
+  describe('observation_mode', () => {
+    test('does not send but still runs cleanup and the beforeHarvest hook when enabled', () => {
+      fakeAgent.init.observation_mode.enabled = true
+      const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent, postHarvestCleanup: jest.fn(), featureName: 'jserrors' }
+      fakeAgent.runtime.beforeHarvest = jest.fn()
+
+      const result = harvester.triggerHarvestFor(fakeAggregate)
+
+      expect(fakeAgent.runtime.beforeHarvest).toHaveBeenCalledWith({ feature: 'jserrors', payload: 'fakePayload' }) // hook can still inspect data even though nothing is sent
+      expect(result).toEqual({ payload: 'fakePayload', ranSend: false, endpointVersion: 1 })
+      expect(fakeAggregate.postHarvestCleanup).toHaveBeenCalledTimes(1)
+      expect(fakeAggregate.postHarvestCleanup).toHaveBeenCalledWith({ sent: false })
+    })
+
+    test('sends normally when disabled', () => {
+      fakeAgent.init.observation_mode.enabled = false
+      const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent }
+
+      const result = harvester.triggerHarvestFor(fakeAggregate)
+
+      expect(result).toEqual({ payload: 'fakePayload', ranSend: true, endpointVersion: 1 })
+    })
+
+    test('a beforeHarvest cancellation short-circuits before the observation_mode check runs', () => {
+      fakeAgent.init.observation_mode.enabled = true
+      const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent, postHarvestCleanup: jest.fn() }
+      fakeAgent.runtime.beforeHarvest = jest.fn().mockReturnValue(null)
+
+      const result = harvester.triggerHarvestFor(fakeAggregate)
+
+      expect(result).toEqual({ payload: undefined, ranSend: false, endpointVersion: 1 })
+      expect(fakeAggregate.postHarvestCleanup).toHaveBeenCalledTimes(1) // cleanup runs exactly once, not once per branch
+      expect(fakeAggregate.postHarvestCleanup).toHaveBeenCalledWith({ sent: false })
+    })
   })
 })

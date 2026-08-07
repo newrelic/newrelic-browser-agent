@@ -44,7 +44,8 @@ describe('newrelic api', () => {
       log: false,
       wrapLogger: false,
       register: false,
-      consent: false
+      consent: false,
+      beforeHarvest: false
     }
     globalApiMethods.forEach(keyName => {
       if (apiSeen[keyName] !== undefined) apiSeen[keyName] = true

@@ -589,7 +589,6 @@ describe('script-tracker correlations', () => {
         const fcpObservedAt = secondTimings.registeredAt + 50
         const reportedFcp = fcpObservedAt - (secondTimings.scriptStart || secondTimings.registeredAt)
         expect(reportedFcp).toBe(50)
-        expect(reportedFcp).toBeLessThan(10000)
       })
 
       test('does not treat a correlation as stale the first time a different MFE claims it', () => {

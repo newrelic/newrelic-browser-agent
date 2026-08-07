@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { prefix, CONSENT } from './constants'
@@ -23,7 +23,7 @@ export function setupConsentAPI (agent) {
       pveInst.onAggregateImported.then((loaded) => {
         const pveAgg = pveInst.featAggregate
         if (loaded && !pveAgg.sentRum) {
-          pveAgg.sendRum()
+          pveAgg.sendRum?.() // only the old v1 aggregate has a sendRum method that acts as a blocker for the rest of the agent; v2 aggregate will auto report when harvester becomes unblocked
         }
       })
     }

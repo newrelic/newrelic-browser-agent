@@ -58,7 +58,11 @@ export class Aggregate extends AggregateBase {
         const { name, value, attrs } = cumulativeLayoutShift.current
         if (value === undefined) return
         this.addTiming(name, value * 1000, attrs)
-      }, true, true) // CLS node should only reports on vis change rather than on every change
+      }, true, true) // CLS node should only report on vis change rather than on every change.
+      /* NOTE: the capture=true is required -- empirically verified against a real browser (Chrome) for CLS
+      timing node to reliably be in the same final harvest as the rest, alongside Harvester#startTimer's
+      queueMicrotask deferral of the EOL harvest itself. Dropping this flag caused CLS to be split into its own,
+      separate, later harvest instead of going out together with pageHide/INP. */
 
       this.drain()
     })

@@ -25,6 +25,7 @@ import { SESSION_ERROR } from '../../common/constants/agent-constants'
 import { handle } from '../../common/event-emitter/handle'
 
 const checkedAgents = new WeakSet()
+const runtimeBootstrapPromises = new WeakMap()
 
 /**
  * Base class for instrumenting a feature.
@@ -103,16 +104,13 @@ export class InstrumentBase extends FeatureBase {
         return
       }
 
-      let session
-      try {
-        if (canEnableSessionTracking(agentRef.init)) { // would require some setup before certain features start
-          const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
-          session = setupAgentSession(agentRef)
-        }
+      try { // in the interest of keeping loader file size small, some modules are lazy-loaded as part of the larger async chunk
+        await ensureRuntimeBootstrap(agentRef, this.ee, this.featureName)
       } catch (e) {
-        warn(20, e)
-        this.ee.emit('internal-error', [e])
-        handle(SESSION_ERROR, [e], undefined, this.featureName, this.ee)
+        warn(72, e)
+        this.ee.abort() // failed Connector or Harvester will cause entire agent to shutdown
+        this.loadedSuccessfully(false)
+        return
       }
 
       /**
@@ -120,23 +118,24 @@ export class InstrumentBase extends FeatureBase {
        * it's only responsible for aborting its one specific feature, rather than all.
        */
       try {
-        if (!this.#shouldImportAgg(this.featureName, session, agentRef.init)) {
+        if (!this.#shouldImportAgg(this.featureName, agentRef.runtime.session, agentRef.init)) {
+          this.abortHandler?.()
           drain(this.agentRef, this.featureName)
           this.loadedSuccessfully(false) // aggregate module isn't loaded at all
           return
         }
         const { Aggregate } = await fetchAggregator()
+
         this.featAggregate = new Aggregate(agentRef, argsObjFromInstrument)
 
-        agentRef.runtime.harvester.initializedAggregates.push(this.featAggregate) // "subscribe" the feature to future harvest intervals (PVE will start the timer)
+        agentRef.runtime.harvester.initializedAggregates.push(this.featAggregate) // "subscribe" the feature to future harvest intervals
         this.loadedSuccessfully(true)
       } catch (e) {
         warn(34, e)
-        this.abortHandler?.() // undo any important alterations made to the page
+        this.abortHandler?.()
         // not supported yet but nice to do: "abort" this agent's EE for this feature specifically
         drain(this.agentRef, this.featureName, true)
         this.loadedSuccessfully(false)
-        if (this.ee) this.ee.abort()
       }
     }
 
@@ -193,4 +192,52 @@ export class InstrumentBase extends FeatureBase {
       }, existingAgent.runtime.loaderType)
     }
   }
+}
+
+/**
+ * Lazily initializes the shared runtime bootstrap for a given agent exactly once. This loads session setup, Connector, and
+ * Harvester through shared async chunks and returns the same in-flight Promise to any concurrent callers.
+ *
+ * Session setup failures are reported but do not stop bootstrap. Connector or Harvester failures are allowed to bubble so the caller can abort the agent.
+ *
+ * @param {Object} agentRef - The agent reference object.
+ * @param {Object} ee - The feature event emitter used for error reporting.
+ * @param {string} featureName - The feature name used when reporting session setup errors.
+ * @returns {Promise<void>} Resolves when the shared bootstrap completes.
+ */
+async function ensureRuntimeBootstrap (agentRef, ee, featureName) {
+  if (runtimeBootstrapPromises.has(agentRef)) return runtimeBootstrapPromises.get(agentRef)
+
+  const bootstrapPromise = (async () => {
+    if (canEnableSessionTracking(agentRef.init)) {
+      try {
+        const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
+        setupAgentSession(agentRef) // sets agentRef.runtime.session, if successful
+      } catch (e) {
+        warn(20, e)
+        ee.emit('internal-error', [e])
+        handle(SESSION_ERROR, [e], undefined, featureName, ee)
+      }
+    }
+
+    const [{ Connector }, { Harvester }] = await Promise.all([
+      import(/* webpackChunkName: "connector" */ '../../common/harvest/connector'),
+      import(/* webpackChunkName: "harvester" */ '../../common/harvest/harvester')
+    ])
+    agentRef.runtime.connector = new Connector(agentRef)
+    agentRef.runtime.harvester = new Harvester(agentRef)
+
+    /* Wait for auto-started features' aggregates to load before starting the harvest timer, so Harvester's EOL
+    listener registers after aggregate-level listeners like web-vitals' CWV APIs. Not awaited here to avoid
+    deadlock, since every feature awaits this same bootstrap promise before its own aggregate load.
+    Only auto-started features are waited on: an autoStart:false feature only registers in drainRegistry once
+    `start` is called, so filtering on that registry excludes any feature that's never started instead of
+    blocking startTimer() forever. */
+    const autoStartedFeatures = Object.values(agentRef.features).filter(feature => agentRef.runtime.drainRegistry.has(feature.featureName))
+    Promise.all(autoStartedFeatures.map(feature => feature.onAggregateImported))
+      .then(() => agentRef.runtime.harvester.startTimer())
+  })()
+
+  runtimeBootstrapPromises.set(agentRef, bootstrapPromise)
+  await bootstrapPromise
 }

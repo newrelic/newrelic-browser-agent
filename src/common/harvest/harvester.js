@@ -22,22 +22,20 @@ export class Harvester {
   constructor (agentRef) {
     this.agentRef = agentRef
 
-    // Create obfuscator for harvest metadata (referrer URL, etc.)
     // No event type specified - applies to all harvests regardless of feature
     this.obfuscator = new Obfuscator(agentRef)
-
-    subscribeToEOL(() => { // do one last harvest round or check
-      this.initializedAggregates.forEach(aggregateInst => { // let all features wrap up things needed to do before ANY harvest in case there's last minute cross-feature data dependencies
-        if (typeof aggregateInst.harvestOpts.beforeUnload === 'function') aggregateInst.harvestOpts.beforeUnload()
-      })
-      this.initializedAggregates.forEach(aggregateInst => this.triggerHarvestFor(aggregateInst, { isFinalHarvest: true }))
-      /* This callback should run in bubble phase, so that CWV api, like "onLCP", is called before the final harvest so that emitted timings are part of last outgoing. */
-    }, false)
   }
 
   startTimer (harvestInterval = this.agentRef.init.harvest.interval) {
     if (this.#started) return
     this.#started = true
+
+    subscribeToEOL(() => {
+      this.initializedAggregates.forEach(aggregateInst => { // let all features wrap up things needed to do before ANY harvest in case there's last minute cross-feature data dependencies
+        if (typeof aggregateInst.harvestOpts.beforeUnload === 'function') aggregateInst.harvestOpts.beforeUnload()
+      })
+      this.initializedAggregates.forEach(aggregateInst => this.triggerHarvestFor(aggregateInst, { isFinalHarvest: true }))
+    })
 
     const onHarvestInterval = () => {
       this.initializedAggregates.forEach(aggregateInst => this.triggerHarvestFor(aggregateInst))

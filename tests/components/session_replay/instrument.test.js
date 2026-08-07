@@ -5,12 +5,17 @@ import { getAppSessionHash } from '../../../src/common/session/session-key'
 import { SESSION_STORAGE_KEY_PREFIX } from '../../../src/common/session/constants'
 import { MODE } from '../../specs/util/helpers'
 
-let mainAgent, savedInitialSession
-
-beforeAll(() => {
-  mainAgent = setupAgent({
+/**
+ * Creates a never-bootstrapped agent, distinct from the shared `mainAgent` below. Some tests need the
+ * SessionReplay runtime bootstrap (session setup + Connector/Harvester creation) to actually run so they can
+ * observe or interfere with it -- `mainAgent`'s bootstrap is cached after the first real Instrument in this
+ * file uses it, so reusing it can't simulate "session doesn't exist/fails to init yet".
+ * @param {object} sessionReplayInit - value for `init.session_replay`
+ */
+function setupFreshAgent (sessionReplayInit) {
+  return setupAgent({
     init: {
-      session_replay: { preload: false, enabled: true }
+      session_replay: sessionReplayInit
     },
     runtime: {
       timeKeeper: {
@@ -18,14 +23,15 @@ beforeAll(() => {
       }
     }
   })
-  jest.spyOn(mainAgent.runtime.harvester, 'triggerHarvestFor').mockImplementation(() => Promise.resolve())
-  savedInitialSession = mainAgent.runtime.session
+}
+
+let mainAgent
+
+beforeAll(() => {
+  mainAgent = setupFreshAgent({ preload: false, enabled: true })
 })
 
 afterEach(() => {
-  if (!mainAgent.runtime.session) {
-    mainAgent.runtime.session = savedInitialSession
-  }
   if (jest.mocked(nreumModule.gosNREUMOriginals).mock) {
     jest.mocked(nreumModule.gosNREUMOriginals).mockRestore()
   }
@@ -90,21 +96,28 @@ describe('Replay', () => { // this is moreso a test of the SR-specific logic wit
 })
 
 describe('Preload early records', () => {
+  let localAgent
+
   beforeEach(() => {
     localStorage.clear()
     mainAgent.init.privacy.cookies_enabled = true
     mainAgent.init.session_trace.enabled = true
   })
 
-  test('with flag enabled and if session dne yet', async () => {
-    mainAgent.runtime.session = undefined
-    Object.assign(mainAgent.init.session_replay, { preload: true, enabled: true })
+  afterEach(() => {
+    if (localAgent) resetAgent(localAgent)
+    localAgent = undefined
+  })
 
-    const sessionReplayInstrument = new SessionReplay(mainAgent)
+  test('with flag enabled and if session dne yet', async () => {
+    localAgent = setupFreshAgent({ preload: true, enabled: true })
+    localAgent.runtime.session = undefined
+
+    const sessionReplayInstrument = new SessionReplay(localAgent)
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeDefined()
-    expect(mainAgent.runtime.isRecording).toEqual(true)
+    expect(localAgent.runtime.isRecording).toEqual(true)
   })
 
   test('when replay already on in existing session, even if preload flag disabled', async () => {
@@ -119,19 +132,19 @@ describe('Preload early records', () => {
   })
 
   test('when replay already on in namespaced localStorage session, even if preload flag disabled', async () => {
-    const namespacedKey = `${SESSION_STORAGE_KEY_PREFIX}${getAppSessionHash(mainAgent.info.licenseKey, mainAgent.info.applicationID)}`
+    localAgent = setupFreshAgent({ preload: false, enabled: true })
+    const namespacedKey = `${SESSION_STORAGE_KEY_PREFIX}${getAppSessionHash(localAgent.info.licenseKey, localAgent.info.applicationID)}`
     localStorage.setItem(namespacedKey, JSON.stringify({ sessionReplayMode: MODE.FULL }))
-    mainAgent.runtime.session = undefined
-    Object.assign(mainAgent.init.session_replay, { preload: false, enabled: true })
+    localAgent.runtime.session = undefined
 
-    const sessionReplayInstrument = new SessionReplay(mainAgent)
+    const sessionReplayInstrument = new SessionReplay(localAgent)
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeDefined()
-    expect(mainAgent.runtime.isRecording).toEqual(true)
+    expect(localAgent.runtime.isRecording).toEqual(true)
   })
 
-  test('when replay already on in existing session, even if flag enabled but a pre-req is not', async () => {
+  test('stops preload recording if replay was already on in existing session but a pre-req is not met', async () => {
     mainAgent.init.privacy.cookies_enabled = false
     Object.assign(mainAgent.init.session_replay, { preload: false, enabled: true })
     mainAgent.runtime.session.write({ sessionReplayMode: MODE.FULL })
@@ -140,7 +153,8 @@ describe('Preload early records', () => {
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeDefined()
-    expect(mainAgent.runtime.isRecording).toEqual(true)
+    // shouldImportAgg is false here (missing prerequisite), which now always stops any preload recording.
+    expect(mainAgent.runtime.isRecording).toEqual(false)
   })
 
   test('if replay is off in existing session, but all required flags are enabled', async () => {
@@ -160,18 +174,31 @@ describe('Preload recording stops if', () => {
     Object.assign(mainAgent.init.session_replay, { preload: true, enabled: true })
   })
 
+  // The first test below needs its own fresh agent (rather than the shared `mainAgent`) because the runtime
+  // bootstrap (session setup + Connector/Harvester creation) only ever runs once per agent -- reusing
+  // `mainAgent` would skip session setup entirely since it already succeeded in the tests above, so the
+  // mocked `setupAgentSession` throw would never actually run.
+  let localAgent
+
+  afterEach(() => {
+    if (localAgent) resetAgent(localAgent)
+    localAgent = undefined
+    jest.clearAllMocks()
+  })
+
   test('session entity fails to initialize', async () => {
     jest.doMock('../../../src/features/utils/agent-session', () => ({
       __esModule: true,
       setupAgentSession: jest.fn(() => { throw new Error('RIP') })
     }))
-    mainAgent.runtime.session = undefined
+    localAgent = setupFreshAgent({ preload: true, enabled: true })
+    localAgent.runtime.session = undefined
 
-    const sessionReplayInstrument = new SessionReplay(mainAgent)
+    const sessionReplayInstrument = new SessionReplay(localAgent)
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeDefined()
-    expect(mainAgent.runtime.isRecording).toEqual(false)
+    expect(localAgent.runtime.isRecording).toEqual(false)
   })
 
   test('replay aggregate fails to initialize', async () => {
@@ -180,6 +207,7 @@ describe('Preload recording stops if', () => {
       setupAgentSession: jest.fn(() => { throw new Error('RIP') })
     }))
 
+    // This scenario doesn't need a fresh bootstrap (session setup already succeeded), so it can reuse `mainAgent`.
     const sessionReplayInstrument = new SessionReplay(mainAgent)
     await new Promise(process.nextTick)
 

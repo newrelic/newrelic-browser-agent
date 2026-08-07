@@ -23,7 +23,6 @@ expect.extend({
 
 export const baseQuery = expect.objectContaining({
   a: expect.any(String),
-  ck: expect.any(String),
   ref: expect.any(String),
   rst: expect.any(String),
   s: expect.any(String),
@@ -35,7 +34,6 @@ export function checkRumQuery ({ query }, { liteAgent } = {}) {
   expect(query).toMatchObject({
     a: expect.any(String),
     be: expect.any(String),
-    ck: expect.any(String),
     dc: expect.any(String),
     fe: expect.any(String),
     perf: expect.any(String),

@@ -167,12 +167,8 @@ export async function handleMethodCall (event, agent) {
   }
 
   output.entity = entity
-  if (!isSafeProperty(entity, method)) {
-    warn(35, method)
-    return output
-  }
   const methodFn = entity[method]
-  if (typeof methodFn !== 'function') {
+  if (!isSafeProperty(entity, method) || typeof methodFn !== 'function') {
     warn(35, method)
     return output
   }

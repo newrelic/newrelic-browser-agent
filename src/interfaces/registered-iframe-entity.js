@@ -307,7 +307,7 @@ export class RegisteredIframeEntity {
 
     const timestamp = now()
     try {
-      await (bypassRegistration ? Promise.resolve() : this.#registrationPromise.catch((err) => { throw err }))
+      await (bypassRegistration ? Promise.resolve() : this.#registrationPromise)
       const messageId = ++this.#messageIdCounter
       const pending = needsResponse ? this.#openPending(messageId) : Promise.resolve()
       globalScope.parent.postMessage({

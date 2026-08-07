@@ -100,7 +100,7 @@ export class RegisteredIframeEntity {
 
     if (this.#parentOrigin === '*') {
       // If the parent's origin cannot be determined, fail closed rather than allow postMessage
-      // traffic to/from any origin -- see #isAllowedOrigin, which would otherwise trust everyone.
+      // traffic to/from any origin
       warn(78)
       this.blocked = true
       return
@@ -253,7 +253,7 @@ export class RegisteredIframeEntity {
       // Validate origin now that we know the message claims to be for us. Reject the pending
       // call immediately rather than leaving it to time out, since we know exactly which
       // messageId this response was for.
-      if (!this.#isAllowedOrigin(event.origin)) {
+      if (event.origin !== this.#parentOrigin) {
         warn(74, event.origin)
         this.#closePending({ messageId: event.data.messageId, error: 'Rejected message from unauthorized origin' })
         return
@@ -277,20 +277,6 @@ export class RegisteredIframeEntity {
     this.setUserId = this.setUserId.bind(this)
     this.setApplicationVersion = this.setApplicationVersion.bind(this)
     this.log = this.log.bind(this)
-  }
-
-  // ---------------------------------------------------------------------------
-  // postMessage plumbing
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Checks if an origin matches the parent origin
-   * @private
-   * @param {string} origin - The origin to check
-   * @returns {boolean}
-   */
-  #isAllowedOrigin (origin) {
-    return this.#parentOrigin === '*' || origin === this.#parentOrigin
   }
 
   /**

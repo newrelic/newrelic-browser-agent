@@ -32,8 +32,7 @@ export default (env) => {
               }
               // The register API's iframe bridge can never work on lite -- none of its features
               // (page_view_event/page_view_timing/metrics) call setupRegisterAPI, so agent.register
-              // never exists here regardless of the allow_iframe_bridge flag. Drop the chunk entirely
-              // rather than ship dead code that would just warn-and-no-op if ever reached.
+              // never exists here regardless of the allow_iframe_bridge flag. Drop the chunk entirely for space-saving.
               if (resource.includes('iframe-message-handler')) return true
             }
 

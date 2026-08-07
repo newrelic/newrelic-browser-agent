@@ -23,6 +23,7 @@ import { loadTime } from '../../../common/vitals/load-time'
 import { webdriverDetected } from '../../../common/util/webdriver-detection'
 import { cleanURL } from '../../../common/url/clean-url'
 import { EVENT_TYPES } from '../../../common/constants/events'
+import { createStringAdders } from '../../../common/payloads/payloads'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -93,6 +94,8 @@ export class Aggregate extends AggregateBase {
       attrs.cls = cumulativeLayoutShift.current.value
     }
 
+    attrs.webdriverDetected = webdriverDetected
+
     const timing = {
       name,
       value,
@@ -125,17 +128,13 @@ export class Aggregate extends AggregateBase {
     })
   }
 
-  appendGlobalCustomAttributes (timing) {
-    var timingAttributes = timing.attrs || {}
+  #getGlobalCustomAttributes () {
+    const reservedAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elTag', 'elUrl', 'net-type',
+      'net-etype', 'net-rtt', 'net-dlink', 'webdriverDetected']
 
-    var reservedAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elTag', 'elUrl', 'net-type',
-      'net-etype', 'net-rtt', 'net-dlink']
-    Object.entries(this.agentRef.info.jsAttributes || {}).forEach(([key, val]) => {
-      if (reservedAttributes.indexOf(key) < 0) {
-        timingAttributes[key] = val
-      }
-    })
-    timingAttributes.webdriverDetected = webdriverDetected
+    return Object.fromEntries(
+      Object.entries(this.agentRef.info.jsAttributes || {}).filter(([key]) => !reservedAttributes.includes(key))
+    )
   }
 
   preHarvestChecks () {
@@ -146,7 +145,9 @@ export class Aggregate extends AggregateBase {
   // serialize array of timing data
   serializer (eventBuffer) {
     if (!eventBuffer?.length) return ''
-    var addString = getAddStringContext(this.obfuscator)
+    const { addString, addStringRaw } = createStringAdders(getAddStringContext, this.obfuscator)
+    const keepOrigValue = { addKey: addStringRaw, addVal: addStringRaw }
+    const obfuscateValue = { addKey: addStringRaw, addVal: addString }
 
     var payload = 'bel.6;'
 
@@ -154,12 +155,16 @@ export class Aggregate extends AggregateBase {
       var timing = eventBuffer[i]
 
       payload += 'e,'
-      payload += addString(timing.name) + ','
+      payload += addStringRaw(timing.name) + ','
       payload += nullable(timing.value, numeric, false) + ','
 
-      this.appendGlobalCustomAttributes(timing)
+      const userAttrs = this.#getGlobalCustomAttributes()
 
-      var attrParts = addCustomAttributes(timing.attrs, addString)
+      const { pageUrl, ...systemReservedAttrs } = timing.attrs || {}
+      var attrParts = addCustomAttributes(systemReservedAttrs, keepOrigValue)
+      attrParts.push(...addCustomAttributes(userAttrs, obfuscateValue))
+      if (pageUrl) attrParts.push(...addCustomAttributes({ pageUrl }, obfuscateValue))
+
       if (attrParts && attrParts.length > 0) {
         payload += numeric(attrParts.length) + ';' + attrParts.join(';')
       }

@@ -284,12 +284,12 @@ export function findScriptTimings (target) {
     Object.defineProperty(
       timings,
       'scriptStart',
-      timingFactory(() => (!isCorrelationStale() && (correlation?.script.start || timings.fetchEnd)) || timings.registeredAt)
+      timingFactory(() => isCorrelationStale() ? timings.registeredAt : (correlation?.script.start ?? timings.fetchEnd))
     )
     Object.defineProperty(
       timings,
       'scriptEnd',
-      timingFactory(() => (!isCorrelationStale() && correlation?.script.end) || timings.registeredAt)
+      timingFactory(() => isCorrelationStale() ? timings.registeredAt : (correlation?.script.end ?? timings.registeredAt))
     )
   } catch (error) {
     // Don't let stack parsing errors break anything

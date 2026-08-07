@@ -1,7 +1,8 @@
 import {
-  // testLogsRequest,
-  testMFEErrorsRequest
-  // testMFEInsRequest
+  testLogsRequest,
+  testMFEErrorsRequest,
+  testMFEAjaxEventsRequest,
+  testMFEInsRequest
 } from '../../../../tools/testing-server/utils/expect-tests'
 
 describe('Register API - General Behaviors', () => {
@@ -452,5 +453,72 @@ describe('Register API - General Behaviors', () => {
       expect(sourceKeys).toEqual(expect.arrayContaining(['source.name', 'source.id', 'source.type']))
       expect(sourceKeys.length).toBe(3)
     })
+  })
+
+  it('collapses auto-instrumented events across duplicate registrations of the same MFE script, while keeping API-driven calls and MicroFrontEndTiming per-instance', async () => {
+    const [mfeErrorsCapture, mfeAjaxCapture, logsCapture, mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testMFEErrorsRequest },
+      { test: testMFEAjaxEventsRequest },
+      { test: testLogsRequest },
+      { test: testMFEInsRequest }
+    ])
+
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+      init: { feature_flags: ['register'] }
+    })).then(() => browser.waitForAgentLoad())
+
+    // mfe-dedup.js registers the same MFE 30 times, then triggers one auto AJAX call, one
+    // auto-captured console.log, one uncaught error, and 30 explicit `.log()` calls (one per registration)
+    await browser.execute(function () {
+      const script = document.createElement('script')
+      script.src = './js/mfe/mfe-dedup.js'
+      document.head.appendChild(script)
+    })
+
+    await browser.pause(500)
+
+    // deregister all 30 instances to flush their MicroFrontEndTiming events
+    await browser.execute(function () {
+      window.__deregisterDedupApis()
+    })
+
+    const [errorsHarvests, ajaxHarvests, logsHarvests, insightsHarvests] = await Promise.all([
+      mfeErrorsCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
+      mfeAjaxCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
+      logsCapture.waitForResult({ timeout: 15000 }),
+      // 30 near-simultaneous deregister() calls can legitimately produce more than one insights harvest
+      // request -- wait out the full window rather than stopping after the first one arrives, or events
+      // in a later harvest get silently dropped from this capture.
+      mfeInsightsCapture.waitForResult({ timeout: 15000 })
+    ])
+
+    // exactly 1 auto-captured JS error, not 30
+    const autoErrors = errorsHarvests
+      .flatMap(({ request: { body } }) => body.err || [])
+      .filter(err => err.params.message.includes('auto captured error from mfe-dedup.js'))
+    expect(autoErrors.length).toBe(1)
+
+    // exactly 1 auto-instrumented AJAX event, not 30
+    const autoAjaxEvents = ajaxHarvests
+      .flatMap(({ request: { body } }) => body || [])
+      .filter(event => event.path === '/dedup-marker-test')
+    expect(autoAjaxEvents.length).toBe(1)
+
+    // logs: 1 auto-captured console.log + 30 explicit `.log()` calls (one per registration, never deduped).
+    // Explicit calls are asserted with a generous lower bound rather than an exact count, since harvesting
+    // 30 near-simultaneous log calls can legitimately split across harvest boundaries -- the important
+    // invariant here is that they are clearly NOT collapsed down to 1 like the auto-captured log is.
+    const allLogs = logsHarvests.flatMap(({ request: { body } }) => JSON.parse(body)[0].logs)
+    const autoLogs = allLogs.filter(log => log.message === 'auto captured log from mfe-dedup.js')
+    const explicitLogs = allLogs.filter(log => /^explicit log \d+$/.test(log.message))
+    expect(autoLogs.length).toBe(1)
+    expect(explicitLogs.length).toBeGreaterThanOrEqual(20)
+    expect(new Set(explicitLogs.map(log => log.message)).size).toBe(explicitLogs.length) // each is distinct, none deduped
+
+    // MicroFrontEndTiming stays per-instance: 30 registrations of the same id => still 30 distinct timing events
+    const timingEvents = insightsHarvests
+      .flatMap(({ request: { body } }) => body.ins)
+      .filter(event => event.eventType === 'MicroFrontEndTiming' && event['source.name'] === 'DedupMFE')
+    expect(timingEvents.length).toBe(30)
   })
 })

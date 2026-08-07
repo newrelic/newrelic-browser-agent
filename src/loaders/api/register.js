@@ -82,7 +82,7 @@ function register (agentRef, target) {
     type: V2_TYPES.BA
   }
 
-  const timings = findScriptTimings()
+  const timings = findScriptTimings(target)
 
   // Track MFE vitals for this entity
   const vitals = trackMFEVitals(target, timings)

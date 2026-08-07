@@ -8,10 +8,12 @@ import { now } from '../timing/now'
 import { cleanURL } from '../url/clean-url'
 import { chrome, chromeEval, gecko } from '../util/browser-stack-matchers'
 import { ScriptCorrelation } from './script-correlation'
+import { CORRELATION_STALE_THRESHOLD_MS } from './script-tracker-constants'
 import { timingFactory } from './timing-factory'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPITimings} RegisterAPITimings
+ * @typedef {import('../../loaders/api/register-api-types').RegisterAPITarget} RegisterAPITarget
  */
 
 /** export for testing purposes */
@@ -219,9 +221,11 @@ function subscribeToLatePerformanceEntry (timings, mfeScriptUrl) {
 
 /**
  * Uses the stack of the initiator function, returns script timing information if a script can be found with the resource timing API matching the URL found in the stack.
+ * @param {RegisterAPITarget} [target] - The MFE target being registered. Its id is used to scope stale-correlation detection per-MFE rather than per-script-URL, so one script registering multiple distinct MFEs doesn't misclassify a later MFE's registration as a stale reuse of an earlier one's.
  * @returns {RegisterAPITimings} Object containing script fetch start and end times, and the asset URL if found
  */
-export function findScriptTimings () {
+export function findScriptTimings (target) {
+  const mfeId = target?.id
   const timings = { registeredAt: now(), reportedAt: undefined, fetchStart: 0, fetchEnd: 0, scriptStart: 0, scriptEnd: 0, asset: undefined, type: 'unknown' }
   const stack = getDeepStackTrace()
   if (!stack) return timings
@@ -261,12 +265,32 @@ export function findScriptTimings () {
       subscribeToLatePerformanceEntry(timings, mfeScriptUrl)
     }
 
-    /*
-     * Use getters here because the correlation data may arrive after this function returns the timing object, and we want to provide the most up-to-date timing information possible when the getters are accessed at harvest time.
-     * The getters will fall back to fetchEnd if correlation data isn't available yet, which is our best approximation for script execution start when actual script timings can not be determined.
-    */
-    Object.defineProperty(timings, 'scriptStart', timingFactory(() => timings.correlation?.script.start || timings.fetchEnd))
-    Object.defineProperty(timings, 'scriptEnd', timingFactory(() => timings.correlation?.script.end || timings.registeredAt))
+    // A correlation can be reused across multiple `register()` calls for the same script URL (e.g. an SPA
+    // remounting the same MFE without the script actually reloading). When that happens, its dom/performance
+    // timings still describe the *original* load, not this one. Detect that case so scriptStart/scriptEnd
+    // below can ignore the stale data instead of reporting it as if it were fresh.
+    const correlation = timings.correlation
+    const alreadyClaimedByThisMFE = !!mfeId && !!correlation?.claimedBy.has(mfeId)
+    if (correlation && mfeId) correlation.claimedBy.add(mfeId)
+    const isCorrelationStale = () => {
+      const correlationStart = correlation?.script.start
+      if (!alreadyClaimedByThisMFE || !correlationStart) return false
+      const staleness = timings.registeredAt - correlationStart
+      return staleness > CORRELATION_STALE_THRESHOLD_MS
+    }
+
+    // Use getters here because the correlation data may arrive after this function returns the timing object, and we want to provide the most up-to-date timing information possible when the getters are accessed at harvest time.
+    // Non-stale: fall back to fetchEnd if correlation data isn't available yet (our best approximation for script execution start). Stale: fall back straight to registeredAt — fetchEnd would be derived from the same stale correlation, so it can't be trusted either.
+    Object.defineProperty(
+      timings,
+      'scriptStart',
+      timingFactory(() => isCorrelationStale() ? timings.registeredAt : (correlation?.script.start ?? timings.fetchEnd))
+    )
+    Object.defineProperty(
+      timings,
+      'scriptEnd',
+      timingFactory(() => isCorrelationStale() ? timings.registeredAt : (correlation?.script.end ?? timings.registeredAt))
+    )
   } catch (error) {
     // Don't let stack parsing errors break anything
   }

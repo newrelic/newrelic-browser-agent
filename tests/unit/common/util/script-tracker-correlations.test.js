@@ -516,6 +516,106 @@ describe('script-tracker correlations', () => {
       expect(timings.scriptEnd).toBe(timings.registeredAt)
       expect(timings.registeredAt).toBe(150)
     })
+
+    describe('stale correlation reuse (SPA remount)', () => {
+      let CORRELATION_STALE_THRESHOLD_MS
+
+      beforeEach(async () => {
+        ({ CORRELATION_STALE_THRESHOLD_MS } = await import('../../../../src/common/v2/script-tracker-constants'))
+      })
+
+      // Regression/replication test for the bug where an MFE remounted by an SPA (without its
+      // script actually reloading) would reuse the *original* script correlation. Because FCP is
+      // reported relative to timings.scriptStart, this made FCP appear to be the gap since the
+      // original page load — often many seconds, i.e. a false "FCP > 10s" report — instead of the
+      // near-instant paint that actually happened on remount.
+      test('discards a correlation reused by the same MFE past the staleness threshold', () => {
+        const scriptUrl = 'https://cdn.example.com/remount.js'
+        mockNavigationEntry = { name: 'https://example.com/' }
+        mockStack = `Error
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at init (${scriptUrl}:10:5)`
+        const mfeTarget = { id: 'mfe-a', instance: 'instance-1' }
+
+        const perfEntry = { name: scriptUrl, initiatorType: 'script', startTime: 10, responseEnd: 90 }
+        globalThis.performance.getEntriesByType = jest.fn((type) => {
+          if (type === 'resource') return [perfEntry]
+          if (type === 'navigation') return mockNavigationEntry ? [mockNavigationEntry] : []
+          return []
+        })
+
+        // Original load of the MFE's script
+        currentTime = 50
+        if (performanceObserverCallback) performanceObserverCallback({ getEntries: () => [perfEntry] })
+
+        currentTime = 100
+        const scriptElement = document.createElement('script')
+        scriptElement.src = scriptUrl
+        createdScripts.push(scriptElement)
+        if (mutationObserverCallback) mutationObserverCallback([{ addedNodes: [scriptElement] }])
+
+        currentTime = 150
+        scriptElement.dispatchEvent(new Event('load'))
+
+        // First register() call for this MFE claims the correlation and behaves normally
+        currentTime = 160
+        const firstTimings = scriptTrackerModule.findScriptTimings(mfeTarget)
+        expect(firstTimings.scriptStart).toBe(100) // max(dom.start=100, perf.end=90)
+
+        // SPA remounts the same MFE (script does not reload) and calls register() again for the
+        // same MFE id, more than the staleness threshold after the first claim.
+        currentTime = 160 + CORRELATION_STALE_THRESHOLD_MS + 1
+        const secondTimings = scriptTrackerModule.findScriptTimings(mfeTarget)
+
+        // The stale correlation must be discarded in favor of this registration's own timestamp
+        expect(secondTimings.scriptStart).toBe(secondTimings.registeredAt)
+        expect(secondTimings.scriptEnd).toBe(secondTimings.registeredAt)
+
+        // FCP observed shortly after the remount must be reported relative to *this*
+        // registration, not the original page load ~10s+ ago.
+        const fcpObservedAt = secondTimings.registeredAt + 50
+        const reportedFcp = fcpObservedAt - (secondTimings.scriptStart || secondTimings.registeredAt)
+        expect(reportedFcp).toBe(50)
+      })
+
+      test('does not treat a correlation as stale the first time a different MFE claims it', () => {
+        const scriptUrl = 'https://cdn.example.com/shared-bundle.js'
+        mockNavigationEntry = { name: 'https://example.com/' }
+        mockStack = `Error
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at init (${scriptUrl}:10:5)`
+
+        const perfEntry = { name: scriptUrl, initiatorType: 'script', startTime: 10, responseEnd: 90 }
+        globalThis.performance.getEntriesByType = jest.fn((type) => {
+          if (type === 'resource') return [perfEntry]
+          if (type === 'navigation') return mockNavigationEntry ? [mockNavigationEntry] : []
+          return []
+        })
+
+        currentTime = 50
+        if (performanceObserverCallback) performanceObserverCallback({ getEntries: () => [perfEntry] })
+
+        currentTime = 100
+        const scriptElement = document.createElement('script')
+        scriptElement.src = scriptUrl
+        createdScripts.push(scriptElement)
+        if (mutationObserverCallback) mutationObserverCallback([{ addedNodes: [scriptElement] }])
+
+        currentTime = 150
+        scriptElement.dispatchEvent(new Event('load'))
+
+        // First MFE sharing this bundle claims the correlation
+        currentTime = 160
+        scriptTrackerModule.findScriptTimings({ id: 'mfe-a', instance: 'instance-1' })
+
+        // A second, distinct MFE claims the same correlation for the first time, well past the
+        // staleness window — this must NOT be treated as stale since it's a fresh claim for mfe-b.
+        currentTime = 160 + CORRELATION_STALE_THRESHOLD_MS + 1
+        const timings = scriptTrackerModule.findScriptTimings({ id: 'mfe-b', instance: 'instance-1' })
+
+        expect(timings.scriptStart).toBe(100) // still max(dom.start=100, perf.end=90), not discarded
+      })
+    })
   })
 
   describe('Timing calculations for different loading methods', () => {

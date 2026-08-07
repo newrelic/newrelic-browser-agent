@@ -5,6 +5,7 @@
 
 import { globalScope, isBrowserScope } from '../constants/runtime'
 import { now } from '../timing/now'
+import { CORRELATION_STALE_THRESHOLD_MS } from './script-tracker-constants'
 
 /**
  * @typedef {import('../../loaders/api/register-api-types').RegisterAPITimings} RegisterAPITimings
@@ -151,11 +152,11 @@ export function trackMFEVitals (target, timings) {
 
   const observers = []
 
-  // If FCP hasn't been observed within 10 seconds, give up and shut down all observers.
+  // If FCP hasn't been observed within this window, give up and shut down all observers.
   // Once FCP is observed, the other vitals are left to record until their natural lifespan ends.
   setTimeout(() => {
     if (!fcpObservedAt) vitals.disconnect()
-  }, 10000)
+  }, CORRELATION_STALE_THRESHOLD_MS)
 
   const populateVitalMinimums = () => {
     fcpObservedAt ??= now()

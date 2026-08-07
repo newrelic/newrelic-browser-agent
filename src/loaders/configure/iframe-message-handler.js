@@ -6,25 +6,12 @@ import { warn } from '../../common/util/console'
 import { getRegisteredEntityByIframeInterfaceId } from '../../common/v2/utils'
 import { IFRAME_TIMING_UPDATE, IFRAME_API, IFRAME_API_RESPONSE, IFRAME_VITALS_UPDATE, IFRAME_AJAX } from '../../common/constants/iframe-constants'
 import { REGISTER } from '../api/constants'
-import { pendingOriginTimestamps } from '../api/register'
 import { handle } from '../../common/event-emitter/handle'
 import { FEATURE_NAMES } from '../features/features'
 import { stringify } from '../../common/util/stringify'
 import { registerHandler } from '../../common/event-emitter/register-handler'
 import { drain } from '../../common/drain/drain'
 import { isBrowserScope } from '../../common/constants/runtime'
-import { now } from '../../common/timing/now'
-
-/**
- * Per-entity offset (approximately iframe timeOrigin - container timeOrigin) used to convert
- * timing values captured with the iframe's own `now()` into container-page-relative values.
- * Without this, values like `registeredAt`/`fetchStart` are reported as if they were relative to
- * the container page's origin, when they're actually relative to the iframe's own (later) origin --
- * skewing any timeline built from them by however long the iframe took to load. Keyed by entity via
- * a WeakMap rather than a property on entity.metadata, since entity.metadata is also the object
- * returned directly to non-iframe register() callers, for whom this offset is meaningless.
- */
-const clockOffsets = new WeakMap()
 
 /**
  * Retrieves the registered entity associated with the iframeInterfaceId from the event data, and validates that the origin of the message event matches the expected origin for that entity.
@@ -60,11 +47,9 @@ function handleTimingUpdate (event, agent) {
 
   if (!entity.metadata.timings) return
 
-  const offset = clockOffsets.get(entity) || 0
   event.data.entries?.forEach(({ property, value }) => {
     if (isSafeProperty(entity.metadata.timings, property)) {
-      // guard: `asset`/`type` are strings, not timing values -- only numeric values need the offset
-      entity.metadata.timings[property] = typeof value === 'number' ? value + offset : value
+      entity.metadata.timings[property] = value
     }
   })
 }
@@ -81,15 +66,9 @@ function handleVitalsUpdate (event, agent) {
 
   if (!entity.metadata?.vitals) return
 
-  const offset = clockOffsets.get(entity) || 0
   event.data.entries?.forEach(({ property, value }) => {
     if (isSafeProperty(entity.metadata.vitals, property) && (!!Number(value) || value === 0)) {
-      // fcp/lcp are absolute iframe-clock timestamps that get compared against timings.scriptStart
-      // (which handleTimingUpdate stores container-relative) -- they need the same clock offset
-      // applied here, or the subtraction mixes two different clock bases and can go negative.
-      // cls/inp are plain scores/durations, not timestamps, so they must stay unadjusted.
-      const needsOffset = property === 'fcp' || property === 'lcp'
-      entity.metadata.vitals[property].value = needsOffset ? value + offset : value
+      entity.metadata.vitals[property].value = value
     }
   })
 }
@@ -177,10 +156,6 @@ export async function handleMethodCall (event, agent) {
     output.entity = agent[REGISTER](freshTarget)
     output.entity.metadata.target.iframeInterfaceId = iframeInterfaceId
     output.entity.metadata.target.iframeOrigin = event.origin
-    // `timestamp` is the iframe's own now() captured when this REGISTER message was sent (see
-    // #postMessageToParent); comparing it to our now() approximates the gap between the two
-    // frames' timeOrigins (modulo negligible postMessage transit time).
-    clockOffsets.set(output.entity, now() - timestamp)
 
     return output
   }
@@ -202,11 +177,8 @@ export async function handleMethodCall (event, agent) {
     return output
   }
 
-  // Prime the timestamp used by this call's underlying report() with the timestamp
-  // captured inside the iframe at call time, rather than letting report() fall back
-  // to the time this message happens to be processed by the container (which can lag
-  // behind due to the registration handshake or buffered/drained messages).
-  pendingOriginTimestamps.set(entity, timestamp)
+  // Supply the timestamp captured inside the iframe at call time (from event.data.timestamp)
+  entity.metadata.events.latestTimestamp = timestamp
   output.result = await methodFn.apply(entity, args || [])
   return output
 }

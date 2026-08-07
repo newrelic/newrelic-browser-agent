@@ -31,7 +31,8 @@ describe('handleMethodCall', () => {
       metadata: {
         target: {
           iframeOrigin: 'https://iframe.example.com'
-        }
+        },
+        events: {}
       },
       noticeError: jest.fn(() => 'noticed')
     }
@@ -75,12 +76,11 @@ describe('handleMethodCall', () => {
   })
 })
 
-describe('clock offset correction for iframe timings', () => {
+describe('iframe timing/vitals updates use the iframe-reported values directly', () => {
   let setupIframeMFEMessageListener
   let capturedHandler
   let mockAgent
   let registeredEntity
-  let mockNow
   const origin = 'https://iframe.example.com'
 
   beforeEach(async () => {
@@ -105,9 +105,6 @@ describe('clock offset correction for iframe timings', () => {
       getRegisteredEntityByIframeInterfaceId: jest.fn(() => registeredEntity)
     }))
 
-    mockNow = jest.fn()
-    jest.doMock('../../../../src/common/timing/now', () => ({ now: mockNow }))
-
     mockAgent = {
       init: { api: { register: { iframe_domains: [] } } },
       runtime: { listeningForIframeMessages: false },
@@ -120,8 +117,7 @@ describe('clock offset correction for iframe timings', () => {
     setupIframeMFEMessageListener(mockAgent)
   })
 
-  it('offsets numeric timing values by the gap between the container and iframe clocks captured at registration', async () => {
-    mockNow.mockReturnValueOnce(130) // container's now() when processing REGISTER
+  it('sets numeric timing values from the iframe as-is, without any clock adjustment', async () => {
     await capturedHandler({
       origin,
       source: { postMessage: jest.fn() },
@@ -130,25 +126,23 @@ describe('clock offset correction for iframe timings', () => {
         messageId: 1,
         entries: [{ method: 'register', args: [{ id: 'my-id', name: 'my-name' }] }],
         iframeInterfaceId: 'abc123',
-        timestamp: 100 // iframe's own now() when it sent REGISTER
+        timestamp: 100
       }
     })
-    // clockOffset = 130 - 100 = 30
 
     capturedHandler({
       origin,
       data: {
         type: 'newrelic-iframe-timing-update',
         iframeInterfaceId: 'abc123',
-        entries: [{ property: 'fetchStart', value: 50 }] // iframe-relative value
+        entries: [{ property: 'fetchStart', value: 50 }]
       }
     })
 
-    expect(registeredEntity.metadata.timings.fetchStart).toBe(80) // 50 + 30
+    expect(registeredEntity.metadata.timings.fetchStart).toBe(50)
   })
 
   it('leaves non-numeric timing values (asset/type) untouched', async () => {
-    mockNow.mockReturnValueOnce(130)
     await capturedHandler({
       origin,
       source: { postMessage: jest.fn() },
@@ -173,8 +167,7 @@ describe('clock offset correction for iframe timings', () => {
     expect(registeredEntity.metadata.timings.asset).toBe('https://iframe.example.com/app.js')
   })
 
-  it('offsets fcp/lcp vitals by the same clock gap applied to timings, since both are compared against timings.scriptStart', async () => {
-    mockNow.mockReturnValueOnce(130) // container's now() when processing REGISTER
+  it('sets fcp/lcp vitals from the iframe as-is, without any clock adjustment', async () => {
     await capturedHandler({
       origin,
       source: { postMessage: jest.fn() },
@@ -183,10 +176,9 @@ describe('clock offset correction for iframe timings', () => {
         messageId: 1,
         entries: [{ method: 'register', args: [{ id: 'my-id', name: 'my-name' }] }],
         iframeInterfaceId: 'abc123',
-        timestamp: 100 // iframe's own now() when it sent REGISTER
+        timestamp: 100
       }
     })
-    // clockOffset = 130 - 100 = 30
     registeredEntity.metadata.vitals = { fcp: { value: null }, lcp: { value: null }, cls: { value: null }, inp: { value: null } }
 
     capturedHandler({
@@ -194,15 +186,14 @@ describe('clock offset correction for iframe timings', () => {
       data: {
         type: 'newrelic-iframe-vitals-update',
         iframeInterfaceId: 'abc123',
-        entries: [{ property: 'fcp', value: 45 }] // iframe-relative value
+        entries: [{ property: 'fcp', value: 45 }]
       }
     })
 
-    expect(registeredEntity.metadata.vitals.fcp.value).toBe(75) // 45 + 30
+    expect(registeredEntity.metadata.vitals.fcp.value).toBe(45)
   })
 
-  it('leaves cls/inp vitals unadjusted, since they are scores/durations rather than clock timestamps', async () => {
-    mockNow.mockReturnValueOnce(130)
+  it('sets cls/inp vitals from the iframe as-is', async () => {
     await capturedHandler({
       origin,
       source: { postMessage: jest.fn() },
@@ -226,5 +217,46 @@ describe('clock offset correction for iframe timings', () => {
     })
 
     expect(registeredEntity.metadata.vitals.cls.value).toBe(0.12)
+  })
+})
+
+describe('handleMethodCall timestamp propagation', () => {
+  let handleMethodCall
+  let mockEntity
+
+  beforeEach(async () => {
+    jest.resetModules()
+    jest.clearAllMocks()
+
+    jest.doMock('../../../../src/common/util/console', () => ({ warn: jest.fn() }))
+
+    mockEntity = {
+      metadata: {
+        target: { iframeOrigin: 'https://iframe.example.com' },
+        events: { latestTimestamp: undefined }
+      },
+      noticeError: jest.fn(() => 'noticed')
+    }
+
+    jest.doMock('../../../../src/common/v2/utils', () => ({
+      getRegisteredEntityByIframeInterfaceId: jest.fn(() => mockEntity)
+    }))
+
+    const module = await import('../../../../src/loaders/configure/iframe-message-handler')
+    handleMethodCall = module.handleMethodCall
+  })
+
+  it('stores the timestamp captured inside the iframe on entity.metadata.events.latestTimestamp before invoking the method', async () => {
+    await handleMethodCall({
+      origin: 'https://iframe.example.com',
+      data: {
+        iframeInterfaceId: 'abc123',
+        entries: [{ method: 'noticeError', args: [] }],
+        timestamp: 12345
+      }
+    }, {})
+
+    expect(mockEntity.metadata.events.latestTimestamp).toBe(12345)
+    expect(mockEntity.noticeError).toHaveBeenCalled()
   })
 })

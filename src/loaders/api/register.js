@@ -28,15 +28,6 @@ import { generateRandomHexString } from '../../common/ids/unique-id'
 const PROTECTED_KEYS = ['name', 'id', 'type']
 
 /**
- * Queues an origin timestamp (e.g. captured inside a registered iframe at call time) to be
- * used by the *next* report() call for a given entity, instead of a fresh `now()`. Set a
- * value keyed by the entity (the object returned from register()) before invoking one of
- * its reporting methods. Keyed via a WeakMap so it requires no property on the public API
- * object and is automatically cleaned up if the entity is ever garbage collected.
- */
-export const pendingOriginTimestamps = new WeakMap()
-
-/**
  * Map of API methods to their names (prevents minification from breaking method name references)
  * @private
  */
@@ -163,7 +154,10 @@ function register (agentRef, target) {
       get customAttributes () { return attrs },
       target,
       timings,
-      vitals
+      vitals,
+      events: {
+        latestTimestamp: undefined
+      }
     }
   }
 
@@ -243,11 +237,9 @@ function register (agentRef, target) {
   const report = (methodToCall, args, target) => {
     /** Even if we are blocked, if registering we should still return a child register API so nested API calls do not throw errors */
     if (isBlocked() && methodToCall !== register) return
-    /** set the timestamp before the async part of waiting for the rum response for better accuracy, unless a value was queued in pendingOriginTimestamps closer to the source (e.g. inside an iframe) for this call */
-    /* eslint-disable sonarjs/no-empty-collection -- populated externally (e.g. iframe-message-handler.js) via the exported WeakMap reference */
-    const timestamp = pendingOriginTimestamps.get(api) ?? now()
-    pendingOriginTimestamps.delete(api)
-    /* eslint-enable sonarjs/no-empty-collection */
+    /** use the timestamp captured inside the iframe for this call, if one was supplied (see iframe-message-handler.js); otherwise fall back to now(). Consume it immediately so a stale value can't leak into a later call that isn't preceded by a fresh iframe message (e.g. deregister() via page unload) */
+    const timestamp = api.metadata.events.latestTimestamp ?? now()
+    api.metadata.events.latestTimestamp = undefined
     const methodName = METHOD_NAMES.get(methodToCall) || 'unknown'
     handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodName}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)
     try {

@@ -215,16 +215,18 @@ describe('Register API - Iframe Entity', () => {
     expect(timingEvent.timeToBeRequested).toBeGreaterThanOrEqual(0)
 
     // Iframe vitals arrive as raw numbers via postMessage (not JSON-stringified objects).
-    // FCP, LCP, CLS, INP: positive numbers on supporting browsers, null elsewhere.
+    // FCP, LCP, CLS, INP: positive numbers on supporting browsers; on browsers where the
+    // vital is unsupported (e.g. CLS on Firefox), the key is omitted entirely, so the
+    // lookup comes back undefined rather than null.
     // Values are raw millisecond/score numbers, not JSON-stringified objects.
     const fcp = timingEvent['nr.vitals.fcp.value']
     const lcp = timingEvent['nr.vitals.lcp.value']
     const cls = timingEvent['nr.vitals.cls.value']
     const inp = timingEvent['nr.vitals.inp.value']
-    expect(fcp === null || (typeof fcp === 'number' && fcp >= 0)).toBe(true)
-    expect(lcp === null || (typeof lcp === 'number' && lcp >= 0)).toBe(true)
-    expect(cls === null || (typeof cls === 'number' && cls >= 0)).toBe(true)
-    expect(inp === null || (typeof inp === 'number' && inp >= 0)).toBe(true)
+    expect(fcp === undefined || (typeof fcp === 'number' && fcp >= 0)).toBe(true)
+    expect(lcp === undefined || (typeof lcp === 'number' && lcp >= 0)).toBe(true)
+    expect(cls === undefined || (typeof cls === 'number' && cls >= 0)).toBe(true)
+    expect(inp === undefined || (typeof inp === 'number' && inp >= 0)).toBe(true)
   })
 
   it.withBrowsersMatching(supportsLargestContentfulPaint)('should have positive FCP and LCP vital values from the iframe in supporting browsers', async () => {

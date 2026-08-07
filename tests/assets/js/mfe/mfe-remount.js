@@ -1,4 +1,4 @@
-// Simulates an SPA that mounts an MFE, then remounts the SAME MFE (same id) much later
+// Simulates a SPA that mounts a MFE, then remounts the SAME MFE (same id) much later
 // WITHOUT this script ever reloading. Both register() calls execute from this same script file,
 // so they resolve to the same underlying ScriptCorrelation -- this is the exact scenario the
 // stale-correlation staleness check in findScriptTimings()/script-correlation.js guards against.

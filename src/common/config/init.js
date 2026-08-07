@@ -23,7 +23,9 @@ const InitModelFn = () => {
     feature_flags: [],
     experimental: {
       register: false,
-      resources: false
+      resources: false,
+      iframe_bridge: false,
+      iframe_domains: []
     },
     mask_selector: '*',
     block_selector: '[data-nr-block]',
@@ -53,7 +55,16 @@ const InitModelFn = () => {
       register: {
         get enabled () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.REGISTER) || hiddenState.experimental.register },
         set enabled (val) { hiddenState.experimental.register = val },
-        duplicate_data_to_container: false
+        duplicate_data_to_container: false,
+        // experimental iframe bridge feature
+        get allow_iframe_bridge () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.IFRAME_BRIDGE) || hiddenState.experimental.iframe_bridge },
+        set allow_iframe_bridge (val) { hiddenState.experimental.iframe_bridge = val },
+        get iframe_domains () { return hiddenState.experimental.iframe_domains },
+        set iframe_domains (val) {
+          if (Array.isArray(val)) hiddenState.experimental.iframe_domains = val
+          else warn(1, val)
+        }
+
       }
     },
     browser_consent_mode: { enabled: false },

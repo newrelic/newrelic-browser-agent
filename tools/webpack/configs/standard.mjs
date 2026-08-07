@@ -25,9 +25,15 @@ export default (env) => {
       plugins: [
         new webpack.IgnorePlugin({
           checkResource: (resource, context) => {
-            if (context.match(/features\/utils/) && resource.endsWith('aggregate')) {
-              // Only allow page_view_event, page_view_timing, and metrics features
-              return !/(page_view_event|page_view_timing|metrics)\/aggregate/.test(resource)
+            if (context.match(/features\/utils/)) {
+              if (resource.endsWith('aggregate')) {
+                // Only allow page_view_event, page_view_timing, and metrics features
+                return !/(page_view_event|page_view_timing|metrics)\/aggregate/.test(resource)
+              }
+              // The register API's iframe bridge can never work on lite -- none of its features
+              // (page_view_event/page_view_timing/metrics) call setupRegisterAPI, so agent.register
+              // never exists here regardless of the allow_iframe_bridge flag. Drop the chunk entirely for space-saving.
+              if (resource.includes('iframe-message-handler')) return true
             }
 
             return false

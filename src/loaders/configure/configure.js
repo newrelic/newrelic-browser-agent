@@ -7,11 +7,13 @@ import { gosCDN } from '../../common/window/nreum'
 import { mergeInfo } from '../../common/config/info'
 import { mergeInit } from '../../common/config/init'
 import { mergeRuntime } from '../../common/config/runtime'
-import { isWorkerScope } from '../../common/constants/runtime'
+import { isWorkerScope, globalScope } from '../../common/constants/runtime'
 import { redefinePublicPath } from './public-path'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 import { mergeLoaderConfig } from '../../common/config/loader-config'
+import { handle } from '../../common/event-emitter/handle'
+import { prefix as iframePrefix } from '../../common/constants/iframe-constants'
 
 /**
  * Sets or re-sets the agent's configuration values from global settings. This also attach those as properties to the agent instance.
@@ -80,6 +82,18 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
       feature: undefined,
       data: agent.config
     })
+
+    // Set up iframe postMessage listener for registered entities
+    if (agent.init.api.register.allow_iframe_bridge) {
+      globalScope.addEventListener('message', (event) => {
+        // Pre-filter here rather than in setupIframeMFEMessageListener, so unrelated MessageEvents
+        // (there can be many, from any script on the page) aren't buffered/held onto in memory
+        // while waiting for the iframe bridge's lazy chunk to load and drain the buffer.
+        if (typeof event.data?.type === 'string' && event.data.type.startsWith(iframePrefix)) {
+          handle('iframe-message', [event], undefined, 'IFRAME', agent.ee)
+        }
+      })
+    }
 
     agent.runtime.configured = true
   }

@@ -55,7 +55,8 @@ const RuntimeModel = {
   registeredEntities: [],
   /** a proxy is set in agent-session to track jsAttributes changes for harvesting mechanics */
   jsAttributesMetadata: { bytes: 0 },
-  get harvestCount () { return ++_harvestCount }
+  get harvestCount () { return ++_harvestCount },
+  listeningForIframeMessages: false
 }
 
 export const mergeRuntime = (runtime) => {

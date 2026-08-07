@@ -9,6 +9,7 @@ import { cleanURL } from '../url/clean-url'
 import { chrome, chromeEval, gecko } from '../util/browser-stack-matchers'
 import { ScriptCorrelation } from './script-correlation'
 import { CORRELATION_STALE_THRESHOLD_MS } from './script-tracker-constants'
+import { timingFactory } from './timing-factory'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPITimings} RegisterAPITimings
@@ -24,7 +25,7 @@ try {
 }
 
 /** @type {(entry: PerformanceEntry) => boolean} - A shared function to determine if a performance entry is a valid script or link resource for evaluation */
-const validEntryCriteria = entry => entry.initiatorType === 'script' || (['link', 'fetch'].includes(entry.initiatorType) && entry.name.endsWith('.js'))
+const validEntryCriteria = entry => entry.initiatorType === 'script' || (['link', 'fetch'].includes(entry.initiatorType) && cleanURL(entry.name).endsWith('.js'))
 
 /** @type {Map<string, ScriptCorrelation>} - Central registry for script correlations containing both DOM and Performance data */
 export const scriptCorrelations = new Map()
@@ -199,6 +200,26 @@ function applyPerformanceEntry (timings, entry) {
 }
 
 /**
+ * Subscribes to late resource timing emissions for a script URL.
+ * @param {RegisterAPITimings} timings - The timings object to update
+ * @param {string} mfeScriptUrl - The script URL to match
+ */
+function subscribeToLatePerformanceEntry (timings, mfeScriptUrl) {
+  if (!globalScope.PerformanceObserver?.supportedEntryTypes?.includes('resource')) return
+
+  poSubscribers.push({
+    addedAt: now(),
+    test: (entry) => {
+      if (entryMatchesUrl(entry, mfeScriptUrl)) {
+        applyPerformanceEntry(timings, entry)
+        return true
+      }
+      return false
+    }
+  })
+}
+
+/**
  * Uses the stack of the initiator function, returns script timing information if a script can be found with the resource timing API matching the URL found in the stack.
  * @param {RegisterAPITarget} [target] - The MFE target being registered. Its id is used to scope stale-correlation detection per-MFE rather than per-script-URL, so one script registering multiple distinct MFEs doesn't misclassify a later MFE's registration as a stale reuse of an earlier one's.
  * @returns {RegisterAPITimings} Object containing script fetch start and end times, and the asset URL if found
@@ -227,27 +248,21 @@ export function findScriptTimings (target) {
     // Get correlation data
     timings.correlation = findCorrelation(mfeScriptUrl)
 
-    // Use correlation's performance entry if available, otherwise check live performance API
-    const performanceEntry = timings.correlation?.performance.value || performance.getEntriesByType('resource').find(e => entryMatchesUrl(e, mfeScriptUrl))
+    // Use correlation's performance entry if available, otherwise check the live performance API before falling back to the buffered observer.
+    const performanceEntry = timings.correlation?.performance.value || globalScope.performance?.getEntriesByType('resource')?.find(e => entryMatchesUrl(e, mfeScriptUrl))
 
     if (performanceEntry) {
       applyPerformanceEntry(timings, performanceEntry)
-    } else if (wasPreloaded(mfeScriptUrl)) {
-      // Handle preloaded scripts that may report late
-      timings.asset = mfeScriptUrl
-      timings.type = 'preload'
+    } else {
+      const isPreloaded = wasPreloaded(mfeScriptUrl)
 
-      // Subscribe to late performance observer callbacks
-      poSubscribers.push({
-        addedAt: now(),
-        test: (entry) => {
-          if (entryMatchesUrl(entry, mfeScriptUrl)) {
-            applyPerformanceEntry(timings, entry)
-            return true
-          }
-          return false
-        }
-      })
+      // Handle preloaded scripts and any late resource emissions through the shared buffered observer.
+      if (isPreloaded) {
+        timings.asset = mfeScriptUrl
+        timings.type = 'preload'
+      }
+
+      subscribeToLatePerformanceEntry(timings, mfeScriptUrl)
     }
 
     // A correlation can be reused across multiple `register()` calls for the same script URL (e.g. an SPA
@@ -266,8 +281,16 @@ export function findScriptTimings (target) {
 
     // Use getters here because the correlation data may arrive after this function returns the timing object, and we want to provide the most up-to-date timing information possible when the getters are accessed at harvest time.
     // Non-stale: fall back to fetchEnd if correlation data isn't available yet (our best approximation for script execution start). Stale: fall back straight to registeredAt — fetchEnd would be derived from the same stale correlation, so it can't be trusted either.
-    Object.defineProperty(timings, 'scriptStart', { get: () => (!isCorrelationStale() && (correlation?.script.start || timings.fetchEnd)) || timings.registeredAt })
-    Object.defineProperty(timings, 'scriptEnd', { get: () => (!isCorrelationStale() && correlation?.script.end) || timings.registeredAt })
+    Object.defineProperty(
+      timings,
+      'scriptStart',
+      timingFactory(() => (!isCorrelationStale() && (correlation?.script.start || timings.fetchEnd)) || timings.registeredAt)
+    )
+    Object.defineProperty(
+      timings,
+      'scriptEnd',
+      timingFactory(() => (!isCorrelationStale() && correlation?.script.end) || timings.registeredAt)
+    )
   } catch (error) {
     // Don't let stack parsing errors break anything
   }

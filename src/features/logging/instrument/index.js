@@ -11,6 +11,7 @@ import { setupLogAPI } from '../../../loaders/api/log'
 import { setupWrapLoggerAPI } from '../../../loaders/api/wrapLogger'
 import { setupRegisterAPI } from '../../../loaders/api/register'
 import { isNative } from '../../../common/util/monkey-patched'
+import { getContainerTarget } from '../../../common/v2/utils'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -31,7 +32,7 @@ export class Instrument extends InstrumentBase {
     })
 
     /** emitted by wrap-logger function */
-    this.ee.on('wrap-logger-end', function handleLog ([message], _, __, targets = []) {
+    this.ee.on('wrap-logger-end', function handleLog ([message], _, __, targets = [getContainerTarget(agentRef)]) {
       const { level, customAttributes, autoCaptured } = this
       targets.forEach(target => {
         bufferLog(instanceEE, message, customAttributes, level, autoCaptured, target)

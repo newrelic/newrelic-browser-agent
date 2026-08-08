@@ -17,6 +17,52 @@ export const V2_TYPES = {
 }
 
 /**
+ * @typedef {Object} ContainerTarget
+ * @property {'BA'} type always V2_TYPES.BA -- identifies this as the container (main) agent, not a registered MFE
+ * @property {undefined} instance container targets have no registration instance
+ * @property {string} [id] the container agent's entity guid, once known (getter, resolved asynchronously)
+ * @property {{[key:string]: any}} attributes the V2 payload attributes for the container agent (getter)
+ */
+
+/**
+ * Returns a lazily-created, cached target object representing the container (main) agent itself, for use anywhere a
+ * v2 "target" is expected but no registered MFE applies. This replaces the previous convention of using a bare
+ * `undefined` to mean "the container agent," so that callers can treat container and MFE targets uniformly (e.g.
+ * `target.attributes`, `target.type`) instead of null-checking.
+ * @param {*} agentRef the agent reference
+ * @returns {ContainerTarget}
+ */
+export function getContainerTarget (agentRef) {
+  if (!agentRef?.runtime) {
+    // no agentRef to derive identity from (or attach a cache to) -- return an uncached, empty-identity container target
+    return { type: V2_TYPES.BA, instance: undefined, id: undefined, attributes: {} }
+  }
+  if (!agentRef.runtime.containerTarget) {
+    agentRef.runtime.containerTarget = {
+      type: V2_TYPES.BA,
+      instance: undefined,
+      get id () { return agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid },
+      get attributes () {
+        return {
+          'entity.guid': agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid,
+          appId: agentRef.info.applicationID
+        }
+      }
+    }
+  }
+  return agentRef.runtime.containerTarget
+}
+
+/**
+ * Determines if a given target represents a registered MFE (as opposed to the container agent).
+ * @param {*} target the target to check
+ * @returns {boolean} true if the target is a registered MFE target
+ */
+export function isMfeTarget (target) {
+  return target?.type === V2_TYPES.MFE
+}
+
+/**
  * Returns a single registered entity associated with a given iframe interface ID. Returns undefined if no entity is found.
  * @param {string} iframeInterfaceId
  * @param {*} agentRef the agent reference
@@ -114,14 +160,8 @@ export function dedupeRegisteredEntitiesByAsset (entities) {
  */
 export function getVersion2Attributes (target, aggregateInstance) {
   if (!supportsV2(aggregateInstance)) return {}
-  const containerAgentEntityGuid = aggregateInstance.agentRef.runtime.appMetadata.agents[0].entityGuid
-  /** if there's no target, but we are in v2 mode, this means the data belongs to the container agent */
-  if (!target) {
-    return {
-      'entity.guid': containerAgentEntityGuid,
-      appId: aggregateInstance.agentRef.info.applicationID
-    }
-  }
+  /** if the target isn't a registered MFE, but we are in v2 mode, this means the data belongs to the container agent */
+  if (!isMfeTarget(target)) return getContainerTarget(aggregateInstance.agentRef).attributes
   /** otherwise, the data belongs to the target (MFE) and should be attributed as such */
   return target.attributes
 }
@@ -147,16 +187,17 @@ export function getVersion2DuplicationAttributes (target, aggregateInstance) {
  * @returns {boolean} returns true if the event should be duplicated for the target, false otherwise
  */
 export function shouldDuplicate (target, aggregateInstance) {
-  return !!target && !!supportsV2(aggregateInstance) && aggregateInstance.agentRef.init.api.register.duplicate_data_to_container
+  return isMfeTarget(target) && !!supportsV2(aggregateInstance) && aggregateInstance.agentRef.init.api.register.duplicate_data_to_container
 }
 
 /**
  * Finds the registered targets from the stack trace for a given agent reference.
  * @param {*} agentRef The agent reference to use for finding targets.
- * @returns {Array} An array of targets found from the stack trace. If no targets are found or allowed, returns an array with undefined.
+ * @returns {Array} An array of targets found from the stack trace. If no targets are found or allowed, returns an array containing the container target.
  */
 export function findTargetsFromStackTrace (agentRef) {
-  if (!isValid(true, agentRef) || !agentRef?.runtime?.registeredEntities?.length) return [undefined]
+  if (!agentRef) return []
+  if (!isValid(true, agentRef) || !agentRef?.runtime?.registeredEntities?.length) return [getContainerTarget(agentRef)]
 
   const targets = []
   try {
@@ -170,15 +211,15 @@ export function findTargetsFromStackTrace (agentRef) {
   }
 
   const deduped = dedupeTargetsByInstance(targets)
-  if (!deduped.length) deduped.push(undefined) // if we can't find any targets from the stack trace, return an array with undefined to signify the container agent is the target
+  if (!deduped.length) deduped.push(getContainerTarget(agentRef)) // if we can't find any targets from the stack trace, the container agent is the target
   return deduped
 }
 
 /**
  * Removes duplicate targets from an array, keyed by `target.instance`. This guards against the same canonical
  * target re-entering the array via multiple matched stack-frame URLs (e.g. a recursive call whose stack contains the
- * same file at multiple depths). Entries with no `instance` (i.e. `undefined`, meaning "the container agent")
- * naturally collapse to a single entry too, which is the desired behavior.
+ * same file at multiple depths). Entries with no `instance` (i.e. the container target, whose `instance` is always
+ * `undefined`) naturally collapse to a single entry too, which is the desired behavior.
  * @param {Array} targets
  * @returns {Array} deduped list of targets, preserving relative order of first occurrence
  */

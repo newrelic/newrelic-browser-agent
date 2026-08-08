@@ -9,7 +9,7 @@
  */
 import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { globalScope } from '../constants/runtime'
-import { findTargetsFromStackTrace } from '../v2/utils'
+import { findTargetsFromStackTrace, getContainerTarget } from '../v2/utils'
 
 var prefix = 'fetch-'
 var bodyPrefix = prefix + 'body-'
@@ -47,8 +47,8 @@ export function wrapFetch (sharedEE, agentRef) {
 
   ee.on(prefix + 'end', function (err, res, targets) {
     var ctx = this
-    // undefined target reports to container
-    ctx.targets = targets || [undefined]
+    // default target reports to container
+    ctx.targets = targets || [getContainerTarget(agentRef)]
     if (res) {
       var size = res.headers.get('content-length')
       if (size !== null) {

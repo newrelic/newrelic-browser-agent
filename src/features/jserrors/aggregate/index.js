@@ -19,7 +19,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { now } from '../../../common/timing/now'
 import { Obfuscator } from '../../../common/util/obfuscate'
 import { evaluateInternalError } from './internal-errors'
-import { getRegisteredTargetsFromFilename, getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
+import { getRegisteredTargetsFromFilename, getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate, getContainerTarget, isMfeTarget } from '../../../common/v2/utils'
 import { buildCauseString } from './cause-string'
 import { ShortCircuit } from '../../../common/util/short-circuit'
 import { EVENT_TYPES } from '../../../common/constants/events'
@@ -209,7 +209,7 @@ export class Aggregate extends AggregateBase {
           if (targets.length) break
         }
       }
-      if (!targets.length) targets.push(undefined)
+      if (!targets.length) targets.push(getContainerTarget(this.agentRef))
     }
     return targets
   }
@@ -253,7 +253,7 @@ export class Aggregate extends AggregateBase {
     if (filterOutput?.group) params.errorGroup = filterOutput.group
 
     // Should only decorate "hasReplay" for the container agent, so check if the target matches the config
-    if (hasReplay && !target) params.hasReplay = hasReplay
+    if (hasReplay && !isMfeTarget(target)) params.hasReplay = hasReplay
     /**
      * The bucketHash is different from the params.stackHash because the params.stackHash is based on the canonicalized
      * stack trace and is used downstream in NR1 to attempt to group the same errors across different browsers. However,
@@ -289,7 +289,7 @@ export class Aggregate extends AggregateBase {
 
     // Trace sends the error in its payload, and both trace & replay simply listens for any error to occur.
     const jsErrorEvent = [type, bucketHash, params, newMetrics, customAttributes]
-    if (!target) handle('trace-jserror', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
+    if (!isMfeTarget(target)) handle('trace-jserror', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return
 
@@ -297,7 +297,7 @@ export class Aggregate extends AggregateBase {
       customAttributes.socketId = err.__newrelic.socketId
     }
 
-    if (!target) {
+    if (!isMfeTarget(target)) {
       const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
       if (softNavInUse) { // pass the error to soft nav for evaluation - it will return it via 'returnJserror' when interaction is resolved
         handle('jserror', [jsErrorEvent], undefined, FEATURE_NAMES.softNav, this.ee)
@@ -307,7 +307,7 @@ export class Aggregate extends AggregateBase {
     }
 
     // always add directly if scoped to a sub-entity, the other pathways above will be deterministic if the main agent should procede
-    if (target) this.#storeJserrorForHarvest(jsErrorEvent, {}, target)
+    if (isMfeTarget(target)) this.#storeJserrorForHarvest(jsErrorEvent, {}, target)
   }
 
   /**

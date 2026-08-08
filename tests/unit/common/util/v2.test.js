@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getVersion2Attributes, getRegisteredTargetsFromFilename, findTargetsFromStackTrace, getRegisteredTargetsFromId, dedupeRegisteredEntitiesByAsset, dedupeTargetsByInstance } from '../../../../src/common/v2/utils'
+import { getVersion2Attributes, getRegisteredTargetsFromFilename, findTargetsFromStackTrace, getRegisteredTargetsFromId, dedupeRegisteredEntitiesByAsset, dedupeTargetsByInstance, getContainerTarget, isMfeTarget } from '../../../../src/common/v2/utils'
 
 describe('v2 utilities', () => {
   describe('getRegisteredTargetsFromFilename', () => {
@@ -414,7 +414,7 @@ describe('v2 utilities', () => {
   })
 
   describe('findTargetsFromStackTrace', () => {
-    test('returns empty array when register.enabled is false', () => {
+    test('returns the container target when register.enabled is false', () => {
       const agentRef = {
         init: {
           api: {
@@ -425,11 +425,14 @@ describe('v2 utilities', () => {
         },
         runtime: {
           registeredEntities: []
-        }
+        },
+        info: {}
       }
 
       const result = findTargetsFromStackTrace(agentRef)
-      expect(result).toEqual([])
+      expect(result).toHaveLength(1)
+      expect(result[0]).toBe(getContainerTarget(agentRef))
+      expect(isMfeTarget(result[0])).toBe(false)
     })
 
     test('returns empty array when agentRef is falsy', () => {
@@ -480,12 +483,14 @@ describe('v2 utilities', () => {
         },
         runtime: {
           registeredEntities: null // This will cause an error
-        }
+        },
+        info: {}
       }
 
-      // Should not throw, should return empty array
+      // Should not throw, should return the container target
       const result = findTargetsFromStackTrace(agentRef)
-      expect(result).toEqual([])
+      expect(result).toHaveLength(1)
+      expect(isMfeTarget(result[0])).toBe(false)
     })
   })
 
@@ -514,6 +519,64 @@ describe('v2 utilities', () => {
 
       const result = dedupeTargetsByInstance([a, undefined, b, undefined])
       expect(result).toEqual([a, undefined, b])
+    })
+  })
+
+  describe('getContainerTarget', () => {
+    const makeAgentRef = () => ({
+      runtime: {
+        appMetadata: {
+          agents: [{ entityGuid: 'container-entity-guid' }]
+        }
+      },
+      info: {
+        applicationID: 'app-123'
+      }
+    })
+
+    test('returns a BA-typed target with no instance', () => {
+      const agentRef = makeAgentRef()
+      const target = getContainerTarget(agentRef)
+
+      expect(target.type).toBe('BA')
+      expect(target.instance).toBeUndefined()
+      expect(isMfeTarget(target)).toBe(false)
+    })
+
+    test('exposes live id and attributes reflecting current agentRef state', () => {
+      const agentRef = makeAgentRef()
+      const target = getContainerTarget(agentRef)
+
+      expect(target.id).toBe('container-entity-guid')
+      expect(target.attributes).toEqual({
+        'entity.guid': 'container-entity-guid',
+        appId: 'app-123'
+      })
+
+      agentRef.runtime.appMetadata.agents[0].entityGuid = 'updated-entity-guid'
+      expect(target.id).toBe('updated-entity-guid')
+      expect(target.attributes['entity.guid']).toBe('updated-entity-guid')
+    })
+
+    test('caches and returns the same object for the same agentRef', () => {
+      const agentRef = makeAgentRef()
+      expect(getContainerTarget(agentRef)).toBe(getContainerTarget(agentRef))
+    })
+
+    test('returns distinct objects for distinct agentRefs', () => {
+      const agentRefA = makeAgentRef()
+      const agentRefB = makeAgentRef()
+      expect(getContainerTarget(agentRefA)).not.toBe(getContainerTarget(agentRefB))
+    })
+  })
+
+  describe('isMfeTarget', () => {
+    test('returns true only for targets with type MFE', () => {
+      expect(isMfeTarget({ type: 'MFE' })).toBe(true)
+      expect(isMfeTarget({ type: 'BA' })).toBe(false)
+      expect(isMfeTarget(undefined)).toBe(false)
+      expect(isMfeTarget(null)).toBe(false)
+      expect(isMfeTarget({})).toBe(false)
     })
   })
 
@@ -606,6 +669,7 @@ describe('v2 utilities', () => {
       test('returns container attributes when target is not valid', () => {
         const invalidTarget = {
           id: 'mfe-id',
+          type: 'MFE',
           parent: {
             id: 'container-entity-guid',
             type: 'BA'
@@ -627,7 +691,7 @@ describe('v2 utilities', () => {
         expect(result).toEqual({
           'source.id': 'mfe-id',
           'source.name': undefined,
-          'source.type': undefined,
+          'source.type': 'MFE',
           'parent.id': 'container-entity-guid',
           'parent.type': 'BA'
         })
@@ -661,6 +725,25 @@ describe('v2 utilities', () => {
           'source.type': 'MFE',
           'parent.id': 'parent-id',
           'parent.type': 'MFE'
+        })
+      })
+
+      test('returns container attributes when no target is given', () => {
+        const result = getVersion2Attributes(undefined, mockAggregateInstance)
+
+        expect(result).toEqual({
+          'entity.guid': 'container-entity-guid',
+          appId: 'app-123'
+        })
+      })
+
+      test('returns container attributes when given the real container target', () => {
+        const containerTarget = getContainerTarget(mockAggregateInstance.agentRef)
+        const result = getVersion2Attributes(containerTarget, mockAggregateInstance)
+
+        expect(result).toEqual({
+          'entity.guid': 'container-entity-guid',
+          appId: 'app-123'
         })
       })
 

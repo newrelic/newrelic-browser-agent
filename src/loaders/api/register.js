@@ -4,7 +4,7 @@
  */
 import { handle } from '../../common/event-emitter/handle'
 import { warn } from '../../common/util/console'
-import { V2_TYPES } from '../../common/v2/utils'
+import { V2_TYPES } from '../../common/v2/constants'
 import { FEATURE_NAMES } from '../features/features'
 import { now } from '../../common/timing/now'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'

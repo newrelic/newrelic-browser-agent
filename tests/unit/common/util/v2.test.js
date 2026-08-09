@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getVersion2Attributes, getRegisteredTargetsFromFilename, findTargetsFromStackTrace, getRegisteredTargetsFromId, dedupeRegisteredEntitiesByAsset, dedupeTargetsByInstance, V2_TYPES, isMfeTarget } from '../../../../src/common/v2/utils'
+import { getVersion2Attributes, getRegisteredTargetsFromFilename, findTargetsFromStackTrace, getRegisteredTargetsFromId, dedupeRegisteredEntitiesByAsset, dedupeTargetsByInstance, isMfeTarget } from '../../../../src/common/v2/utils'
+import { V2_TYPES } from '../../../../src/common/v2/constants'
 
 // mirrors the inline v2Target shape eagerly created in loaders/configure/configure.js
 const makeV2Target = (agentRef) => ({

@@ -4,17 +4,7 @@
  */
 
 import { extractUrlsFromStack, getDeepStackTrace } from './script-tracker'
-
-/**
- * @enum {string}
- * @readonly
- */
-export const V2_TYPES = {
-  /** Micro Frontend */
-  MFE: 'MFE',
-  /** Browser Application */
-  BA: 'BA'
-}
+import { V2_TYPES } from './constants'
 
 /**
  * @typedef {Object} V2Target

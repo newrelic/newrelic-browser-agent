@@ -50,7 +50,7 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
     get id () { return agent.runtime.appMetadata?.agents?.[0]?.entityGuid },
     get attributes () {
       return {
-        'entity.guid': agent.runtime.appMetadata?.agents?.[0]?.entityGuid,
+        'entity.guid': this.id,
         appId: agent.info.applicationID
       }
     }

@@ -26,7 +26,6 @@ import { now } from '../../src/common/timing/now'
 import { warnings } from '../../src/loaders/api/register'
 import { single } from '../../src/common/util/invoke'
 import { warn } from '../../src/common/util/console'
-import { getContainerTarget } from '../../src/common/v2/utils'
 
 // Mock script-tracker to avoid PerformanceObserver requirement
 jest.mock('../../src/common/v2/script-tracker', () => {
@@ -1074,11 +1073,11 @@ describe('API tests', () => {
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'])
 
-          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), 'myObservedLogger', [getContainerTarget(agent)]])
-          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined, [getContainerTarget(agent)]])
+          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), 'myObservedLogger', [agent.runtime.v2Target]])
+          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined, [agent.runtime.v2Target]])
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/logging/info/called'])
-          expectHandled('log', [expect.any(Number), 'test1', {}, 'INFO', false, getContainerTarget(agent)])
+          expectHandled('log', [expect.any(Number), 'test1', {}, 'INFO', false, agent.runtime.v2Target])
 
           const callCount = agent.ee.emit.mock.calls.length
           /** does NOT emit data for observed fn */
@@ -1102,11 +1101,11 @@ describe('API tests', () => {
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'])
 
-          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName, [getContainerTarget(agent)]])
-          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined, [getContainerTarget(agent)]])
+          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName, [agent.runtime.v2Target]])
+          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined, [agent.runtime.v2Target]])
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/logging/warn/called'])
-          expectHandled('log', [expect.any(Number), 'test1', {}, 'warn', false, getContainerTarget(agent)])
+          expectHandled('log', [expect.any(Number), 'test1', {}, 'warn', false, agent.runtime.v2Target])
         })
 
         test('should emit events with concat string for multiple args', () => {
@@ -1123,8 +1122,8 @@ describe('API tests', () => {
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'])
 
-          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName, [getContainerTarget(agent)]])
-          expectEmitted('wrap-logger-end', [['test1', { test2: 2 }, ['test3'], true, 1], expect.any(Object), undefined, [getContainerTarget(agent)]])
+          expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName, [agent.runtime.v2Target]])
+          expectEmitted('wrap-logger-end', [['test1', { test2: 2 }, ['test3'], true, 1], expect.any(Object), undefined, [agent.runtime.v2Target]])
         })
 
         test('wrapped function should still behave as intended', () => {

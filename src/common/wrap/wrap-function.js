@@ -9,7 +9,7 @@
 
 import { ee } from '../event-emitter/contextual-ee'
 import { bundleId } from '../ids/bundle-id'
-import { findTargetsFromStackTrace, getContainerTarget } from '../v2/utils'
+import { findTargetsFromStackTrace } from '../v2/utils'
 
 export const flag = `nr@original:${bundleId}`
 const LONG_TASK_THRESHOLD = 50
@@ -88,7 +88,7 @@ export function createWrapperWithEmitter (emitter, always, agentRef) {
 
         // certain wrappers can inform the function wrapper to evaluate the stack of the executed wrapped function to find targets of the execution
         // (e.g. wrap-logger can inform this method to find try to find the MFE source of a console.log)
-        targets = evaluateStack ? findTargetsFromStackTrace(agentRef) : [getContainerTarget(agentRef)] // default target always maps to the container agent
+        targets = evaluateStack ? findTargetsFromStackTrace(agentRef) : [agentRef?.runtime?.v2Target] // default target always maps to the container agent
 
         if (typeof getContext === 'function') {
           ctx = getContext(args, originalThis)

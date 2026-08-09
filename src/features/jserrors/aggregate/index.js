@@ -19,7 +19,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { now } from '../../../common/timing/now'
 import { Obfuscator } from '../../../common/util/obfuscate'
 import { evaluateInternalError } from './internal-errors'
-import { getRegisteredTargetsFromFilename, getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate, getContainerTarget, isMfeTarget } from '../../../common/v2/utils'
+import { getRegisteredTargetsFromFilename, getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate, isMfeTarget } from '../../../common/v2/utils'
 import { buildCauseString } from './cause-string'
 import { ShortCircuit } from '../../../common/util/short-circuit'
 import { EVENT_TYPES } from '../../../common/constants/events'
@@ -209,7 +209,7 @@ export class Aggregate extends AggregateBase {
           if (targets.length) break
         }
       }
-      if (!targets.length) targets.push(getContainerTarget(this.agentRef))
+      if (!targets.length) targets.push(this.agentRef.runtime.v2Target)
     }
     return targets
   }

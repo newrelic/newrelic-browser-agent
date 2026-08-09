@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getRegisteredTargetsFromId, getContainerTarget } from '../v2/utils'
+import { getRegisteredTargetsFromId } from '../v2/utils'
 
 /**
  * Generates a CSS selector path for the given element, if possible.
@@ -18,7 +18,7 @@ import { getRegisteredTargetsFromId, getContainerTarget } from '../v2/utils'
  */
 export const analyzeElemPath = (elem, targetFields = [], agentRef) => {
   const targets = []
-  const result = { path: undefined, nearestFields: {}, get targets () { return targets.length ? targets : [getContainerTarget(agentRef)] }, hasButton: false, hasLink: false }
+  const result = { path: undefined, nearestFields: {}, get targets () { return targets.length ? targets : [agentRef.runtime.v2Target] }, hasButton: false, hasLink: false }
   if (!elem) return result
   if (elem === window) { result.path = 'window'; return result }
   if (elem === document) { result.path = 'document'; return result }

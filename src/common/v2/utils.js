@@ -17,41 +17,12 @@ export const V2_TYPES = {
 }
 
 /**
- * @typedef {Object} ContainerTarget
+ * @typedef {Object} V2Target
  * @property {'BA'} type always V2_TYPES.BA -- identifies this as the container (main) agent, not a registered MFE
- * @property {undefined} instance container targets have no registration instance
+ * @property {string} instance the container agent's agentIdentifier
  * @property {string} [id] the container agent's entity guid, once known (getter, resolved asynchronously)
  * @property {{[key:string]: any}} attributes the V2 payload attributes for the container agent (getter)
  */
-
-/**
- * Returns a lazily-created, cached target object representing the container (main) agent itself, for use anywhere a
- * v2 "target" is expected but no registered MFE applies. This replaces the previous convention of using a bare
- * `undefined` to mean "the container agent," so that callers can treat container and MFE targets uniformly (e.g.
- * `target.attributes`, `target.type`) instead of null-checking.
- * @param {*} agentRef the agent reference
- * @returns {ContainerTarget}
- */
-export function getContainerTarget (agentRef) {
-  if (!agentRef?.runtime) {
-    // no agentRef to derive identity from (or attach a cache to) -- return an uncached, empty-identity container target
-    return { type: V2_TYPES.BA, instance: undefined, id: undefined, attributes: {} }
-  }
-  if (!agentRef.runtime.containerTarget) {
-    agentRef.runtime.containerTarget = {
-      type: V2_TYPES.BA,
-      instance: undefined,
-      get id () { return agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid },
-      get attributes () {
-        return {
-          'entity.guid': agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid,
-          appId: agentRef.info.applicationID
-        }
-      }
-    }
-  }
-  return agentRef.runtime.containerTarget
-}
 
 /**
  * Determines if a given target represents a registered MFE (as opposed to the container agent).
@@ -161,7 +132,7 @@ export function dedupeRegisteredEntitiesByAsset (entities) {
 export function getVersion2Attributes (target, aggregateInstance) {
   if (!supportsV2(aggregateInstance)) return {}
   /** if the target isn't a registered MFE, but we are in v2 mode, this means the data belongs to the container agent */
-  if (!isMfeTarget(target)) return getContainerTarget(aggregateInstance.agentRef).attributes
+  if (!isMfeTarget(target)) return aggregateInstance.agentRef.runtime.v2Target.attributes
   /** otherwise, the data belongs to the target (MFE) and should be attributed as such */
   return target.attributes
 }
@@ -196,8 +167,8 @@ export function shouldDuplicate (target, aggregateInstance) {
  * @returns {Array} An array of targets found from the stack trace. If no targets are found or allowed, returns an array containing the container target.
  */
 export function findTargetsFromStackTrace (agentRef) {
-  if (!agentRef) return []
-  if (!isValid(true, agentRef) || !agentRef?.runtime?.registeredEntities?.length) return [getContainerTarget(agentRef)]
+  if (!agentRef?.runtime) return []
+  if (!isValid(true, agentRef) || !agentRef.runtime.registeredEntities?.length) return [agentRef.runtime.v2Target]
 
   const targets = []
   try {
@@ -211,15 +182,15 @@ export function findTargetsFromStackTrace (agentRef) {
   }
 
   const deduped = dedupeTargetsByInstance(targets)
-  if (!deduped.length) deduped.push(getContainerTarget(agentRef)) // if we can't find any targets from the stack trace, the container agent is the target
+  if (!deduped.length) deduped.push(agentRef.runtime.v2Target) // if we can't find any targets from the stack trace, the container agent is the target
   return deduped
 }
 
 /**
  * Removes duplicate targets from an array, keyed by `target.instance`. This guards against the same canonical
  * target re-entering the array via multiple matched stack-frame URLs (e.g. a recursive call whose stack contains the
- * same file at multiple depths). Entries with no `instance` (i.e. the container target, whose `instance` is always
- * `undefined`) naturally collapse to a single entry too, which is the desired behavior.
+ * same file at multiple depths). Multiple container-target entries (whose `instance` is the container agent's stable
+ * `agentIdentifier`) naturally collapse to a single entry too, which is the desired behavior.
  * @param {Array} targets
  * @returns {Array} deduped list of targets, preserving relative order of first occurrence
  */

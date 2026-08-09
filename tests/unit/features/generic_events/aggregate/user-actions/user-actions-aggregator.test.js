@@ -1,11 +1,13 @@
 import { AggregatedUserAction } from '../../../../../../src/features/generic_events/aggregate/user-actions/aggregated-user-action'
 import { UserActionsAggregator } from '../../../../../../src/features/generic_events/aggregate/user-actions/user-actions-aggregator'
 
+const makeAgentRef = () => ({ agentIdentifier: 'test-agent', runtime: { v2Target: { type: 'BA', instance: 'test-agent', id: undefined, attributes: {} } }, info: {} })
+
 describe('UserActionsAggregator', () => {
   let aggregator
 
   beforeEach(() => {
-    aggregator = new UserActionsAggregator()
+    aggregator = new UserActionsAggregator(makeAgentRef())
   })
 
   test('should initialize with default values', () => {
@@ -80,7 +82,7 @@ describe('UserActionsAggregator - Dead Clicks', () => {
   let aggregator
   beforeEach(() => {
     jest.useFakeTimers()
-    aggregator = new UserActionsAggregator()
+    aggregator = new UserActionsAggregator(makeAgentRef())
   })
   afterEach(() => {
     jest.useRealTimers()
@@ -171,7 +173,7 @@ describe('UserActionsAggregator - Error Clicks', () => {
   let aggregator
   beforeEach(() => {
     jest.useFakeTimers()
-    aggregator = new UserActionsAggregator()
+    aggregator = new UserActionsAggregator(makeAgentRef())
   })
   afterEach(() => {
     jest.useRealTimers()

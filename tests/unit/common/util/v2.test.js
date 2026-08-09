@@ -3,7 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getVersion2Attributes, getRegisteredTargetsFromFilename, findTargetsFromStackTrace, getRegisteredTargetsFromId, dedupeRegisteredEntitiesByAsset, dedupeTargetsByInstance, getContainerTarget, isMfeTarget } from '../../../../src/common/v2/utils'
+import { getVersion2Attributes, getRegisteredTargetsFromFilename, findTargetsFromStackTrace, getRegisteredTargetsFromId, dedupeRegisteredEntitiesByAsset, dedupeTargetsByInstance, V2_TYPES, isMfeTarget } from '../../../../src/common/v2/utils'
+
+// mirrors the inline v2Target shape eagerly created in loaders/configure/configure.js
+const makeV2Target = (agentRef) => ({
+  type: V2_TYPES.BA,
+  instance: agentRef.agentIdentifier,
+  get id () { return agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid },
+  get attributes () {
+    return {
+      'entity.guid': agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid,
+      appId: agentRef.info.applicationID
+    }
+  }
+})
 
 describe('v2 utilities', () => {
   describe('getRegisteredTargetsFromFilename', () => {
@@ -428,10 +441,11 @@ describe('v2 utilities', () => {
         },
         info: {}
       }
+      agentRef.runtime.v2Target = makeV2Target(agentRef)
 
       const result = findTargetsFromStackTrace(agentRef)
       expect(result).toHaveLength(1)
-      expect(result[0]).toBe(getContainerTarget(agentRef))
+      expect(result[0]).toBe(agentRef.runtime.v2Target)
       expect(isMfeTarget(result[0])).toBe(false)
     })
 
@@ -486,10 +500,12 @@ describe('v2 utilities', () => {
         },
         info: {}
       }
+      agentRef.runtime.v2Target = makeV2Target(agentRef)
 
       // Should not throw, should return the container target
       const result = findTargetsFromStackTrace(agentRef)
       expect(result).toHaveLength(1)
+      expect(result[0]).toBe(agentRef.runtime.v2Target)
       expect(isMfeTarget(result[0])).toBe(false)
     })
   })
@@ -522,54 +538,6 @@ describe('v2 utilities', () => {
     })
   })
 
-  describe('getContainerTarget', () => {
-    const makeAgentRef = () => ({
-      runtime: {
-        appMetadata: {
-          agents: [{ entityGuid: 'container-entity-guid' }]
-        }
-      },
-      info: {
-        applicationID: 'app-123'
-      }
-    })
-
-    test('returns a BA-typed target with no instance', () => {
-      const agentRef = makeAgentRef()
-      const target = getContainerTarget(agentRef)
-
-      expect(target.type).toBe('BA')
-      expect(target.instance).toBeUndefined()
-      expect(isMfeTarget(target)).toBe(false)
-    })
-
-    test('exposes live id and attributes reflecting current agentRef state', () => {
-      const agentRef = makeAgentRef()
-      const target = getContainerTarget(agentRef)
-
-      expect(target.id).toBe('container-entity-guid')
-      expect(target.attributes).toEqual({
-        'entity.guid': 'container-entity-guid',
-        appId: 'app-123'
-      })
-
-      agentRef.runtime.appMetadata.agents[0].entityGuid = 'updated-entity-guid'
-      expect(target.id).toBe('updated-entity-guid')
-      expect(target.attributes['entity.guid']).toBe('updated-entity-guid')
-    })
-
-    test('caches and returns the same object for the same agentRef', () => {
-      const agentRef = makeAgentRef()
-      expect(getContainerTarget(agentRef)).toBe(getContainerTarget(agentRef))
-    })
-
-    test('returns distinct objects for distinct agentRefs', () => {
-      const agentRefA = makeAgentRef()
-      const agentRefB = makeAgentRef()
-      expect(getContainerTarget(agentRefA)).not.toBe(getContainerTarget(agentRefB))
-    })
-  })
-
   describe('isMfeTarget', () => {
     test('returns true only for targets with type MFE', () => {
       expect(isMfeTarget({ type: 'MFE' })).toBe(true)
@@ -596,6 +564,7 @@ describe('v2 utilities', () => {
         }
       }
     }
+    mockAggregateInstance.agentRef.runtime.v2Target = makeV2Target(mockAggregateInstance.agentRef)
 
     describe('parent.type attribute validation', () => {
       test('uses target.parent.type when provided', () => {
@@ -738,7 +707,7 @@ describe('v2 utilities', () => {
       })
 
       test('returns container attributes when given the real container target', () => {
-        const containerTarget = getContainerTarget(mockAggregateInstance.agentRef)
+        const containerTarget = mockAggregateInstance.agentRef.runtime.v2Target
         const result = getVersion2Attributes(containerTarget, mockAggregateInstance)
 
         expect(result).toEqual({

@@ -10,6 +10,7 @@ import { chrome, chromeEval, gecko } from '../util/browser-stack-matchers'
 import { ScriptCorrelation } from './script-correlation'
 import { CORRELATION_STALE_THRESHOLD_MS } from './script-tracker-constants'
 import { timingFactory } from './timing-factory'
+import { getEntryAsset } from './manifest'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPITimings} RegisterAPITimings
@@ -217,6 +218,84 @@ function subscribeToLatePerformanceEntry (timings, mfeScriptUrl) {
       return false
     }
   })
+}
+
+/**
+ * Applies a single manifest asset's performance entry to a timings object, widening (never shrinking) the aggregate
+ * fetchStart/fetchEnd window, and updating the anchor asset/type if this entry belongs to the manifest's entry point.
+ * @param {RegisterAPITimings} timings
+ * @param {PerformanceResourceTiming} entry
+ * @param {import('./manifest').ParsedManifestAsset} asset - the manifest asset this entry resolved
+ * @param {import('./manifest').ParsedManifestAsset} [entryAsset] - the manifest's designated entry-point asset, if any
+ */
+function applyManifestEntry (timings, entry, asset, entryAsset) {
+  const start = Math.floor(entry.startTime)
+  const end = Math.floor(entry.responseEnd)
+  // fetchStart/fetchEnd default to 0 (meaning "not yet found") elsewhere in this module, so only fold them into the
+  // min/max aggregation once they hold a real, positive value -- otherwise the 0 default would permanently win Math.min.
+  timings.fetchStart = timings.fetchStart > 0 ? Math.min(timings.fetchStart, start) : start
+  timings.fetchEnd = timings.fetchEnd > 0 ? Math.max(timings.fetchEnd, end) : end
+  if (asset === entryAsset) {
+    timings.asset = entry.name
+    timings.type = entry.initiatorType
+  }
+}
+
+/**
+ * Subscribes to late resource timing emissions for any manifest assets that were not already resolved against the
+ * buffered performance entries. Reuses the shared page-wide scriptObserver/poSubscribers mechanism (rather than
+ * creating a new PerformanceObserver per registered MFE) so this scales with the number of MFEs on a page. Note the
+ * shared observer only forwards script-like entries (see validEntryCriteria above), so late resolution here only
+ * ever applies to script-type manifest assets -- non-script assets (images/css/fonts) that haven't loaded by the
+ * time `applyManifestTimings` runs are not retried, which is an accepted limitation for this pass.
+ * @param {RegisterAPITimings} timings
+ * @param {Set<import('./manifest').ParsedManifestAsset>} pending - manifest assets still unresolved
+ * @param {import('./manifest').ParsedManifestAsset} [entryAsset]
+ */
+function subscribeToLateManifestEntries (timings, pending, entryAsset) {
+  if (!globalScope.PerformanceObserver?.supportedEntryTypes?.includes('resource')) return
+
+  poSubscribers.push({
+    addedAt: now(),
+    test: (entry) => {
+      const matched = [...pending].find(asset => asset.test(entry.name))
+      if (matched) {
+        applyManifestEntry(timings, entry, matched, entryAsset)
+        pending.delete(matched)
+      }
+      return pending.size === 0
+    }
+  })
+}
+
+/**
+ * Widens a timings object (already populated by `findScriptTimings`) using a registered MFE's manifest, if one was
+ * supplied and `timingMethod` calls for it. No-ops entirely when no manifest is present, so this has zero effect on
+ * the default caller-script-only behavior.
+ * @param {RegisterAPITimings} timings - the timings object to widen in place
+ * @param {RegisterAPITarget} target - the registered MFE target, which may carry a parsed `manifest`
+ */
+export function applyManifestTimings (timings, target) {
+  const parsedManifest = target?.manifest
+  if (!parsedManifest) return
+
+  const scriptsOnly = target.timingMethod === 'scripts'
+  const candidates = scriptsOnly ? parsedManifest.scripts : parsedManifest.assets
+  if (!candidates.length) return
+
+  const entryAsset = getEntryAsset(parsedManifest)
+  const pending = new Set(candidates)
+
+  const resourceEntries = globalScope.performance?.getEntriesByType('resource') || []
+  resourceEntries.forEach((entry) => {
+    const matched = [...pending].find(asset => asset.test(entry.name))
+    if (matched) {
+      applyManifestEntry(timings, entry, matched, entryAsset)
+      pending.delete(matched)
+    }
+  })
+
+  if (pending.size) subscribeToLateManifestEntries(timings, pending, entryAsset)
 }
 
 /**

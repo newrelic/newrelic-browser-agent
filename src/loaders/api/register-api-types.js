@@ -18,12 +18,21 @@
  */
 
 /**
+ * @typedef {Object} AssetFile
+ * @property {string} path - A path or path fragment identifying the asset (matched as a substring against resolved resource URLs).
+ * @property {boolean} [entryPoint] - Marks this asset as the MFE's root/entry-point asset, used as the timing anchor. If more than one asset is flagged, the first one supplied wins.
+ * @property {string} [type] - The asset type (e.g. 'js', 'css'). If omitted, inferred from the `.js` extension of `path`.
+ */
+
+/**
  * @typedef {Object} RegisterAPIConstructor
  * @property {string} id - The unique id for the registered entity. This will be assigned to any synthesized entities.
  * @property {string} name - The readable name for the registered entity. This will be assigned to any synthesized entities.
  * @property {{[key: string]: any}} [tags] - The tags for the registered entity as key-value pairs. This will be assigned to any synthesized entities. Tags are converted to source.* attributes (e.g., {environment: 'production'} becomes source.environment: 'production').
  * @property {RegisterAPITarget} [parent] - The parent target for the registered entity. If none was supplied, it will assume the entity guid from the main agent.
  * @property {string} [parentId] - The parentId for the registered entity. If none was supplied, it will assume the entity guid from the main agent.
+ * @property {{assets?: Array<AssetFile|RegExp|string>}} [manifest] - An optional manifest describing the MFE's known assets (scripts, stylesheets, images, fonts, etc.), used to improve the accuracy of event attribution (errors, logs, ajax, websockets) and, depending on `timingMethod`, MicroFrontEndTiming values. If omitted, the agent falls back to its existing behavior of only evaluating the script that called `register()`.
+ * @property {'entry'|'scripts'|'all'} [timingMethod] - Controls which manifest assets are used to calculate MicroFrontEndTiming values: 'entry' anchors on the manifest's entry-point asset only, 'scripts' widens the timing window across all script assets, 'all' widens it across every asset. If omitted, timing is based entirely on the script that called `register()`, unchanged from prior behavior.
  */
 
 /**
@@ -39,6 +48,8 @@
  * @property {string} name - The name returned for the registered entity.
  * @property {{[key: string]: any}} [tags] - The tags for the registered entity as key-value pairs.
  * @property {string} [parentId] - The parentId for the registered entity. If none was supplied, it will assume the entity guid from the main agent.
+ * @property {import('../../common/v2/manifest').ParsedManifest} [manifest] - The parsed manifest for the registered entity, if one was supplied.
+ * @property {'entry'|'scripts'|'all'} [timingMethod] - The timing method supplied for the registered entity, if any.
  */
 
 /**

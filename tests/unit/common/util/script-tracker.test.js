@@ -792,6 +792,110 @@ init@https://cdn.example.com/gecko-app.js:20:10`
     })
   })
 
+  describe('applyManifestTimings', () => {
+    beforeEach(async () => {
+      scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
+    })
+
+    test('is a no-op when target has no manifest', () => {
+      const timings = { fetchStart: 10, fetchEnd: 20, asset: 'https://example.com/root.js', type: 'script' }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: undefined, timingMethod: 'all' })
+      expect(timings).toEqual({ fetchStart: 10, fetchEnd: 20, asset: 'https://example.com/root.js', type: 'script' })
+    })
+
+    test('findScriptTimings output is unaffected by the presence of a manifest when timingMethod is undefined', () => {
+      // Regression guard: findScriptTimings itself never references target.manifest, so its output must be
+      // identical regardless of whether a manifest was supplied, as long as timingMethod is left undefined
+      // (register.js only calls applyManifestTimings when timingMethod is 'scripts' or 'all').
+      const mockResourceEntry = {
+        name: 'https://cdn.example.com/root.js',
+        initiatorType: 'script',
+        startTime: 100,
+        responseEnd: 200
+      }
+      mockNavigationEntry = { name: 'https://example.com/' }
+      mockStack = `Error
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at register (${scriptTrackerModule.thisFile}:2:2)
+    at init (https://cdn.example.com/root.js:5:10)`
+
+      if (performanceObserverCallback) {
+        performanceObserverCallback({ getEntries: () => [mockResourceEntry] })
+      }
+
+      const withoutManifest = scriptTrackerModule.findScriptTimings({ id: 'a' })
+      const withManifest = scriptTrackerModule.findScriptTimings({ id: 'b', manifest: { assets: [], scripts: [] } })
+
+      expect(withoutManifest.fetchStart).toBe(withManifest.fetchStart)
+      expect(withoutManifest.fetchEnd).toBe(withManifest.fetchEnd)
+      expect(withoutManifest.asset).toBe(withManifest.asset)
+      expect(withoutManifest.type).toBe(withManifest.type)
+    })
+
+    test('widens fetchStart/fetchEnd across multiple buffered manifest assets without shrinking the existing window', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: ['early.js', 'late.js'] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/early.js', initiatorType: 'script', startTime: 10, responseEnd: 60 },
+        { name: 'https://cdn.example.com/late.js', initiatorType: 'script', startTime: 200, responseEnd: 400 }
+      ])
+
+      const timings = { fetchStart: 50, fetchEnd: 100, asset: 'https://cdn.example.com/root.js', type: 'script' }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.fetchStart).toBe(10)
+      expect(timings.fetchEnd).toBe(400)
+    })
+
+    test('anchors asset/type on the entry-point manifest asset when it resolves', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({
+        assets: [{ path: 'root-entry.js', entryPoint: true }, 'secondary.js']
+      })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/root-entry.js', initiatorType: 'script', startTime: 5, responseEnd: 40 },
+        { name: 'https://cdn.example.com/secondary.js', initiatorType: 'script', startTime: 45, responseEnd: 90 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: 'https://cdn.example.com/caller.js', type: 'script' }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.asset).toBe('https://cdn.example.com/root-entry.js')
+      expect(timings.fetchStart).toBe(5)
+      expect(timings.fetchEnd).toBe(90)
+    })
+
+    test('subscribes to late resource entries for manifest assets not yet in the performance buffer, and keeps the subscriber alive until every pending asset resolves', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: ['a.js', 'b.js'] })
+
+      global.performance.getEntriesByType = jest.fn(() => [])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown' }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      // Nothing resolved yet
+      expect(timings.fetchStart).toBe(0)
+      expect(timings.fetchEnd).toBe(0)
+
+      // First late entry resolves only one of the two pending assets -- subscriber must not clear yet
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/a.js', initiatorType: 'script', startTime: 10, responseEnd: 20 }]
+      })
+      expect(timings.fetchStart).toBe(10)
+      expect(timings.fetchEnd).toBe(20)
+
+      // Second late entry resolves the remaining pending asset
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/b.js', initiatorType: 'script', startTime: 30, responseEnd: 50 }]
+      })
+      expect(timings.fetchStart).toBe(10)
+      expect(timings.fetchEnd).toBe(50)
+    })
+  })
+
   describe('PerformanceObserver availability', () => {
     test('handles missing PerformanceObserver gracefully', async () => {
       jest.resetModules()

@@ -17,9 +17,12 @@ import { single } from '../../common/util/invoke'
 import { measure } from './measure'
 import { recordCustomEvent } from './recordCustomEvent'
 import { subscribeToPageUnload } from '../../common/window/page-visibility'
-import { findScriptTimings } from '../../common/v2/script-tracker'
+import { findScriptTimings, applyManifestTimings } from '../../common/v2/script-tracker'
 import { trackMFEVitals } from '../../common/v2/mfe-vitals'
 import { generateRandomHexString } from '../../common/ids/unique-id'
+import { parseManifest } from '../../common/v2/manifest'
+
+const TIMING_METHODS = ['entry', 'scripts', 'all']
 
 /**
  * @typedef {import('./register-api-types').RegisterAPI} RegisterAPI
@@ -47,7 +50,8 @@ export const warnings = {
   experimental: single(() => warn(54, 'newrelic.register')),
   disabled: single(() => warn(55)),
   invalidTarget: single((target) => warn(48, target)),
-  deregistered: single(() => warn(68))
+  deregistered: single(() => warn(68)),
+  invalidTimingMethod: single((value) => warn(79, value))
 }
 
 /**
@@ -81,8 +85,16 @@ function register (agentRef, target) {
     get id () { return agentRef.runtime.appMetadata.agents?.[0].entityGuid }, // getter because this is asynchronously set
     type: V2_TYPES.BA
   }
+  target.manifest = parseManifest(target.manifest)
+  if (target.timingMethod !== undefined && !TIMING_METHODS.includes(target.timingMethod)) {
+    warnings.invalidTimingMethod(target.timingMethod)
+    target.timingMethod = undefined
+  }
 
   const timings = findScriptTimings(target)
+  if (target.manifest && (target.timingMethod === 'scripts' || target.timingMethod === 'all')) {
+    applyManifestTimings(timings, target)
+  }
 
   // Track MFE vitals for this entity
   const vitals = trackMFEVitals(target, timings)

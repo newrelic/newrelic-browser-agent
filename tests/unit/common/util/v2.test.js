@@ -4,6 +4,7 @@
  */
 
 import { getVersion2Attributes, getRegisteredTargetsFromFilename, findTargetsFromStackTrace, getRegisteredTargetsFromId, dedupeRegisteredEntitiesByAsset, dedupeTargetsByInstance } from '../../../../src/common/v2/utils'
+import { parseManifest } from '../../../../src/common/v2/manifest'
 
 describe('v2 utilities', () => {
   describe('getRegisteredTargetsFromFilename', () => {
@@ -247,6 +248,69 @@ describe('v2 utilities', () => {
       const result = getRegisteredTargetsFromFilename('page.html', agentRef)
       expect(result).toHaveLength(2)
       expect(result.map(t => t.id).sort()).toEqual(['1', '2'])
+    })
+
+    test('matches via a manifest script asset when timings.asset does not match', () => {
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://example.com/root.js' },
+                target: {
+                  id: 'mfe-1',
+                  name: 'MFE 1',
+                  type: 'MFE',
+                  manifest: parseManifest({ assets: ['lazy-chunk.js'] })
+                }
+              }
+            }
+          ]
+        },
+        init: {
+          api: {
+            register: {
+              enabled: true,
+              duplicate_data_to_container: false
+            }
+          }
+        }
+      }
+
+      const result = getRegisteredTargetsFromFilename('https://cdn.example.com/lazy-chunk.js?v=2', agentRef)
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe('mfe-1')
+    })
+
+    test('does not match a manifest asset that is not a script (e.g. an image), even for stack-based attribution', () => {
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://example.com/root.js' },
+                target: {
+                  id: 'mfe-1',
+                  name: 'MFE 1',
+                  type: 'MFE',
+                  manifest: parseManifest({ assets: [{ path: 'logo.png', type: 'png' }] })
+                }
+              }
+            }
+          ]
+        },
+        init: {
+          api: {
+            register: {
+              enabled: true,
+              duplicate_data_to_container: false
+            }
+          }
+        }
+      }
+
+      const result = getRegisteredTargetsFromFilename('https://cdn.example.com/logo.png', agentRef)
+      expect(result).toEqual([])
     })
   })
 

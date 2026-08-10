@@ -4,6 +4,7 @@
  */
 
 import { extractUrlsFromStack, getDeepStackTrace } from './script-tracker'
+import { matchManifestAsset } from './manifest'
 
 /**
  * @enum {string}
@@ -56,7 +57,10 @@ export function getRegisteredTargetsFromId (id, agentRef) {
 export function getRegisteredTargetsFromFilename (filename, agentRef) {
   if (!isValid(filename, agentRef)) return []
   const registeredEntities = agentRef.runtime.registeredEntities
-  const matches = registeredEntities?.filter(entity => entity.metadata.timings?.asset?.endsWith(filename))
+  const matches = registeredEntities?.filter(entity =>
+    entity.metadata.timings?.asset?.endsWith(filename) ||
+    matchManifestAsset(entity.metadata.target?.manifest, filename, { scriptsOnly: true })
+  )
   return dedupeRegisteredEntitiesByAsset(matches).map(entity => entity.metadata.target)
 }
 

@@ -157,3 +157,5 @@
 `Agent rejected post message, could not validate origin.`
 ### 78
 `RegisteredIframeEntity could not determine parent origin and will not register, to avoid trusting messages from any origin.`
+### 79
+`An invalid timingMethod was provided to register() and will be ignored.`

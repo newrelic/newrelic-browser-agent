@@ -1093,6 +1093,69 @@ describe('trackMFEVitals', () => {
     })
   })
 
+  describe('FCP/LCP staleness cap', () => {
+    it('should drop FCP and disconnect all observers when the first observed render already exceeds the stale threshold', () => {
+      // Force any `now()` reading to land far past the 10s cap relative to scriptStart, simulating a
+      // clock freeze/tab suspend between script registration and first paint.
+      timings.scriptStart = -1000000
+
+      const vitals = trackMFEVitals(mfeTarget, timings)
+
+      expect(vitals.fcp.value).toBeUndefined()
+      expect(vitals.lcp.value).toBeUndefined()
+
+      const lcpObserver = mockMutationObserver.mock.instances[1]
+      expect(lcpObserver.disconnect).toHaveBeenCalled()
+      mockPerformanceObserver.mock.instances.forEach(instance => {
+        expect(instance.disconnect).toHaveBeenCalled()
+      })
+    })
+
+    it('should drop a stale FCP value read directly rather than reporting a multi-hour duration', () => {
+      const vitals = trackMFEVitals(mfeTarget, timings)
+
+      vitals.fcp.value = 999999
+
+      expect(vitals.fcp.value).toBeUndefined()
+    })
+
+    it('should drop LCP whenever FCP is invalid, even if LCP itself would be under the threshold', () => {
+      const vitals = trackMFEVitals(mfeTarget, timings)
+
+      vitals.fcp.value = 999999
+      vitals.lcp.value = 50 // a small, otherwise-valid relative LCP
+
+      expect(vitals.lcp.value).toBeUndefined()
+    })
+
+    it('should not drop FCP/LCP when both are within the stale threshold', () => {
+      const vitals = trackMFEVitals(mfeTarget, timings)
+
+      vitals.fcp.value = 105
+      vitals.lcp.value = 120
+
+      expect(vitals.fcp.value).toBe(15) // 105 - scriptStart(90)
+      expect(vitals.lcp.value).toBe(30) // 120 - scriptStart(90)
+    })
+
+    it('should reject writes to fcp/lcp value setters once disconnected, even from an in-flight callback', () => {
+      // Avoid the automatic existingRoots-triggered populate so only the explicit setter calls below affect state
+      mockDocument.querySelectorAll = jest.fn(() => [])
+
+      const vitals = trackMFEVitals(mfeTarget, timings)
+
+      vitals.fcp.value = 105 // valid, pre-disconnect
+      vitals.disconnect()
+
+      // Simulate an observer callback that was already in flight when disconnect() ran
+      vitals.fcp.value = 200
+      vitals.lcp.value = 200
+
+      expect(vitals.fcp.value).toBe(15) // unchanged - the post-disconnect write was rejected
+      expect(vitals.lcp.value).toBeUndefined() // never set, and would cascade-drop from fcp anyway if it were
+    })
+  })
+
   describe('disconnect functionality', () => {
     it('should disconnect all observers', () => {
       const vitals = trackMFEVitals(mfeTarget, timings)

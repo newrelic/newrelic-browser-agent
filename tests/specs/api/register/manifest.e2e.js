@@ -165,7 +165,7 @@ describe('Register API - Manifest', () => {
     expect(timing.timeToFetch).toBeGreaterThan(0)
   })
 
-  it('anchors MicroFrontEndTiming assetUrl on the manifest entry-point asset instead of the caller script', async () => {
+  it('widens MicroFrontEndTiming execution window across manifest script assets when timingMethod is "scripts"', async () => {
     const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testMFEInsRequest }
     ])
@@ -175,25 +175,60 @@ describe('Register API - Manifest', () => {
     })).then(() => browser.waitForAgentLoad())
 
     await browser.execute(function () {
-      window.entryPointApi = newrelic.register({
-        id: 'manifest-entrypoint-mfe',
-        name: 'ManifestEntryPointMFE',
-        manifest: { assets: [{ path: 'mfe-manifest-secondary.js', entryPoint: true }] },
+      window.executeTimingApi = newrelic.register({
+        id: 'manifest-execute-timing-mfe',
+        name: 'ManifestExecuteTimingMFE',
+        manifest: { assets: ['mfe-manifest-secondary.js'] },
         timingMethod: 'scripts'
       })
     })
     await browser.execute(loadSecondaryScript)
 
     await browser.pause(500)
-    await browser.execute(function () { window.entryPointApi.deregister() })
+    await browser.execute(function () { window.executeTimingApi.deregister() })
+
+    const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 10000 })
+    const timingEvents = insightsHarvests
+      .flatMap(({ request: { body } }) => body.ins)
+      .filter(event => event.eventType === 'MicroFrontEndTiming' && event['source.id'] === 'manifest-execute-timing-mfe')
+
+    expect(timingEvents.length).toBeGreaterThanOrEqual(1)
+    const timing = timingEvents[0]
+    // The registering script is inline (timeToExecute would otherwise be 0), but the manifest's secondary script
+    // asset actually loads and executes in the DOM -- once widened, timeToExecute should reflect that instead of
+    // staying 0.
+    expect(timing.timeToExecute).toBeGreaterThan(0)
+  })
+
+  it('anchors MicroFrontEndTiming assetUrl on the first-resolving manifest script asset instead of the caller script', async () => {
+    const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testMFEInsRequest }
+    ])
+
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+      init: { feature_flags: ['register'] }
+    })).then(() => browser.waitForAgentLoad())
+
+    await browser.execute(function () {
+      window.firstScriptAnchorApi = newrelic.register({
+        id: 'manifest-first-script-mfe',
+        name: 'ManifestFirstScriptMFE',
+        manifest: { assets: ['mfe-manifest-secondary.js'] },
+        timingMethod: 'scripts'
+      })
+    })
+    await browser.execute(loadSecondaryScript)
+
+    await browser.pause(500)
+    await browser.execute(function () { window.firstScriptAnchorApi.deregister() })
 
     const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 10000 })
     const timing = insightsHarvests
       .flatMap(({ request: { body } }) => body.ins)
-      .find(event => event.eventType === 'MicroFrontEndTiming' && event['source.id'] === 'manifest-entrypoint-mfe')
+      .find(event => event.eventType === 'MicroFrontEndTiming' && event['source.id'] === 'manifest-first-script-mfe')
 
     expect(timing).toBeDefined()
-    // The inline registering script is never the resolved anchor here -- the manifest's entryPoint asset is.
+    // The inline registering script is never the resolved anchor here -- the first-resolving manifest script asset is.
     expect(timing.assetUrl).toContain('mfe-manifest-secondary.js')
     expect(timing.assetType).toBe('script')
   })

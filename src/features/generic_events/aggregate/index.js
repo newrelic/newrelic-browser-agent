@@ -15,7 +15,7 @@ import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
 import { EVENT_TYPES } from '../../../common/constants/events'
-import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
+import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate, getRegisteredTargetsFromResourceUrl } from '../../../common/v2/utils'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -229,7 +229,8 @@ export class Aggregate extends AggregateBase {
               firstParty
             }
 
-            this.addEvent(event)
+            const targets = getRegisteredTargetsFromResourceUrl(name, this.agentRef)
+            ;(targets.length ? targets : [undefined]).forEach(target => this.addEvent({ ...event }, target))
           } catch (err) {
             this.ee.emit('internal-error', [err, 'GenericEvents-Resource'])
           }

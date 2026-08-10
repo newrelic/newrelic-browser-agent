@@ -13,7 +13,6 @@ import { cleanURL } from '../url/clean-url'
  * @typedef {Object} ParsedManifestAsset
  * @property {string|RegExp} pattern - the original path/RegExp supplied by the customer
  * @property {(url: string) => boolean} test - precompiled matcher against a resolved URL
- * @property {boolean} entryPoint
  * @property {boolean} isScript
  */
 
@@ -45,16 +44,16 @@ export function parseManifest (rawManifest) {
  */
 function parseAsset (entry) {
   if (entry instanceof RegExp) {
-    return { pattern: entry, test: (url) => entry.test(cleanURL(url)), entryPoint: false, isScript: false }
+    return { pattern: entry, test: (url) => entry.test(cleanURL(url)), isScript: false }
   }
 
   if (typeof entry === 'string') {
-    return { pattern: entry, test: (url) => cleanURL(url).includes(entry), entryPoint: false, isScript: isScriptPath(entry) }
+    return { pattern: entry, test: (url) => cleanURL(url).includes(entry), isScript: isScriptPath(entry) }
   }
 
   if (entry && typeof entry === 'object' && typeof entry.path === 'string') {
     const isScript = entry.type ? isScriptType(entry.type) : isScriptPath(entry.path)
-    return { pattern: entry.path, test: (url) => cleanURL(url).includes(entry.path), entryPoint: !!entry.entryPoint, isScript }
+    return { pattern: entry.path, test: (url) => cleanURL(url).includes(entry.path), isScript }
   }
 
   return undefined
@@ -66,16 +65,6 @@ function isScriptPath (path) {
 
 function isScriptType (type) {
   return type === 'js' || type === 'script'
-}
-
-/**
- * Returns the manifest asset flagged as the MFE's entry point, if any. If more than one asset is flagged, the first
- * one (in supplied order) wins.
- * @param {ParsedManifest} [parsed]
- * @returns {ParsedManifestAsset|undefined}
- */
-export function getEntryAsset (parsed) {
-  return parsed?.assets.find(asset => asset.entryPoint)
 }
 
 /**

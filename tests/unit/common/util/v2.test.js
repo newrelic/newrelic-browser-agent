@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getVersion2Attributes, getRegisteredTargetsFromFilename, findTargetsFromStackTrace, getRegisteredTargetsFromId, dedupeRegisteredEntitiesByAsset, dedupeTargetsByInstance } from '../../../../src/common/v2/utils'
+import { getVersion2Attributes, getRegisteredTargetsFromFilename, getRegisteredTargetsFromResourceUrl, findTargetsFromStackTrace, getRegisteredTargetsFromId, dedupeRegisteredEntitiesByAsset, dedupeTargetsByInstance } from '../../../../src/common/v2/utils'
 import { parseManifest } from '../../../../src/common/v2/manifest'
 
 describe('v2 utilities', () => {
@@ -311,6 +311,158 @@ describe('v2 utilities', () => {
 
       const result = getRegisteredTargetsFromFilename('https://cdn.example.com/logo.png', agentRef)
       expect(result).toEqual([])
+    })
+  })
+
+  describe('getRegisteredTargetsFromResourceUrl', () => {
+    test('returns empty array when url is falsy', () => {
+      const agentRef = { runtime: { registeredEntities: [] } }
+      expect(getRegisteredTargetsFromResourceUrl(null, agentRef)).toEqual([])
+      expect(getRegisteredTargetsFromResourceUrl('', agentRef)).toEqual([])
+      expect(getRegisteredTargetsFromResourceUrl(undefined, agentRef)).toEqual([])
+    })
+
+    test('returns empty array when no registered entities', () => {
+      const agentRef = {
+        runtime: { registeredEntities: [] },
+        init: { api: { register: { enabled: true, duplicate_data_to_container: false } } }
+      }
+
+      const result = getRegisteredTargetsFromResourceUrl('https://cdn.example.com/app.js', agentRef)
+      expect(result).toEqual([])
+    })
+
+    test('returns empty array when no matching entities', () => {
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://example.com/other.js' },
+                target: { id: 'mfe-1', name: 'MFE 1' }
+              }
+            }
+          ]
+        },
+        init: { api: { register: { enabled: true, duplicate_data_to_container: false } } }
+      }
+
+      const result = getRegisteredTargetsFromResourceUrl('https://cdn.example.com/app.js', agentRef)
+      expect(result).toEqual([])
+    })
+
+    test('matches an exact (cleaned) URL against timings.asset when no manifest is present', () => {
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://cdn.example.com/app.js?v=1' },
+                target: { id: 'mfe-1', name: 'MFE 1', type: 'MFE' }
+              }
+            }
+          ]
+        },
+        init: { api: { register: { enabled: true, duplicate_data_to_container: false } } }
+      }
+
+      const result = getRegisteredTargetsFromResourceUrl('https://cdn.example.com/app.js?v=2', agentRef)
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe('mfe-1')
+    })
+
+    test('does not match on a mere URL suffix, unlike stack-trace attribution', () => {
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://cdn.example.com/vendor/app.js' },
+                target: { id: 'mfe-1', name: 'MFE 1', type: 'MFE' }
+              }
+            }
+          ]
+        },
+        init: { api: { register: { enabled: true, duplicate_data_to_container: false } } }
+      }
+
+      const result = getRegisteredTargetsFromResourceUrl('https://other.example.com/app.js', agentRef)
+      expect(result).toEqual([])
+    })
+
+    test('matches a non-script manifest asset (e.g. an image), unlike stack-trace attribution', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://example.com/root.js' },
+                target: {
+                  id: 'mfe-1',
+                  name: 'MFE 1',
+                  type: 'MFE',
+                  manifest: manifestModule.parseManifest({ assets: [{ path: 'logo.png', type: 'png' }] })
+                }
+              }
+            }
+          ]
+        },
+        init: { api: { register: { enabled: true, duplicate_data_to_container: false } } }
+      }
+
+      const result = getRegisteredTargetsFromResourceUrl('https://cdn.example.com/logo.png', agentRef)
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe('mfe-1')
+    })
+
+    test('returns multiple targets when multiple entities match, and collapses duplicate registrations of the same MFE', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://example.com/root.js' },
+                target: {
+                  id: 'mfe-1',
+                  name: 'MFE 1',
+                  type: 'MFE',
+                  manifest: manifestModule.parseManifest({ assets: ['shared.css'] })
+                }
+              }
+            },
+            {
+              metadata: {
+                timings: { asset: 'https://example.com/root2.js' },
+                target: {
+                  id: 'mfe-2',
+                  name: 'MFE 2',
+                  type: 'MFE',
+                  manifest: manifestModule.parseManifest({ assets: ['shared.css'] })
+                }
+              }
+            },
+            {
+              // duplicate registration of mfe-1 -- same id, same resolved asset -- must collapse to one target
+              metadata: {
+                timings: { asset: 'https://example.com/root.js' },
+                target: {
+                  id: 'mfe-1',
+                  name: 'MFE 1',
+                  type: 'MFE',
+                  manifest: manifestModule.parseManifest({ assets: ['shared.css'] })
+                }
+              }
+            }
+          ]
+        },
+        init: { api: { register: { enabled: true, duplicate_data_to_container: false } } }
+      }
+
+      const result = getRegisteredTargetsFromResourceUrl('https://cdn.example.com/shared.css', agentRef)
+      expect(result).toHaveLength(2)
+      expect(result.map(t => t.id).sort()).toEqual(['mfe-1', 'mfe-2'])
     })
   })
 

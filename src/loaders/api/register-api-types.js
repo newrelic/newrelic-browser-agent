@@ -20,7 +20,6 @@
 /**
  * @typedef {Object} AssetFile
  * @property {string} path - A path or path fragment identifying the asset (matched as a substring against resolved resource URLs).
- * @property {boolean} [entryPoint] - Marks this asset as the MFE's root/entry-point asset, used as the timing anchor. If more than one asset is flagged, the first one supplied wins.
  * @property {string} [type] - The asset type (e.g. 'js', 'css'). If omitted, inferred from the `.js` extension of `path`.
  */
 
@@ -31,8 +30,8 @@
  * @property {{[key: string]: any}} [tags] - The tags for the registered entity as key-value pairs. This will be assigned to any synthesized entities. Tags are converted to source.* attributes (e.g., {environment: 'production'} becomes source.environment: 'production').
  * @property {RegisterAPITarget} [parent] - The parent target for the registered entity. If none was supplied, it will assume the entity guid from the main agent.
  * @property {string} [parentId] - The parentId for the registered entity. If none was supplied, it will assume the entity guid from the main agent.
- * @property {{assets?: Array<AssetFile|RegExp|string>}} [manifest] - An optional manifest describing the MFE's known assets (scripts, stylesheets, images, fonts, etc.), used to improve the accuracy of event attribution (errors, logs, ajax, websockets) and, depending on `timingMethod`, MicroFrontEndTiming values. If omitted, the agent falls back to its existing behavior of only evaluating the script that called `register()`.
- * @property {'entry'|'scripts'|'all'} [timingMethod] - Controls which manifest assets are used to calculate MicroFrontEndTiming values: 'entry' anchors on the manifest's entry-point asset only, 'scripts' widens the timing window across all script assets, 'all' widens it across every asset. If omitted, timing is based entirely on the script that called `register()`, unchanged from prior behavior.
+ * @property {{assets?: Array<AssetFile|RegExp|string>}} [manifest] - An optional manifest describing the MFE's known assets (scripts, stylesheets, images, fonts, etc.), used to improve the accuracy of event attribution (errors, logs, ajax, websockets), attribute `BrowserPerformance` resource events (any asset type, not just scripts) and, depending on `timingMethod`, MicroFrontEndTiming values. If omitted, the agent falls back to its existing behavior of only evaluating the script that called `register()` (resource attribution still applies to that script).
+ * @property {'entry'|'scripts'|'all'} [timingMethod] - Controls which manifest assets are used to calculate MicroFrontEndTiming values: 'entry' (the default) leaves timing based entirely on the script that called `register()`, unaffected by the manifest; 'scripts' widens the timing window across all script assets; 'all' widens it across every asset.
  */
 
 /**
@@ -56,10 +55,10 @@
  * @typedef {Object} RegisterAPITimings
  * @property {number} registeredAt - The timestamp when the registered entity was created.
  * @property {number} [reportedAt] - The timestamp when the registered entity was deregistered.
- * @property {number} fetchStart - The timestamp when the registered entity began fetching (performance.start).
- * @property {number} fetchEnd - The timestamp when the registered entity finished fetching (performance.end).
- * @property {number} scriptStart - The timestamp when script initialization began (max of dom.start or performance.end, or performance.end if no dom.start).
- * @property {number} scriptEnd - The timestamp when script loading completed (dom.end or registeredAt if no dom.end).
+ * @property {number} fetchStart - The timestamp when the registered entity began fetching (performance.start). When a manifest with timingMethod 'scripts'|'all' is supplied, this widens to the earliest fetchStart across all matched manifest assets.
+ * @property {number} fetchEnd - The timestamp when the registered entity finished fetching (performance.end). When a manifest with timingMethod 'scripts'|'all' is supplied, this widens to the latest fetchEnd across all matched manifest assets.
+ * @property {number} scriptStart - The timestamp when script initialization began (max of dom.start or performance.end, or performance.end if no dom.start). When a manifest with timingMethod 'scripts'|'all' is supplied, this widens to the earliest scriptStart across all matched manifest script assets (non-script assets are excluded).
+ * @property {number} scriptEnd - The timestamp when script loading completed (dom.end or registeredAt if no dom.end). When a manifest with timingMethod 'scripts'|'all' is supplied, this widens to the latest scriptEnd across all matched manifest script assets (non-script assets are excluded).
  * @property {Object} [asset] - The asset path (if found) for the registered entity.
  * @property {string} type - The type of timing associated with the registered entity, 'script' or 'link' if found with the performance resource API, 'fetch' for dynamic imports, 'inline' if found to be associated with the root document URL, or 'unknown' if no associated resource could be found.
  */

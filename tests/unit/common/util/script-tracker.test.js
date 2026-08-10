@@ -848,10 +848,12 @@ init@https://cdn.example.com/gecko-app.js:20:10`
       expect(timings.fetchEnd).toBe(400)
     })
 
-    test('anchors asset/type on the entry-point manifest asset when it resolves', async () => {
+    test('anchors asset/type on whichever manifest script asset resolves first, regardless of declaration order', async () => {
       const manifestModule = await import('../../../../src/common/v2/manifest')
+      // 'secondary.js' is declared first, but 'root-entry.js' resolves first in the performance buffer below --
+      // auto-anchoring must follow resolution order, not manifest declaration order.
       const parsedManifest = manifestModule.parseManifest({
-        assets: [{ path: 'root-entry.js', entryPoint: true }, 'secondary.js']
+        assets: ['secondary.js', 'root-entry.js']
       })
 
       global.performance.getEntriesByType = jest.fn(() => [
@@ -865,6 +867,46 @@ init@https://cdn.example.com/gecko-app.js:20:10`
       expect(timings.asset).toBe('https://cdn.example.com/root-entry.js')
       expect(timings.fetchStart).toBe(5)
       expect(timings.fetchEnd).toBe(90)
+    })
+
+    test('does not re-anchor asset/type once a manifest script asset has already resolved, even across late entries', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: ['first.js', 'second.js'] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/first.js', initiatorType: 'script', startTime: 5, responseEnd: 40 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: 'https://cdn.example.com/caller.js', type: 'script' }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.asset).toBe('https://cdn.example.com/first.js')
+
+      // second.js resolves later, via the shared late-entries subscriber -- must not steal the anchor from first.js.
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/second.js', initiatorType: 'script', startTime: 50, responseEnd: 90 }]
+      })
+
+      expect(timings.asset).toBe('https://cdn.example.com/first.js')
+      expect(timings.type).toBe('script')
+    })
+
+    test('never anchors asset/type from non-script manifest assets, even in "all" mode', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: ['styles.css'] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/styles.css', initiatorType: 'link', startTime: 5, responseEnd: 40 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: 'https://cdn.example.com/caller.js', type: 'script' }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'all' })
+
+      // fetch window still widens from the css asset, but asset/type stay anchored on the caller script.
+      expect(timings.fetchStart).toBe(5)
+      expect(timings.fetchEnd).toBe(40)
+      expect(timings.asset).toBe('https://cdn.example.com/caller.js')
+      expect(timings.type).toBe('script')
     })
 
     test('subscribes to late resource entries for manifest assets not yet in the performance buffer, and keeps the subscriber alive until every pending asset resolves', async () => {
@@ -893,6 +935,96 @@ init@https://cdn.example.com/gecko-app.js:20:10`
       })
       expect(timings.fetchStart).toBe(10)
       expect(timings.fetchEnd).toBe(50)
+    })
+
+    test('widens scriptStart/scriptEnd across multiple manifest script assets using their DOM correlations', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const correlationModule = await import('../../../../src/common/v2/script-correlation')
+      const parsedManifest = manifestModule.parseManifest({ assets: ['early.js', 'late.js'] })
+
+      const earlyCorrelation = new correlationModule.ScriptCorrelation('https://cdn.example.com/early.js')
+      earlyCorrelation.dom.start = 15
+      earlyCorrelation.dom.end = 70
+      const lateCorrelation = new correlationModule.ScriptCorrelation('https://cdn.example.com/late.js')
+      lateCorrelation.dom.start = 210
+      lateCorrelation.dom.end = 450
+      scriptTrackerModule.scriptCorrelations.set('https://cdn.example.com/early.js', earlyCorrelation)
+      scriptTrackerModule.scriptCorrelations.set('https://cdn.example.com/late.js', lateCorrelation)
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/early.js', initiatorType: 'script', startTime: 10, responseEnd: 60 },
+        { name: 'https://cdn.example.com/late.js', initiatorType: 'script', startTime: 200, responseEnd: 400 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, scriptStart: 0, scriptEnd: 0, asset: undefined, type: 'unknown' }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.scriptStart).toBe(15)
+      expect(timings.scriptEnd).toBe(450)
+    })
+
+    test('does not widen scriptStart/scriptEnd using non-script manifest assets, even in all mode', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const correlationModule = await import('../../../../src/common/v2/script-correlation')
+      const parsedManifest = manifestModule.parseManifest({ assets: ['script.js', 'styles.css'] })
+
+      const scriptCorrelation = new correlationModule.ScriptCorrelation('https://cdn.example.com/script.js')
+      scriptCorrelation.dom.start = 20
+      scriptCorrelation.dom.end = 80
+      const cssCorrelation = new correlationModule.ScriptCorrelation('https://cdn.example.com/styles.css')
+      cssCorrelation.dom.start = 1
+      cssCorrelation.dom.end = 999
+      scriptTrackerModule.scriptCorrelations.set('https://cdn.example.com/script.js', scriptCorrelation)
+      scriptTrackerModule.scriptCorrelations.set('https://cdn.example.com/styles.css', cssCorrelation)
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/script.js', initiatorType: 'script', startTime: 10, responseEnd: 60 },
+        { name: 'https://cdn.example.com/styles.css', initiatorType: 'link', startTime: 5, responseEnd: 50 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, scriptStart: 0, scriptEnd: 0, asset: undefined, type: 'unknown' }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'all' })
+
+      // styles.css's wildly wider dom.start/dom.end (1/999) must not leak into scriptStart/scriptEnd
+      expect(timings.scriptStart).toBe(20)
+      expect(timings.scriptEnd).toBe(80)
+    })
+
+    test('widens scriptStart/scriptEnd from late-resolving manifest script entries', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const correlationModule = await import('../../../../src/common/v2/script-correlation')
+      const parsedManifest = manifestModule.parseManifest({ assets: ['a.js', 'b.js'] })
+
+      global.performance.getEntriesByType = jest.fn(() => [])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, scriptStart: 0, scriptEnd: 0, asset: undefined, type: 'unknown' }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.scriptStart).toBe(0)
+      expect(timings.scriptEnd).toBe(0)
+
+      const aCorrelation = new correlationModule.ScriptCorrelation('https://cdn.example.com/a.js')
+      aCorrelation.dom.start = 30
+      aCorrelation.dom.end = 90
+      scriptTrackerModule.scriptCorrelations.set('https://cdn.example.com/a.js', aCorrelation)
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/a.js', initiatorType: 'script', startTime: 10, responseEnd: 20 }]
+      })
+      expect(timings.scriptStart).toBe(30)
+      expect(timings.scriptEnd).toBe(90)
+
+      // dom.start (55) is set above the resource entry's responseEnd (50) -- the ScriptCorrelation.script getter
+      // takes max(dom.start, performance.end), since a script can't begin executing before its fetch completes -- so
+      // this widens scriptEnd only, leaving scriptStart at its existing (lower) value of 30.
+      const bCorrelation = new correlationModule.ScriptCorrelation('https://cdn.example.com/b.js')
+      bCorrelation.dom.start = 55
+      bCorrelation.dom.end = 500
+      scriptTrackerModule.scriptCorrelations.set('https://cdn.example.com/b.js', bCorrelation)
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/b.js', initiatorType: 'script', startTime: 30, responseEnd: 50 }]
+      })
+      expect(timings.scriptStart).toBe(30)
+      expect(timings.scriptEnd).toBe(500)
     })
   })
 

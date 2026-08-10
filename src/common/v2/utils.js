@@ -5,6 +5,7 @@
 
 import { extractUrlsFromStack, getDeepStackTrace } from './script-tracker'
 import { matchManifestAsset } from './manifest'
+import { cleanURL } from '../url/clean-url'
 
 /**
  * @enum {string}
@@ -39,6 +40,28 @@ export function getRegisteredTargetsFromId (id, agentRef) {
   if (!isValid(id, agentRef)) return []
   const registeredEntities = agentRef.runtime.registeredEntities
   return registeredEntities?.filter(entity => String(entity.metadata.target.id) === String(id)).map(entity => entity.metadata.target) || []
+}
+
+/**
+ * Returns the registered target(s) whose resource matches a given resource URL -- used to attribute `BrowserPerformance`
+ * (PerformanceResourceTiming) events, which never have a JS call stack to walk (they're fired for declarative
+ * `<script src>`/`<link>`/`<img>` tags, not JS execution), so stack-trace attribution (see {@link findTargetsFromStackTrace})
+ * doesn't apply. Unlike {@link getRegisteredTargetsFromFilename}, this matches manifest assets of ANY type (scripts,
+ * images, fonts, css, etc.) -- non-script assets can't produce a JS stack frame to match against, but they can and do
+ * produce their own resource timing entries. Returns an empty array if no target is found.
+ * @param {string} url - the resource's URL, as reported by the Performance API
+ * @param {*} agentRef
+ * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget[]}
+ */
+export function getRegisteredTargetsFromResourceUrl (url, agentRef) {
+  if (!isValid(url, agentRef)) return []
+  const registeredEntities = agentRef.runtime.registeredEntities
+  const cleanedUrl = cleanURL(url)
+  const matches = registeredEntities?.filter(entity =>
+    (entity.metadata.timings?.asset && cleanURL(entity.metadata.timings.asset) === cleanedUrl) ||
+    matchManifestAsset(entity.metadata.target?.manifest, url, { scriptsOnly: false })
+  )
+  return dedupeRegisteredEntitiesByAsset(matches).map(entity => entity.metadata.target)
 }
 
 /**

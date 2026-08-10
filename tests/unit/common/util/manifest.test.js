@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { parseManifest, getEntryAsset, matchManifestAsset } from '../../../../src/common/v2/manifest'
+import { parseManifest, matchManifestAsset } from '../../../../src/common/v2/manifest'
 
 describe('manifest utilities', () => {
   describe('parseManifest', () => {
@@ -39,29 +39,6 @@ describe('manifest utilities', () => {
     test('AssetFile explicit type overrides extension inference', () => {
       const parsed = parseManifest({ assets: [{ path: 'weird-name', type: 'js' }, { path: 'other.js', type: 'css' }] })
       expect(parsed.scripts.map(a => a.pattern)).toEqual(['weird-name'])
-    })
-
-    test('AssetFile entryPoint is carried through, first flagged entry wins on duplicates', () => {
-      const parsed = parseManifest({
-        assets: [
-          { path: 'root.js', entryPoint: true },
-          { path: 'other.js', entryPoint: true }
-        ]
-      })
-      const entry = getEntryAsset(parsed)
-      expect(entry.pattern).toBe('root.js')
-    })
-  })
-
-  describe('getEntryAsset', () => {
-    test('returns undefined when no manifest or no entry point flagged', () => {
-      expect(getEntryAsset(undefined)).toBeUndefined()
-      expect(getEntryAsset(parseManifest({ assets: ['a.js'] }))).toBeUndefined()
-    })
-
-    test('returns the flagged asset', () => {
-      const parsed = parseManifest({ assets: ['a.js', { path: 'b.js', entryPoint: true }] })
-      expect(getEntryAsset(parsed).pattern).toBe('b.js')
     })
   })
 

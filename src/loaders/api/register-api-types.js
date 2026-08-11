@@ -61,6 +61,8 @@
  * @property {number} scriptEnd - The timestamp when script loading completed (dom.end or registeredAt if no dom.end). When a manifest with timingMethod 'scripts'|'all' is supplied, this widens to the latest scriptEnd across all matched manifest script assets (non-script assets are excluded).
  * @property {Object} [asset] - The asset path (if found) for the registered entity.
  * @property {string} type - The type of timing associated with the registered entity, 'script' or 'link' if found with the performance resource API, 'fetch' for dynamic imports, 'inline' if found to be associated with the root document URL, or 'unknown' if no associated resource could be found.
+ * @property {number} totalWeight - The sum of `transferSize` (bytes) across every asset detected for the registered entity -- the entry script, plus, when a manifest with timingMethod 'scripts'|'all' is supplied, every matched manifest asset. Cross-origin assets without a Timing-Allow-Origin header report 0 bytes per the Resource Timing spec.
+ * @property {boolean} [renderBlocking] - True if any detected asset (entry script or matched manifest asset) has a `renderBlockingStatus` of 'blocking'; false if none were 'blocking' but at least one reported 'non-blocking'; left `undefined` if no detected asset reported the attribute at all (e.g. unsupported browser). A single 'blocking' asset always wins over any number of 'non-blocking' ones, regardless of resolution order.
  */
 
 /**

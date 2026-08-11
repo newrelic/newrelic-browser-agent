@@ -217,6 +217,9 @@ function register (agentRef, target) {
       timeToFetch, // fetchStart to fetchEnd
       timeToLoad: timeToFetch + timeToExecute, // fetch time and script time together
       timeToRegister: timings.registeredAt, // timestamp when register() was called
+      totalWeight: timings.totalWeight, // sum of transferSize bytes across every detected asset (entry script + matched manifest assets)
+      // renderBlocking: true if any detected asset was 'blocking', false if only 'non-blocking' assets were seen, omitted entirely if no detected asset reported the attribute at all
+      ...(timings.renderBlocking !== undefined && { renderBlocking: timings.renderBlocking }),
       // leave room to extend these with more data keys as needed
       ...(vitals.fcp.value >= 0 && { 'nr.vitals.fcp.value': vitals.fcp.value }), // FCP vital object with value and metadata
       ...(vitals.lcp.value >= 0 && { 'nr.vitals.lcp.value': vitals.lcp.value }), // LCP vital object with value and metadata

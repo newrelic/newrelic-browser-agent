@@ -99,9 +99,88 @@ describe('script-tracker', () => {
         fetchStart: 0,
         fetchEnd: 0,
         asset: undefined,
-        type: 'unknown'
+        type: 'unknown',
+        totalWeight: 0,
+        renderBlocking: undefined
       })
       expect(result.registeredAt).toBeGreaterThan(0)
+    })
+
+    test('accumulates totalWeight and maps renderBlocking to true from a "blocking" entry script resource entry', () => {
+      const mockResourceEntry = {
+        name: 'https://cdn.example.com/mfe-app.js',
+        initiatorType: 'script',
+        startTime: 100.5,
+        responseEnd: 250.8,
+        transferSize: 4321,
+        renderBlockingStatus: 'blocking'
+      }
+
+      mockNavigationEntry = { name: 'https://example.com/' }
+      mockStack = `Error
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at Object.register (${scriptTrackerModule.thisFile}:5:10)
+    at main (https://cdn.example.com/mfe-app.js:15:20)`
+
+      if (performanceObserverCallback) {
+        performanceObserverCallback({ getEntries: () => [mockResourceEntry] })
+      }
+
+      const result = scriptTrackerModule.findScriptTimings()
+
+      expect(result.totalWeight).toBe(4321)
+      expect(result.renderBlocking).toBe(true)
+    })
+
+    test('maps renderBlocking to false from a "non-blocking" entry script resource entry', () => {
+      const mockResourceEntry = {
+        name: 'https://cdn.example.com/mfe-app.js',
+        initiatorType: 'script',
+        startTime: 100,
+        responseEnd: 200,
+        transferSize: 100,
+        renderBlockingStatus: 'non-blocking'
+      }
+
+      mockNavigationEntry = { name: 'https://example.com/' }
+      mockStack = `Error
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at Object.register (${scriptTrackerModule.thisFile}:5:10)
+    at main (https://cdn.example.com/mfe-app.js:15:20)`
+
+      if (performanceObserverCallback) {
+        performanceObserverCallback({ getEntries: () => [mockResourceEntry] })
+      }
+
+      const result = scriptTrackerModule.findScriptTimings()
+
+      expect(result.renderBlocking).toBe(false)
+    })
+
+    test('totalWeight defaults to 0 bytes and renderBlocking stays undefined for entries without transferSize/renderBlockingStatus (Timing-Allow-Origin restriction / unsupported browser)', () => {
+      const mockResourceEntry = {
+        name: 'https://cdn.example.com/mfe-app.js',
+        initiatorType: 'script',
+        startTime: 100,
+        responseEnd: 200,
+        transferSize: 0
+        // renderBlockingStatus intentionally omitted -- unsupported/not observable for this entry
+      }
+
+      mockNavigationEntry = { name: 'https://example.com/' }
+      mockStack = `Error
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at Object.register (${scriptTrackerModule.thisFile}:5:10)
+    at main (https://cdn.example.com/mfe-app.js:15:20)`
+
+      if (performanceObserverCallback) {
+        performanceObserverCallback({ getEntries: () => [mockResourceEntry] })
+      }
+
+      const result = scriptTrackerModule.findScriptTimings()
+
+      expect(result.totalWeight).toBe(0)
+      expect(result.renderBlocking).toBeUndefined()
     })
 
     test('identifies inline script when URL matches navigation', () => {
@@ -937,6 +1016,77 @@ init@https://cdn.example.com/gecko-app.js:20:10`
       expect(timings.fetchEnd).toBe(50)
     })
 
+    test('resolves a late-loading non-script manifest asset (e.g. an image) via the shared observer', async () => {
+      // Regression test: the shared observer used to filter every entry through validEntryCriteria (script-like
+      // only) before ever checking it against a pending late-resolution subscriber, so a non-script manifest
+      // asset that hadn't loaded yet at register() time could never resolve. Images/fonts/stylesheets lazy-loaded
+      // after register() must now resolve just like scripts do.
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ path: 'banner.png', type: 'png' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'all' })
+
+      // Nothing resolved yet -- the image hasn't loaded
+      expect(timings.fetchStart).toBe(0)
+      expect(timings.totalWeight).toBe(0)
+
+      // The image loads later. initiatorType 'img' would previously have been filtered out before ever reaching
+      // the pending-subscriber check.
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/banner.png', initiatorType: 'img', startTime: 10, responseEnd: 50, transferSize: 300 }]
+      })
+
+      expect(timings.fetchStart).toBe(10)
+      expect(timings.fetchEnd).toBe(50)
+      expect(timings.totalWeight).toBe(300)
+      // Non-script assets never anchor asset/type or widen scriptStart/scriptEnd, even when late-resolved.
+      expect(timings.asset).toBeUndefined()
+    })
+
+    test('resolves a late-loading non-script manifest asset even when it arrives in the same observer batch as an unrelated script entry', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ path: 'icon.svg', type: 'svg' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'all' })
+
+      // The batch includes an unrelated script (which passes validEntryCriteria and drives correlation
+      // bookkeeping) alongside the actual matching image entry (which doesn't) -- both must still be checked
+      // against the pending subscriber.
+      performanceObserverCallback({
+        getEntries: () => [
+          { name: 'https://cdn.example.com/unrelated.js', initiatorType: 'script', startTime: 1, responseEnd: 2, transferSize: 10 },
+          { name: 'https://cdn.example.com/icon.svg', initiatorType: 'img', startTime: 20, responseEnd: 45, transferSize: 75 }
+        ]
+      })
+
+      expect(timings.fetchStart).toBe(20)
+      expect(timings.fetchEnd).toBe(45)
+      expect(timings.totalWeight).toBe(75)
+    })
+
+    test('does not resolve a pending non-script manifest asset from an unrelated entry', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ path: 'banner.png', type: 'png' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'all' })
+
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/other-image.png', initiatorType: 'img', startTime: 10, responseEnd: 50, transferSize: 300 }]
+      })
+
+      expect(timings.fetchStart).toBe(0)
+      expect(timings.totalWeight).toBe(0)
+    })
+
     test('widens scriptStart/scriptEnd across multiple manifest script assets using their DOM correlations', async () => {
       const manifestModule = await import('../../../../src/common/v2/manifest')
       const correlationModule = await import('../../../../src/common/v2/script-correlation')
@@ -1025,6 +1175,122 @@ init@https://cdn.example.com/gecko-app.js:20:10`
       })
       expect(timings.scriptStart).toBe(30)
       expect(timings.scriptEnd).toBe(500)
+    })
+
+    test('accumulates totalWeight across multiple buffered manifest assets, script and non-script alike', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: ['app.js', 'styles.css'] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/app.js', initiatorType: 'script', startTime: 10, responseEnd: 60, transferSize: 1000 },
+        { name: 'https://cdn.example.com/styles.css', initiatorType: 'link', startTime: 5, responseEnd: 40, transferSize: 250 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'all' })
+
+      // Both the script and the non-script asset contribute bytes, unlike scriptStart/scriptEnd widening which
+      // is script-only.
+      expect(timings.totalWeight).toBe(1250)
+    })
+
+    test('adds to an existing totalWeight from the entry script rather than overwriting it', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: ['secondary.js'] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/secondary.js', initiatorType: 'script', startTime: 10, responseEnd: 60, transferSize: 500 }
+      ])
+
+      // Simulates findScriptTimings() having already attributed the entry script's own 300 bytes.
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: 'https://cdn.example.com/root.js', type: 'script', totalWeight: 300, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.totalWeight).toBe(800)
+    })
+
+    test('accumulates totalWeight from late-resolving manifest assets', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: ['a.js', 'b.js'] })
+
+      global.performance.getEntriesByType = jest.fn(() => [])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.totalWeight).toBe(0)
+
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/a.js', initiatorType: 'script', startTime: 10, responseEnd: 20, transferSize: 400 }]
+      })
+      expect(timings.totalWeight).toBe(400)
+
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/b.js', initiatorType: 'script', startTime: 30, responseEnd: 50, transferSize: 600 }]
+      })
+      expect(timings.totalWeight).toBe(1000)
+    })
+
+    test('sets renderBlocking true if any matched manifest asset (including non-script) is "blocking"', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: ['app.js', 'styles.css'] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/app.js', initiatorType: 'script', startTime: 10, responseEnd: 60, transferSize: 100 },
+        { name: 'https://cdn.example.com/styles.css', initiatorType: 'link', startTime: 5, responseEnd: 40, transferSize: 50, renderBlockingStatus: 'blocking' }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'all' })
+
+      expect(timings.renderBlocking).toBe(true)
+    })
+
+    test('sets renderBlocking false when matched manifest assets are only ever "non-blocking"', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: ['app.js', 'styles.css'] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/app.js', initiatorType: 'script', startTime: 10, responseEnd: 60, transferSize: 100, renderBlockingStatus: 'non-blocking' },
+        { name: 'https://cdn.example.com/styles.css', initiatorType: 'link', startTime: 5, responseEnd: 40, transferSize: 50, renderBlockingStatus: 'non-blocking' }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'all' })
+
+      expect(timings.renderBlocking).toBe(false)
+    })
+
+    test('a "blocking" asset wins over "non-blocking" ones regardless of resolution order', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: ['first.js', 'second.js'] })
+
+      // 'first.js' (non-blocking) resolves before 'second.js' (blocking) in the buffered entries below --
+      // renderBlocking must still end up true, and a blocking result must never be downgraded by a later
+      // non-blocking asset.
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/first.js', initiatorType: 'script', startTime: 5, responseEnd: 40, transferSize: 10, renderBlockingStatus: 'non-blocking' },
+        { name: 'https://cdn.example.com/second.js', initiatorType: 'script', startTime: 45, responseEnd: 90, transferSize: 10, renderBlockingStatus: 'blocking' }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.renderBlocking).toBe(true)
+    })
+
+    test('leaves renderBlocking undefined when no matched manifest asset reports the attribute at all', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: ['app.js'] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/app.js', initiatorType: 'script', startTime: 10, responseEnd: 60, transferSize: 100 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'all' })
+
+      expect(timings.renderBlocking).toBeUndefined()
     })
   })
 

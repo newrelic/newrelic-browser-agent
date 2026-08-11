@@ -232,4 +232,114 @@ describe('Register API - Manifest', () => {
     expect(timing.assetUrl).toContain('mfe-manifest-secondary.js')
     expect(timing.assetType).toBe('script')
   })
+
+  it('accumulates MicroFrontEndTiming totalWeight from the manifest script asset when timingMethod is "scripts"', async () => {
+    const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testMFEInsRequest }
+    ])
+
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+      init: { feature_flags: ['register'] }
+    })).then(() => browser.waitForAgentLoad())
+
+    await browser.execute(function () {
+      window.weightApi = newrelic.register({
+        id: 'manifest-weight-mfe',
+        name: 'ManifestWeightMFE',
+        manifest: { assets: ['mfe-manifest-secondary.js'] },
+        timingMethod: 'scripts'
+      })
+    })
+    await browser.execute(loadSecondaryScript)
+
+    await browser.pause(500)
+    await browser.execute(function () { window.weightApi.deregister() })
+
+    const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 10000 })
+    const timingEvents = insightsHarvests
+      .flatMap(({ request: { body } }) => body.ins)
+      .filter(event => event.eventType === 'MicroFrontEndTiming' && event['source.id'] === 'manifest-weight-mfe')
+
+    expect(timingEvents.length).toBeGreaterThanOrEqual(1)
+    // The registering script is inline (0 bytes), so any weight here can only have come from the manifest's
+    // secondary script asset actually downloading over the network.
+    expect(timingEvents[0].totalWeight).toBeGreaterThan(0)
+  })
+
+  it('reports MicroFrontEndTiming renderBlocking as a boolean when the browser supports renderBlockingStatus, omitted otherwise', async () => {
+    const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testMFEInsRequest }
+    ])
+
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+      init: { feature_flags: ['register'] }
+    })).then(() => browser.waitForAgentLoad())
+
+    await browser.execute(function () {
+      window.renderBlockingApi = newrelic.register({
+        id: 'manifest-render-blocking-mfe',
+        name: 'ManifestRenderBlockingMFE',
+        manifest: { assets: ['mfe-manifest-secondary.js'] },
+        timingMethod: 'all'
+      })
+    })
+    await browser.execute(loadSecondaryScript)
+
+    await browser.pause(500)
+    await browser.execute(function () { window.renderBlockingApi.deregister() })
+
+    const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 10000 })
+    const timingEvents = insightsHarvests
+      .flatMap(({ request: { body } }) => body.ins)
+      .filter(event => event.eventType === 'MicroFrontEndTiming' && event['source.id'] === 'manifest-render-blocking-mfe')
+
+    expect(timingEvents.length).toBeGreaterThanOrEqual(1)
+    // Support for the underlying renderBlockingStatus attribute varies across this project's Chrome/Edge/Firefox/
+    // Safari test matrix -- when unsupported, the attribute is never observed and renderBlocking is correctly
+    // omitted from the event entirely (see register.js), so only the shape is asserted here. The exact
+    // blocking->true / non-blocking->false / never-observed->omitted mapping is covered by the unit tests in
+    // script-tracker.test.js.
+    expect(['boolean', 'undefined']).toContain(typeof timingEvents[0].renderBlocking)
+  })
+
+  it('accumulates totalWeight from a non-script manifest asset lazy-loaded well after register() (late-resolution path, not the synchronous buffer pass)', async () => {
+    const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testMFEInsRequest }
+    ])
+
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+      init: { feature_flags: ['register'] }
+    })).then(() => browser.waitForAgentLoad())
+
+    await browser.execute(function () {
+      window.lazyAssetApi = newrelic.register({
+        id: 'manifest-lazy-asset-mfe',
+        name: 'ManifestLazyAssetMFE',
+        manifest: { assets: [{ path: 'square.png', type: 'png' }] },
+        timingMethod: 'all'
+      })
+    })
+
+    // Load the image well after register() returns, so it can only resolve via the shared observer's
+    // late-resolution path -- never through the synchronous performance-buffer pass inside applyManifestTimings.
+    await browser.execute(function () {
+      setTimeout(function () {
+        var img = document.createElement('img')
+        img.src = './images/square.png'
+        document.body.appendChild(img)
+      }, 300)
+    })
+
+    await browser.pause(1000)
+    await browser.execute(function () { window.lazyAssetApi.deregister() })
+
+    const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 10000 })
+    const timingEvents = insightsHarvests
+      .flatMap(({ request: { body } }) => body.ins)
+      .filter(event => event.eventType === 'MicroFrontEndTiming' && event['source.id'] === 'manifest-lazy-asset-mfe')
+
+    expect(timingEvents.length).toBeGreaterThanOrEqual(1)
+    // The registering script is inline (0 bytes); any weight here can only have come from the lazy-loaded image.
+    expect(timingEvents[0].totalWeight).toBeGreaterThan(0)
+  })
 })

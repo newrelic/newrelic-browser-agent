@@ -72,6 +72,7 @@ export class Connector {
       const cachedResp = session.state.cachedRumResponse
       if (cachedResp) {
         this.#applyConnectResponse(cachedResp)
+        return
       }
     }
 

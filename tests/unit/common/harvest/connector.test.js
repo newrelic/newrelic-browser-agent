@@ -363,7 +363,7 @@ describe('Connector', () => {
     handleSpy.mockRestore()
   })
 
-  test('applies cached response found during callback before processing live response', () => {
+  test('applies cached response found during callback and skips processing the live response entirely', () => {
     send.mockReturnValue(true)
 
     const session = {
@@ -402,6 +402,12 @@ describe('Connector', () => {
     })
 
     expect(agent.runtime.appMetadata).toEqual(cached.app)
-    expect(activateFeatures).toHaveBeenNthCalledWith(1, cached.config, agent)
+    // The live response must never be applied on top of the cached one -- only a single activateFeatures call,
+    // for the cached config -- otherwise features would be activated/configured twice (once per response).
+    expect(activateFeatures).toHaveBeenCalledTimes(1)
+    expect(activateFeatures).toHaveBeenCalledWith(cached.config, agent)
+    // The live response must not clobber the session's cached one, and TimeKeeper must not process it either.
+    expect(session.write).not.toHaveBeenCalled()
+    expect(agent.runtime.timeKeeper.ready).toEqual(false)
   })
 })

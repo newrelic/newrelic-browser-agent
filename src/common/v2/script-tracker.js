@@ -33,11 +33,13 @@ export const scriptCorrelations = new Map()
 let poSubscribers = []
 
 /**
- * Retrieves a script correlation by URL using exact matching
+ * Retrieves a script correlation by URL using exact matching. Exported so other features (e.g. generic_events'
+ * resource attribution) can key off the same DOM node/load-timing tracking this module already does for every
+ * `<script>` element, rather than setting up a second, redundant observer.
  * @param {string} targetUrl - The URL to find
  * @returns {ScriptCorrelation | undefined} - The correlation object if found
  */
-function findCorrelation (targetUrl) {
+export function findCorrelation (targetUrl) {
   return scriptCorrelations.get(targetUrl)
 }
 

@@ -30,12 +30,13 @@ describe('Register API - Auto-Detection - BrowserPerformance (Resources)', () =>
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
       init: {
         feature_flags: ['register'],
-        performance: { resources: { enabled: true } }
+        performance: { resources: { enabled: true, ignore_newrelic: false } }
       }
     })).then(() => browser.waitForAgentLoad())
 
     await browser.execute(loadAutoScript)
     await browser.pause(500)
+    await browser.refresh() // force any pending BrowserPerformance events to flush via the page-unload harvest
 
     const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 10000 })
     const resourceEvents = insightsHarvests
@@ -54,7 +55,7 @@ describe('Register API - Auto-Detection - BrowserPerformance (Resources)', () =>
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
       init: {
         feature_flags: ['register'],
-        performance: { resources: { enabled: true } }
+        performance: { resources: { enabled: true, ignore_newrelic: false } }
       }
     })).then(() => browser.waitForAgentLoad())
 
@@ -67,6 +68,7 @@ describe('Register API - Auto-Detection - BrowserPerformance (Resources)', () =>
     })
     await browser.execute(loadManifestImage)
     await browser.pause(500)
+    await browser.refresh() // force any pending BrowserPerformance events to flush via the page-unload harvest
 
     const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 10000 })
     const resourceEvents = insightsHarvests
@@ -85,7 +87,8 @@ describe('Register API - Auto-Detection - BrowserPerformance (Resources)', () =>
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
       init: {
         feature_flags: ['register'],
-        performance: { resources: { enabled: true } }
+        // see ignore_newrelic note above
+        performance: { resources: { enabled: true, ignore_newrelic: false } }
       }
     })).then(() => browser.waitForAgentLoad())
 
@@ -94,6 +97,7 @@ describe('Register API - Auto-Detection - BrowserPerformance (Resources)', () =>
     })
     await browser.execute(loadManifestImage)
     await browser.pause(500)
+    await browser.refresh() // force any pending BrowserPerformance events to flush via the page-unload harvest
 
     const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 10000 })
     const resourceEvents = insightsHarvests

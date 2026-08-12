@@ -261,7 +261,7 @@ describe('v2 utilities', () => {
                   id: 'mfe-1',
                   name: 'MFE 1',
                   type: 'MFE',
-                  manifest: parseManifest({ assets: ['lazy-chunk.js'] })
+                  manifest: parseManifest({ assets: [{ matcher: 'lazy-chunk.js' }] })
                 }
               }
             }
@@ -282,6 +282,85 @@ describe('v2 utilities', () => {
       expect(result[0].id).toBe('mfe-1')
     })
 
+    test('matches two independent manifest script assets on the same target, each via its own filename', () => {
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://example.com/root.js' },
+                target: {
+                  id: 'mfe-1',
+                  name: 'MFE 1',
+                  type: 'MFE',
+                  manifest: parseManifest({ assets: [{ matcher: 'secondary-a.js' }, { matcher: 'secondary-b.js' }] })
+                }
+              }
+            }
+          ]
+        },
+        init: {
+          api: {
+            register: {
+              enabled: true,
+              duplicate_data_to_container: false
+            }
+          }
+        }
+      }
+
+      const resultA = getRegisteredTargetsFromFilename('https://cdn.example.com/secondary-a.js', agentRef)
+      expect(resultA).toHaveLength(1)
+      expect(resultA[0].id).toBe('mfe-1')
+
+      const resultB = getRegisteredTargetsFromFilename('https://cdn.example.com/secondary-b.js', agentRef)
+      expect(resultB).toHaveLength(1)
+      expect(resultB[0].id).toBe('mfe-1')
+    })
+
+    test('does not collapse two distinct MFEs whose manifests both match the same script filename (overlapping manifests)', () => {
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: undefined },
+                target: {
+                  id: 'mfe-1',
+                  name: 'MFE 1',
+                  type: 'MFE',
+                  manifest: parseManifest({ assets: [{ matcher: 'shared-chunk.js' }] })
+                }
+              }
+            },
+            {
+              metadata: {
+                timings: { asset: undefined },
+                target: {
+                  id: 'mfe-2',
+                  name: 'MFE 2',
+                  type: 'MFE',
+                  manifest: parseManifest({ assets: [{ matcher: 'shared-chunk.js' }] })
+                }
+              }
+            }
+          ]
+        },
+        init: {
+          api: {
+            register: {
+              enabled: true,
+              duplicate_data_to_container: false
+            }
+          }
+        }
+      }
+
+      const result = getRegisteredTargetsFromFilename('https://cdn.example.com/shared-chunk.js', agentRef)
+      expect(result).toHaveLength(2)
+      expect(result.map(t => t.id).sort()).toEqual(['mfe-1', 'mfe-2'])
+    })
+
     test('does not match a manifest asset that is not a script (e.g. an image), even for stack-based attribution', () => {
       const agentRef = {
         runtime: {
@@ -293,7 +372,7 @@ describe('v2 utilities', () => {
                   id: 'mfe-1',
                   name: 'MFE 1',
                   type: 'MFE',
-                  manifest: parseManifest({ assets: [{ path: 'logo.png', type: 'png' }] })
+                  manifest: parseManifest({ assets: [{ matcher: 'logo.png' }] })
                 }
               }
             }
@@ -402,7 +481,7 @@ describe('v2 utilities', () => {
                   id: 'mfe-1',
                   name: 'MFE 1',
                   type: 'MFE',
-                  manifest: manifestModule.parseManifest({ assets: [{ path: 'logo.png', type: 'png' }] })
+                  manifest: manifestModule.parseManifest({ assets: [{ matcher: 'logo.png' }] })
                 }
               }
             }
@@ -428,7 +507,7 @@ describe('v2 utilities', () => {
                   id: 'mfe-1',
                   name: 'MFE 1',
                   type: 'MFE',
-                  manifest: manifestModule.parseManifest({ assets: ['shared.css'] })
+                  manifest: manifestModule.parseManifest({ assets: [{ matcher: 'shared.css' }] })
                 }
               }
             },
@@ -439,7 +518,7 @@ describe('v2 utilities', () => {
                   id: 'mfe-2',
                   name: 'MFE 2',
                   type: 'MFE',
-                  manifest: manifestModule.parseManifest({ assets: ['shared.css'] })
+                  manifest: manifestModule.parseManifest({ assets: [{ matcher: 'shared.css' }] })
                 }
               }
             },
@@ -451,7 +530,7 @@ describe('v2 utilities', () => {
                   id: 'mfe-1',
                   name: 'MFE 1',
                   type: 'MFE',
-                  manifest: manifestModule.parseManifest({ assets: ['shared.css'] })
+                  manifest: manifestModule.parseManifest({ assets: [{ matcher: 'shared.css' }] })
                 }
               }
             }

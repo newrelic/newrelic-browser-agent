@@ -92,9 +92,9 @@ function register (agentRef, target) {
   }
 
   const timings = findScriptTimings(target)
-  if (target.manifest && (target.timingMethod === 'scripts' || target.timingMethod === 'all')) {
-    applyManifestTimings(timings, target)
-  }
+  // Always applied when a manifest is present -- totalWeight/renderBlocking accumulate from manifest assets
+  // regardless of timingMethod; actual timing widening inside stays gated to 'scripts'/'all' (see applyManifestTimings).
+  if (target.manifest) applyManifestTimings(timings, target)
 
   // Track MFE vitals for this entity
   const vitals = trackMFEVitals(target, timings)

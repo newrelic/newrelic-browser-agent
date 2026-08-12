@@ -6,12 +6,16 @@
 import { cleanURL } from '../url/clean-url'
 
 /**
- * @typedef {import('../../loaders/api/register-api-types').AssetFile} AssetFile
+ * @typedef {Object} AssetFile
+ * @property {string|RegExp} matcher - the path/path-fragment string, or RegExp, used to match a resolved URL against this asset
+ * @property {'script'} [type] - optional override for script-capability inference. When omitted, script-capability is inferred from a `.js`
+ * suffix on a string `matcher` (a RegExp `matcher` is never inferred as a script). Supply `type: 'script'` to explicitly flag an entry as a
+ * script regardless of its matcher shape/suffix (e.g. an extensionless URL, or a RegExp targeting a script path).
  */
 
 /**
  * @typedef {Object} ParsedManifestAsset
- * @property {string|RegExp} pattern - the original path/RegExp supplied by the customer
+ * @property {string|RegExp} pattern - the original matcher supplied by the customer
  * @property {(url: string) => boolean} test - precompiled matcher against a resolved URL
  * @property {boolean} isScript
  */
@@ -26,7 +30,7 @@ import { cleanURL } from '../url/clean-url'
  * Parses a raw manifest supplied to `register()` into precompiled matcher closures. Parsing happens once, at
  * registration time, so downstream event attribution (which runs on every ajax/error/log/websocket event) never has
  * to re-derive matching logic from the raw customer input.
- * @param {{assets?: Array<AssetFile|RegExp|string>}} [rawManifest]
+ * @param {{assets?: Array<AssetFile>}} [rawManifest]
  * @returns {ParsedManifest|undefined} undefined if no usable assets were supplied, so callers can cheaply skip all manifest logic
  */
 export function parseManifest (rawManifest) {
@@ -39,21 +43,21 @@ export function parseManifest (rawManifest) {
 }
 
 /**
- * @param {AssetFile|RegExp|string} entry
+ * @param {AssetFile} entry
  * @returns {ParsedManifestAsset|undefined}
  */
 function parseAsset (entry) {
-  if (entry instanceof RegExp) {
-    return { pattern: entry, test: (url) => entry.test(cleanURL(url)), isScript: false }
+  if (!entry || typeof entry !== 'object') return undefined
+
+  const { matcher, type } = entry
+  const isScript = type !== undefined ? isScriptType(type) : (typeof matcher === 'string' && isScriptPath(matcher))
+
+  if (matcher instanceof RegExp) {
+    return { pattern: matcher, test: (url) => matcher.test(cleanURL(url)), isScript }
   }
 
-  if (typeof entry === 'string') {
-    return { pattern: entry, test: (url) => cleanURL(url).includes(entry), isScript: isScriptPath(entry) }
-  }
-
-  if (entry && typeof entry === 'object' && typeof entry.path === 'string') {
-    const isScript = entry.type ? isScriptType(entry.type) : isScriptPath(entry.path)
-    return { pattern: entry.path, test: (url) => cleanURL(url).includes(entry.path), isScript }
+  if (typeof matcher === 'string') {
+    return { pattern: matcher, test: (url) => cleanURL(url).includes(matcher), isScript }
   }
 
   return undefined
@@ -64,7 +68,7 @@ function isScriptPath (path) {
 }
 
 function isScriptType (type) {
-  return type === 'js' || type === 'script'
+  return type === 'script'
 }
 
 /**

@@ -404,7 +404,7 @@ describe('sub-features', () => {
               id: 'mfe-1',
               name: 'MFE 1',
               type: 'MFE',
-              manifest: manifestModule.parseManifest({ assets: [{ path: 'logo.png', type: 'png' }] }),
+              manifest: manifestModule.parseManifest({ assets: [{ matcher: 'logo.png' }] }),
               attributes: { 'entity.guid': 'mfe-1-guid' }
             }
           }

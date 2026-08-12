@@ -62,7 +62,7 @@ describe('Register API - Auto-Detection - BrowserPerformance (Resources)', () =>
       window.resourceManifestApi = newrelic.register({
         id: 'resource-manifest-mfe',
         name: 'ResourceManifestMFE',
-        manifest: { assets: [{ path: 'square.png', type: 'png' }] }
+        manifest: { assets: [{ matcher: 'square.png' }] }
       })
     })
     await browser.execute(loadManifestImage)

@@ -144,4 +144,4 @@
 ### 71
 `An invalid feature mode was detected and set to "off".`
 ### 72
-`Unable to initialized Connector and/or Harvester.`
+`Unable to initialize Connector and/or Harvester.`

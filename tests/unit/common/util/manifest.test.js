@@ -6,6 +6,8 @@
 import vm from 'vm'
 import { parseManifest, matchManifestAsset } from '../../../../src/common/v2/manifest'
 
+jest.mock('../../../../src/common/util/console')
+
 describe('manifest utilities', () => {
   describe('parseManifest', () => {
     test('returns undefined for undefined/null input', () => {
@@ -48,10 +50,66 @@ describe('manifest utilities', () => {
       expect(parsed.scripts).toHaveLength(1)
     })
 
-    test('an unrecognized type value forces isScript false, even on a .js-suffixed string matcher', () => {
+    test('an unrecognized type value falls back to inference instead of forcing isScript false', () => {
+      // An invalid `type` must never override inference -- otherwise a typo'd `type` could silently break
+      // stack-trace attribution for an otherwise-valid `.js` matcher.
       const parsed = parseManifest({ assets: [{ matcher: 'bundle.js', type: 'style' }] })
+      expect(parsed.scripts).toHaveLength(1)
+      expect(parsed.assets[0].isScript).toBe(true)
+    })
+
+    test('type: "asset" explicitly marks a .js-suffixed string matcher as non-script', () => {
+      const parsed = parseManifest({ assets: [{ matcher: 'bundle.js', type: 'asset' }] })
       expect(parsed.scripts).toHaveLength(0)
       expect(parsed.assets[0].isScript).toBe(false)
+    })
+
+    test('rejects an empty-string matcher instead of matching every URL', () => {
+      // ''.includes('') is always true -- an empty string matcher must be discarded, not treated as a valid
+      // substring matcher that would otherwise match every resolved URL on the page.
+      const parsed = parseManifest({ assets: [{ matcher: '' }, { matcher: 'styles.css' }] })
+      expect(parsed.assets).toHaveLength(1)
+      expect(parsed.assets[0].pattern).toBe('styles.css')
+    })
+
+    test('logs a warning (code 79) for an invalid matcher and discards the entry', async () => {
+      jest.resetModules()
+      const consoleModule = await import('../../../../src/common/util/console')
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+
+      const parsed = manifestModule.parseManifest({ assets: [{ matcher: {} }, { matcher: 'styles.css' }] })
+
+      expect(parsed.assets).toHaveLength(1)
+      expect(consoleModule.warn).toHaveBeenCalledWith(79, {})
+    })
+
+    test('logs a warning (code 79) for an unrecognized type value', async () => {
+      jest.resetModules()
+      const consoleModule = await import('../../../../src/common/util/console')
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+
+      manifestModule.parseManifest({ assets: [{ matcher: 'bundle.js', type: 'stylesheet' }] })
+
+      expect(consoleModule.warn).toHaveBeenCalledWith(79, 'stylesheet')
+    })
+
+    test('the invalid-matcher and invalid-type warnings share a single once-per-page gate', async () => {
+      // A deliberate tradeoff: an invalid matcher and an invalid type both warn through the same single()-wrapped
+      // emitter, so whichever kind of mistake is parsed first suppresses the warning for the other kind for the
+      // rest of the page's life. Both invalid entries are still discarded/ignored correctly either way -- only the
+      // warning itself is deduped, not the validation behavior.
+      jest.resetModules()
+      const consoleModule = await import('../../../../src/common/util/console')
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+
+      const parsed = manifestModule.parseManifest({
+        assets: [{ matcher: {} }, { matcher: 'bundle.js', type: 'stylesheet' }, { matcher: 'styles.css' }]
+      })
+
+      expect(parsed.assets).toHaveLength(2) // bundle.js (inference-only) + styles.css
+      expect(parsed.assets.find(a => a.pattern === 'bundle.js').isScript).toBe(true)
+      expect(consoleModule.warn).toHaveBeenCalledTimes(1)
+      expect(consoleModule.warn).toHaveBeenCalledWith(79, {})
     })
 
     test('a manifest containing only non-script assets has an empty scripts subset', () => {

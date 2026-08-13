@@ -4,14 +4,21 @@
  */
 
 import { cleanURL } from '../url/clean-url'
+import { warn } from '../util/console'
+import { single } from '../util/invoke'
 
 /**
  * @typedef {Object} AssetFile
  * @property {string|RegExp} matcher - the path/path-fragment string, or RegExp, used to match a resolved URL against this asset
- * @property {'script'} [type] - optional override for script-capability inference. When omitted, script-capability is inferred from a `.js`
- * suffix on a string `matcher` (a RegExp `matcher` is never inferred as a script). Supply `type: 'script'` to explicitly flag an entry as a
- * script regardless of its matcher shape/suffix (e.g. an extensionless URL, or a RegExp targeting a script path).
+ * @property {'script'|'asset'} [type] - optional override for script-capability inference. When omitted, script-capability is inferred from a
+ * `.js` suffix on a string `matcher` (a RegExp `matcher` is never inferred as a script). Supply `type: 'script'` to explicitly flag an entry
+ * as a script regardless of its matcher shape/suffix (e.g. an extensionless URL, or a RegExp targeting a script path), or `type: 'asset'` to
+ * explicitly flag it as non-script. Any other value is invalid, logs a warning, and is ignored (falls back to inference).
  */
+
+/** Warns at most once per page for any invalid manifest entry (bad `matcher` or bad `type`) -- mirrors the
+ * existing `invalidTimingMethod` single()-wrapped warning pattern in register.js. */
+const warnInvalidManifestEntry = single((secondary) => warn(79, secondary))
 
 /**
  * @typedef {Object} ParsedManifestAsset
@@ -50,21 +57,40 @@ function parseAsset (entry) {
   if (!entry || typeof entry !== 'object') return undefined
 
   const { matcher, type } = entry
-  const isScript = type !== undefined ? isScriptType(type) : (typeof matcher === 'string' && isScriptPath(matcher))
+  const inferredIsScript = typeof matcher === 'string' && isScriptPath(matcher)
+
+  let isScript = inferredIsScript
+  if (type !== undefined) {
+    if (isValidType(type)) {
+      isScript = isScriptType(type)
+    } else {
+      // Invalid `type` never overrides -- fall back to inference-only behavior rather than forcing `isScript: false`,
+      // so a typo'd `type` can't silently break stack-trace attribution for an otherwise-valid `.js` matcher.
+      warnInvalidManifestEntry(type)
+    }
+  }
 
   if (isRegExp(matcher)) {
     return { pattern: matcher, test: (url) => matcher.test(cleanURL(url)), isScript }
   }
 
-  if (typeof matcher === 'string') {
+  if (typeof matcher === 'string' && matcher.length > 0) {
     return { pattern: matcher, test: (url) => cleanURL(url).includes(matcher), isScript }
   }
 
+  // Every other matcher shape (missing, empty string, null, number, plain object, ...) is invalid -- notably an
+  // empty string must be rejected here rather than falling through to the string branch above, since
+  // ''.includes('') is always true and would otherwise silently match every URL.
+  warnInvalidManifestEntry(matcher)
   return undefined
 }
 
 function isScriptPath (path) {
   return path.endsWith('.js')
+}
+
+function isValidType (type) {
+  return type === 'script' || type === 'asset'
 }
 
 /**

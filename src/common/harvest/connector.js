@@ -10,7 +10,7 @@ import { activateFeatures } from '../util/feature-flags'
 import { now } from '../timing/now'
 import { warn } from '../util/console'
 import { VERSION } from '../constants/env'
-import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../loaders/features/features'
+import { CONNECT, FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../loaders/features/features'
 import { handle } from '../event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 
@@ -53,7 +53,7 @@ export class Connector {
       },
       localOpts: { sendEmptyBody: true, headers: retryHeaders },
       raw: true,
-      featureName: 'connect',
+      featureName: CONNECT,
       cbFinished: this.#processConnectResponse.bind(this)
     })
   }

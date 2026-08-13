@@ -1,6 +1,7 @@
 import { setupAgent } from '../setup-agent'
 import { Instrument as PageViewEvent } from '../../../src/features/page_view_event/instrument'
 import * as sendModule from '../../../src/common/harvest/send'
+import { CONNECT } from '../../../src/loaders/features/features'
 
 describe('PageViewEvent aggregate v2', () => {
   test('uses harvest endpoint version 2', async () => {
@@ -69,7 +70,7 @@ describe('PageViewEvent aggregate v2', () => {
     await new Promise(process.nextTick)
     const pveAggregate = pveInst.featAggregate
 
-    const connectCall = sendSpy.mock.calls.find(call => call[1].featureName === 'connect')
+    const connectCall = sendSpy.mock.calls.find(call => call[1].featureName === CONNECT)
     connectCall[1].cbFinished({
       sent: true,
       status: 200,
@@ -106,7 +107,7 @@ describe('PageViewEvent aggregate v2', () => {
     await new Promise(process.nextTick)
     const pveAggregate = pveInst.featAggregate
 
-    const connectCall = sendSpy.mock.calls.find(call => call[1].featureName === 'connect')
+    const connectCall = sendSpy.mock.calls.find(call => call[1].featureName === CONNECT)
     connectCall[1].cbFinished({
       sent: true,
       status: 200,

@@ -2,7 +2,7 @@
  * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { JSERRORS, RUM, EVENTS, FEATURE_NAMES, BLOBS, LOGS } from '../../loaders/features/features'
+import { JSERRORS, RUM, EVENTS, FEATURE_NAMES, BLOBS, LOGS, CONNECT } from '../../loaders/features/features'
 import { VERSION } from '../constants/env'
 import { globalScope, isWorkerScope } from '../constants/runtime'
 import { handle } from '../event-emitter/handle'
@@ -94,6 +94,7 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
 
     function trackHarvestMetadata () {
       try {
+        if (featureName === CONNECT) return
         if (featureName === FEATURE_NAMES.jserrors && !body?.err) return
 
         const hasReplay = baseParams.includes('hr=1')

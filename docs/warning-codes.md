@@ -106,7 +106,7 @@
 ### 52
 `Unexpected problem encountered. There should be at least one app for harvest!`
 ### 53
-`Did not receive a valid entityGuid from connection response`
+`Failed to parse connect response.`
 ### 54
 `An experimental feature is being used. Support can not be offered for issues`
 ### 55

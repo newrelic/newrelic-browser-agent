@@ -68,7 +68,7 @@ import { dispatchGlobalEvent } from '../dispatch/global-event'
  * | 50 | Failed to connect. Cannot allow registered API. |
  * | 51 | Container agent is not available to register with. Can not connect |
  * | 52 | Unexpected problem encountered. There should be at least one app for harvest! |
- * | 53 | Did not receive a valid entityGuid from connection response |
+ * | 53 | Failed to parse connect response. |
  * | 54 | An experimental feature is being used. Support can not be offered for issues |
  * | 55 | Register API has been disabled on the container agent |
  * | 56 | Could not find a matching entity to store data |
@@ -87,7 +87,7 @@ import { dispatchGlobalEvent } from '../dispatch/global-event'
  * | 69 | More than one Browser agent is running on the page |
  * | 70 | A session replay payload failed to send and is being retried. Recording is paused during the retry period, and will resume when a successful harvest is made. Some replay activity may be missed during retry phases. |
  * | 71 | An invalid feature mode was detected and set to "off". |
- * | 72 | Unable to initialized Connector and/or Harvester. |
+ * | 72 | Unable to initialize Connector and/or Harvester. |
  *
  * @param {number} code The warning code to emit, which will be used to link to the warning code documentation
  * @param {*} [secondary] Secondary data to include, usually an extra message, error or object

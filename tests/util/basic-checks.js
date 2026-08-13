@@ -339,12 +339,18 @@ export function checkSpa ({ query, body }, { trigger } = {}) {
  * @returns {Object}
  */
 export function getHarvestCalls(fakeAgent){
-  return fakeAgent.runtime.harvester.triggerHarvestFor.mock.calls.map((call, i) => {
-    return {
+  // `triggerHarvestFor` is spied at the prototype level (see setup-agent.js), so every Harvester instance
+  // -- across every fake agent created in this test file -- shares the exact same mock and its `.mock.calls`.
+  // Filter down to calls whose aggregate instance actually belongs to this agent, or harvests from other
+  // agents set up in the same file (e.g. a shared `mainAgent` alongside a test-local agent) would leak in.
+  return fakeAgent.runtime.harvester.triggerHarvestFor.mock.calls.reduce((acc, call, i) => {
+    if (call[0].agentRef !== fakeAgent) return acc
+    acc.push({
       featureName: call[0].featureName,
       results: fakeAgent.runtime.harvester.triggerHarvestFor.mock.results[i]
-    }
-  })
+    })
+    return acc
+  }, [])
 }
 
 /**

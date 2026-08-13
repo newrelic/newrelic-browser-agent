@@ -78,11 +78,11 @@ function register (agentRef, target) {
   target.blocked = false
   if (typeof target.tags !== 'object' || target.tags === null || Array.isArray(target.tags)) target.tags = {}
   target.parent ??= {
-    get id () { return agentRef.runtime.appMetadata.agents[0].entityGuid }, // getter because this is asyncronously set
+    get id () { return agentRef.runtime.appMetadata.agents?.[0].entityGuid }, // getter because this is asynchronously set
     type: V2_TYPES.BA
   }
 
-  const timings = findScriptTimings()
+  const timings = findScriptTimings(target)
 
   // Track MFE vitals for this entity
   const vitals = trackMFEVitals(target, timings)
@@ -154,7 +154,10 @@ function register (agentRef, target) {
       get customAttributes () { return attrs },
       target,
       timings,
-      vitals
+      vitals,
+      events: {
+        latestTimestamp: undefined
+      }
     }
   }
 
@@ -234,8 +237,9 @@ function register (agentRef, target) {
   const report = (methodToCall, args, target) => {
     /** Even if we are blocked, if registering we should still return a child register API so nested API calls do not throw errors */
     if (isBlocked() && methodToCall !== register) return
-    /** set the timestamp before the async part of waiting for the rum response for better accuracy */
-    const timestamp = now()
+    /** use the timestamp captured inside the iframe for this call, if one was supplied (see iframe-message-handler.js); otherwise fall back to now(). Consume it immediately so a stale value can't leak into a later call that isn't preceded by a fresh iframe message (e.g. deregister() via page unload) */
+    const timestamp = api.metadata.events.latestTimestamp ?? now()
+    api.metadata.events.latestTimestamp = undefined
     const methodName = METHOD_NAMES.get(methodToCall) || 'unknown'
     handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodName}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)
     try {

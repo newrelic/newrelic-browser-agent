@@ -319,13 +319,9 @@ describe('script-tracker correlations', () => {
   })
 
   describe('findScriptTimings with correlations', () => {
-    let originalGetEntriesByType = globalThis.performance.getEntriesByType
     beforeEach(async () => {
       scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
       globalThis.performance.getEntriesByType = jest.fn()
-    })
-    afterEach(() => {
-      globalThis.performance.getEntriesByType = originalGetEntriesByType
     })
 
     test('calculates script start as max(dom.start, performance.end)', () => {
@@ -496,7 +492,7 @@ describe('script-tracker correlations', () => {
       expect(timings.scriptEnd).toBe(100)
     })
 
-    test('fallback to fetchEnd when no correlation exists', () => {
+    test('fallback to fetchEnd/registeredAt when no correlation exists', () => {
       const scriptUrl = 'https://cdn.example.com/uncorrelated.js'
       mockNavigationEntry = { name: 'https://example.com/' }
       // Use thisFile from module so filtering works correctly
@@ -504,39 +500,125 @@ describe('script-tracker correlations', () => {
     at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
     at init (${scriptUrl}:10:5)`
 
-      // Performance entry exists but no correlation was created
-      currentTime = 100
-      const perfEntry = {
-        name: scriptUrl,
-        initiatorType: 'script',
-        startTime: 20,
-        responseEnd: 80
-      }
-      globalThis.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'resource') {
-          return [perfEntry]
-        }
-        return []
-      })
-
+      // Deliberately never fire performanceObserverCallback/mutationObserverCallback for this
+      // URL, so getOrCreateCorrelation is never invoked and no correlation entry exists.
       currentTime = 150
       const timings = scriptTrackerModule.findScriptTimings()
 
-      // Should use fetchEnd as fallback for scriptStart
-      expect(timings.scriptStart).toBe(80) // fetchEnd fallback
-      // scriptEnd uses registeredAt as fallback when no correlation exists
-      expect(timings.scriptEnd).toBe(150) // registeredAt fallback
-      expect(timings.fetchStart).toBe(20)
-      expect(timings.fetchEnd).toBe(80)
+      expect(timings.correlation).toBeUndefined()
+      expect(scriptTrackerModule.scriptCorrelations.has(scriptUrl)).toBe(false)
+
+      // With no correlation, fetchStart/fetchEnd stay at their initial 0 values, and the
+      // scriptStart/scriptEnd getters fall back to fetchEnd/registeredAt respectively.
+      expect(timings.fetchStart).toBe(0)
+      expect(timings.fetchEnd).toBe(0)
+      expect(timings.scriptStart).toBe(timings.fetchEnd)
+      expect(timings.scriptEnd).toBe(timings.registeredAt)
+      expect(timings.registeredAt).toBe(150)
+    })
+
+    describe('stale correlation reuse (SPA remount)', () => {
+      let CORRELATION_STALE_THRESHOLD_MS
+
+      beforeEach(async () => {
+        ({ CORRELATION_STALE_THRESHOLD_MS } = await import('../../../../src/common/v2/script-tracker-constants'))
+      })
+
+      // Regression/replication test for the bug where an MFE remounted by an SPA (without its
+      // script actually reloading) would reuse the *original* script correlation. Because FCP is
+      // reported relative to timings.scriptStart, this made FCP appear to be the gap since the
+      // original page load — often many seconds, i.e. a false "FCP > 10s" report — instead of the
+      // near-instant paint that actually happened on remount.
+      test('discards a correlation reused by the same MFE past the staleness threshold', () => {
+        const scriptUrl = 'https://cdn.example.com/remount.js'
+        mockNavigationEntry = { name: 'https://example.com/' }
+        mockStack = `Error
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at init (${scriptUrl}:10:5)`
+        const mfeTarget = { id: 'mfe-a', instance: 'instance-1' }
+
+        const perfEntry = { name: scriptUrl, initiatorType: 'script', startTime: 10, responseEnd: 90 }
+        globalThis.performance.getEntriesByType = jest.fn((type) => {
+          if (type === 'resource') return [perfEntry]
+          if (type === 'navigation') return mockNavigationEntry ? [mockNavigationEntry] : []
+          return []
+        })
+
+        // Original load of the MFE's script
+        currentTime = 50
+        if (performanceObserverCallback) performanceObserverCallback({ getEntries: () => [perfEntry] })
+
+        currentTime = 100
+        const scriptElement = document.createElement('script')
+        scriptElement.src = scriptUrl
+        createdScripts.push(scriptElement)
+        if (mutationObserverCallback) mutationObserverCallback([{ addedNodes: [scriptElement] }])
+
+        currentTime = 150
+        scriptElement.dispatchEvent(new Event('load'))
+
+        // First register() call for this MFE claims the correlation and behaves normally
+        currentTime = 160
+        const firstTimings = scriptTrackerModule.findScriptTimings(mfeTarget)
+        expect(firstTimings.scriptStart).toBe(100) // max(dom.start=100, perf.end=90)
+
+        // SPA remounts the same MFE (script does not reload) and calls register() again for the
+        // same MFE id, more than the staleness threshold after the first claim.
+        currentTime = 160 + CORRELATION_STALE_THRESHOLD_MS + 1
+        const secondTimings = scriptTrackerModule.findScriptTimings(mfeTarget)
+
+        // The stale correlation must be discarded in favor of this registration's own timestamp
+        expect(secondTimings.scriptStart).toBe(secondTimings.registeredAt)
+        expect(secondTimings.scriptEnd).toBe(secondTimings.registeredAt)
+
+        // FCP observed shortly after the remount must be reported relative to *this*
+        // registration, not the original page load ~10s+ ago.
+        const fcpObservedAt = secondTimings.registeredAt + 50
+        const reportedFcp = fcpObservedAt - (secondTimings.scriptStart || secondTimings.registeredAt)
+        expect(reportedFcp).toBe(50)
+      })
+
+      test('does not treat a correlation as stale the first time a different MFE claims it', () => {
+        const scriptUrl = 'https://cdn.example.com/shared-bundle.js'
+        mockNavigationEntry = { name: 'https://example.com/' }
+        mockStack = `Error
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at init (${scriptUrl}:10:5)`
+
+        const perfEntry = { name: scriptUrl, initiatorType: 'script', startTime: 10, responseEnd: 90 }
+        globalThis.performance.getEntriesByType = jest.fn((type) => {
+          if (type === 'resource') return [perfEntry]
+          if (type === 'navigation') return mockNavigationEntry ? [mockNavigationEntry] : []
+          return []
+        })
+
+        currentTime = 50
+        if (performanceObserverCallback) performanceObserverCallback({ getEntries: () => [perfEntry] })
+
+        currentTime = 100
+        const scriptElement = document.createElement('script')
+        scriptElement.src = scriptUrl
+        createdScripts.push(scriptElement)
+        if (mutationObserverCallback) mutationObserverCallback([{ addedNodes: [scriptElement] }])
+
+        currentTime = 150
+        scriptElement.dispatchEvent(new Event('load'))
+
+        // First MFE sharing this bundle claims the correlation
+        currentTime = 160
+        scriptTrackerModule.findScriptTimings({ id: 'mfe-a', instance: 'instance-1' })
+
+        // A second, distinct MFE claims the same correlation for the first time, well past the
+        // staleness window — this must NOT be treated as stale since it's a fresh claim for mfe-b.
+        currentTime = 160 + CORRELATION_STALE_THRESHOLD_MS + 1
+        const timings = scriptTrackerModule.findScriptTimings({ id: 'mfe-b', instance: 'instance-1' })
+
+        expect(timings.scriptStart).toBe(100) // still max(dom.start=100, perf.end=90), not discarded
+      })
     })
   })
 
   describe('Timing calculations for different loading methods', () => {
-    let originalGetEntriesByType = globalThis.performance.getEntriesByType
-
-    afterEach(() => {
-      globalThis.performance.getEntriesByType = originalGetEntriesByType
-    })
     test('dynamic script injection: full capture with all timings', () => {
       const scriptUrl = 'https://cdn.example.com/dynamic.js'
       mockNavigationEntry = { name: 'https://example.com/' }
@@ -572,13 +654,6 @@ describe('script-tracker correlations', () => {
 
       currentTime = 250
       scriptElement.dispatchEvent(new Event('load'))
-
-      // Make performance entry available for findScriptTimings lookup
-      globalThis.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'resource') return [perfEntry]
-        if (type === 'navigation') return mockNavigationEntry ? [mockNavigationEntry] : []
-        return []
-      })
 
       currentTime = 260
       const timings = scriptTrackerModule.findScriptTimings()
@@ -635,18 +710,17 @@ describe('script-tracker correlations', () => {
       currentTime = 2161
       scriptElement.dispatchEvent(new Event('load'))
 
-      // Make performance entry available for findScriptTimings lookup
       const perfEntry = {
         name: scriptUrl,
         initiatorType: 'link',
         startTime: 5,
         responseEnd: 20
       }
-      globalThis.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'resource') return [perfEntry]
-        if (type === 'navigation') return mockNavigationEntry ? [mockNavigationEntry] : []
-        return []
-      })
+      if (performanceObserverCallback) {
+        performanceObserverCallback({
+          getEntries: () => [perfEntry]
+        })
+      }
 
       currentTime = 2170
       const timings = scriptTrackerModule.findScriptTimings()
@@ -680,13 +754,6 @@ describe('script-tracker correlations', () => {
           getEntries: () => [perfEntry]
         })
       }
-
-      // Make performance entry available for findScriptTimings lookup
-      globalThis.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'resource') return [perfEntry]
-        if (type === 'navigation') return mockNavigationEntry ? [mockNavigationEntry] : []
-        return []
-      })
 
       currentTime = 120
       const timings = scriptTrackerModule.findScriptTimings()
@@ -728,29 +795,29 @@ describe('script-tracker correlations', () => {
     at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
     at init (${scriptUrl}:10:5)`
 
-      // Only performance entry (MutationObserver missed it)
+      // Only performance entry (MutationObserver missed it) -- delivered via the buffered
+      // PerformanceObserver callback, which is how findScriptTimings actually correlates
+      // resource entries (it never calls getEntriesByType('resource') itself).
       currentTime = 100
-      globalThis.performance.getEntriesByType = jest.fn((type) => {
-        if (type === 'resource') {
-          return [{
+      if (performanceObserverCallback) {
+        performanceObserverCallback({
+          getEntries: () => [{
             name: scriptUrl,
             initiatorType: 'script',
             startTime: 20,
             responseEnd: 90
           }]
-        }
-        return []
-      })
+        })
+      }
 
       currentTime = 150
       const timings = scriptTrackerModule.findScriptTimings()
 
       expect(timings.fetchStart).toBe(20)
       expect(timings.fetchEnd).toBe(90)
-      // scriptStart uses fetchEnd as fallback when no correlation
+      // scriptStart/scriptEnd derive from the performance-only correlation's performance.end
       expect(timings.scriptStart).toBe(90)
-      // scriptEnd uses registeredAt as fallback when no correlation
-      expect(timings.scriptEnd).toBe(150)
+      expect(timings.scriptEnd).toBe(90)
     })
   })
 
@@ -938,12 +1005,6 @@ describe('script-tracker correlations', () => {
   })
 
   describe('Edge cases', () => {
-    let originalGetEntriesByType = globalThis.performance.getEntriesByType
-
-    afterEach(() => {
-      globalThis.performance.getEntriesByType = originalGetEntriesByType
-    })
-
     test('handles script element without src attribute', () => {
       currentTime = 100
       const inlineScript = document.createElement('script')

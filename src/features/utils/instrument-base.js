@@ -107,7 +107,7 @@ export class InstrumentBase extends FeatureBase {
       try { // in the interest of keeping loader file size small, some modules are lazy-loaded as part of the larger async chunk
         await ensureRuntimeBootstrap(agentRef, this.ee, this.featureName)
       } catch (e) {
-        warn(72, e)
+        warn(79, e)
         this.ee.abort() // failed Connector or Harvester will cause entire agent to shutdown
         this.loadedSuccessfully(false)
         return
@@ -217,6 +217,17 @@ async function ensureRuntimeBootstrap (agentRef, ee, featureName) {
         warn(20, e)
         ee.emit('internal-error', [e])
         handle(SESSION_ERROR, [e], undefined, featureName, ee)
+      }
+    }
+    if (agentRef.init.api.register.allow_iframe_bridge) {
+      try {
+        // This chunk doesn't exist in the lite build (see webpack IgnorePlugin config) since none
+        // of lite's features wire up agent.register -- guard against that rather than letting an
+        // unhandled rejection surface if this flag is ever set on a lite page.
+        const { setupIframeMFEMessageListener } = await import(/* webpackChunkName: "iframe-message-handler" */ '../../loaders/configure/iframe-message-handler')
+        setupIframeMFEMessageListener(agentRef)
+      } catch (e) {
+        warn(23, e)
       }
     }
 

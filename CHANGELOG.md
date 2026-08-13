@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.320.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.319.0...v1.320.0) (2026-08-07)
+
+
+### Features
+
+* Improve ability to apply reasonable caps to MFE vitals ([#1823](https://github.com/newrelic/newrelic-browser-agent/issues/1823)) ([df72604](https://github.com/newrelic/newrelic-browser-agent/commit/df7260404dee51cf3706311235ab9b0d785f8789))
+* MFE iframe support - Beta Access ([#1752](https://github.com/newrelic/newrelic-browser-agent/issues/1752)) ([46e36f7](https://github.com/newrelic/newrelic-browser-agent/commit/46e36f77abbad70155f20755cd4554799125e334))
+
+
+### Bug Fixes
+
+* Deduplicate auto-instrumented MFE events ([#1820](https://github.com/newrelic/newrelic-browser-agent/issues/1820)) ([ba60ac6](https://github.com/newrelic/newrelic-browser-agent/commit/ba60ac6550d93feb466af845a8f3f3fdb03b4970))
+
 ## [1.319.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.318.0...v1.319.0) (2026-07-28)
 
 

@@ -129,11 +129,11 @@ export function truncateAsString (data) {
 }
 
 /**
- * Creates string adder functions for BEL serialization with obfuscation and optional truncation.
+ * Creates string adder functions for BEL serialization with obfuscation and optional truncation, as well as raw string.
  * This ensures a single string table is used while providing separate handling for regular vs payload attributes.
  * @param {Function} getAddStringContext - Function that creates a new string table context
  * @param {Object} obfuscator - Optional obfuscator instance for string obfuscation
- * @returns {{addString: Function, addStringWithTruncation: Function}} Object containing both string adder functions
+ * @returns {{addString: Function, addStringRaw: Function, addStringWithTruncation: Function}} Object containing various string adder functions
  */
 export function createStringAdders (getAddStringContext, obfuscator) {
   const addStringRaw = getAddStringContext()
@@ -148,6 +148,7 @@ export function createStringAdders (getAddStringContext, obfuscator) {
 
   return {
     addString: (str) => processString(str, false),
+    addStringRaw: (str) => addStringRaw(str),
     addStringWithTruncation: (str) => processString(str, true)
   }
 }

@@ -575,6 +575,53 @@ describe('Register API - Manifest', () => {
     expect(mfeAjaxEvents.some(event => event.path?.startsWith('/mock/manifest-root-secondary'))).toBe(true)
   })
 
+  it('never attributes a registrar script\'s own activity to an MFE it registers with a manifest excluding itself', async () => {
+    // A platform-level registrar script calls register() on behalf of an MFE, using a manifest that names only the
+    // MFE's own file -- never the registrar's own file. The registrar's own error/log/ajax activity must never
+    // attribute to the MFE, even though it's the one that called register().
+    const [mfeErrorsCapture, logsCapture, mfeAjaxCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testMFEErrorsRequest },
+      { test: testLogsRequest },
+      { test: testMFEAjaxEventsRequest }
+    ])
+
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+      init: { feature_flags: ['register'], logging: { enabled: true } }
+    })).then(() => browser.waitForAgentLoad())
+
+    await browser.execute(loadScript, './js/mfe/mfe-manifest-registrar.js')
+    await browser.pause(300)
+    await browser.execute(loadScript, './js/mfe/mfe-manifest-registrar-secondary.js')
+    await browser.pause(300)
+    await browser.refresh() // force any pending logs (and anything else buffered) to flush via the page-unload harvest
+
+    const [mfeErrorHarvests, logsHarvests, ajaxHarvests] = await Promise.all([
+      mfeErrorsCapture.waitForResult({ timeout: 10000 }),
+      logsCapture.waitForResult({ timeout: 10000 }),
+      mfeAjaxCapture.waitForResult({ timeout: 10000 })
+    ])
+
+    const mfeErrors = mfeErrorHarvests
+      .flatMap(({ request: { body } }) => body.err)
+      .filter(err => err.custom?.['source.id'] === 'manifest-registrar-mfe')
+    // The MFE's own file (named in the manifest) must attribute.
+    expect(mfeErrors.some(err => err.params.message.includes('error from manifest registrar secondary asset'))).toBe(true)
+    // The registrar's own error must never attribute, since it's excluded from the manifest.
+    expect(mfeErrors.some(err => err.params.message.includes('error from manifest registrar caller'))).toBe(false)
+
+    const mfeLogs = logsHarvests
+      .flatMap(harvest => JSON.parse(harvest.request.body)[0].logs || [])
+      .filter(log => log.attributes?.['source.id'] === 'manifest-registrar-mfe')
+    expect(mfeLogs.some(log => log.message === 'log from manifest registrar secondary asset')).toBe(true)
+    expect(mfeLogs.some(log => log.message === 'log from manifest registrar caller')).toBe(false)
+
+    const mfeAjaxEvents = ajaxHarvests
+      .flatMap(({ request: { body } }) => body)
+      .filter(event => event.type === 'ajax' && getAttr(event, 'source.id') === 'manifest-registrar-mfe')
+    expect(mfeAjaxEvents.some(event => event.path?.startsWith('/mock/manifest-registrar-secondary'))).toBe(true)
+    expect(mfeAjaxEvents.some(event => event.path?.startsWith('/mock/manifest-registrar-caller'))).toBe(false)
+  })
+
   it('gives each of TWO different MFEs their own copy of an error when their manifests overlap on the same script', async () => {
     const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testMFEErrorsRequest }

@@ -391,6 +391,40 @@ describe('v2 utilities', () => {
       const result = getRegisteredTargetsFromFilename('https://cdn.example.com/logo.png', agentRef)
       expect(result).toEqual([])
     })
+
+    test('does not fall back to timings.asset when a manifest is present but excludes the caller script (registrar scenario)', () => {
+      // Models a platform-level registrar script that calls register() on behalf of an MFE, using a manifest that
+      // names only that MFE's own file -- the registrar's own resolved script (timings.asset) must never attribute
+      // to the MFE just because it happened to be the one that called register().
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://example.com/registrar.js' },
+                target: {
+                  id: 'mfe-1',
+                  name: 'MFE 1',
+                  type: 'MFE',
+                  manifest: parseManifest({ assets: [{ matcher: 'mfe-own-file.js' }] })
+                }
+              }
+            }
+          ]
+        },
+        init: {
+          api: {
+            register: {
+              enabled: true,
+              duplicate_data_to_container: false
+            }
+          }
+        }
+      }
+
+      const result = getRegisteredTargetsFromFilename('registrar.js', agentRef)
+      expect(result).toEqual([])
+    })
   })
 
   describe('getRegisteredTargetsFromResourceUrl', () => {
@@ -493,6 +527,31 @@ describe('v2 utilities', () => {
       const result = getRegisteredTargetsFromResourceUrl('https://cdn.example.com/logo.png', agentRef)
       expect(result).toHaveLength(1)
       expect(result[0].id).toBe('mfe-1')
+    })
+
+    test('does not fall back to timings.asset when a manifest is present but excludes the caller script (registrar scenario)', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://example.com/registrar.js' },
+                target: {
+                  id: 'mfe-1',
+                  name: 'MFE 1',
+                  type: 'MFE',
+                  manifest: manifestModule.parseManifest({ assets: [{ matcher: 'mfe-own-file.js' }] })
+                }
+              }
+            }
+          ]
+        },
+        init: { api: { register: { enabled: true, duplicate_data_to_container: false } } }
+      }
+
+      const result = getRegisteredTargetsFromResourceUrl('https://example.com/registrar.js', agentRef)
+      expect(result).toEqual([])
     })
 
     test('returns multiple targets when multiple entities match, and collapses duplicate registrations of the same MFE', async () => {

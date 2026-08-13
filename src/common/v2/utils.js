@@ -57,10 +57,18 @@ export function getRegisteredTargetsFromResourceUrl (url, agentRef) {
   if (!isValid(url, agentRef)) return []
   const registeredEntities = agentRef.runtime.registeredEntities
   const cleanedUrl = cleanURL(url)
-  const matches = registeredEntities?.filter(entity =>
-    (entity.metadata.timings?.asset && cleanURL(entity.metadata.timings.asset) === cleanedUrl) ||
-    matchManifestAsset(entity.metadata.target?.manifest, url, { scriptsOnly: false })
-  )
+  const matches = registeredEntities?.filter(entity => {
+    const manifest = entity.metadata.target?.manifest
+    if (manifest) {
+      // A manifest was supplied -- it is the sole source of truth for attribution. The caller-script fallback
+      // below never applies here, so e.g. a registrar script that calls register() on behalf of many MFEs (each
+      // with its own manifest naming only that MFE's own files) never has ITS OWN activity attributed just because
+      // it happened to be the one that called register().
+      return matchManifestAsset(manifest, url, { scriptsOnly: false })
+    }
+    // No manifest -- fall back to matching the resolved URL of whatever script called register().
+    return !!entity.metadata.timings?.asset && cleanURL(entity.metadata.timings.asset) === cleanedUrl
+  })
   return dedupeRegisteredEntitiesByAsset(matches).map(entity => entity.metadata.target)
 }
 
@@ -80,10 +88,16 @@ export function getRegisteredTargetsFromResourceUrl (url, agentRef) {
 export function getRegisteredTargetsFromFilename (filename, agentRef) {
   if (!isValid(filename, agentRef)) return []
   const registeredEntities = agentRef.runtime.registeredEntities
-  const matches = registeredEntities?.filter(entity =>
-    entity.metadata.timings?.asset?.endsWith(filename) ||
-    matchManifestAsset(entity.metadata.target?.manifest, filename, { scriptsOnly: true })
-  )
+  const matches = registeredEntities?.filter(entity => {
+    const manifest = entity.metadata.target?.manifest
+    if (manifest) {
+      // See the identical case in getRegisteredTargetsFromResourceUrl above: once a manifest exists, it is the
+      // sole source of truth for attribution -- the caller-script fallback below never applies.
+      return matchManifestAsset(manifest, filename, { scriptsOnly: true })
+    }
+    // No manifest -- fall back to matching the resolved URL of whatever script called register().
+    return !!entity.metadata.timings?.asset?.endsWith(filename)
+  })
   return dedupeRegisteredEntitiesByAsset(matches).map(entity => entity.metadata.target)
 }
 

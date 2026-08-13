@@ -52,7 +52,7 @@ function parseAsset (entry) {
   const { matcher, type } = entry
   const isScript = type !== undefined ? isScriptType(type) : (typeof matcher === 'string' && isScriptPath(matcher))
 
-  if (matcher instanceof RegExp) {
+  if (isRegExp(matcher)) {
     return { pattern: matcher, test: (url) => matcher.test(cleanURL(url)), isScript }
   }
 
@@ -65,6 +65,19 @@ function parseAsset (entry) {
 
 function isScriptPath (path) {
   return path.endsWith('.js')
+}
+
+/**
+ * Cross-realm-safe check for whether a value is a RegExp. `instanceof RegExp` only returns true when the value's
+ * prototype chain links to THIS realm's `RegExp.prototype` -- a regex literal constructed in a different realm
+ * (an iframe, a Worker via structured clone, a WebDriver sandbox such as Firefox's geckodriver executeScript
+ * context) is still a genuine RegExp, just not an instance of this realm's constructor, and would otherwise be
+ * silently dropped by parseAsset below.
+ * @param {*} value
+ * @returns {boolean}
+ */
+function isRegExp (value) {
+  return Object.prototype.toString.call(value) === '[object RegExp]'
 }
 
 function isScriptType (type) {

@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import vm from 'vm'
 import { parseManifest, matchManifestAsset } from '../../../../src/common/v2/manifest'
 
 describe('manifest utilities', () => {
@@ -69,6 +70,19 @@ describe('manifest utilities', () => {
       const parsed = parseManifest({ assets: [{ type: 'script' }, { matcher: 123 }, { matcher: 'styles.css' }] })
       expect(parsed.assets).toHaveLength(1)
       expect(parsed.assets[0].pattern).toBe('styles.css')
+    })
+
+    test('recognizes a RegExp matcher constructed in a different realm, where `instanceof RegExp` is unsafe', () => {
+      // A regex built via Node's vm module in a fresh context is a genuine RegExp, but fails `instanceof RegExp`
+      // against this file's global -- the same failure mode as a Firefox WebDriver executeScript sandbox, or a
+      // customer's manifest built inside an iframe/Worker. parseManifest must still recognize it.
+      const foreignRegExp = vm.runInNewContext('/bundle\\.js$/')
+      expect(foreignRegExp instanceof RegExp).toBe(false) // sanity check that this really is the cross-realm case
+
+      const parsed = parseManifest({ assets: [{ matcher: foreignRegExp, type: 'script' }] })
+      expect(parsed?.assets).toHaveLength(1)
+      expect(parsed?.scripts).toHaveLength(1)
+      expect(matchManifestAsset(parsed, 'https://cdn.example.com/bundle.js', { scriptsOnly: true })).toBe(true)
     })
   })
 

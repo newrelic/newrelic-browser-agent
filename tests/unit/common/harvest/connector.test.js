@@ -77,7 +77,7 @@ describe('Connector', () => {
   test('uses cached response and skips network request', () => {
     const cachedResponse = {
       app: { agents: [{ entityGuid: 'cached-guid' }], nrServerTime: Date.now() },
-      config: { err: 1 }
+      err: 1
     }
 
     const agent = {
@@ -98,7 +98,7 @@ describe('Connector', () => {
 
     expect(send).not.toHaveBeenCalled()
     expect(agent.runtime.appMetadata).toEqual(cachedResponse.app)
-    expect(activateFeatures).toHaveBeenCalledWith(cachedResponse.config, agent)
+    expect(activateFeatures).toHaveBeenCalledWith({ err: 1 }, agent)
   })
 
   test('processes successful connect response and caches it', () => {
@@ -133,7 +133,7 @@ describe('Connector', () => {
       responseText: JSON.stringify(response)
     })
 
-    expect(session.write).toHaveBeenCalledWith({ cachedRumResponse: response })
+    expect(session.write).toHaveBeenCalledWith({ cachedRumResponse: { app: response.app, ...response.config } })
     expect(agent.runtime.appMetadata).toEqual(response.app)
     expect(activateFeatures).toHaveBeenCalledWith(response.config, agent)
   })
@@ -386,7 +386,7 @@ describe('Connector', () => {
 
     const cached = {
       app: { agents: [{ entityGuid: 'cached-guid' }], nrServerTime: Date.now() + 10000 },
-      config: { err: 1 }
+      err: 1
     }
     session.state.cachedRumResponse = cached
 
@@ -405,7 +405,7 @@ describe('Connector', () => {
     // The live response must never be applied on top of the cached one -- only a single activateFeatures call,
     // for the cached config -- otherwise features would be activated/configured twice (once per response).
     expect(activateFeatures).toHaveBeenCalledTimes(1)
-    expect(activateFeatures).toHaveBeenCalledWith(cached.config, agent)
+    expect(activateFeatures).toHaveBeenCalledWith({ err: 1 }, agent)
     // The live response must not clobber the session's cached one, and TimeKeeper must not process it either.
     expect(session.write).not.toHaveBeenCalled()
     expect(agent.runtime.timeKeeper.ready).toEqual(false)

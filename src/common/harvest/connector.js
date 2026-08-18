@@ -30,10 +30,10 @@ export class Connector {
     if (isBrowserScope) {
       const cached = agentRef.runtime.session && agentRef.runtime.session.state.cachedRumResponse
       if (cached) {
-        if (cached.config) { // the old v1 RUM response does not have a config field, so this guards against breaking change on existing sessions at release time
-          this.#applyConnectResponse(cached)
-          return
-        } else this.#agentRef.runtime.session.reset() // this can be removed on the next version after rls, once the old format and sessions have expired or reset
+        // `cachedRumResponse` is stored flat (`{ app, ...flags }`, matching the old v1 RUM response), so re-nest it before applying.
+        const { app, ...config } = cached
+        this.#applyConnectResponse({ app, config })
+        return
       }
     }
     this.makeConnectRequest()
@@ -58,9 +58,9 @@ export class Connector {
     })
   }
 
-  #applyConnectResponse (response) {
-    if (!Object.keys(this.#agentRef.runtime.appMetadata).length) this.#agentRef.runtime.appMetadata = response.app
-    activateFeatures(response.config, this.#agentRef)
+  #applyConnectResponse ({ app, config }) {
+    if (!Object.keys(this.#agentRef.runtime.appMetadata).length) this.#agentRef.runtime.appMetadata = app
+    activateFeatures(config, this.#agentRef)
   }
 
   #processConnectResponse ({ sent, status, retry, xhr, responseText }) {
@@ -71,7 +71,9 @@ export class Connector {
       // Double check that there isn't a response saved (e.g. from another agent/browser tab) btwn the async time of the request and now in a race-condition.
       const cachedResp = session.state.cachedRumResponse
       if (cachedResp) {
-        this.#applyConnectResponse(cachedResp)
+        // `cachedRumResponse` is stored flat (`{ app, ...flags }`, matching the old v1 RUM response), so re-nest it before applying.
+        const { app, ...config } = cachedResp
+        this.#applyConnectResponse({ app, config })
         return
       }
     }
@@ -143,7 +145,8 @@ export class Connector {
       this.#agentRef.ee.abort()
       return
     }
-    if (session) session.write({ cachedRumResponse: resp }) // store the response for other pages later in same session or in parallel tabs
+    // store the response for other pages later in same session or in parallel tabs; flatten `.config` into the old v1 RUM response shape
+    if (session) session.write({ cachedRumResponse: { app: resp.app, ...resp.config } })
     try {
       const wasReady = this.#agentRef.runtime.timeKeeper.ready
       this.#agentRef.runtime.timeKeeper.processRumRequest(xhr, this.#connectStartTime, connectEndTime, resp.app.nrServerTime)

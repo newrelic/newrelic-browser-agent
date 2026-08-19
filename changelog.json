@@ -4,6 +4,31 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "1f1919809498e6aa8f1fc2ada0c00c3872cb30b8",
+          "message": "Avoid obfuscating keys and reserved system vals",
+          "issues": [
+            "1817"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "095a1d66a917b5044f64757f61ee57607b2879ae",
+          "message": "Apply hard cap to MFE FCP",
+          "issues": [
+            "1828"
+          ]
+        }
+      ],
+      "version": "1.320.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "74f84a72-7eb8-4dae-a341-e5b54d286682",
+      "createTime": "2026-08-12T17:09:24.258Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "df7260404dee51cf3706311235ab9b0d785f8789",
           "message": "Improve ability to apply reasonable caps to MFE vitals",
@@ -4168,5 +4193,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-08-07T23:09:15.191Z"
+  "updateTime": "2026-08-12T17:09:24.258Z"
 }

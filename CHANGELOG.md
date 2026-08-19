@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.320.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.320.0...v1.320.1) (2026-08-12)
+
+
+### Bug Fixes
+
+* Apply hard cap to MFE FCP ([#1828](https://github.com/newrelic/newrelic-browser-agent/issues/1828)) ([095a1d6](https://github.com/newrelic/newrelic-browser-agent/commit/095a1d66a917b5044f64757f61ee57607b2879ae))
+* Avoid obfuscating keys and reserved system vals ([#1817](https://github.com/newrelic/newrelic-browser-agent/issues/1817)) ([1f19198](https://github.com/newrelic/newrelic-browser-agent/commit/1f1919809498e6aa8f1fc2ada0c00c3872cb30b8))
+
 ## [1.320.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.319.0...v1.320.0) (2026-08-07)
 
 

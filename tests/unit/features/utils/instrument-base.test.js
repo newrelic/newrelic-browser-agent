@@ -30,6 +30,7 @@ beforeEach(() => {
   featureName = faker.string.uuid()
   agentBase = {
     agentIdentifier,
+    features: {},
     ee: {
       abort: jest.fn()
     },
@@ -47,7 +48,8 @@ beforeEach(() => {
     runtime: {
       loaderType: 'browser-test',
       harvester: {
-        initializedAggregates: []
+        initializedAggregates: [],
+        startTimer: jest.fn()
       }
     }
   }

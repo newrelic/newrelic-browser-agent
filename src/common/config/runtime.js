@@ -41,6 +41,7 @@ const RuntimeModel = {
   disabled: false,
   /** @type {Map<string, {staged: boolean, priority: number}>} */
   drainRegistry: new Map(),
+  connector: undefined,
   harvester: undefined,
   isolatedBacklog: false,
   isRecording: false, // true when actively recording, false when paused or stopped

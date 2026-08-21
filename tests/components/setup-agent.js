@@ -3,10 +3,9 @@ import { setNREUMInitializedAgent } from '../../src/common/window/nreum'
 import { configure } from '../../src/loaders/configure/configure'
 import { ee } from '../../src/common/event-emitter/contextual-ee'
 import { TimeKeeper } from '../../src/common/timing/time-keeper'
-import { setupAgentSession } from '../../src/features/utils/agent-session'
+import { Connector } from '../../src/common/harvest/connector'
 import { Harvester } from '../../src/common/harvest/harvester'
 import { EventAggregator } from '../../src/common/aggregate/event-aggregator'
-import { canEnableSessionTracking } from '../../src/features/utils/feature-gates'
 
 const entityGuid = faker.string.uuid()
 
@@ -52,19 +51,32 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
     'browser-test',
     true
   )
-  if (canEnableSessionTracking(fakeAgent.init)) {
-    setupAgentSession(fakeAgent)
-  }
+  /* Deliberately does NOT set up `runtime.session`/`runtime.connector`/`runtime.harvester` here: the real
+  runtime bootstrap (`ensureRuntimeBootstrap` in instrument-base.js) creates all three exactly once, the
+  first time any feature's own `importAggregator` runs for this agent. Every caller of `setupAgent()`
+  constructs a real Instrument before touching those properties, so pre-creating them here would just be
+  guessing at values the real bootstrap is about to replace anyway. */
 
+  /* TimeKeeper is the one exception: it's normally created either by the rum_v2 Connector or by the v1 PVE
+  aggregate (see src/features/page_view_event/aggregate/index.js), so tests for any OTHER feature never
+  get one "for free" -- they need this fallback. */
   if (!fakeAgent.runtime.timeKeeper) {
     fakeAgent.runtime.timeKeeper = new TimeKeeper(fakeAgent.runtime.session)
     fakeAgent.runtime.timeKeeper.processRumRequest({}, 450, 600, Date.now())
   }
   fakeAgent.features = {}
-  if (!fakeAgent.runtime.harvester) fakeAgent.runtime.harvester = new Harvester(fakeAgent)
   fakeAgent.sharedAggregator = new EventAggregator()
 
-  jest.spyOn(fakeAgent.runtime.harvester, 'triggerHarvestFor')
+  // Spy at the prototype level (rather than on an instance) for both classes, since no instance may exist
+  // yet -- a prototype spy tracks calls on whichever instance `ensureRuntimeBootstrap` eventually creates.
+  // Skip a class whose module is jest.mock()'d (automock assigns mocked methods per-instance, not on the
+  // prototype), in which case every new instance already gets its own working jest.fn() for that method.
+  if (typeof Connector.prototype.makeConnectRequest === 'function') {
+    jest.spyOn(Connector.prototype, 'makeConnectRequest')
+  }
+  if (typeof Harvester.prototype.triggerHarvestFor === 'function') {
+    jest.spyOn(Harvester.prototype, 'triggerHarvestFor')
+  }
 
   return fakeAgent
 }
@@ -98,5 +110,5 @@ function resetAggregator (agentRef) {
 }
 
 function resetSession (agentRef) {
-  agentRef.runtime.session.reset()
+  agentRef.runtime.session?.reset()
 }

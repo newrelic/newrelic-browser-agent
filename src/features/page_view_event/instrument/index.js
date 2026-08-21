@@ -20,7 +20,12 @@ export class Instrument extends InstrumentBase {
     /** feature specific APIs */
     setupSetPageViewNameAPI(agentRef)
 
-    this.importAggregator(agentRef, () => import(/* webpackChunkName: "page_view_event-aggregate" */ '../aggregate'))
+    this.importAggregator(agentRef, () => {
+      if (agentRef.init.feature_flags.includes('rum_v2')) {
+        return import(/* webpackChunkName: "page_view_event-aggregate" */ '../aggregate_v2')
+      }
+      return import(/* webpackChunkName: "page_view_event-aggregate" */ '../aggregate')
+    })
   }
 
   setupInspectionEvents () {

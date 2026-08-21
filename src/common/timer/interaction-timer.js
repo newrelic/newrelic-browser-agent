@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { Timer } from './timer'
@@ -53,7 +53,7 @@ export class InteractionTimer extends Timer {
         if (state === 'hidden') this.pause()
         // vis change --> visible is treated like a new interaction with the page
         else this.resume()
-      }, false, false, this.abortController?.signal)
+      }, false, this.abortController?.signal)
     }
   }
 

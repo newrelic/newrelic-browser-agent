@@ -7,6 +7,7 @@ import { gosCDN } from '../../common/window/nreum'
 import { mergeInfo } from '../../common/config/info'
 import { mergeInit } from '../../common/config/init'
 import { mergeRuntime } from '../../common/config/runtime'
+import { V2_TYPES } from '../../common/v2/constants'
 import { isWorkerScope, globalScope } from '../../common/constants/runtime'
 import { redefinePublicPath } from './public-path'
 import { ee } from '../../common/event-emitter/contextual-ee'
@@ -43,6 +44,17 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   const updatedInit = agent.init
 
   agent.runtime ??= mergeRuntime(runtime)
+  agent.runtime.v2Target ??= {
+    type: V2_TYPES.BA,
+    instance: agent.agentIdentifier,
+    get id () { return agent.runtime.appMetadata?.agents?.[0]?.entityGuid },
+    get attributes () {
+      return {
+        'entity.guid': this.id,
+        appId: agent.info.applicationID
+      }
+    }
+  }
 
   // Apply proxy settings whenever configure is called (supports late {init} setting)
   if (updatedInit.proxy.assets) {

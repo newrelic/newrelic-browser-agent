@@ -14,7 +14,7 @@ import { gosNREUMOriginals } from '../../../common/window/nreum'
 import { hasGQLErrors, parseGQL } from './gql'
 import { canCapturePayload, isLikelyHumanReadable, parseQueryString, createStringAdders } from '../../../common/payloads/payloads'
 import { Obfuscator } from '../../../common/util/obfuscate'
-import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
+import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate, isMfeTarget } from '../../../common/v2/utils'
 import { EVENT_TYPES } from '../../../common/constants/events'
 import { generateUuid } from '../../../common/ids/unique-id'
 
@@ -137,7 +137,7 @@ export class Aggregate extends AggregateBase {
     if (event.gql) this.reportSupportabilityMetric('Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length)
 
     /** make a copy of the event for the MFE target if it exists */
-    if (target) {
+    if (isMfeTarget(target)) {
       this.events.add({ ...event, targetAttributes: getVersion2Attributes(target, this) })
       if (shouldDuplicate(target, this)) this.reportContainerEvent({ ...event, targetAttributes: getVersion2DuplicationAttributes(target, this) }, ctx)
     } else {

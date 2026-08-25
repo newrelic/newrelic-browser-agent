@@ -81,7 +81,8 @@ describe('Connector (rum_v2 browser connect)', () => {
     const cachedBeforeNav = await browser.execute(function () {
       return Object.values(newrelic.initializedAgents)[0].runtime.session.state.cachedRumResponse
     })
-    expect(cachedBeforeNav).toEqual(expect.objectContaining({ config: expect.any(Object) }))
+    // cachedRumResponse is stored flat (`{ app, ...flags }`, matching the old v1 RUM response), not nested under `.config`.
+    expect(cachedBeforeNav).toEqual(expect.objectContaining({ app: expect.any(Object), err: expect.any(Number) }))
 
     // Reload within the SAME session (localStorage persists across a refresh by default)
     await browser.refresh()

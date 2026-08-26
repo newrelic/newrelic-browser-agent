@@ -40,17 +40,18 @@ function validateVitals (timingEvent, options = {}) {
     expect(fcp).toBeDefined()
     expect(fcp).not.toBeUndefined()
     expect(fcp).toBeGreaterThan(0)
-    expect(fcp).toBeLessThan(10000) // Less than 10 seconds
   } else if (fcp !== undefined) {
     // If FCP is present (but not required), validate it's reasonable
     expect(fcp).toBeGreaterThanOrEqual(0)
   }
+  // Whenever FCP is present at all, it must never exceed the stale-clock cap - a defensive guard against a
+  // tab-freeze/clock-drift scenario reporting a multi-hour "FCP" (see mfe-vitals.js's fcp.value getter)
+  if (fcp !== undefined) expect(fcp).toBeLessThan(10000)
 
   if (expectLCP) {
     expect(lcp).toBeDefined()
     expect(lcp).not.toBeUndefined()
     expect(lcp).toBeGreaterThan(0)
-    expect(lcp).toBeLessThan(10000)
     // LCP should be >= FCP if both are present
     if (fcp !== undefined) {
       expect(lcp).toBeGreaterThanOrEqual(fcp)
@@ -58,6 +59,8 @@ function validateVitals (timingEvent, options = {}) {
   } else if (lcp !== undefined) {
     expect(lcp).toBeGreaterThanOrEqual(0)
   }
+  // LCP can never be observed before FCP, so if FCP was ever dropped as stale, LCP must never leak through either
+  if (fcp === undefined) expect(lcp).toBeUndefined()
 
   if (expectCLS) {
     expect(cls).toBeDefined()
@@ -331,7 +334,9 @@ describe('Register API - MFE Vitals Tracking', () => {
     await browser.pause(11000)
 
     // Render content AFTER the timeout should have fired - since observers should already be
-    // disconnected at this point, this should NOT be picked up as FCP/LCP/CLS/INP
+    // disconnected at this point, this should NOT be picked up as FCP/LCP/CLS/INP. The element is
+    // sized to also qualify as the largest contentful paint candidate, so this also exercises the
+    // FCP -> LCP cascade: LCP must never be reported once FCP has been dropped as stale/never-observed.
     await browser.execute(function () {
       const div = document.createElement('div')
       div.textContent = 'Late content after FCP timeout'

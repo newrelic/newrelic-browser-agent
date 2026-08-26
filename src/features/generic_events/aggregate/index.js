@@ -272,7 +272,7 @@ export class Aggregate extends AggregateBase {
       }, this.featureName, this.ee)
 
       if (agentRef.init.feature_flags.includes('websockets') || agentRef.init.web_sockets?.enabled) {
-        registerHandler('ws-complete', (nrData, targets = [undefined]) => {
+        registerHandler('ws-complete', (nrData, targets = [agentRef.runtime.v2Target]) => {
           targets.forEach(target => {
             const event = {
               ...nrData,

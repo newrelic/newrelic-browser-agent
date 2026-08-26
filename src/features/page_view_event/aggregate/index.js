@@ -132,9 +132,7 @@ export class Aggregate extends AggregateBase {
     }
     this.events.add(body)
 
-    if (this.agentRef.runtime.harvester.triggerHarvestFor(this, {
-      sendEmptyBody: true
-    }).ranSend) this.sentRum = true
+    if (this.agentRef.runtime.harvester.triggerHarvestFor(this).ranSend) this.sentRum = true
   }
 
   serializer (eventBuffer) { // this is necessary because PVE sends a single item rather than an array; in the case of undefined, this prevents sending [null] as body
@@ -162,9 +160,7 @@ export class Aggregate extends AggregateBase {
     super.postHarvestCleanup({ sent, retry: retry && !hasCachedRumResponse }) // this will set isRetrying & re-buffer the body if request is to be retried
 
     if (this.isRetrying && this.retries++ < 1) { // Only retry once
-      setTimeout(() => this.agentRef.runtime.harvester.triggerHarvestFor(this, {
-        sendEmptyBody: true
-      }), 5000) // Retry sending the RUM event after 5 seconds
+      setTimeout(() => this.agentRef.runtime.harvester.triggerHarvestFor(this), 5000) // Retry sending the RUM event after 5 seconds
       return
     }
 

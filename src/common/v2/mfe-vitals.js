@@ -124,6 +124,9 @@ const observePerformance = (observers, config, onEntry) => {
 export function trackMFEVitals (target, timings) {
   let fcpObservedAt
   let lcpObservedAt
+  // Once disconnect() runs, no further vitals data should be written - even from an observer callback that was
+  // already in flight when disconnect() was called.
+  let disconnected = false
 
   const getTimeRelativeToScriptStart = (capturedAt) => {
     if (capturedAt == null) return capturedAt
@@ -132,12 +135,21 @@ export function trackMFEVitals (target, timings) {
 
   const vitals = {
     fcp: {
-      get value () { return getTimeRelativeToScriptStart(fcpObservedAt) },
-      set value (v) { fcpObservedAt = v }
+      // A clock freeze/tab suspend between script registration and first paint can make this value huge once the
+      // tab resumes. Rather than report a multi-hour "FCP", drop it so bad data doesn't reach the backend.
+      get value () {
+        const relative = getTimeRelativeToScriptStart(fcpObservedAt)
+        return relative > CORRELATION_STALE_THRESHOLD_MS ? undefined : relative
+      },
+      set value (v) { if (!disconnected) fcpObservedAt = v }
     },
     lcp: {
-      get value () { return getTimeRelativeToScriptStart(lcpObservedAt) },
-      set value (v) { lcpObservedAt = v }
+      // LCP can never occur before FCP, so if FCP was dropped as invalid, LCP is derived from the same untrustworthy clock and must be dropped too.
+      get value () {
+        if (vitals.fcp.value === undefined) return undefined
+        return getTimeRelativeToScriptStart(lcpObservedAt)
+      },
+      set value (v) { if (!disconnected) lcpObservedAt = v }
     },
     cls: {
       value: undefined
@@ -159,14 +171,21 @@ export function trackMFEVitals (target, timings) {
   }, CORRELATION_STALE_THRESHOLD_MS)
 
   const populateVitalMinimums = () => {
-    fcpObservedAt ??= now()
+    if (disconnected) return
+    if (fcpObservedAt == null) {
+      const capturedAt = now()
+      // If the very first observed render already exceeds the window, the clock is untrustworthy for this
+      // MFE (e.g. tab was frozen/suspended between registration and paint) - shut everything down instead
+      // of seeding vitals with data derived from it.
+      if (getTimeRelativeToScriptStart(capturedAt) > CORRELATION_STALE_THRESHOLD_MS) {
+        vitals.disconnect()
+        return
+      }
+      fcpObservedAt = capturedAt
+    }
     lcpObservedAt ??= now()
     vitals.cls.value ??= 0
   }
-
-  // if the MFE has already rendered something on the page before we could set up listeners, just populate vital minimums immediately
-  const existingRoots = globalScope.document?.querySelectorAll(`[data-nr-mfe-id="${escapeSelectorValue(target.id)}"]`)
-  if (Array.from(existingRoots || []).some(x => isMatch(x.dataset, target))) populateVitalMinimums()
 
   // Track FCP - first contentful paint
   const fcpObs = observeMutations(target, (_, obs) => {
@@ -183,12 +202,13 @@ export function trackMFEVitals (target, timings) {
 
   try {
     resizeObs = new globalScope.ResizeObserver((entries) => {
+      if (disconnected) return
       entries.forEach((entry) => {
         try {
           const size = entry.contentRect.width * entry.contentRect.height
           if (size > largestSize) {
             largestSize = size
-            lcpObservedAt = now()
+            vitals.lcp.value = now()
           }
           resizeObs.unobserve(entry.target)
         } catch (e) {
@@ -245,7 +265,7 @@ export function trackMFEVitals (target, timings) {
   // Track CLS - cumulative layout shift
   // Initialize CLS to 0 if browser supports it
   observePerformance(observers, { type: 'layout-shift', buffered: true }, (entry) => {
-    if (entry.hadRecentInput) return
+    if (disconnected || entry.hadRecentInput) return
     ;(entry.sources || []).some(source => {
       if (isInMFE(source.node, target)) {
         // an observed "CLS" means _something_ rendered for the MFE, so at minimum we can make sure all the baseline values are populated for the vitals
@@ -259,7 +279,7 @@ export function trackMFEVitals (target, timings) {
 
   // Track INP - interaction to next paint
   observePerformance(observers, { type: 'event', buffered: true, durationThreshold: 40 }, (entry) => {
-    if (!entry.interactionId || !isInMFE(entry.target, target)) return
+    if (disconnected || !entry.interactionId || !isInMFE(entry.target, target)) return
     if (vitals.inp.value === undefined || entry.duration > vitals.inp.value) {
       // an observed "INP" means _something_ rendered for the MFE, so at minimum we can make sure all the baseline values are populated for the vitals
       populateVitalMinimums()
@@ -276,6 +296,7 @@ export function trackMFEVitals (target, timings) {
 
   // Disconnect all observers
   vitals.disconnect = () => {
+    disconnected = true
     // Disconnect all observers
     observers.forEach(obs => {
       try {
@@ -316,6 +337,12 @@ export function trackMFEVitals (target, timings) {
   ;['visibilitychange', 'pagehide'].forEach(type => {
     globalScope.addEventListener(type, vitals.disconnect, { once: true, passive: true })
   })
+
+  // If the MFE has already rendered something on the page before we could set up listeners, just populate vital
+  // minimums immediately. Done last, once `observers` is fully populated and `vitals.disconnect` has its real
+  // implementation, so a stale-clock detection here can actually tear everything down instead of no-op'ing.
+  const existingRoots = globalScope.document?.querySelectorAll(`[data-nr-mfe-id="${escapeSelectorValue(target.id)}"]`)
+  if (Array.from(existingRoots || []).some(x => isMatch(x.dataset, target))) populateVitalMinimums()
 
   return vitals
 }

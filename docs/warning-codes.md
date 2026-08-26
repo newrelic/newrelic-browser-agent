@@ -1,4 +1,5 @@
 <a href="https://opensource.newrelic.com/oss-category/#community-plus"><picture><source media="(prefers-color-scheme: dark)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/dark/Community_Plus.png"><source media="(prefers-color-scheme: light)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"><img alt="New Relic Open Source community plus project banner." src="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"></picture></a>
+
 # New Relic Browser Agent Warning Codes
 
 ### 1
@@ -106,7 +107,7 @@
 ### 52
 `Unexpected problem encountered. There should be at least one app for harvest!`
 ### 53
-`Did not receive a valid entityGuid from connection response.`
+`Failed to parse connect response.`
 ### 54
 `An experimental feature is being used. Support can not be offered for issues.`
 ### 55
@@ -158,4 +159,6 @@
 ### 78
 `RegisteredIframeEntity could not determine parent origin and will not register, to avoid trusting messages from any origin.`
 ### 79
+`Unable to initialize Connector and/or Harvester.`
+### 80
 `An invalid manifest option was provided to register() and will be ignored.`

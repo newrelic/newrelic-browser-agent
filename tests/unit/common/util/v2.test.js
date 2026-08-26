@@ -3,8 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getVersion2Attributes, getRegisteredTargetsFromFilename, getRegisteredTargetsFromResourceUrl, findTargetsFromStackTrace, getRegisteredTargetsFromId, dedupeRegisteredEntitiesByAsset, dedupeTargetsByInstance } from '../../../../src/common/v2/utils'
 import { parseManifest } from '../../../../src/common/v2/manifest'
+import { getVersion2Attributes, getRegisteredTargetsFromFilename, getRegisteredTargetsFromResourceUrl, findTargetsFromStackTrace, getRegisteredTargetsFromId, dedupeRegisteredEntitiesByAsset, dedupeTargetsByInstance, isMfeTarget } from '../../../../src/common/v2/utils'
+import { V2_TYPES } from '../../../../src/common/v2/constants'
+
+// mirrors the inline v2Target shape eagerly created in loaders/configure/configure.js
+const makeV2Target = (agentRef) => ({
+  type: V2_TYPES.BA,
+  instance: agentRef.agentIdentifier,
+  get id () { return agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid },
+  get attributes () {
+    return {
+      'entity.guid': agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid,
+      appId: agentRef.info.applicationID
+    }
+  }
+})
 
 describe('v2 utilities', () => {
   describe('getRegisteredTargetsFromFilename', () => {
@@ -768,7 +782,7 @@ describe('v2 utilities', () => {
   })
 
   describe('findTargetsFromStackTrace', () => {
-    test('returns empty array when register.enabled is false', () => {
+    test('returns the container target when register.enabled is false', () => {
       const agentRef = {
         init: {
           api: {
@@ -779,11 +793,15 @@ describe('v2 utilities', () => {
         },
         runtime: {
           registeredEntities: []
-        }
+        },
+        info: {}
       }
+      agentRef.runtime.v2Target = makeV2Target(agentRef)
 
       const result = findTargetsFromStackTrace(agentRef)
-      expect(result).toEqual([])
+      expect(result).toHaveLength(1)
+      expect(result[0]).toBe(agentRef.runtime.v2Target)
+      expect(isMfeTarget(result[0])).toBe(false)
     })
 
     test('returns empty array when agentRef is falsy', () => {
@@ -834,12 +852,16 @@ describe('v2 utilities', () => {
         },
         runtime: {
           registeredEntities: null // This will cause an error
-        }
+        },
+        info: {}
       }
+      agentRef.runtime.v2Target = makeV2Target(agentRef)
 
-      // Should not throw, should return empty array
+      // Should not throw, should return the container target
       const result = findTargetsFromStackTrace(agentRef)
-      expect(result).toEqual([])
+      expect(result).toHaveLength(1)
+      expect(result[0]).toBe(agentRef.runtime.v2Target)
+      expect(isMfeTarget(result[0])).toBe(false)
     })
   })
 
@@ -871,6 +893,16 @@ describe('v2 utilities', () => {
     })
   })
 
+  describe('isMfeTarget', () => {
+    test('returns true only for targets with type MFE', () => {
+      expect(isMfeTarget({ type: 'MFE' })).toBe(true)
+      expect(isMfeTarget({ type: 'BA' })).toBe(false)
+      expect(isMfeTarget(undefined)).toBe(false)
+      expect(isMfeTarget(null)).toBe(false)
+      expect(isMfeTarget({})).toBe(false)
+    })
+  })
+
   describe('getVersion2Attributes', () => {
     const mockAggregateInstance = {
       harvestEndpointVersion: 2,
@@ -887,6 +919,7 @@ describe('v2 utilities', () => {
         }
       }
     }
+    mockAggregateInstance.agentRef.runtime.v2Target = makeV2Target(mockAggregateInstance.agentRef)
 
     describe('parent.type attribute validation', () => {
       test('uses target.parent.type when provided', () => {
@@ -960,6 +993,7 @@ describe('v2 utilities', () => {
       test('returns container attributes when target is not valid', () => {
         const invalidTarget = {
           id: 'mfe-id',
+          type: 'MFE',
           parent: {
             id: 'container-entity-guid',
             type: 'BA'
@@ -981,7 +1015,7 @@ describe('v2 utilities', () => {
         expect(result).toEqual({
           'source.id': 'mfe-id',
           'source.name': undefined,
-          'source.type': undefined,
+          'source.type': 'MFE',
           'parent.id': 'container-entity-guid',
           'parent.type': 'BA'
         })
@@ -1015,6 +1049,25 @@ describe('v2 utilities', () => {
           'source.type': 'MFE',
           'parent.id': 'parent-id',
           'parent.type': 'MFE'
+        })
+      })
+
+      test('returns container attributes when no target is given', () => {
+        const result = getVersion2Attributes(undefined, mockAggregateInstance)
+
+        expect(result).toEqual({
+          'entity.guid': 'container-entity-guid',
+          appId: 'app-123'
+        })
+      })
+
+      test('returns container attributes when given the real container target', () => {
+        const containerTarget = mockAggregateInstance.agentRef.runtime.v2Target
+        const result = getVersion2Attributes(containerTarget, mockAggregateInstance)
+
+        expect(result).toEqual({
+          'entity.guid': 'container-entity-guid',
+          appId: 'app-123'
         })
       })
 

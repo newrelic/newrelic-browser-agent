@@ -72,7 +72,7 @@ describe('manifest utilities', () => {
       expect(parsed.assets[0].pattern).toBe('styles.css')
     })
 
-    test('logs a warning (code 79) for an invalid matcher and discards the entry', async () => {
+    test('logs a warning (code 80) for an invalid matcher and discards the entry', async () => {
       jest.resetModules()
       const consoleModule = await import('../../../../src/common/util/console')
       const manifestModule = await import('../../../../src/common/v2/manifest')
@@ -80,17 +80,17 @@ describe('manifest utilities', () => {
       const parsed = manifestModule.parseManifest({ assets: [{ matcher: {} }, { matcher: 'styles.css' }] })
 
       expect(parsed.assets).toHaveLength(1)
-      expect(consoleModule.warn).toHaveBeenCalledWith(79, {})
+      expect(consoleModule.warn).toHaveBeenCalledWith(80, {})
     })
 
-    test('logs a warning (code 79) for an unrecognized type value', async () => {
+    test('logs a warning (code 80) for an unrecognized type value', async () => {
       jest.resetModules()
       const consoleModule = await import('../../../../src/common/util/console')
       const manifestModule = await import('../../../../src/common/v2/manifest')
 
       manifestModule.parseManifest({ assets: [{ matcher: 'bundle.js', type: 'stylesheet' }] })
 
-      expect(consoleModule.warn).toHaveBeenCalledWith(79, 'stylesheet')
+      expect(consoleModule.warn).toHaveBeenCalledWith(80, 'stylesheet')
     })
 
     test('the invalid-matcher and invalid-type warnings share a single once-per-page gate', async () => {
@@ -109,7 +109,7 @@ describe('manifest utilities', () => {
       expect(parsed.assets).toHaveLength(2) // bundle.js (inference-only) + styles.css
       expect(parsed.assets.find(a => a.pattern === 'bundle.js').isScript).toBe(true)
       expect(consoleModule.warn).toHaveBeenCalledTimes(1)
-      expect(consoleModule.warn).toHaveBeenCalledWith(79, {})
+      expect(consoleModule.warn).toHaveBeenCalledWith(80, {})
     })
 
     test('a manifest containing only non-script assets has an empty scripts subset', () => {

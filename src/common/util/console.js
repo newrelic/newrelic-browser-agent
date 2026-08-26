@@ -68,7 +68,7 @@ import { dispatchGlobalEvent } from '../dispatch/global-event'
  * | 50 | Failed to connect. Cannot allow registered API. |
  * | 51 | Container agent is not available to register with. Can not connect. |
  * | 52 | Unexpected problem encountered. There should be at least one app for harvest! |
- * | 53 | Did not receive a valid entityGuid from connection response. |
+ * | 53 | Failed to parse connect response. |
  * | 54 | An experimental feature is being used. Support can not be offered for issues. |
  * | 55 | Register API has been disabled on the container agent. |
  * | 56 | Could not find a matching entity to store data. |
@@ -94,7 +94,8 @@ import { dispatchGlobalEvent } from '../dispatch/global-event'
  * | 76 | Agent rejected post message, could not match with existing entity. |
  * | 77 | Agent rejected post message, could not validate origin. |
  * | 78 | RegisteredIframeEntity could not determine parent origin and will not register, to avoid trusting messages from any origin. |
- * | 79 | An invalid manifest option was provided to register() and will be ignored. |
+ * | 79 | Unable to initialize Connector and/or Harvester. |
+ * | 80 | An invalid manifest option was provided to register() and will be ignored. |
  *
  * @param {number} code The warning code to emit, which will be used to link to the warning code documentation
  * @param {*} [secondary] Secondary data to include, usually an extra message, error or object

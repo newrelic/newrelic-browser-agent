@@ -2,7 +2,7 @@
  * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { JSERRORS, RUM, EVENTS, FEATURE_NAMES, BLOBS, LOGS } from '../../loaders/features/features'
+import { JSERRORS, RUM, EVENTS, FEATURE_NAMES, BLOBS, LOGS, CONNECT } from '../../loaders/features/features'
 import { VERSION } from '../constants/env'
 import { globalScope, isWorkerScope } from '../constants/runtime'
 import { handle } from '../event-emitter/handle'
@@ -12,7 +12,7 @@ import { cleanURL } from '../url/clean-url'
 import { obj, param } from '../url/encode'
 import { warn } from '../util/console'
 import { stringify } from '../util/stringify'
-import { xhr as xhrMethod, xhrFetch as fetchMethod } from '../util/submit-data'
+import { xhr as xhrMethod, xhrFetch as fetchMethod, getSubmitMethod } from '../util/submit-data'
 import { dispatchGlobalEvent } from '../dispatch/global-event'
 
 /**
@@ -27,7 +27,7 @@ const warnings = {}
  * @param {NetworkSendSpec} spec Specification for sending data
  * @returns {boolean} True if a network call was made. Note that this does not mean or guarantee that it was successful.
  */
-export function send (agentRef, { endpoint, payload, localOpts = {}, submitMethod, cbFinished, raw, featureName, endpointVersion = 1, harvesterObfuscator }) {
+export function send (agentRef, { endpoint, payload, localOpts = {}, submitMethod = getSubmitMethod(), cbFinished, raw, featureName, endpointVersion = 1, harvesterObfuscator }) {
   if (!agentRef.info.errorBeacon) return false
 
   let { body, qs } = cleanPayload(payload)
@@ -39,16 +39,18 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
 
   const protocol = agentRef.init.ssl === false ? 'http' : 'https'
   const perceivedBeacon = agentRef.init.proxy.beacon || agentRef.info.errorBeacon
+  const includeEndpointName = endpoint !== RUM || endpointVersion !== 1
   const url = raw
     ? `${protocol}://${perceivedBeacon}/${endpoint}`
-    : `${protocol}://${perceivedBeacon}${endpoint !== RUM ? '/' + endpoint : ''}/${endpointVersion}/${agentRef.info.licenseKey}`
+    : `${protocol}://${perceivedBeacon}${includeEndpointName ? '/' + endpoint : ''}/${endpointVersion}/${agentRef.info.licenseKey}`
   const baseParams = !raw ? baseQueryString(agentRef, qs, endpoint, harvesterObfuscator) : ''
   let payloadParams = obj(qs, agentRef.runtime.maxBytes)
   if (baseParams === '' && payloadParams.startsWith('&')) {
     payloadParams = payloadParams.substring(1)
   }
 
-  const fullUrl = `${url}?${baseParams}${payloadParams}`
+  const queryString = `${baseParams}${payloadParams}`
+  const fullUrl = queryString ? `${url}?${queryString}` : url // omit the '?' if there are no query params
   const gzip = !!qs?.attributes?.includes('gzip')
 
   // all gzipped data is already in the correct format and needs no transformation
@@ -61,7 +63,7 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
   // Warn--once per endpoint--if the agent tries to send large payloads
   if (endpoint !== BLOBS && stringBody.length > 750000 && (warnings[endpoint] = (warnings[endpoint] || 0) + 1) === 1) warn(28, endpoint)
 
-  const headers = [{ key: 'content-type', value: 'text/plain' }]
+  const headers = [{ key: 'content-type', value: 'text/plain' }, ...(localOpts.headers || [])]
 
   /* Since workers don't support sendBeacon right now, they can only use XHR method.
       Because they still do permit synch XHR, the idea is that at final harvest time (worker is closing),
@@ -92,6 +94,7 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
 
     function trackHarvestMetadata () {
       try {
+        if (featureName === CONNECT) return
         if (featureName === FEATURE_NAMES.jserrors && !body?.err) return
 
         const hasReplay = baseParams.includes('hr=1')
@@ -189,7 +192,6 @@ function baseQueryString (agentRef, qs, endpoint, harvesterObfuscator) {
     transactionNameParam(),
     param('ct', agentRef.runtime.customTransaction),
     '&rst=' + now(),
-    '&ck=0', // ck param DEPRECATED - still expected by backend
     '&s=' + (session?.state.value || '0'), // the 0 id encaps all untrackable and default traffic
     param('ref', ref),
     param('ptid', (agentRef.runtime.ptid ? '' + agentRef.runtime.ptid : ''))

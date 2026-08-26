@@ -4,7 +4,7 @@
  */
 import { handle } from '../../common/event-emitter/handle'
 import { warn } from '../../common/util/console'
-import { V2_TYPES } from '../../common/v2/utils'
+import { V2_TYPES } from '../../common/v2/constants'
 import { FEATURE_NAMES } from '../features/features'
 import { now } from '../../common/timing/now'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
@@ -51,7 +51,7 @@ export const warnings = {
   disabled: single(() => warn(55)),
   invalidTarget: single((target) => warn(48, target)),
   deregistered: single(() => warn(68)),
-  invalidTimingMethod: single((value) => warn(79, value))
+  invalidTimingMethod: single((value) => warn(80, value))
 }
 
 /**

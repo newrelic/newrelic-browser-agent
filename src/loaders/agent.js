@@ -93,10 +93,11 @@ export class Agent extends AgentBase {
     try {
       const enabledFeatures = getEnabledFeatures(this.init)
       const featuresToStart = [...this.desiredFeatures]
+      const isRumV2Enabled = this.init.feature_flags.includes('rum_v2')
 
       featuresToStart.sort((a, b) => featurePriority[a.featureName] - featurePriority[b.featureName])
       featuresToStart.forEach(InstrumentCtor => {
-        if (!enabledFeatures[InstrumentCtor.featureName] && InstrumentCtor.featureName !== FEATURE_NAMES.pageViewEvent) return // PVE is required to run even if it's marked disabled
+        if (!enabledFeatures[InstrumentCtor.featureName] && (isRumV2Enabled || InstrumentCtor.featureName !== FEATURE_NAMES.pageViewEvent)) return // PVE is required to run even if it's marked disabled unless rum_v2 is enabled
 
         const dependencies = getFeatureDependencyNames(InstrumentCtor.featureName)
         const missingDependencies = dependencies.filter(featName => !(featName in this.features)) // any other feature(s) this depends on should've been initialized on prior iterations by priority order

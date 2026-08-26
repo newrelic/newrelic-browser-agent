@@ -18,7 +18,7 @@ import { single } from '../util/invoke'
 
 /** Warns at most once per page for any invalid manifest entry (bad `matcher` or bad `type`) -- mirrors the
  * existing `invalidTimingMethod` single()-wrapped warning pattern in register.js. */
-const warnInvalidManifestEntry = single((secondary) => warn(79, secondary))
+const warnInvalidManifestEntry = single((secondary) => warn(80, secondary))
 
 /**
  * @typedef {Object} ParsedManifestAsset

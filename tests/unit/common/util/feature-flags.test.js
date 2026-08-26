@@ -19,6 +19,7 @@ beforeEach(() => {
   agentRef = {
     agentIdentifier,
     ee: eventEmitterModule.ee.get(agentIdentifier),
+    init: { feature_flags: [] },
     runtime: {}
   }
 })

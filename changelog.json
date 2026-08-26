@@ -4,6 +4,64 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "1f1919809498e6aa8f1fc2ada0c00c3872cb30b8",
+          "message": "Avoid obfuscating keys and reserved system vals",
+          "issues": [
+            "1817"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "095a1d66a917b5044f64757f61ee57607b2879ae",
+          "message": "Apply hard cap to MFE FCP",
+          "issues": [
+            "1828"
+          ]
+        }
+      ],
+      "version": "1.320.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "74f84a72-7eb8-4dae-a341-e5b54d286682",
+      "createTime": "2026-08-12T17:09:24.258Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "df7260404dee51cf3706311235ab9b0d785f8789",
+          "message": "Improve ability to apply reasonable caps to MFE vitals",
+          "issues": [
+            "1823"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "46e36f77abbad70155f20755cd4554799125e334",
+          "message": "MFE iframe support - Beta Access",
+          "issues": [
+            "1752"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "ba60ac6550d93feb466af845a8f3f3fdb03b4970",
+          "message": "Deduplicate auto-instrumented MFE events",
+          "issues": [
+            "1820"
+          ]
+        }
+      ],
+      "version": "1.320.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "0504f052-200c-4e62-8a5d-3502d5558a64",
+      "createTime": "2026-08-07T23:09:15.191Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "21f38a9af35f5204a47be02bfa2a73d41d8ba1f6",
           "message": "MFE vitals improvements",
@@ -4135,5 +4193,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-07-28T00:10:55.833Z"
+  "updateTime": "2026-08-12T17:09:24.258Z"
 }

@@ -205,6 +205,9 @@ function register (agentRef, target) {
       assetType: timings.type, // the type of asset that was associated with the timings, one of 'script', 'link' (if preloaded and found in the resource timing buffer), 'preload' (if preloaded but not found in the resource timing buffer), or "unknown" if it could not be determined
       registerUrl, // the url of the page at the time this entity was registered
       deregisterUrl: cleanURL('' + location), // the url of the page at the time this entity was deregistered (or unloaded)
+      // generic_events' addEvent() injects pageUrl/currentUrl on every custom event by default; override them away here in favor of registerUrl/deregisterUrl above
+      pageUrl: undefined,
+      currentUrl: undefined,
       timeAlive: timings.reportedAt - timings.registeredAt, // registeredAt to reportedAt
       timeToBeRequested: timings.fetchStart, // origin to fetchStart
       timeToExecute, // scriptStart to scriptEnd

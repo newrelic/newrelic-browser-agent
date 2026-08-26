@@ -220,6 +220,11 @@ describe('Register API - Iframe Entity', () => {
     expect(typeof timingEvent.deregisterUrl).toBe('string')
     expect(timingEvent.deregisterUrl).toContain('http')
 
+    // MicroFrontEndTiming opts out of the generic pageUrl/currentUrl attributes that
+    // generic_events injects by default on every custom event, in favor of registerUrl/deregisterUrl
+    expect(timingEvent.pageUrl).toBeUndefined()
+    expect(timingEvent.currentUrl).toBeUndefined()
+
     // Iframe vitals arrive as raw numbers via postMessage (not JSON-stringified objects).
     // FCP, LCP, CLS, INP: positive numbers on supporting browsers; on browsers where the
     // vital is unsupported (e.g. CLS on Firefox), the key is omitted entirely, so the

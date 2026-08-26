@@ -968,6 +968,11 @@ describe('API tests', () => {
           expect(typeof attrs.timeAlive).toBe('number')
           expect(typeof attrs.registerUrl).toBe('string')
           expect(typeof attrs.deregisterUrl).toBe('string')
+
+          // pageUrl/currentUrl are generic_events defaults injected on every custom event;
+          // MicroFrontEndTiming opts out of them in favor of registerUrl/deregisterUrl
+          expect(attrs.pageUrl).toBeUndefined()
+          expect(attrs.currentUrl).toBeUndefined()
         })
 
         test('should capture registerUrl and deregisterUrl independently, at each respective time', () => {

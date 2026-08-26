@@ -214,15 +214,21 @@ describe('Register API - Iframe Entity', () => {
     expect(timingEvent.timeToExecute).toBeGreaterThanOrEqual(0)
     expect(timingEvent.timeToBeRequested).toBeGreaterThanOrEqual(0)
 
+    // registerUrl/deregisterUrl: url of the (iframe) page at register()/deregister() time
+    expect(typeof timingEvent.registerUrl).toBe('string')
+    expect(timingEvent.registerUrl).toContain('http')
+    expect(typeof timingEvent.deregisterUrl).toBe('string')
+    expect(timingEvent.deregisterUrl).toContain('http')
+
     // Iframe vitals arrive as raw numbers via postMessage (not JSON-stringified objects).
     // FCP, LCP, CLS, INP: positive numbers on supporting browsers; on browsers where the
     // vital is unsupported (e.g. CLS on Firefox), the key is omitted entirely, so the
     // lookup comes back undefined rather than null.
     // Values are raw millisecond/score numbers, not JSON-stringified objects.
-    const fcp = timingEvent['nr.vitals.fcp.value']
-    const lcp = timingEvent['nr.vitals.lcp.value']
-    const cls = timingEvent['nr.vitals.cls.value']
-    const inp = timingEvent['nr.vitals.inp.value']
+    const fcp = timingEvent['vitals.fcp.value']
+    const lcp = timingEvent['vitals.lcp.value']
+    const cls = timingEvent['vitals.cls.value']
+    const inp = timingEvent['vitals.inp.value']
     expect(fcp === undefined || (typeof fcp === 'number' && fcp >= 0)).toBe(true)
     expect(lcp === undefined || (typeof lcp === 'number' && lcp >= 0)).toBe(true)
     expect(cls === undefined || (typeof cls === 'number' && cls >= 0)).toBe(true)
@@ -247,13 +253,13 @@ describe('Register API - Iframe Entity', () => {
     expect(timingEvent).toBeDefined()
 
     // The iframe renders an <h1> — FCP and LCP must be positive on supporting browsers
-    expect(timingEvent['nr.vitals.fcp.value']).not.toBeNull()
-    expect(typeof timingEvent['nr.vitals.fcp.value']).toBe('number')
-    expect(timingEvent['nr.vitals.fcp.value']).toBeGreaterThan(0)
+    expect(timingEvent['vitals.fcp.value']).not.toBeNull()
+    expect(typeof timingEvent['vitals.fcp.value']).toBe('number')
+    expect(timingEvent['vitals.fcp.value']).toBeGreaterThan(0)
 
-    expect(timingEvent['nr.vitals.lcp.value']).not.toBeNull()
-    expect(typeof timingEvent['nr.vitals.lcp.value']).toBe('number')
-    expect(timingEvent['nr.vitals.lcp.value']).toBeGreaterThan(0)
+    expect(timingEvent['vitals.lcp.value']).not.toBeNull()
+    expect(typeof timingEvent['vitals.lcp.value']).toBe('number')
+    expect(timingEvent['vitals.lcp.value']).toBeGreaterThan(0)
   })
 
   it.withBrowsersMatching(supportsCumulativeLayoutShift)('should have a positive CLS score from the iframe layout shift in supporting browsers', async () => {
@@ -276,9 +282,9 @@ describe('Register API - Iframe Entity', () => {
 
     // The load handler inserts a 200px spacer before existing content, causing a measurable
     // layout shift. The WebDriver click finalizes CLS reporting via web-vitals.
-    expect(timingEvent['nr.vitals.cls.value']).not.toBeNull()
-    expect(typeof timingEvent['nr.vitals.cls.value']).toBe('number')
-    expect(timingEvent['nr.vitals.cls.value']).toBeGreaterThan(0)
+    expect(timingEvent['vitals.cls.value']).not.toBeNull()
+    expect(typeof timingEvent['vitals.cls.value']).toBe('number')
+    expect(timingEvent['vitals.cls.value']).toBeGreaterThan(0)
   })
 
   it.withBrowsersMatching(supportsInteractionToNextPaint)('should have a positive INP score from real interactions in the iframe in supporting browsers', async () => {
@@ -301,9 +307,9 @@ describe('Register API - Iframe Entity', () => {
 
     // Two real WebDriver clicks give web-vitals something to measure. The wrapper's
     // debounced deregister handler waits for interactions to settle before reporting.
-    expect(timingEvent['nr.vitals.inp.value']).not.toBeNull()
-    expect(typeof timingEvent['nr.vitals.inp.value']).toBe('number')
-    expect(timingEvent['nr.vitals.inp.value']).toBeGreaterThan(0)
+    expect(timingEvent['vitals.inp.value']).not.toBeNull()
+    expect(typeof timingEvent['vitals.inp.value']).toBe('number')
+    expect(timingEvent['vitals.inp.value']).toBeGreaterThan(0)
   })
 
   it('should propagate setCustomAttribute, setUserId, and setApplicationVersion through the postMessage bridge', async () => {

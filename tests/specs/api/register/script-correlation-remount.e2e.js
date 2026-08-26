@@ -54,8 +54,8 @@ describe('Register API - stale script correlation reuse on MFE remount', () => {
     const firstHarvest = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
     const firstTiming = getMFETimingEvents(firstHarvest, 'remount-mfe').find(e => e['source.name'] === 'Remount First')
     expect(firstTiming).toBeDefined()
-    expect(firstTiming['nr.vitals.fcp.value']).toBeGreaterThan(0)
-    expect(firstTiming['nr.vitals.fcp.value']).toBeLessThan(10000)
+    expect(firstTiming['vitals.fcp.value']).toBeGreaterThan(0)
+    expect(firstTiming['vitals.fcp.value']).toBeLessThan(10000)
 
     // Wait past the 10s staleness threshold WITHOUT the script ever reloading -- simulating an
     // SPA remounting the same MFE much later, where register() still resolves to the SAME,
@@ -80,7 +80,7 @@ describe('Register API - stale script correlation reuse on MFE remount', () => {
     // remounted MFE would reuse the ~10s+ old script correlation and report FCP as the gap since
     // the ORIGINAL script load (~10s+), instead of the near-instant paint that actually just
     // happened on remount.
-    expect(secondTiming['nr.vitals.fcp.value']).toBeGreaterThan(0)
-    expect(secondTiming['nr.vitals.fcp.value']).toBeLessThan(1000)
+    expect(secondTiming['vitals.fcp.value']).toBeGreaterThan(0)
+    expect(secondTiming['vitals.fcp.value']).toBeLessThan(1000)
   })
 })

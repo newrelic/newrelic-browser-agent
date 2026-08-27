@@ -71,6 +71,8 @@ export class Connector {
       // Double check that there isn't a response saved (e.g. from another agent/browser tab) btwn the async time of the request and now in a race-condition.
       const cachedResp = session.state.cachedRumResponse
       if (cachedResp) {
+        // Report that we've seen a race condition on updating session state
+        handle(SUPPORTABILITY_METRIC_CHANNEL, ['Session/RaceCondition/Seen'], undefined, FEATURE_NAMES.metrics, this.#agentRef.ee)
         // `cachedRumResponse` is stored flat (`{ app, ...flags }`, matching the old v1 RUM response), so re-nest it before applying.
         const { app, ...config } = cachedResp
         this.#applyConnectResponse({ app, config })

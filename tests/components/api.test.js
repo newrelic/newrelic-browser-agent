@@ -641,6 +641,8 @@ describe('API tests', () => {
         warnings.disabled = single(() => warn(55))
         warnings.invalidTarget = single((target) => warn(48, target))
         warnings.deregistered = single(() => warn(68))
+        warnings.duplicateName = single((target) => warn(81, target))
+        warnings.duplicateId = single((target) => warn(82, target))
       })
 
       test('should return api object', () => {
@@ -702,6 +704,75 @@ describe('API tests', () => {
 
         myApi.setUserId('userid')
         expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar2', 'application.version': 'appversion', 'enduser.id': 'userid' })
+      })
+
+      describe('duplicate entity detection', () => {
+        test('should warn #81 when a second entity shares a name with a different id', () => {
+          const sharedName = faker.string.uuid()
+          agent.register({ id: faker.string.uuid(), name: sharedName })
+          console.debug.mockClear()
+
+          agent.register({ id: faker.string.uuid(), name: sharedName })
+
+          expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#81'))).toEqual(true)
+          expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#82'))).toEqual(false)
+        })
+
+        test('should warn #82 when a second entity shares an id with a different name', () => {
+          const sharedId = faker.string.uuid()
+          agent.register({ id: sharedId, name: faker.string.uuid() })
+          console.debug.mockClear()
+
+          agent.register({ id: sharedId, name: faker.string.uuid() })
+
+          expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#82'))).toEqual(true)
+          expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#81'))).toEqual(false)
+        })
+
+        test('should not warn when a second entity shares both id and name (intentional duplicate)', () => {
+          const sameId = faker.string.uuid()
+          const sameName = faker.string.uuid()
+          agent.register({ id: sameId, name: sameName })
+          console.debug.mockClear()
+
+          agent.register({ id: sameId, name: sameName })
+
+          expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#81'))).toEqual(false)
+          expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#82'))).toEqual(false)
+        })
+
+        test('should not warn when a second entity shares neither id nor name', () => {
+          agent.register({ id: faker.string.uuid(), name: faker.string.uuid() })
+          console.debug.mockClear()
+
+          agent.register({ id: faker.string.uuid(), name: faker.string.uuid() })
+
+          expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#81'))).toEqual(false)
+          expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#82'))).toEqual(false)
+        })
+
+        test('should pass the newly registered target as the warning argument', () => {
+          const sharedName = faker.string.uuid()
+          agent.register({ id: faker.string.uuid(), name: sharedName })
+          console.debug.mockClear()
+
+          const newId = faker.string.uuid()
+          agent.register({ id: newId, name: sharedName })
+
+          const warningCall = console.debug.mock.calls.find(call => call[0].includes('#81'))
+          expect(warningCall[1]).toMatchObject({ id: newId, name: sharedName })
+        })
+
+        test('should not warn again for a target that was already flagged (single-fire warning)', () => {
+          const sharedName = faker.string.uuid()
+          agent.register({ id: faker.string.uuid(), name: sharedName })
+          agent.register({ id: faker.string.uuid(), name: sharedName })
+          console.debug.mockClear()
+
+          agent.register({ id: faker.string.uuid(), name: sharedName })
+
+          expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#81'))).toEqual(false)
+        })
       })
 
       describe('noticeError', () => {

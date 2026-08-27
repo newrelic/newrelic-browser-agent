@@ -95,6 +95,8 @@ import { dispatchGlobalEvent } from '../dispatch/global-event'
  * | 77 | Agent rejected post message, could not validate origin. |
  * | 78 | RegisteredIframeEntity could not determine parent origin and will not register, to avoid trusting messages from any origin. |
  * | 79 | Unable to initialize Connector and/or Harvester. |
+ * | 81 | Entities were detected that share a name with different IDs - This can cause multiple entities to have the same name in New Relic. |
+ * | 82 | Entities were detected that share an ID with different names - This can cause your entity's name to change unexpectedly. |
  *
  * @param {number} code The warning code to emit, which will be used to link to the warning code documentation
  * @param {*} [secondary] Secondary data to include, usually an extra message, error or object

@@ -47,7 +47,9 @@ export const warnings = {
   experimental: single(() => warn(54, 'newrelic.register')),
   disabled: single(() => warn(55)),
   invalidTarget: single((target) => warn(48, target)),
-  deregistered: single(() => warn(68))
+  deregistered: single(() => warn(68)),
+  duplicateName: single((target) => warn(81, target)),
+  duplicateId: single((target) => warn(82, target))
 }
 
 /**
@@ -133,6 +135,16 @@ function register (agentRef, target) {
   /** primary cases that can block the register API from working at init time */
   if (!agentRef.init.api.register.enabled) block(warnings.disabled)
   if (!hasValidValue(target.id) || !hasValidValue(target.name)) block(() => warnings.invalidTarget(target))
+  /** warn if we see obviously unstable things with MFE targets */
+  registeredEntities.forEach((entity) => {
+    try {
+      const { name, id } = entity.metadata.target
+      if (name === target.name && id !== target.id) warnings.duplicateName(target)
+      if (id === target.id && name !== target.name) warnings.duplicateId(target)
+    } catch (e) {
+      // something unexpected went wrong...
+    }
+  })
 
   /** @type {RegisterAPI} */
   const api = {

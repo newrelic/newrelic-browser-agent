@@ -95,7 +95,10 @@ describe('RRWeb Configuration', () => {
         expect(node.textContent).toMatch(/\s+/)
       })
 
-      const testNodes = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===3 && !!@.textContent && @.textContent.match(/\\S+/) && ![\'script\',\'link\',\'style\'].includes(@parent.tagName))]', json: sessionReplaysHarvests })
+      // text-unmask-class/text-unmask-data are deliberately decorated to stay unmasked even under mask_text_selector:
+      // '*' -- excluded here since this test is about the blanket-masking behavior, not the unmask override (see the
+      // dedicated 'mask fn callbacks' tests below for that).
+      const testNodes = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===3 && !!@.textContent && @.textContent.match(/\\S+/) && ![\'script\',\'link\',\'style\'].includes(@parent.tagName) && ![\'text-unmask-class\',\'text-unmask-data\'].includes(@parent.attributes.id))]', json: sessionReplaysHarvests })
       expect(testNodes.length).toBeGreaterThan(0)
 
       testNodes.forEach(node => {

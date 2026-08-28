@@ -260,6 +260,24 @@ describe('RRWeb Configuration', () => {
       expect(textNode).toBeDefined()
       expect(textNode.textContent).not.toMatch(/\*+/)
     })
+
+    it('maskTextFn: should unmask a plain (non-input) text node by class when explicitly targeted by mask_text_selector', async () => {
+      await visit('rrweb-instrumented.html', { session_replay: { mask_text_selector: '#text-unmask-class' } })
+      const sessionReplaysHarvests = await getInitialHarvest()
+
+      const textNode = findTextNode(sessionReplaysHarvests, 'div', 'text-unmask-class')
+      expect(textNode).toBeDefined()
+      expect(textNode.textContent).not.toMatch(/\*+/)
+    })
+
+    it('maskTextFn: should unmask a plain (non-input) text node by data attr when explicitly targeted by mask_text_selector', async () => {
+      await visit('rrweb-instrumented.html', { session_replay: { mask_text_selector: '#text-unmask-data' } })
+      const sessionReplaysHarvests = await getInitialHarvest()
+
+      const textNode = findTextNode(sessionReplaysHarvests, 'div', 'text-unmask-data')
+      expect(textNode).toBeDefined()
+      expect(textNode.textContent).not.toMatch(/\*+/)
+    })
   })
 
   describe('block_selector', () => {

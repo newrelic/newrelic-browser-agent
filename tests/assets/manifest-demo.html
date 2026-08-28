@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020-2026 New Relic, Inc. All rights reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+  Manual demo asset for the register() manifest feature (src/common/v2/manifest.js). Not a wdio/jest spec --
+  open this page directly in a browser (via `npm run build` + `npm run test-server`, see the box at the top of
+  the page body) and click through the scenarios below to show colleagues how manifest-based MFE attribution
+  behaves. Each scenario is lifted directly from tests/specs/api/register/manifest.e2e.js -- the secondary
+  script assets it loads (tests/assets/js/mfe/mfe-manifest-*.js) are the same fixtures that suite uses.
+-->
+<html>
+  <head>
+    <title>MFE Manifest Demo</title>
+    {init}
+    <script type="text/javascript">
+      // The default test-server init disables the register() API and several auto-instrumented features --
+      // force them on here so this page works with zero query params, regardless of what {init} produced above.
+      window.NREUM = window.NREUM || {}
+      NREUM.init = NREUM.init || {}
+      NREUM.init.feature_flags = (NREUM.init.feature_flags || []).concat('register')
+      NREUM.init.logging = Object.assign({}, NREUM.init.logging, { enabled: true })
+      NREUM.init.web_sockets = Object.assign({}, NREUM.init.web_sockets, { enabled: true })
+      NREUM.init.performance = Object.assign({}, NREUM.init.performance, {
+        resources: Object.assign({}, (NREUM.init.performance && NREUM.init.performance.resources), { enabled: true, ignore_newrelic: false })
+      })
+    </script>
+    {config}
+    {loader}
+    <style>
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color: #1a1a2e; }
+      h1 { font-size: 1.4rem; }
+      h2 { font-size: 1.05rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: .25rem; }
+      .howto { background: #eef4ff; border: 1px solid #c7d9f5; border-radius: 6px; padding: .75rem 1rem; font-size: .85rem; }
+      .scenario { border: 1px solid #ddd; border-radius: 6px; padding: .75rem 1rem; margin: .6rem 0; }
+      .scenario p { margin: .3rem 0; font-size: .88rem; color: #444; }
+      .scenario .expect { font-size: .82rem; color: #0a6b2e; background: #eafff1; border-radius: 4px; padding: .4rem .6rem; margin-top: .4rem; }
+      button { background: #1a1a6e; color: #fff; border: none; border-radius: 4px; padding: .45rem .9rem; font-size: .85rem; cursor: pointer; }
+      button:hover { background: #2a2a9e; }
+      button:disabled { background: #999; cursor: default; }
+      code { background: #f3f3f3; padding: 1px 5px; border-radius: 3px; font-size: .85em; }
+      #log { position: sticky; bottom: 0; background: #0d1117; color: #c9d1d9; font-family: monospace; font-size: .78rem; height: 220px; overflow-y: auto; padding: .6rem; border-radius: 6px; margin-top: 2rem; }
+      #log div { white-space: pre-wrap; border-bottom: 1px solid #222; padding: 2px 0; }
+      #log .tag { color: #58a6ff; }
+    </style>
+  </head>
+  <body>
+    <h1>MFE Manifest Demo</h1>
+    <p class="howto">
+      Each scenario below calls <code>newrelic.register()</code> and/or loads a manifest-listed secondary script,
+      mirroring <code>tests/specs/api/register/manifest.e2e.js</code>. Open DevTools &rarr; Network, filter by
+      <code>jserrors</code> / <code>events</code> / <code>ins</code> / <code>browser/blobs/logs</code>, and inspect
+      the request payloads for <code>source.id</code> / <code>custom.["source.id"]</code> to see which MFE an
+      event was attributed to. The panel at the bottom of this page logs every action this demo takes.
+    </p>
+
+    <h2>1. Basic script-manifest attribution</h2>
+
+    <div class="scenario">
+      <strong>String matcher</strong> &mdash; register an MFE whose manifest names a secondary script it never
+      loads itself, then load that script from a real <code>&lt;script src&gt;</code> tag.
+      <p>Loads <code>js/mfe/mfe-manifest-secondary.js</code>, which fetches, logs, and throws.</p>
+      <div class="expect">Expect: error/log/ajax from the secondary script attribute to <code>string-matcher-mfe</code>, not to the page/container.</div>
+      <button onclick="scenarios.stringMatcher()">Run</button>
+    </div>
+
+    <div class="scenario">
+      <strong>RegExp matcher with <code>type: 'script'</code></strong> &mdash; a RegExp matcher is never inferred
+      as a script on its own; <code>type: 'script'</code> is required for it to satisfy stack-trace attribution.
+      <div class="expect">Expect: same attribution as above, this time via a RegExp manifest entry.</div>
+      <button onclick="scenarios.regexMatcher()">Run</button>
+    </div>
+
+    <div class="scenario">
+      <strong>No manifest at all (baseline)</strong> &mdash; register with no <code>manifest</code> option, then
+      load the same secondary script.
+      <div class="expect">Expect: the secondary script's error/log/ajax do <strong>not</strong> attribute to this MFE &mdash; only the register() caller's own activity would.</div>
+      <button onclick="scenarios.noManifest()">Run</button>
+    </div>
+
+    <div class="scenario">
+      <strong>Empty manifest (<code>{ assets: [] }</code>)</strong> &mdash; treated identically to no manifest.
+      <div class="expect">Expect: same as above &mdash; no attribution to this MFE.</div>
+      <button onclick="scenarios.emptyManifest()">Run</button>
+    </div>
+
+    <h2>2. Multiple assets / multiple MFEs</h2>
+
+    <div class="scenario">
+      <strong>Two independent manifest-listed scripts</strong> &mdash; one MFE, manifest names two separate files.
+      <p>Loads <code>mfe-manifest-secondary.js</code> and <code>mfe-manifest-secondary-2.js</code>.</p>
+      <div class="expect">Expect: errors/logs/ajax from <em>both</em> files attribute to the same MFE.</div>
+      <button onclick="scenarios.twoScripts()">Run</button>
+    </div>
+
+    <div class="scenario">
+      <strong>Two overlapping MFEs, same script</strong> &mdash; two different MFEs each list the same secondary
+      script in their manifest.
+      <div class="expect">Expect: loading the script once produces a separate, independently-attributed copy of the error for each MFE.</div>
+      <button onclick="scenarios.overlappingMfes()">Run</button>
+    </div>
+
+    <h2>3. Timing &amp; weight widening</h2>
+
+    <div class="scenario">
+      <strong>Fetch/execute widening (<code>timingMethod: 'scripts'</code>)</strong> &mdash; the registering call
+      here is inline (0ms fetch/execute on its own); widening should pull those numbers from the manifest script's
+      real network fetch/execution instead.
+      <div class="expect">Expect: the next <code>MicroFrontEndTiming</code> insight shows <code>timeToFetch</code> &amp; <code>timeToExecute</code> &gt; 0, and <code>assetUrl</code> anchored on the secondary script.</div>
+      <button onclick="scenarios.timingWidening()">Run</button>
+    </div>
+
+    <div class="scenario">
+      <strong><code>totalWeight</code> without <code>timingMethod</code></strong> &mdash; weight accumulation is
+      not gated behind opting into <code>timingMethod</code>.
+      <div class="expect">Expect: <code>totalWeight</code> &gt; 0 even though <code>timeToFetch</code> stays 0 (no widening requested).</div>
+      <button onclick="scenarios.weightNoTimingMethod()">Run</button>
+    </div>
+
+    <div class="scenario">
+      <strong>Lazy-loaded, late-resolving asset</strong> &mdash; manifest names an image; the image is only added
+      to the DOM 300ms <em>after</em> register() returns, well past the synchronous performance-buffer pass.
+      <div class="expect">Expect: <code>totalWeight</code> &gt; 0 anyway, via the late-resolution observer path.</div>
+      <button onclick="scenarios.lazyAsset()">Run</button>
+    </div>
+
+    <div class="scenario">
+      <strong>Manifest asset that never loads</strong> &mdash; manifest names a file that is never added to the page.
+      <div class="expect">Expect: a normal baseline <code>MicroFrontEndTiming</code> event still reports (no hang, no error) &mdash; <code>timeToFetch</code>/<code>totalWeight</code> stay at 0.</div>
+      <button onclick="scenarios.neverLoaded()">Run</button>
+    </div>
+
+    <h2>4. Real-world registration patterns</h2>
+
+    <div class="scenario">
+      <strong>MFE registers itself from a real file</strong> &mdash; unlike the scenarios above (which register via
+      an inline call on this page), <code>mfe-manifest-root.js</code> calls <code>register()</code> itself from a
+      genuine <code>&lt;script src&gt;</code>, then a second file it names in its own manifest loads.
+      <div class="expect">Expect: the secondary file's error/log/ajax still attribute correctly to <code>manifest-root-mfe</code>.</div>
+      <button onclick="scenarios.rootRegisters()">Run</button>
+    </div>
+
+    <div class="scenario">
+      <strong>Platform registrar excludes itself</strong> &mdash; a "registrar" script calls <code>register()</code>
+      on behalf of an MFE, with a manifest naming only the MFE's own file &mdash; never the registrar's file.
+      <div class="expect">Expect: the MFE's file attributes; the registrar's own error/log/ajax never do, even though it's the one that called register().</div>
+      <button onclick="scenarios.registrarExcludesSelf()">Run</button>
+    </div>
+
+    <div class="scenario">
+      <strong>WebSocket opened by a manifest-listed script</strong>
+      <div class="expect">Expect: a <code>WebSocket</code> insight attributed to <code>manifest-ws-mfe</code>.</div>
+      <button onclick="scenarios.webSocket()">Run</button>
+    </div>
+
+    <h2>5. Guardrails</h2>
+
+    <div class="scenario">
+      <strong>Non-script-only manifest, even with <code>timingMethod: 'all'</code></strong> &mdash; manifest names
+      only an image; a completely unrelated script (not in the manifest, not the caller) throws.
+      <div class="expect">Expect: that error is <strong>never</strong> attributed &mdash; a manifest with zero script assets can never satisfy stack-trace matching.</div>
+      <button onclick="scenarios.nonScriptOnlyGuardrail()">Run</button>
+    </div>
+
+    <div class="scenario">
+      <strong><code>timingMethod</code> set with no manifest at all</strong> &mdash; nothing for it to widen against.
+      <div class="expect">Expect: silent no-op &mdash; a normal baseline timing event, no warning/throw.</div>
+      <button onclick="scenarios.timingMethodNoManifest()">Run</button>
+    </div>
+
+    <div id="log"></div>
+
+    <script type="text/javascript">
+      var seq = 0
+      function logLine (label, detail) {
+        var el = document.getElementById('log')
+        var row = document.createElement('div')
+        row.innerHTML = '<span class="tag">[' + (++seq) + ']</span> ' + label + (detail ? ' &mdash; ' + detail : '')
+        el.appendChild(row)
+        el.scrollTop = el.scrollHeight
+      }
+
+      function loadScript (src) {
+        var script = document.createElement('script')
+        script.src = src
+        document.head.appendChild(script)
+        logLine('loaded script', src)
+      }
+
+      function loadImage (src) {
+        var img = document.createElement('img')
+        img.src = src
+        document.body.appendChild(img)
+        logLine('loaded image', src)
+      }
+
+      // Every scenario uses a fresh, timestamped id/name so repeated clicks are distinguishable in the Network tab.
+      function uid (label) {
+        return label + '-' + Date.now()
+      }
+
+      var scenarios = {
+        stringMatcher: function () {
+          var id = uid('string-matcher-mfe')
+          window.newrelic.register({ id: id, name: 'StringMatcherMFE', manifest: { assets: [{ matcher: 'mfe-manifest-secondary.js' }] } })
+          logLine('register()', id + ' manifest: [mfe-manifest-secondary.js]')
+          loadScript('./js/mfe/mfe-manifest-secondary.js')
+        },
+        regexMatcher: function () {
+          var id = uid('regex-matcher-mfe')
+          window.newrelic.register({ id: id, name: 'RegexMatcherMFE', manifest: { assets: [{ matcher: /mfe-manifest-secondary\.js$/, type: 'script' }] } })
+          logLine('register()', id + " manifest: [/mfe-manifest-secondary.js$/, type: 'script']")
+          loadScript('./js/mfe/mfe-manifest-secondary.js')
+        },
+        noManifest: function () {
+          var id = uid('no-manifest-mfe')
+          window.newrelic.register({ id: id, name: 'NoManifestMFE' })
+          logLine('register()', id + ' (no manifest option supplied)')
+          loadScript('./js/mfe/mfe-manifest-secondary.js')
+        },
+        emptyManifest: function () {
+          var id = uid('empty-manifest-mfe')
+          window.newrelic.register({ id: id, name: 'EmptyManifestMFE', manifest: { assets: [] } })
+          logLine('register()', id + ' manifest: { assets: [] }')
+          loadScript('./js/mfe/mfe-manifest-secondary.js')
+        },
+        twoScripts: function () {
+          var id = uid('two-script-mfe')
+          window.newrelic.register({ id: id, name: 'TwoScriptMFE', manifest: { assets: [{ matcher: 'mfe-manifest-secondary.js' }, { matcher: 'mfe-manifest-secondary-2.js' }] } })
+          logLine('register()', id + ' manifest: [mfe-manifest-secondary.js, mfe-manifest-secondary-2.js]')
+          loadScript('./js/mfe/mfe-manifest-secondary.js')
+          loadScript('./js/mfe/mfe-manifest-secondary-2.js')
+        },
+        overlappingMfes: function () {
+          var idOne = uid('overlap-mfe-1')
+          var idTwo = uid('overlap-mfe-2')
+          window.newrelic.register({ id: idOne, name: 'OverlapMFE1', manifest: { assets: [{ matcher: 'mfe-manifest-secondary.js' }] } })
+          window.newrelic.register({ id: idTwo, name: 'OverlapMFE2', manifest: { assets: [{ matcher: 'mfe-manifest-secondary.js' }] } })
+          logLine('register() x2', idOne + ' and ' + idTwo + ', both matching mfe-manifest-secondary.js')
+          loadScript('./js/mfe/mfe-manifest-secondary.js')
+        },
+        timingWidening: function () {
+          var id = uid('timing-widening-mfe')
+          var api = window.newrelic.register({ id: id, name: 'TimingWideningMFE', manifest: { assets: [{ matcher: 'mfe-manifest-secondary.js' }] }, timingMethod: 'scripts' })
+          logLine('register()', id + " timingMethod: 'scripts'")
+          loadScript('./js/mfe/mfe-manifest-secondary.js')
+          setTimeout(function () { api.deregister(); logLine('deregister()', id) }, 800)
+        },
+        weightNoTimingMethod: function () {
+          var id = uid('weight-no-method-mfe')
+          var api = window.newrelic.register({ id: id, name: 'WeightNoMethodMFE', manifest: { assets: [{ matcher: 'mfe-manifest-secondary.js' }] } })
+          logLine('register()', id + ' (no timingMethod)')
+          loadScript('./js/mfe/mfe-manifest-secondary.js')
+          setTimeout(function () { api.deregister(); logLine('deregister()', id) }, 800)
+        },
+        lazyAsset: function () {
+          var id = uid('lazy-asset-mfe')
+          var api = window.newrelic.register({ id: id, name: 'LazyAssetMFE', manifest: { assets: [{ matcher: 'square.png' }] }, timingMethod: 'all' })
+          logLine('register()', id + " manifest: [square.png], timingMethod: 'all'")
+          setTimeout(function () {
+            loadImage('./images/square.png')
+          }, 300)
+          setTimeout(function () { api.deregister(); logLine('deregister()', id) }, 1500)
+        },
+        neverLoaded: function () {
+          var id = uid('never-loaded-mfe')
+          var api = window.newrelic.register({ id: id, name: 'NeverLoadedMFE', manifest: { assets: [{ matcher: 'never-loaded-asset.js' }] }, timingMethod: 'all' })
+          logLine('register()', id + ' manifest: [never-loaded-asset.js] (never actually loaded)')
+          setTimeout(function () { api.deregister(); logLine('deregister()', id) }, 500)
+        },
+        rootRegisters: function () {
+          logLine('loading', 'js/mfe/mfe-manifest-root.js (calls register() itself)')
+          loadScript('./js/mfe/mfe-manifest-root.js')
+          setTimeout(function () { loadScript('./js/mfe/mfe-manifest-root-secondary.js') }, 300)
+        },
+        registrarExcludesSelf: function () {
+          logLine('loading', 'js/mfe/mfe-manifest-registrar.js (registers manifest-registrar-mfe, excludes itself)')
+          loadScript('./js/mfe/mfe-manifest-registrar.js')
+          setTimeout(function () { loadScript('./js/mfe/mfe-manifest-registrar-secondary.js') }, 300)
+        },
+        webSocket: function () {
+          var id = uid('manifest-ws-mfe')
+          var api = window.newrelic.register({ id: id, name: 'ManifestWsMFE', manifest: { assets: [{ matcher: 'mfe-manifest-secondary-ws.js' }] } })
+          logLine('register()', id + ' manifest: [mfe-manifest-secondary-ws.js]')
+          loadScript('./js/mfe/mfe-manifest-secondary-ws.js')
+          setTimeout(function () {
+            if (window.manifestWs) window.manifestWs.close()
+            api.deregister()
+            logLine('closed socket + deregister()', id)
+          }, 1000)
+        },
+        nonScriptOnlyGuardrail: function () {
+          var id = uid('image-only-mfe')
+          window.newrelic.register({ id: id, name: 'ImageOnlyMFE', manifest: { assets: [{ matcher: 'square.png' }] }, timingMethod: 'all' })
+          logLine('register()', id + ' manifest: [square.png] only (no script assets)')
+          loadScript('./js/mfe/mfe-manifest-secondary.js')
+        },
+        timingMethodNoManifest: function () {
+          var id = uid('timing-no-manifest-mfe')
+          var api = window.newrelic.register({ id: id, name: 'TimingNoManifestMFE', timingMethod: 'all' })
+          logLine('register()', id + " timingMethod: 'all', no manifest supplied")
+          setTimeout(function () { api.deregister(); logLine('deregister()', id) }, 500)
+        }
+      }
+
+      logLine('ready', 'newrelic.register() available: ' + (window.newrelic && typeof window.newrelic.register === 'function'))
+    </script>
+  </body>
+</html>

@@ -83,12 +83,13 @@ function register (agentRef, target) {
     type: V2_TYPES.BA
   }
 
+  // The script timings for this entity, which will be used to populate part of the MicroFrontEndTiming custom event.
   const timings = findScriptTimings(target)
 
-  // Track MFE vitals for this entity
+  // Track MFE vitals for this entity, which will be used to populate part of the MicroFrontEndTiming custom event.
   const vitals = trackMFEVitals(target, timings)
 
-  // the URL of the page at the time this entity was registered
+  // the URL of the page at the time this entity was registered, which will be used to populate part of the MicroFrontEndTiming custom event.
   const registerUrl = cleanURL('' + location)
 
   const attrs = {}

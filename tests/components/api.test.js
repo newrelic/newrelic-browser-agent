@@ -957,6 +957,8 @@ describe('API tests', () => {
           expect(attrs).toHaveProperty('timeToFetch')
           expect(attrs).toHaveProperty('timeToRegister')
           expect(attrs).toHaveProperty('timeAlive')
+          expect(attrs).toHaveProperty('registerUrl')
+          expect(attrs).toHaveProperty('deregisterUrl')
 
           // All values should be numbers
           expect(typeof attrs.timeToLoad).toBe('number')
@@ -964,6 +966,39 @@ describe('API tests', () => {
           expect(typeof attrs.timeToFetch).toBe('number')
           expect(typeof attrs.timeToRegister).toBe('number')
           expect(typeof attrs.timeAlive).toBe('number')
+          expect(typeof attrs.registerUrl).toBe('string')
+          expect(typeof attrs.deregisterUrl).toBe('string')
+
+          // pageUrl/currentUrl are generic_events defaults injected on every custom event;
+          // MicroFrontEndTiming opts out of them in favor of registerUrl/deregisterUrl
+          expect(attrs.pageUrl).toBeUndefined()
+          expect(attrs.currentUrl).toBeUndefined()
+        })
+
+        test('should capture registerUrl and deregisterUrl independently, at each respective time', () => {
+          const registerUrl = String(location)
+
+          try {
+            const myApi = agent.register({ id, name })
+
+            // Navigate before deregistering so registerUrl and deregisterUrl are provably
+            // captured at different times rather than both just reading the same current value.
+            window.history.pushState(null, '', '/deregistered-page')
+            const deregisterUrl = String(location)
+            expect(deregisterUrl).not.toBe(registerUrl)
+
+            myApi.deregister()
+
+            const timingCall = handleModule.handle.mock.calls.find(call =>
+              call[0] === 'api-recordCustomEvent' && call[1][1] === 'MicroFrontEndTiming'
+            )
+            const attrs = timingCall[1][2]
+
+            expect(attrs.registerUrl).toBe(registerUrl)
+            expect(attrs.deregisterUrl).toBe(deregisterUrl)
+          } finally {
+            window.history.pushState(null, '', registerUrl)
+          }
         })
 
         test('should not report timing twice on multiple deregister calls', () => {

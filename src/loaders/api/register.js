@@ -20,6 +20,7 @@ import { subscribeToPageUnload } from '../../common/window/page-visibility'
 import { findScriptTimings } from '../../common/v2/script-tracker'
 import { trackMFEVitals } from '../../common/v2/mfe-vitals'
 import { generateRandomHexString } from '../../common/ids/unique-id'
+import { cleanURL } from '../../common/url/clean-url'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPI} RegisterAPI
@@ -82,10 +83,14 @@ function register (agentRef, target) {
     type: V2_TYPES.BA
   }
 
+  // The script timings for this entity, which will be used to populate part of the MicroFrontEndTiming custom event.
   const timings = findScriptTimings(target)
 
-  // Track MFE vitals for this entity
+  // Track MFE vitals for this entity, which will be used to populate part of the MicroFrontEndTiming custom event.
   const vitals = trackMFEVitals(target, timings)
+
+  // the URL of the page at the time this entity was registered, which will be used to populate part of the MicroFrontEndTiming custom event.
+  const registerUrl = cleanURL('' + location)
 
   const attrs = {}
 
@@ -199,6 +204,11 @@ function register (agentRef, target) {
     const eventData = {
       assetUrl: timings.asset, // the url of the script that was registered, or undefined if it could not be determined (inline or no match)
       assetType: timings.type, // the type of asset that was associated with the timings, one of 'script', 'link' (if preloaded and found in the resource timing buffer), 'preload' (if preloaded but not found in the resource timing buffer), or "unknown" if it could not be determined
+      registerUrl, // the url of the page at the time this entity was registered
+      deregisterUrl: cleanURL('' + location), // the url of the page at the time this entity was deregistered (or unloaded)
+      // generic_events' addEvent() injects pageUrl/currentUrl on every custom event by default; override them away here in favor of registerUrl/deregisterUrl above
+      pageUrl: undefined,
+      currentUrl: undefined,
       timeAlive: timings.reportedAt - timings.registeredAt, // registeredAt to reportedAt
       timeToBeRequested: timings.fetchStart, // origin to fetchStart
       timeToExecute, // scriptStart to scriptEnd
@@ -206,10 +216,10 @@ function register (agentRef, target) {
       timeToLoad: timeToFetch + timeToExecute, // fetch time and script time together
       timeToRegister: timings.registeredAt, // timestamp when register() was called
       // leave room to extend these with more data keys as needed
-      ...(vitals.fcp.value >= 0 && { 'nr.vitals.fcp.value': vitals.fcp.value }), // FCP vital object with value and metadata
-      ...(vitals.lcp.value >= 0 && { 'nr.vitals.lcp.value': vitals.lcp.value }), // LCP vital object with value and metadata
-      ...(vitals.cls.value >= 0 && { 'nr.vitals.cls.value': vitals.cls.value }), // CLS vital object with value and metadata
-      ...(vitals.inp.value >= 0 && { 'nr.vitals.inp.value': vitals.inp.value }) // INP vital object with value and metadata
+      ...(vitals.fcp.value >= 0 && { 'vitals.fcp.value': vitals.fcp.value }), // FCP vital object with value and metadata
+      ...(vitals.lcp.value >= 0 && { 'vitals.lcp.value': vitals.lcp.value }), // LCP vital object with value and metadata
+      ...(vitals.cls.value >= 0 && { 'vitals.cls.value': vitals.cls.value }), // CLS vital object with value and metadata
+      ...(vitals.inp.value >= 0 && { 'vitals.inp.value': vitals.inp.value }) // INP vital object with value and metadata
     }
 
     api.recordCustomEvent('MicroFrontEndTiming', eventData)

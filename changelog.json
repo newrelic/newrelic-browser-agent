@@ -4,6 +4,55 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "a282ba0afbc9291aaaef165050da813bfc79f8b6",
+          "message": "MicroFrontEndTiming attributes changes",
+          "issues": [
+            "1837"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "db9faa52730585c8ecbd1100e00a3b6fe94c2ab9",
+          "message": "Ensure Session Replay's custom masker applies to non-inputs",
+          "issues": [
+            "1840"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "f678c3a60f53455eb5d43eab90ab28e081b18a83",
+          "message": "Add instrumentation to track races between tabs",
+          "issues": [
+            "1838"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "1a18e10f4754f6516fdac82020fe5cc5eed489a4",
+          "message": "improve v2 target standardization",
+          "issues": [
+            "1826"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "a07609a36f9891d85001711ba2d723fef096421b",
+          "message": "Introduce v2 PageView & decouple connect service call",
+          "issues": [
+            "1824"
+          ]
+        }
+      ],
+      "version": "1.321.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "b79fb764-c5f3-4477-9bbf-06e236c7dd8a",
+      "createTime": "2026-08-31T17:35:32.244Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "1f1919809498e6aa8f1fc2ada0c00c3872cb30b8",
           "message": "Avoid obfuscating keys and reserved system vals",
@@ -4193,5 +4242,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-08-12T17:09:24.258Z"
+  "updateTime": "2026-08-31T17:35:32.244Z"
 }

@@ -95,7 +95,10 @@ describe('RRWeb Configuration', () => {
         expect(node.textContent).toMatch(/\s+/)
       })
 
-      const testNodes = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===3 && !!@.textContent && @.textContent.match(/\\S+/) && ![\'script\',\'link\',\'style\'].includes(@parent.tagName))]', json: sessionReplaysHarvests })
+      // text-unmask-class/text-unmask-data are deliberately decorated to stay unmasked even under mask_text_selector:
+      // '*' -- excluded here since this test is about the blanket-masking behavior, not the unmask override (see the
+      // dedicated 'mask fn callbacks' tests below for that).
+      const testNodes = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===3 && !!@.textContent && @.textContent.match(/\\S+/) && ![\'script\',\'link\',\'style\'].includes(@parent.tagName) && ![\'text-unmask-class\',\'text-unmask-data\'].includes(@parent.attributes.id))]', json: sessionReplaysHarvests })
       expect(testNodes.length).toBeGreaterThan(0)
 
       testNodes.forEach(node => {
@@ -231,6 +234,53 @@ describe('RRWeb Configuration', () => {
         { tagName: 'textarea', id: 'unmask-class', shouldMask: false }
       ])
     })
+
+    // NR-fix: a plain (non-input) element -- e.g. the container of a text node -- has no `.type` property.
+    // maskTextFn must still honor the unmask class/data attribute on elements like this, not just on inputs.
+    it('maskTextFn: should mask a plain (non-input) text node with no unmask decoration (control test)', async () => {
+      await visit('rrweb-instrumented.html', { session_replay: { mask_text_selector: '*' } })
+      const sessionReplaysHarvests = await getInitialHarvest()
+
+      const textNode = findTextNode(sessionReplaysHarvests, 'div', 'text-plain')
+      expect(textNode).toBeDefined()
+      expect(textNode.textContent).toMatch(/\*+/)
+    })
+
+    it('maskTextFn: should unmask a plain (non-input) text node by class', async () => {
+      await visit('rrweb-instrumented.html', { session_replay: { mask_text_selector: '*' } })
+      const sessionReplaysHarvests = await getInitialHarvest()
+
+      const textNode = findTextNode(sessionReplaysHarvests, 'div', 'text-unmask-class')
+      expect(textNode).toBeDefined()
+      expect(textNode.textContent).not.toMatch(/\*+/)
+    })
+
+    it('maskTextFn: should unmask a plain (non-input) text node by data attr', async () => {
+      await visit('rrweb-instrumented.html', { session_replay: { mask_text_selector: '*' } })
+      const sessionReplaysHarvests = await getInitialHarvest()
+
+      const textNode = findTextNode(sessionReplaysHarvests, 'div', 'text-unmask-data')
+      expect(textNode).toBeDefined()
+      expect(textNode.textContent).not.toMatch(/\*+/)
+    })
+
+    it('maskTextFn: should unmask a plain (non-input) text node by class when explicitly targeted by mask_text_selector', async () => {
+      await visit('rrweb-instrumented.html', { session_replay: { mask_text_selector: '#text-unmask-class' } })
+      const sessionReplaysHarvests = await getInitialHarvest()
+
+      const textNode = findTextNode(sessionReplaysHarvests, 'div', 'text-unmask-class')
+      expect(textNode).toBeDefined()
+      expect(textNode.textContent).not.toMatch(/\*+/)
+    })
+
+    it('maskTextFn: should unmask a plain (non-input) text node by data attr when explicitly targeted by mask_text_selector', async () => {
+      await visit('rrweb-instrumented.html', { session_replay: { mask_text_selector: '#text-unmask-data' } })
+      const sessionReplaysHarvests = await getInitialHarvest()
+
+      const textNode = findTextNode(sessionReplaysHarvests, 'div', 'text-unmask-data')
+      expect(textNode).toBeDefined()
+      expect(textNode.textContent).not.toMatch(/\*+/)
+    })
   })
 
   describe('block_selector', () => {
@@ -328,6 +378,24 @@ describe('RRWeb Configuration', () => {
 
   function getInitialHarvest () {
     return sessionReplaysCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+  }
+
+  /**
+   * Finds the single text-node child of the given element (by tagName + id) in the initial snapshot harvest.
+   * @param {Array} sessionReplaysHarvests
+   * @param {string} tagName
+   * @param {string} id
+   * @returns {{textContent: string}|undefined}
+   */
+  function findTextNode (sessionReplaysHarvests, tagName, id) {
+    const snapshotHarvest = sessionReplaysHarvests.find(x => decodeAttributes(x.request.query.attributes).hasSnapshot === true)
+    expect(snapshotHarvest).toBeDefined()
+
+    const elementNode = JSONPath({ path: `$.request.body.[?(!!@ && @.tagName==='${tagName}' && @.attributes.id==='${id}')]`, json: snapshotHarvest })
+    expect(elementNode.length).toBe(1)
+
+    const textNodes = JSONPath({ path: '$.childNodes.[?(@.type===3)]', json: elementNode[0] })
+    return textNodes[0]
   }
 
   /**

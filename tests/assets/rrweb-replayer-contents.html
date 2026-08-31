@@ -4,15 +4,21 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/rrweb@latest/dist/rrweb.min.css"
     />
-    <script src="https://cdn.jsdelivr.net/npm/rrweb@latest/dist/rrweb.min.js"></script>
+    <!-- <script type="module" src="https://cdn.jsdelivr.net/npm/rrweb@latest/dist/rrweb.min.js"></script> -->
   </head>
   <body>
-    <script>
+    <script type="module">
+      import * as rrweb from "https://cdn.jsdelivr.net/npm/rrweb@latest/dist/rrweb.min.js";
       (async () => {
         const urlParams = new URLSearchParams(window.location.search)
         const events = await fetch(`/session-replay?sessionId=${urlParams.get('sessionId')}`).then((r) => r.json());
         console.log("events", events);
-        const replayer = new rrweb.Replayer(events);
+        const replayer = new rrweb.Replayer(events, {
+          // Allows script/canvas execution in the replayed DOM iframe
+          UNSAFE_replayCanvas: true, 
+          // Disable inline script stripping if rrweb is filtering them out
+          blockClass: 'rr-block', 
+        });
         replayer.play();
       })();
     </script>

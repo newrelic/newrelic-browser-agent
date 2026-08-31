@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { gosNREUMOriginals } from '../../../common/window/nreum'
@@ -17,10 +17,8 @@ export function isPreloadAllowed (agentInit) {
 
 export function customMasker (text, element) {
   try {
-    if (typeof element?.type === 'string') {
-      if (element.type.toLowerCase() === 'password') return '*'.repeat(text?.length || 0)
-      if (element?.dataset?.nrUnmask !== undefined || element?.classList?.contains('nr-unmask')) return text
-    }
+    if (typeof element?.type === 'string' && element.type.toLowerCase() === 'password') return '*'.repeat(text?.length || 0)
+    if (element?.dataset?.nrUnmask !== undefined || element?.classList?.contains('nr-unmask')) return text
   } catch (err) {
     // likely an element was passed to this handler that was invalid and was missing attributes or methods
   }

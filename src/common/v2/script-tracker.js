@@ -33,11 +33,13 @@ export const scriptCorrelations = new Map()
 let poSubscribers = []
 
 /**
- * Retrieves a script correlation by URL using exact matching
+ * Retrieves a script correlation by URL using exact matching. Exported so other features (e.g. generic_events'
+ * resource attribution) can key off the same DOM node/load-timing tracking this module already does for every
+ * `<script>` element, rather than setting up a second, redundant observer.
  * @param {string} targetUrl - The URL to find
  * @returns {ScriptCorrelation | undefined} - The correlation object if found
  */
-function findCorrelation (targetUrl) {
+export function findCorrelation (targetUrl) {
   return scriptCorrelations.get(targetUrl)
 }
 
@@ -93,15 +95,23 @@ if (globalScope.PerformanceObserver?.supportedEntryTypes.includes('resource')) {
    * after the buffer fills up we won't be able to get the script timing information from the resource timing API
   */
   const scriptObserver = new PerformanceObserver((list) => {
-    list.getEntries().filter(validEntryCriteria).forEach((entry) => {
-      // Update correlation with performance data (creates entry if needed)
-      const entryUrl = cleanURL(entry.name)
-      const correlation = getOrCreateCorrelation(entryUrl)
-      correlation.performance.start = Math.floor(entry.startTime)
-      correlation.performance.end = Math.floor(entry.responseEnd)
-      correlation.performance.value = entry
+    list.getEntries().forEach((entry) => {
+      // DOM/script correlation bookkeeping only makes sense for script-like entries (it's later read via
+      // ScriptCorrelation.script, which is anchored to <script> tag DOM timing) -- stays gated on
+      // validEntryCriteria to avoid growing scriptCorrelations for every image/css/font load on the page.
+      if (validEntryCriteria(entry)) {
+        const entryUrl = cleanURL(entry.name)
+        const correlation = getOrCreateCorrelation(entryUrl)
+        correlation.performance.start = Math.floor(entry.startTime)
+        correlation.performance.end = Math.floor(entry.responseEnd)
+        correlation.performance.value = entry
+      }
 
-      // Clear resolved or expired subscribers
+      // Late-resolution subscribers (findScriptTimings' entry-script subscriber, or a manifest asset's) can be for
+      // any asset type -- images/fonts/stylesheets lazy-loaded after register() need to resolve too, not just
+      // scripts -- so every entry is checked here, unfiltered. Skipped when nothing is pending, the common case.
+      if (!poSubscribers.length) return
+
       const canClear = []
       poSubscribers.forEach(({ test, addedAt }, idx) => {
         if (test(entry) || now() - addedAt > 10000) canClear.push(idx)
@@ -197,6 +207,27 @@ function applyPerformanceEntry (timings, entry) {
   timings.fetchEnd = Math.floor(entry.responseEnd)
   timings.asset = entry.name
   timings.type = entry.initiatorType
+  applyResourceWeight(timings, entry)
+}
+
+/**
+ * Accumulates the byte weight and render-blocking status of a single detected asset (the entry script or a resolved
+ * manifest asset) into a timings object. Shared by both the entry-script path (`applyPerformanceEntry`) and the
+ * manifest path (`applyManifestEntry`) so `totalWeight`/`renderBlocking` reflect every asset actually detected,
+ * regardless of which path found it.
+ * @param {RegisterAPITimings} timings
+ * @param {PerformanceResourceTiming} entry
+ */
+function applyResourceWeight (timings, entry) {
+  // transferSize is 0 for cross-origin responses without a Timing-Allow-Origin header (a browser privacy
+  // restriction, not evidence of a zero-byte asset) -- adding 0 is the correct behavior either way.
+  timings.totalWeight = (timings.totalWeight || 0) + (entry.transferSize || 0)
+  // renderBlocking maps directly to the browser's own renderBlockingStatus value: 'blocking' -> true (and, once
+  // true across any detected asset, it never gets downgraded by a later non-blocking one), 'non-blocking' -> false
+  // (only if nothing has already resolved true), and no value at all (browser doesn't support the attribute for
+  // this asset) leaves it untouched -- so it stays `undefined` if no detected asset ever reports the attribute.
+  if (entry.renderBlockingStatus === 'blocking') timings.renderBlocking = true
+  else if (entry.renderBlockingStatus === 'non-blocking' && timings.renderBlocking !== true) timings.renderBlocking = false
 }
 
 /**
@@ -220,13 +251,133 @@ function subscribeToLatePerformanceEntry (timings, mfeScriptUrl) {
 }
 
 /**
+ * Applies a single manifest asset's performance entry to a timings object: always accumulates totalWeight/
+ * renderBlocking (these aren't timing concerns, so unlike everything else here they're never gated behind
+ * `timingMethod`), then, only when `timingMethod` calls for it, widens the aggregate fetchStart/fetchEnd window
+ * (never shrinking it), widens the aggregate scriptStart/scriptEnd window for script assets using their DOM
+ * correlation data, and anchors asset/type on this entry if it's the first script asset seen to resolve.
+ * @param {RegisterAPITimings} timings
+ * @param {PerformanceResourceTiming} entry
+ * @param {import('./manifest').ParsedManifestAsset} asset - the manifest asset this entry resolved
+ * @param {{ resolved: boolean }} entryState - shared "first script asset wins" guard for a single `applyManifestTimings` call
+ * @param {'entry'|'scripts'|'all'} [timingMethod] - the registered MFE's timing method; `undefined`/'entry' means weight/render-blocking still accumulate, but no timing widening happens at all
+ */
+function applyManifestEntry (timings, entry, asset, entryState, timingMethod) {
+  // Weight/render-blocking accumulate for every matched asset regardless of type or timingMethod -- css/images/
+  // fonts have byte weight and can be render-blocking too, and "how much did this MFE actually weigh" isn't a
+  // timing question, so it shouldn't be gated behind the opt-in timingMethod values below.
+  applyResourceWeight(timings, entry)
+
+  if (timingMethod !== 'scripts' && timingMethod !== 'all') return // no timing-widening effect at the 'entry' default/unset
+
+  const widensAllAssets = timingMethod === 'all'
+  // Under 'scripts', only script assets widen the fetch window (matching pre-existing behavior); under 'all',
+  // every matched asset does.
+  if (widensAllAssets || asset.isScript) {
+    const start = Math.floor(entry.startTime)
+    const end = Math.floor(entry.responseEnd)
+    // fetchStart/fetchEnd default to 0 (meaning "not yet found") elsewhere in this module, so only fold them into
+    // the min/max aggregation once they hold a real, positive value -- otherwise the 0 default would permanently
+    // win Math.min.
+    timings.fetchStart = timings.fetchStart > 0 ? Math.min(timings.fetchStart, start) : start
+    timings.fetchEnd = timings.fetchEnd > 0 ? Math.max(timings.fetchEnd, end) : end
+  }
+
+  // Non-script assets (css/images/fonts) never execute, so only script assets widen the execution window or anchor asset/type.
+  if (asset.isScript) {
+    const correlation = findCorrelation(cleanURL(entry.name))
+    if (correlation) {
+      const widenScriptWindow = () => {
+        const { start: scriptStart, end: scriptEnd } = correlation.script
+        if (scriptStart) timings.scriptStart = timings.scriptStart > 0 ? Math.min(timings.scriptStart, scriptStart) : scriptStart
+        if (scriptEnd) timings.scriptEnd = timings.scriptEnd > 0 ? Math.max(timings.scriptEnd, scriptEnd) : scriptEnd
+      }
+      widenScriptWindow()
+      // A script's PerformanceResourceTiming (keyed on responseEnd, network completion only) can resolve before
+      // its DOM load/error event (which sets correlation.dom.end, after parse/execution) -- if that hasn't
+      // fired yet, re-widen once it does instead of permanently snapshotting a collapsed scriptStart===scriptEnd.
+      if (!correlation.dom.end && correlation.dom.value) {
+        ;['load', 'error'].forEach(eventType => correlation.dom.value.addEventListener(eventType, widenScriptWindow, { once: true }))
+      }
+    }
+
+    if (!entryState.resolved) {
+      timings.asset = entry.name
+      timings.type = entry.initiatorType
+      entryState.resolved = true
+    }
+  }
+}
+
+/**
+ * Subscribes to late resource timing emissions for any manifest assets that were not already resolved against the
+ * buffered performance entries. Reuses the shared page-wide scriptObserver/poSubscribers mechanism (rather than
+ * creating a new PerformanceObserver per registered MFE) so this scales with the number of MFEs on a page. Unlike
+ * the correlation bookkeeping in the observer above (which only looks at script-like entries via
+ * validEntryCriteria), this late-resolution pass runs against every resource entry, so images/fonts/stylesheets
+ * lazy-loaded after `register()` resolve correctly too, not just script-type manifest assets.
+ * @param {RegisterAPITimings} timings
+ * @param {Set<import('./manifest').ParsedManifestAsset>} pending - manifest assets still unresolved
+ * @param {{ resolved: boolean }} entryState - shared "first script asset wins" guard for a single `applyManifestTimings` call
+ * @param {'entry'|'scripts'|'all'} [timingMethod] - forwarded to `applyManifestEntry` for each late-resolving asset
+ */
+function subscribeToLateManifestEntries (timings, pending, entryState, timingMethod) {
+  if (!globalScope.PerformanceObserver?.supportedEntryTypes?.includes('resource')) return
+
+  poSubscribers.push({
+    addedAt: now(),
+    test: (entry) => {
+      const matched = [...pending].find(asset => asset.test(entry.name))
+      if (matched) {
+        applyManifestEntry(timings, entry, matched, entryState, timingMethod)
+        pending.delete(matched)
+      }
+      return pending.size === 0
+    }
+  })
+}
+
+/**
+ * Applies a registered MFE's manifest to a timings object (already populated by `findScriptTimings`). No-ops
+ * entirely when no manifest is present. `totalWeight`/`renderBlocking` accumulate from every manifest asset
+ * detected regardless of `timingMethod` -- weight isn't a timing concept, so even the 'entry' default (or
+ * `timingMethod` left unset) still reflects manifest assets' bytes. Actual timing widening (fetchStart/fetchEnd/
+ * scriptStart/scriptEnd/asset anchor) stays opt-in: it only happens when `timingMethod` is 'scripts' or 'all', and
+ * only scriptStart/scriptEnd/the asset anchor are restricted to script assets even in 'all' mode (non-script
+ * assets never execute). Whichever script asset is seen to resolve first (across both the immediate
+ * buffered-entries pass and any later-resolving entries) anchors asset/type -- manifests with no script assets, or
+ * a `timingMethod` that doesn't request widening, leave asset/type as whatever `findScriptTimings` derived from
+ * the caller script.
+ * @param {RegisterAPITimings} timings - the timings object to widen in place
+ * @param {RegisterAPITarget} target - the registered MFE target, which may carry a parsed `manifest`
+ */
+export function applyManifestTimings (timings, target) {
+  const parsedManifest = target?.manifest
+  if (!parsedManifest || !parsedManifest.assets.length) return
+
+  const entryState = { resolved: false }
+  const pending = new Set(parsedManifest.assets)
+
+  const resourceEntries = globalScope.performance?.getEntriesByType('resource') || []
+  resourceEntries.forEach((entry) => {
+    const matched = [...pending].find(asset => asset.test(entry.name))
+    if (matched) {
+      applyManifestEntry(timings, entry, matched, entryState, target.timingMethod)
+      pending.delete(matched)
+    }
+  })
+
+  if (pending.size) subscribeToLateManifestEntries(timings, pending, entryState, target.timingMethod)
+}
+
+/**
  * Uses the stack of the initiator function, returns script timing information if a script can be found with the resource timing API matching the URL found in the stack.
  * @param {RegisterAPITarget} [target] - The MFE target being registered. Its id is used to scope stale-correlation detection per-MFE rather than per-script-URL, so one script registering multiple distinct MFEs doesn't misclassify a later MFE's registration as a stale reuse of an earlier one's.
  * @returns {RegisterAPITimings} Object containing script fetch start and end times, and the asset URL if found
  */
 export function findScriptTimings (target) {
   const mfeId = target?.id
-  const timings = { registeredAt: now(), reportedAt: undefined, fetchStart: 0, fetchEnd: 0, scriptStart: 0, scriptEnd: 0, asset: undefined, type: 'unknown' }
+  const timings = { registeredAt: now(), reportedAt: undefined, fetchStart: 0, fetchEnd: 0, scriptStart: 0, scriptEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
   const stack = getDeepStackTrace()
   if (!stack) return timings
 

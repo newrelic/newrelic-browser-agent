@@ -328,6 +328,100 @@ describe('sub-features', () => {
     global.PerformanceObserver = origGlobalPO
   })
 
+  describe('browserPerformance.resource attribution', () => {
+    async function setupResourceAggregate () {
+      mainAgent.init.performance = { capture_marks: false, capture_measures: false, capture_detail: false, resources: { enabled: true, asset_types: [], first_party_domains: [], ignore_newrelic: true } }
+      mainAgent.init.api.register.enabled = true
+
+      const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
+      const aggregate = new Aggregate(mainAgent)
+      const triggerHarvestSpy = jest.spyOn(mainAgent.runtime.harvester, 'triggerHarvestFor').mockImplementation(() => {})
+
+      aggregate.ee.emit('rumresp', [{ ins: 1 }])
+      await new Promise(process.nextTick)
+
+      return { aggregate, triggerHarvestSpy }
+    }
+
+    function resourceEntry (name, overrides = {}) {
+      return {
+        toJSON: () => ({
+          name,
+          duration: 10,
+          startTime: performance.now(),
+          initiatorType: 'script',
+          ...overrides
+        })
+      }
+    }
+
+    test('attributes to the container agent when no MFE matches', async () => {
+      mainAgent.runtime.registeredEntities = []
+      const { aggregate, triggerHarvestSpy } = await setupResourceAggregate()
+
+      aggregate.ee.emit('browserPerformance.resource', [resourceEntry('https://cdn.example.com/unrelated.js')])
+
+      const events = aggregate.events.get()
+      expect(events).toHaveLength(1)
+      expect(events[0]).toMatchObject({ eventType: 'BrowserPerformance', entryName: 'https://cdn.example.com/unrelated.js' })
+      expect(events[0]['entity.guid']).toBeUndefined()
+
+      triggerHarvestSpy.mockRestore()
+    })
+
+    test('attributes a resource to the auto-detected MFE script when no manifest is supplied', async () => {
+      mainAgent.runtime.registeredEntities = [
+        {
+          metadata: {
+            timings: { asset: 'https://cdn.example.com/mfe.js' },
+            target: {
+              id: 'mfe-1',
+              name: 'MFE 1',
+              type: 'MFE',
+              attributes: { 'entity.guid': 'mfe-1-guid' }
+            }
+          }
+        }
+      ]
+      const { aggregate, triggerHarvestSpy } = await setupResourceAggregate()
+
+      aggregate.ee.emit('browserPerformance.resource', [resourceEntry('https://cdn.example.com/mfe.js')])
+
+      const events = aggregate.events.get()
+      expect(events).toHaveLength(1)
+      expect(events[0]).toMatchObject({ eventType: 'BrowserPerformance', 'entity.guid': 'mfe-1-guid' })
+
+      triggerHarvestSpy.mockRestore()
+    })
+
+    test('attributes a resource to the MFE via a non-script manifest asset (e.g. an image)', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      mainAgent.runtime.registeredEntities = [
+        {
+          metadata: {
+            timings: { asset: 'https://cdn.example.com/mfe.js' },
+            target: {
+              id: 'mfe-1',
+              name: 'MFE 1',
+              type: 'MFE',
+              manifest: manifestModule.parseManifest({ assets: [{ matcher: 'logo.png' }] }),
+              attributes: { 'entity.guid': 'mfe-1-guid' }
+            }
+          }
+        }
+      ]
+      const { aggregate, triggerHarvestSpy } = await setupResourceAggregate()
+
+      aggregate.ee.emit('browserPerformance.resource', [resourceEntry('https://cdn.example.com/logo.png', { initiatorType: 'img' })])
+
+      const events = aggregate.events.get()
+      expect(events).toHaveLength(1)
+      expect(events[0]).toMatchObject({ eventType: 'BrowserPerformance', entryName: 'https://cdn.example.com/logo.png', 'entity.guid': 'mfe-1-guid' })
+
+      triggerHarvestSpy.mockRestore()
+    })
+  })
+
   test('should record security policy violations when enabled', () => {
     const event = new Event('securitypolicyviolation')
     Object.defineProperties(event, {

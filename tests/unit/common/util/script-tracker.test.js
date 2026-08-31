@@ -99,9 +99,88 @@ describe('script-tracker', () => {
         fetchStart: 0,
         fetchEnd: 0,
         asset: undefined,
-        type: 'unknown'
+        type: 'unknown',
+        totalWeight: 0,
+        renderBlocking: undefined
       })
       expect(result.registeredAt).toBeGreaterThan(0)
+    })
+
+    test('accumulates totalWeight and maps renderBlocking to true from a "blocking" entry script resource entry', () => {
+      const mockResourceEntry = {
+        name: 'https://cdn.example.com/mfe-app.js',
+        initiatorType: 'script',
+        startTime: 100.5,
+        responseEnd: 250.8,
+        transferSize: 4321,
+        renderBlockingStatus: 'blocking'
+      }
+
+      mockNavigationEntry = { name: 'https://example.com/' }
+      mockStack = `Error
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at Object.register (${scriptTrackerModule.thisFile}:5:10)
+    at main (https://cdn.example.com/mfe-app.js:15:20)`
+
+      if (performanceObserverCallback) {
+        performanceObserverCallback({ getEntries: () => [mockResourceEntry] })
+      }
+
+      const result = scriptTrackerModule.findScriptTimings()
+
+      expect(result.totalWeight).toBe(4321)
+      expect(result.renderBlocking).toBe(true)
+    })
+
+    test('maps renderBlocking to false from a "non-blocking" entry script resource entry', () => {
+      const mockResourceEntry = {
+        name: 'https://cdn.example.com/mfe-app.js',
+        initiatorType: 'script',
+        startTime: 100,
+        responseEnd: 200,
+        transferSize: 100,
+        renderBlockingStatus: 'non-blocking'
+      }
+
+      mockNavigationEntry = { name: 'https://example.com/' }
+      mockStack = `Error
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at Object.register (${scriptTrackerModule.thisFile}:5:10)
+    at main (https://cdn.example.com/mfe-app.js:15:20)`
+
+      if (performanceObserverCallback) {
+        performanceObserverCallback({ getEntries: () => [mockResourceEntry] })
+      }
+
+      const result = scriptTrackerModule.findScriptTimings()
+
+      expect(result.renderBlocking).toBe(false)
+    })
+
+    test('totalWeight defaults to 0 bytes and renderBlocking stays undefined for entries without transferSize/renderBlockingStatus (Timing-Allow-Origin restriction / unsupported browser)', () => {
+      const mockResourceEntry = {
+        name: 'https://cdn.example.com/mfe-app.js',
+        initiatorType: 'script',
+        startTime: 100,
+        responseEnd: 200,
+        transferSize: 0
+        // renderBlockingStatus intentionally omitted -- unsupported/not observable for this entry
+      }
+
+      mockNavigationEntry = { name: 'https://example.com/' }
+      mockStack = `Error
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at Object.register (${scriptTrackerModule.thisFile}:5:10)
+    at main (https://cdn.example.com/mfe-app.js:15:20)`
+
+      if (performanceObserverCallback) {
+        performanceObserverCallback({ getEntries: () => [mockResourceEntry] })
+      }
+
+      const result = scriptTrackerModule.findScriptTimings()
+
+      expect(result.totalWeight).toBe(0)
+      expect(result.renderBlocking).toBeUndefined()
     })
 
     test('identifies inline script when URL matches navigation', () => {
@@ -789,6 +868,509 @@ init@https://cdn.example.com/gecko-app.js:20:10`
       expect(result.fetchStart).toBe(150)
       expect(result.fetchEnd).toBe(280)
       expect(result.type).toBe('script')
+    })
+  })
+
+  describe('applyManifestTimings', () => {
+    beforeEach(async () => {
+      scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
+    })
+
+    test('is a no-op when target has no manifest', () => {
+      const timings = { fetchStart: 10, fetchEnd: 20, asset: 'https://example.com/root.js', type: 'script' }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: undefined, timingMethod: 'all' })
+      expect(timings).toEqual({ fetchStart: 10, fetchEnd: 20, asset: 'https://example.com/root.js', type: 'script' })
+    })
+
+    test('findScriptTimings output is unaffected by the presence of a manifest when timingMethod is undefined', () => {
+      // Regression guard: findScriptTimings itself never references target.manifest at all -- it's
+      // applyManifestTimings (called separately, from register.js) that reads the manifest, and even there,
+      // timing widening specifically stays gated to timingMethod 'scripts'/'all' (totalWeight/renderBlocking
+      // accumulate regardless -- see the dedicated tests below).
+      const mockResourceEntry = {
+        name: 'https://cdn.example.com/root.js',
+        initiatorType: 'script',
+        startTime: 100,
+        responseEnd: 200
+      }
+      mockNavigationEntry = { name: 'https://example.com/' }
+      mockStack = `Error
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at register (${scriptTrackerModule.thisFile}:2:2)
+    at init (https://cdn.example.com/root.js:5:10)`
+
+      if (performanceObserverCallback) {
+        performanceObserverCallback({ getEntries: () => [mockResourceEntry] })
+      }
+
+      const withoutManifest = scriptTrackerModule.findScriptTimings({ id: 'a' })
+      const withManifest = scriptTrackerModule.findScriptTimings({ id: 'b', manifest: { assets: [], scripts: [] } })
+
+      expect(withoutManifest.fetchStart).toBe(withManifest.fetchStart)
+      expect(withoutManifest.fetchEnd).toBe(withManifest.fetchEnd)
+      expect(withoutManifest.asset).toBe(withManifest.asset)
+      expect(withoutManifest.type).toBe(withManifest.type)
+    })
+
+    test('accumulates totalWeight from manifest assets even when timingMethod is left undefined (weight is not gated like timing widening)', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'secondary.js' }, { matcher: 'banner.png' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/secondary.js', initiatorType: 'script', startTime: 10, responseEnd: 60, transferSize: 500 },
+        { name: 'https://cdn.example.com/banner.png', initiatorType: 'img', startTime: 5, responseEnd: 40, transferSize: 300, renderBlockingStatus: 'non-blocking' }
+      ])
+
+      // No timingMethod at all -- the 'entry' default.
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: 'https://cdn.example.com/caller.js', type: 'script', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest })
+
+      // Weight/render-blocking accumulate from both manifest assets regardless...
+      expect(timings.totalWeight).toBe(800)
+      expect(timings.renderBlocking).toBe(false)
+      // ...but timing widening and the asset/type anchor stay untouched -- identical to pre-manifest behavior.
+      expect(timings.fetchStart).toBe(0)
+      expect(timings.fetchEnd).toBe(0)
+      expect(timings.asset).toBe('https://cdn.example.com/caller.js')
+      expect(timings.type).toBe('script')
+    })
+
+    test('accumulates totalWeight from a late-resolving manifest asset even when timingMethod is left undefined', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'secondary.js' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest })
+
+      expect(timings.totalWeight).toBe(0)
+
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/secondary.js', initiatorType: 'script', startTime: 10, responseEnd: 60, transferSize: 500 }]
+      })
+
+      expect(timings.totalWeight).toBe(500)
+      // Still no timing widening without an opt-in timingMethod.
+      expect(timings.fetchStart).toBe(0)
+      expect(timings.asset).toBeUndefined()
+    })
+
+    test('under timingMethod "scripts", a non-script manifest asset contributes weight but does not widen the fetch window', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'app.js' }, { matcher: 'styles.css' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/app.js', initiatorType: 'script', startTime: 100, responseEnd: 150, transferSize: 200 },
+        { name: 'https://cdn.example.com/styles.css', initiatorType: 'link', startTime: 5, responseEnd: 40, transferSize: 50 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      // styles.css's much earlier/wider window (5-40) must not leak into fetchStart/fetchEnd under "scripts" mode...
+      expect(timings.fetchStart).toBe(100)
+      expect(timings.fetchEnd).toBe(150)
+      // ...but its bytes still count toward totalWeight, alongside the script's.
+      expect(timings.totalWeight).toBe(250)
+    })
+
+    test('widens fetchStart/fetchEnd across multiple buffered manifest assets without shrinking the existing window', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'early.js' }, { matcher: 'late.js' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/early.js', initiatorType: 'script', startTime: 10, responseEnd: 60 },
+        { name: 'https://cdn.example.com/late.js', initiatorType: 'script', startTime: 200, responseEnd: 400 }
+      ])
+
+      const timings = { fetchStart: 50, fetchEnd: 100, asset: 'https://cdn.example.com/root.js', type: 'script' }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.fetchStart).toBe(10)
+      expect(timings.fetchEnd).toBe(400)
+    })
+
+    test('anchors asset/type on whichever manifest script asset resolves first, regardless of declaration order', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      // 'secondary.js' is declared first, but 'root-entry.js' resolves first in the performance buffer below --
+      // auto-anchoring must follow resolution order, not manifest declaration order.
+      const parsedManifest = manifestModule.parseManifest({
+        assets: [{ matcher: 'secondary.js' }, { matcher: 'root-entry.js' }]
+      })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/root-entry.js', initiatorType: 'script', startTime: 5, responseEnd: 40 },
+        { name: 'https://cdn.example.com/secondary.js', initiatorType: 'script', startTime: 45, responseEnd: 90 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: 'https://cdn.example.com/caller.js', type: 'script' }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.asset).toBe('https://cdn.example.com/root-entry.js')
+      expect(timings.fetchStart).toBe(5)
+      expect(timings.fetchEnd).toBe(90)
+    })
+
+    test('does not re-anchor asset/type once a manifest script asset has already resolved, even across late entries', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'first.js' }, { matcher: 'second.js' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/first.js', initiatorType: 'script', startTime: 5, responseEnd: 40 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: 'https://cdn.example.com/caller.js', type: 'script' }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.asset).toBe('https://cdn.example.com/first.js')
+
+      // second.js resolves later, via the shared late-entries subscriber -- must not steal the anchor from first.js.
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/second.js', initiatorType: 'script', startTime: 50, responseEnd: 90 }]
+      })
+
+      expect(timings.asset).toBe('https://cdn.example.com/first.js')
+      expect(timings.type).toBe('script')
+    })
+
+    test('never anchors asset/type from non-script manifest assets, even in "all" mode', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'styles.css' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/styles.css', initiatorType: 'link', startTime: 5, responseEnd: 40 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: 'https://cdn.example.com/caller.js', type: 'script' }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'all' })
+
+      // fetch window still widens from the css asset, but asset/type stay anchored on the caller script.
+      expect(timings.fetchStart).toBe(5)
+      expect(timings.fetchEnd).toBe(40)
+      expect(timings.asset).toBe('https://cdn.example.com/caller.js')
+      expect(timings.type).toBe('script')
+    })
+
+    test('subscribes to late resource entries for manifest assets not yet in the performance buffer, and keeps the subscriber alive until every pending asset resolves', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'a.js' }, { matcher: 'b.js' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown' }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      // Nothing resolved yet
+      expect(timings.fetchStart).toBe(0)
+      expect(timings.fetchEnd).toBe(0)
+
+      // First late entry resolves only one of the two pending assets -- subscriber must not clear yet
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/a.js', initiatorType: 'script', startTime: 10, responseEnd: 20 }]
+      })
+      expect(timings.fetchStart).toBe(10)
+      expect(timings.fetchEnd).toBe(20)
+
+      // Second late entry resolves the remaining pending asset
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/b.js', initiatorType: 'script', startTime: 30, responseEnd: 50 }]
+      })
+      expect(timings.fetchStart).toBe(10)
+      expect(timings.fetchEnd).toBe(50)
+    })
+
+    test('resolves a late-loading non-script manifest asset (e.g. an image) via the shared observer', async () => {
+      // Regression test: the shared observer used to filter every entry through validEntryCriteria (script-like
+      // only) before ever checking it against a pending late-resolution subscriber, so a non-script manifest
+      // asset that hadn't loaded yet at register() time could never resolve. Images/fonts/stylesheets lazy-loaded
+      // after register() must now resolve just like scripts do.
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'banner.png' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'all' })
+
+      // Nothing resolved yet -- the image hasn't loaded
+      expect(timings.fetchStart).toBe(0)
+      expect(timings.totalWeight).toBe(0)
+
+      // The image loads later. initiatorType 'img' would previously have been filtered out before ever reaching
+      // the pending-subscriber check.
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/banner.png', initiatorType: 'img', startTime: 10, responseEnd: 50, transferSize: 300 }]
+      })
+
+      expect(timings.fetchStart).toBe(10)
+      expect(timings.fetchEnd).toBe(50)
+      expect(timings.totalWeight).toBe(300)
+      // Non-script assets never anchor asset/type or widen scriptStart/scriptEnd, even when late-resolved.
+      expect(timings.asset).toBeUndefined()
+    })
+
+    test('resolves a late-loading non-script manifest asset even when it arrives in the same observer batch as an unrelated script entry', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'icon.svg' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'all' })
+
+      // The batch includes an unrelated script (which passes validEntryCriteria and drives correlation
+      // bookkeeping) alongside the actual matching image entry (which doesn't) -- both must still be checked
+      // against the pending subscriber.
+      performanceObserverCallback({
+        getEntries: () => [
+          { name: 'https://cdn.example.com/unrelated.js', initiatorType: 'script', startTime: 1, responseEnd: 2, transferSize: 10 },
+          { name: 'https://cdn.example.com/icon.svg', initiatorType: 'img', startTime: 20, responseEnd: 45, transferSize: 75 }
+        ]
+      })
+
+      expect(timings.fetchStart).toBe(20)
+      expect(timings.fetchEnd).toBe(45)
+      expect(timings.totalWeight).toBe(75)
+    })
+
+    test('does not resolve a pending non-script manifest asset from an unrelated entry', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'banner.png' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'all' })
+
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/other-image.png', initiatorType: 'img', startTime: 10, responseEnd: 50, transferSize: 300 }]
+      })
+
+      expect(timings.fetchStart).toBe(0)
+      expect(timings.totalWeight).toBe(0)
+    })
+
+    test('leaves timings at their pre-call baseline, and never throws, when a manifest asset never appears on the page at all', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'never-loaded-asset.js' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, scriptStart: 0, scriptEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      const baseline = { ...timings }
+
+      expect(() => scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'all' })).not.toThrow()
+
+      // No synchronous match, and the asset is never resolved by any late PerformanceObserver entry either --
+      // every field must remain exactly at its pre-call baseline.
+      expect(timings).toEqual(baseline)
+    })
+
+    test('widens scriptStart/scriptEnd across multiple manifest script assets using their DOM correlations', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const correlationModule = await import('../../../../src/common/v2/script-correlation')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'early.js' }, { matcher: 'late.js' }] })
+
+      const earlyCorrelation = new correlationModule.ScriptCorrelation('https://cdn.example.com/early.js')
+      earlyCorrelation.dom.start = 15
+      earlyCorrelation.dom.end = 70
+      const lateCorrelation = new correlationModule.ScriptCorrelation('https://cdn.example.com/late.js')
+      lateCorrelation.dom.start = 210
+      lateCorrelation.dom.end = 450
+      scriptTrackerModule.scriptCorrelations.set('https://cdn.example.com/early.js', earlyCorrelation)
+      scriptTrackerModule.scriptCorrelations.set('https://cdn.example.com/late.js', lateCorrelation)
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/early.js', initiatorType: 'script', startTime: 10, responseEnd: 60 },
+        { name: 'https://cdn.example.com/late.js', initiatorType: 'script', startTime: 200, responseEnd: 400 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, scriptStart: 0, scriptEnd: 0, asset: undefined, type: 'unknown' }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.scriptStart).toBe(15)
+      expect(timings.scriptEnd).toBe(450)
+    })
+
+    test('does not widen scriptStart/scriptEnd using non-script manifest assets, even in all mode', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const correlationModule = await import('../../../../src/common/v2/script-correlation')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'script.js' }, { matcher: 'styles.css' }] })
+
+      const scriptCorrelation = new correlationModule.ScriptCorrelation('https://cdn.example.com/script.js')
+      scriptCorrelation.dom.start = 20
+      scriptCorrelation.dom.end = 80
+      const cssCorrelation = new correlationModule.ScriptCorrelation('https://cdn.example.com/styles.css')
+      cssCorrelation.dom.start = 1
+      cssCorrelation.dom.end = 999
+      scriptTrackerModule.scriptCorrelations.set('https://cdn.example.com/script.js', scriptCorrelation)
+      scriptTrackerModule.scriptCorrelations.set('https://cdn.example.com/styles.css', cssCorrelation)
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/script.js', initiatorType: 'script', startTime: 10, responseEnd: 60 },
+        { name: 'https://cdn.example.com/styles.css', initiatorType: 'link', startTime: 5, responseEnd: 50 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, scriptStart: 0, scriptEnd: 0, asset: undefined, type: 'unknown' }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'all' })
+
+      // styles.css's wildly wider dom.start/dom.end (1/999) must not leak into scriptStart/scriptEnd
+      expect(timings.scriptStart).toBe(20)
+      expect(timings.scriptEnd).toBe(80)
+    })
+
+    test('widens scriptStart/scriptEnd from late-resolving manifest script entries', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const correlationModule = await import('../../../../src/common/v2/script-correlation')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'a.js' }, { matcher: 'b.js' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, scriptStart: 0, scriptEnd: 0, asset: undefined, type: 'unknown' }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.scriptStart).toBe(0)
+      expect(timings.scriptEnd).toBe(0)
+
+      const aCorrelation = new correlationModule.ScriptCorrelation('https://cdn.example.com/a.js')
+      aCorrelation.dom.start = 30
+      aCorrelation.dom.end = 90
+      scriptTrackerModule.scriptCorrelations.set('https://cdn.example.com/a.js', aCorrelation)
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/a.js', initiatorType: 'script', startTime: 10, responseEnd: 20 }]
+      })
+      expect(timings.scriptStart).toBe(30)
+      expect(timings.scriptEnd).toBe(90)
+
+      // dom.start (55) is set above the resource entry's responseEnd (50) -- the ScriptCorrelation.script getter
+      // takes max(dom.start, performance.end), since a script can't begin executing before its fetch completes -- so
+      // this widens scriptEnd only, leaving scriptStart at its existing (lower) value of 30.
+      const bCorrelation = new correlationModule.ScriptCorrelation('https://cdn.example.com/b.js')
+      bCorrelation.dom.start = 55
+      bCorrelation.dom.end = 500
+      scriptTrackerModule.scriptCorrelations.set('https://cdn.example.com/b.js', bCorrelation)
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/b.js', initiatorType: 'script', startTime: 30, responseEnd: 50 }]
+      })
+      expect(timings.scriptStart).toBe(30)
+      expect(timings.scriptEnd).toBe(500)
+    })
+
+    test('accumulates totalWeight across multiple buffered manifest assets, script and non-script alike', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'app.js' }, { matcher: 'styles.css' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/app.js', initiatorType: 'script', startTime: 10, responseEnd: 60, transferSize: 1000 },
+        { name: 'https://cdn.example.com/styles.css', initiatorType: 'link', startTime: 5, responseEnd: 40, transferSize: 250 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'all' })
+
+      // Both the script and the non-script asset contribute bytes, unlike scriptStart/scriptEnd widening which
+      // is script-only.
+      expect(timings.totalWeight).toBe(1250)
+    })
+
+    test('adds to an existing totalWeight from the entry script rather than overwriting it', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'secondary.js' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/secondary.js', initiatorType: 'script', startTime: 10, responseEnd: 60, transferSize: 500 }
+      ])
+
+      // Simulates findScriptTimings() having already attributed the entry script's own 300 bytes.
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: 'https://cdn.example.com/root.js', type: 'script', totalWeight: 300, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.totalWeight).toBe(800)
+    })
+
+    test('accumulates totalWeight from late-resolving manifest assets', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'a.js' }, { matcher: 'b.js' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.totalWeight).toBe(0)
+
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/a.js', initiatorType: 'script', startTime: 10, responseEnd: 20, transferSize: 400 }]
+      })
+      expect(timings.totalWeight).toBe(400)
+
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/b.js', initiatorType: 'script', startTime: 30, responseEnd: 50, transferSize: 600 }]
+      })
+      expect(timings.totalWeight).toBe(1000)
+    })
+
+    test('sets renderBlocking true if any matched manifest asset (including non-script) is "blocking"', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'app.js' }, { matcher: 'styles.css' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/app.js', initiatorType: 'script', startTime: 10, responseEnd: 60, transferSize: 100 },
+        { name: 'https://cdn.example.com/styles.css', initiatorType: 'link', startTime: 5, responseEnd: 40, transferSize: 50, renderBlockingStatus: 'blocking' }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'all' })
+
+      expect(timings.renderBlocking).toBe(true)
+    })
+
+    test('sets renderBlocking false when matched manifest assets are only ever "non-blocking"', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'app.js' }, { matcher: 'styles.css' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/app.js', initiatorType: 'script', startTime: 10, responseEnd: 60, transferSize: 100, renderBlockingStatus: 'non-blocking' },
+        { name: 'https://cdn.example.com/styles.css', initiatorType: 'link', startTime: 5, responseEnd: 40, transferSize: 50, renderBlockingStatus: 'non-blocking' }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'all' })
+
+      expect(timings.renderBlocking).toBe(false)
+    })
+
+    test('a "blocking" asset wins over "non-blocking" ones regardless of resolution order', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'first.js' }, { matcher: 'second.js' }] })
+
+      // 'first.js' (non-blocking) resolves before 'second.js' (blocking) in the buffered entries below --
+      // renderBlocking must still end up true, and a blocking result must never be downgraded by a later
+      // non-blocking asset.
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/first.js', initiatorType: 'script', startTime: 5, responseEnd: 40, transferSize: 10, renderBlockingStatus: 'non-blocking' },
+        { name: 'https://cdn.example.com/second.js', initiatorType: 'script', startTime: 45, responseEnd: 90, transferSize: 10, renderBlockingStatus: 'blocking' }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.renderBlocking).toBe(true)
+    })
+
+    test('leaves renderBlocking undefined when no matched manifest asset reports the attribute at all', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'app.js' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/app.js', initiatorType: 'script', startTime: 10, responseEnd: 60, transferSize: 100 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'all' })
+
+      expect(timings.renderBlocking).toBeUndefined()
     })
   })
 

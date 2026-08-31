@@ -1,4 +1,5 @@
 <a href="https://opensource.newrelic.com/oss-category/#community-plus"><picture><source media="(prefers-color-scheme: dark)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/dark/Community_Plus.png"><source media="(prefers-color-scheme: light)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"><img alt="New Relic Open Source community plus project banner." src="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"></picture></a>
+
 # New Relic Browser Agent Warning Codes
 
 ### 1
@@ -159,3 +160,5 @@
 `RegisteredIframeEntity could not determine parent origin and will not register, to avoid trusting messages from any origin.`
 ### 79
 `Unable to initialize Connector and/or Harvester.`
+### 80
+`An invalid manifest option was provided to register() and will be ignored.`

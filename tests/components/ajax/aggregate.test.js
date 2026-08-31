@@ -290,6 +290,37 @@ describe('prepareHarvest', () => {
     })
   })
 
+  test('reports Ajax/Events/Payload/Bytes-Added SM when payload attributes are present', () => {
+    const spy = jest.spyOn(ajaxAggregate, 'reportSupportabilityMetric')
+
+    context.requestHeaders = { 'content-type': 'application/json' }
+    context.requestBody = 'fooBody'
+    context.responseHeaders = { 'content-type': 'application/json' }
+    context.responseBody = 'barBody'
+    fakeAgent.init.ajax.capture_payloads = CAPTURE_PAYLOAD_SETTINGS.ALL
+    ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
+
+    ajaxAggregate.makeHarvestPayload(false)
+
+    expect(spy).toHaveBeenCalledWith('Ajax/Events/Payload/Bytes-Added', expect.any(Number))
+    const [, bytesAdded] = spy.mock.calls.find(call => call[0] === 'Ajax/Events/Payload/Bytes-Added')
+    expect(bytesAdded).toBeGreaterThan(0)
+
+    spy.mockRestore()
+  })
+
+  test('does not report Ajax/Events/Payload/Bytes-Added SM when no payload attributes are present', () => {
+    const spy = jest.spyOn(ajaxAggregate, 'reportSupportabilityMetric')
+
+    ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
+
+    ajaxAggregate.makeHarvestPayload(false)
+
+    expect(spy).not.toHaveBeenCalledWith('Ajax/Events/Payload/Bytes-Added', expect.any(Number))
+
+    spy.mockRestore()
+  })
+
   test('does not obfuscate reserved/system fields', async () => {
     const mockEvent = {
       startTime: 1000,

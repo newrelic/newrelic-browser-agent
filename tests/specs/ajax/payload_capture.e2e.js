@@ -1,4 +1,4 @@
-import { testAjaxEventsRequest, testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testAjaxEventsRequest, testInteractionEventsRequest, testMetricsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('capture_payloads', () => {
   let ajaxEventsCapture, bIxnCapture
@@ -276,6 +276,61 @@ describe('capture_payloads - beacon exclusion', () => {
       const keys = event.children.map(x => x.key)
       expect(keys).toEqual(expect.arrayContaining(['ajaxRequest.id']))
       expect(keys).not.toEqual(expect.arrayContaining(['requestHeaders', 'requestBody', 'responseHeaders', 'responseBody']))
+    })
+  })
+})
+
+describe('capture_payloads - supportability metrics', () => {
+  let ajaxEventsCapture, bIxnCapture, metricsCapture
+
+  beforeEach(async () => {
+    [ajaxEventsCapture, bIxnCapture, metricsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testAjaxEventsRequest },
+      { test: testInteractionEventsRequest },
+      { test: testMetricsRequest }
+    ])
+  })
+
+  ;['full', 'spa'].forEach((loader) => {
+    // under the 'full' loader, ajax events are harvested standalone (ajax feature's own serializer);
+    // under the 'spa' loader, they're instead routed into interaction (bIxn) events via soft navigations,
+    // and the SM is recorded from AjaxNode.serialize as part of that harvest -- both paths must report it
+    const eventsCapture = () => loader === 'spa' ? bIxnCapture : ajaxEventsCapture
+
+    it(`reports Ajax/Events/Payload/Bytes-Added when payload attributes are captured (${loader} loader)`, async () => {
+      await browser.url(await browser.testHandle.assetURL('ajax/xhr-payloads.html', {
+        init: { ajax: { capture_payloads: 'all' } }, loader
+      })).then(() => browser.waitForAgentLoad())
+
+      // the SM is only recorded once the relevant feature's own harvest runs its serializer; wait for
+      // that harvest to land before forcing a final metrics harvest, so the SM has actually been recorded by then
+      await eventsCapture().waitForResult({ totalCount: 1 })
+
+      const [[smHarvest]] = await Promise.all([
+        metricsCapture.waitForResult({ totalCount: 1 }),
+        browser.refresh()
+      ])
+      const bytesAddedSm = smHarvest.request.body.sm.find(sm => sm.params.name === 'Ajax/Events/Payload/Bytes-Added')
+
+      expect(bytesAddedSm).toBeDefined()
+      expect(bytesAddedSm.stats.c).toBeGreaterThan(0)
+      expect(bytesAddedSm.stats.t).toBeGreaterThan(0)
+    })
+
+    it(`does not report Ajax/Events/Payload/Bytes-Added when capture_payloads is none (${loader} loader)`, async () => {
+      await browser.url(await browser.testHandle.assetURL('ajax/xhr-payloads.html', {
+        init: { ajax: { capture_payloads: 'none' } }, loader
+      })).then(() => browser.waitForAgentLoad())
+
+      await eventsCapture().waitForResult({ totalCount: 1 })
+
+      const [[smHarvest]] = await Promise.all([
+        metricsCapture.waitForResult({ totalCount: 1 }),
+        browser.refresh()
+      ])
+      const bytesAddedSm = smHarvest.request.body.sm.find(sm => sm.params.name === 'Ajax/Events/Payload/Bytes-Added')
+
+      expect(bytesAddedSm).toBeUndefined()
     })
   })
 })

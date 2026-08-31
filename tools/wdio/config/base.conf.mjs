@@ -38,7 +38,10 @@ export default function config () {
       path.resolve(__dirname, '../plugins/custom-commands.mjs'),
       [path.resolve(__dirname, '../plugins/testing-server/index.mjs'), args]
     ],
-    reporters: [['spec', { onlyFailures: true }]],
+    reporters: [
+      ['spec', { onlyFailures: true }],
+      path.resolve(__dirname, '../plugins/failed-specs-reporter.mjs')
+    ],
     specFileRetries: args.retry ? 1 : 0,
     specFileRetriesDeferred: true,
     framework: 'mocha',

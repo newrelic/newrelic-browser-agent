@@ -10,6 +10,7 @@ import baseConfig from './config/base.conf.mjs'
 import specsConfig from './config/specs.conf.mjs'
 import lambdaTestConfig from './config/lambdatest.conf.mjs'
 import args from './args.mjs'
+import { FAILED_SPECS_DIR, SUMMARY_FILE } from './util/failed-specs.mjs'
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
 /**
@@ -35,6 +36,7 @@ if (args.verbose) {
 
 // Clean output directories
 fs.emptyDirSync(path.dirname(configFilePath))
+fs.emptyDirSync(FAILED_SPECS_DIR)
 
 // Clear the CLI params before starting wdio so they are not passed to worker processes
 process.argv.splice(2)
@@ -51,6 +53,10 @@ fs.writeFile(
     wdio.run().then(
       (exitCode) => {
         // testingServer.stop();
+        const failedSpecs = fs.readdirSync(FAILED_SPECS_DIR)
+          .filter(file => file.endsWith('.json'))
+          .map(file => fs.readJsonSync(path.join(FAILED_SPECS_DIR, file)).spec)
+        fs.outputJsonSync(SUMMARY_FILE, { failedSpecs })
         process.exit(exitCode)
       },
       (error) => {

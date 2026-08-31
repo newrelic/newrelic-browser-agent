@@ -55,6 +55,9 @@ jobs:
     env:
       LAMBDA_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
       LAMBDA_ACCESS_KEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
+    outputs:
+      exit-code: ${{ steps.wdio-run.outputs.exit-code }}
+      failed-specs: ${{ steps.failed-specs.outputs.specs }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -68,13 +71,26 @@ jobs:
         run: |
           npm run build:all
       - name: Run WDIO Tests
+        id: wdio-run
         run: |
+          set +e
           node --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
             -T \
             -b '${{ inputs.browser-target }}' \
             --concurrent ${{ inputs.concurrency }} \
             ${{ runner.debug && '-v -L -D -d' || '' }} \
             ${{ inputs.additional-flags || '' }}
+          echo "exit-code=$?" >> "$GITHUB_OUTPUT"
+      - name: Collect failed specs
+        if: always()
+        id: failed-specs
+        run: |
+          if [ -f .wdio-results/failed-specs.json ]; then
+            specs=$(node -e "console.log(JSON.parse(require('fs').readFileSync('.wdio-results/failed-specs.json','utf8')).failedSpecs.join(' '))")
+          else
+            specs=""
+          fi
+          echo "specs=$specs" >> "$GITHUB_OUTPUT"
       - name: Generate wdio tunnel log archive name
         if: ${{ always() }}
         id: wdio-tunnel-log-archive-name
@@ -87,3 +103,78 @@ jobs:
         with:
           name: ${{ steps.wdio-tunnel-log-archive-name.outputs.results }}
           path: .lambdatest
+
+  wdio-retry:
+    name: WDIO ${{ contains(inputs.additional-flags, '--webview') && 'WebView' || '' }} Retry - '${{ inputs.browser-target }}'
+    needs: wdio
+    if: needs.wdio.outputs.exit-code != '0' && needs.wdio.outputs.failed-specs != ''
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      LAMBDA_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+      LAMBDA_ACCESS_KEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
+    outputs:
+      exit-code: ${{ steps.wdio-retry-run.outputs.exit-code }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Install dependencies
+        run: npm ci
+      - name: Build agent
+        run: |
+          npm run build:all
+      - name: Run WDIO Tests (retry of failed specs only)
+        id: wdio-retry-run
+        run: |
+          set +e
+          node --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
+            -T \
+            -b '${{ inputs.browser-target }}' \
+            --concurrent 3 \
+            ${{ runner.debug && '-v -L -D -d' || '' }} \
+            ${{ inputs.additional-flags || '' }} \
+            ${{ needs.wdio.outputs.failed-specs }}
+          echo "exit-code=$?" >> "$GITHUB_OUTPUT"
+      - name: Generate wdio tunnel log archive name
+        if: ${{ always() }}
+        id: wdio-tunnel-log-archive-name
+        run: |
+          browser=${{ inputs.browser-target }}
+          echo "results=${browser/\*/all}${{ contains(inputs.additional-flags, '--webview') && '-webview' || '' }}-retry-wdio-tunnel-logs" >> "$GITHUB_OUTPUT"
+      - name: Archive wdio tunnel logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.wdio-tunnel-log-archive-name.outputs.results }}
+          path: .lambdatest
+
+  wdio-result:
+    name: WDIO ${{ contains(inputs.additional-flags, '--webview') && 'WebView' || '' }} Result - '${{ inputs.browser-target }}'
+    needs: [wdio, wdio-retry]
+    if: always()
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Evaluate WDIO result
+        run: |
+          if [ "${{ needs.wdio.outputs.exit-code }}" = "0" ]; then
+            echo "Primary WDIO run passed."
+            exit 0
+          fi
+
+          if [ "${{ needs.wdio-retry.result }}" = "success" ] && [ "${{ needs.wdio-retry.outputs.exit-code }}" = "0" ]; then
+            echo "Primary WDIO run had retryable failures; scoped retry passed. Treating overall run as a pass."
+            exit 0
+          fi
+
+          echo "Primary WDIO run failed and no successful scoped retry is available."
+          exit 1

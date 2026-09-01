@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.322.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.321.0...v1.322.0) (2026-09-01)
+
+
+### Features
+
+* Add registration validation warnings ([#1839](https://github.com/newrelic/newrelic-browser-agent/issues/1839)) ([e26bc9b](https://github.com/newrelic/newrelic-browser-agent/commit/e26bc9baf07c3ffb36993ca18b3c498ef2b88be2))
+
 ## [1.321.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.320.1...v1.321.0) (2026-08-31)
 
 

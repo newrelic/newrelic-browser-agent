@@ -71,6 +71,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Ajax/Metrics/Excluded/App
 <!--- Number of bytes added to reported Ajax event bodies by adding GQL metadata --->
 * Ajax/Events/GraphQL/Bytes-Added
+<!--- Number of bytes added to reported Ajax events by including request/response body, header, and query payload attributes --->
+* Ajax/Events/Payload/Bytes-Added
 <!--- Observed Ajax calls contained a CrossApplicationTracing header --->
 * Ajax/CrossApplicationTracing/Header/Seen
 

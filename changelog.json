@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "e26bc9baf07c3ffb36993ca18b3c498ef2b88be2",
+          "message": "Add registration validation warnings",
+          "issues": [
+            "1839"
+          ]
+        }
+      ],
+      "version": "1.322.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "39f8ddbe-7c10-446f-bf63-6779526c2411",
+      "createTime": "2026-09-01T14:20:21.004Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "a282ba0afbc9291aaaef165050da813bfc79f8b6",
           "message": "MicroFrontEndTiming attributes changes",
           "issues": [
@@ -4242,5 +4259,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-08-31T17:35:32.244Z"
+  "updateTime": "2026-09-01T14:20:21.004Z"
 }

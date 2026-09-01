@@ -27,14 +27,11 @@ runs:
       shell: bash
     - name: Run action script
       id: action-script
+      env:
+        COMMENT: ${{ inputs.comment }}
+        COMMENT_TAG: ${{ inputs.comment_tag }}
       run: |
         node $GITHUB_ACTION_PATH/index.js \
           --github-token ${{ inputs.token }} \
-          --pr-number ${{ inputs.pr_number }} \
-          --comment '''
-            ${{ inputs.comment }}
-          ''' \
-          --comment-tag '''
-            ${{ inputs.comment_tag }}
-          '''
+          --pr-number ${{ inputs.pr_number }}
       shell: bash

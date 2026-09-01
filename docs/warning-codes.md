@@ -123,7 +123,7 @@
 `Session trace aborted.`
 ### 61
 `Timestamps must be non-negative and end time cannot be before start time.`
-### 62 
+### 62
 `Timestamp must be a unix timestamp greater than the page origin time.`
 ### 63
 `A single event was larger than the maximum allowed payload size.`
@@ -159,3 +159,7 @@
 `RegisteredIframeEntity could not determine parent origin and will not register, to avoid trusting messages from any origin.`
 ### 79
 `Unable to initialize Connector and/or Harvester.`
+### 81
+`Entities were detected that share a name with different IDs - This can cause multiple entities to have the same name in New Relic.`
+### 82
+`Entities were detected that share an ID with different names - This can cause your entity's name to change unexpectedly.`

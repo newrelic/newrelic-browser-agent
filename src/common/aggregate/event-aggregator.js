@@ -1,8 +1,9 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { Aggregator } from './aggregator'
+import { debugInstance } from '../debug/instrument-prototype'
 
 /**
  * An extension of the Aggregator class that provides an interface similar to that of EventBuffer class.
@@ -14,6 +15,16 @@ export class EventAggregator {
 
   byteSize () {
     return 0 // EventAggregator does not currently track byte size like EventBuffer does, but will in a future update. This is a placeholder to maintain interface consistency.
+  }
+
+  /**
+   * Turns on console.debug logging of this aggregator's own methods (args and return values).
+   * NOTE: this instance is shared between jserrors and metrics -- debugging it from either feature
+   * logs the other's activity too.
+   * @param {string} label
+   */
+  debug (label) {
+    debugInstance(this, label)
   }
 
   isEmpty ({ aggregatorTypes }) {

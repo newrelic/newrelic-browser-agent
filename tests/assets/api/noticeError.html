@@ -14,6 +14,10 @@
     Api test!
     <script>
       newrelic.noticeError('too many free taco coupons')
+      document.addEventListener('click', () => {
+        console.log("click...")
+        newrelic.noticeError('CLICK - too many free taco coupons')
+      })
     </script>
   </body>
 </html>

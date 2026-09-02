@@ -68,7 +68,8 @@ export function gosNREUMOriginals () {
       PR: globalScope.Promise,
       MO: globalScope.MutationObserver, // this'll be undefined if not in a web window
       FETCH: globalScope.fetch,
-      WS: globalScope.WebSocket
+      WS: globalScope.WebSocket,
+      DEBUG: globalScope.console?.debug
     }
     isNative(...Object.values(nr.o)) // Warns if the originals are not native, which is typically required for the agent to work properly
   }

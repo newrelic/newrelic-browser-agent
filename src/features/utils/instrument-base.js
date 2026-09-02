@@ -40,6 +40,9 @@ export class InstrumentBase extends FeatureBase {
   constructor (agentRef, featureName) {
     super(agentRef, featureName)
 
+    /** @type {string} used to label this instance's debug() output, see FeatureBase#debug */
+    this.moduleType = 'instrument'
+
     /** @type {Function | undefined} This should be set by any derived Instrument class if it has things to do when feature fails or is killed. */
     this.abortHandler = undefined
 
@@ -77,6 +80,16 @@ export class InstrumentBase extends FeatureBase {
       /** if the feature requires opt-in (!auto-start), it will get registered once the api has been called */
       registerDrain(agentRef, featureName)
     }
+  }
+
+  /**
+   * Turns on console.debug logging for this instrument, and cascades to its aggregate -- whether
+   * the aggregate has already been lazy-loaded (see importAggregator) or loads later -- using the
+   * same opts. See FeatureBase#debug for opts.
+   */
+  debug (opts = {}) {
+    super.debug(opts)
+    this.featAggregate?.debug(opts)
   }
 
   /**
@@ -127,6 +140,7 @@ export class InstrumentBase extends FeatureBase {
         const { Aggregate } = await fetchAggregator()
 
         this.featAggregate = new Aggregate(agentRef, argsObjFromInstrument)
+        if (this.__nrDebug) this.featAggregate.debug(this.__nrDebugOpts) // propagate a debug() call made on the instrument before its aggregate existed yet, with the same opts
 
         agentRef.runtime.harvester.initializedAggregates.push(this.featAggregate) // "subscribe" the feature to future harvest intervals
         this.loadedSuccessfully(true)

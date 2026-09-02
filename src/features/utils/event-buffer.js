@@ -1,9 +1,10 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { stringify } from '../../common/util/stringify'
 import { MAX_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
+import { debugInstance } from '../../common/debug/instrument-prototype'
 
 export class EventBuffer {
   #buffer = []
@@ -23,6 +24,14 @@ export class EventBuffer {
 
   get length () {
     return this.#buffer.length
+  }
+
+  /**
+   * Turns on console.debug logging of this buffer's own methods (args and return values).
+   * @param {string} label
+   */
+  debug (label) {
+    debugInstance(this, label)
   }
 
   isEmpty () {

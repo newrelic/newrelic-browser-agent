@@ -21,6 +21,9 @@ export class AggregateBase extends FeatureBase {
   constructor (agentRef, featureName) {
     super(agentRef, featureName)
 
+    /** @type {string} used to label this instance's debug() output, see FeatureBase#debug */
+    this.moduleType = 'aggregate'
+
     /** @type {Boolean} indicates if custom attributes are combined in each event payload for size estimation purposes. this is set to true in derived classes that need to evaluate custom attributes separately from the event payload */
     this.customAttributesAreSeparate = false
     /** @type {Boolean} indicates if the feature can harvest early. This is set to false in derived classes that need to block early harvests, like ajax under certain conditions */
@@ -58,6 +61,16 @@ export class AggregateBase extends FeatureBase {
         this.events = new EventBuffer(MAX_PAYLOAD_SIZE, this)
         break
     }
+  }
+
+  /**
+   * Turns on console.debug logging for this aggregate, and cascades to its event store (`this.events`,
+   * an EventBuffer or, for jserrors/metrics, the shared EventAggregator) unless `opts.eventBuffer` is
+   * explicitly false. See FeatureBase#debug for the rest of opts.
+   */
+  debug (opts = {}) {
+    super.debug(opts)
+    if (opts.eventBuffer !== false) this.events?.debug(`${this.featureName}:event-buffer`)
   }
 
   /** @type {Boolean} indicates if the feature supports registered entities and the harvest requirements therein. Also read by getter "harvestEndpointVersion". Controlled by feature flag in pre-release phase. */

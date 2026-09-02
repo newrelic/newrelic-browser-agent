@@ -43,6 +43,10 @@ security: {{frontMatter.security}}
 
 New Relic recommends that you upgrade the agent regularly to ensure that you're getting the latest features and performance benefits. Older releases will no longer be supported when they reach [end-of-life](https://docs.newrelic.com/docs/browser/browser-monitoring/getting-started/browser-agent-eol-policy/). Release dates are reflective of the original publish date of the agent version.
 
+The following features are currently in limited preview and will not receive standard support:
+- [Micro Front End monitoring](https://docs-preview.newrelic.com/docs/browser/micro-frontend-monitoring/) via the [register() API](https://docs-preview.newrelic.com/docs/browser/register)
+- [BrowserPerformance "resource"](https://docs.newrelic.com/docs/browser/new-relic-browser/browser-pro-features/page-resources/) type events
+
 New browser agent releases are rolled out to customers in small stages over a period of time. Because of this, the date the release becomes accessible to your account may not match the original publish date. Please see this [status dashboard](https://newrelic.github.io/newrelic-browser-agent-release/) for more information.
 
 Consistent with our [browser support policy](https://docs.newrelic.com/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring/#browser-types), {{bodyContent.version}} of the Browser agent was built for and tested against these browsers and version ranges: Chrome {{bodyContent.browserVersions.min.chrome}}-{{bodyContent.browserVersions.max.chrome}}, Edge {{bodyContent.browserVersions.min.edge}}-{{bodyContent.browserVersions.max.edge}}, Safari {{bodyContent.browserVersions.min.safari}}-{{bodyContent.browserVersions.max.safari}}, and Firefox {{bodyContent.browserVersions.min.firefox}}-{{bodyContent.browserVersions.max.firefox}}. For mobile devices, {{bodyContent.version}} was built and tested for Android OS {{bodyContent.browserVersions.max.android}} and iOS Safari {{bodyContent.browserVersions.min.ios}}-{{bodyContent.browserVersions.max.ios}}.

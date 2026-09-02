@@ -80,6 +80,25 @@ describe('RegisteredIframeEntity blocked state', () => {
     })
   }
 
+  it('still constructs and registers the remaining vitals when a web-vitals registration throws', async () => {
+    jest.resetModules()
+    const onCLS = jest.fn(() => { throw new TypeError('performance.getEntriesByType is not a function') })
+    const onLCP = jest.fn()
+    const onFCP = jest.fn()
+    const onINP = jest.fn()
+    jest.doMock('web-vitals', () => ({ onCLS, onFCP, onINP, onLCP }))
+    const { RegisteredIframeEntity: Entity } = await import('../../../src/interfaces/registered-iframe-entity')
+
+    const entity = new Entity({ id: 'my-id', name: 'my-name' })
+    await flushMicrotasks()
+
+    expect(entity).toBeInstanceOf(Entity)
+    expect(onCLS).toHaveBeenCalledTimes(1)
+    expect(onLCP).toHaveBeenCalledTimes(1)
+    expect(onFCP).toHaveBeenCalledTimes(1)
+    expect(onINP).toHaveBeenCalledTimes(1)
+  })
+
   it('becomes blocked when the registration response reports the container blocked the target', async () => {
     const entity = new RegisteredIframeEntity({ id: 'my-id', name: 'my-name' })
     await flushMicrotasks()

@@ -5,6 +5,7 @@
 import { globalScope, isBrowserScope, isiOS, originTime, getNavigationEntry } from '../constants/runtime'
 import { VITAL_NAMES } from './constants'
 import { VitalMetric } from './vital-metric'
+import { registerVital } from './register-vital'
 import { onTTFB } from 'web-vitals/attribution'
 
 export const timeToFirstByte = new VitalMetric(VITAL_NAMES.TIME_TO_FIRST_BYTE)
@@ -18,10 +19,11 @@ export const timeToFirstByte = new VitalMetric(VITAL_NAMES.TIME_TO_FIRST_BYTE)
  * - onTTFB relies on a truthy `responseStart` value, should ensure that exists before relying on it (seen to be falsy in certain Electron.js cases for instance)
  */
 if (isBrowserScope && getNavigationEntry() && !isiOS && window === window.parent) {
-  onTTFB(({ value, attribution }) => {
+  const handleTTFB = ({ value, attribution }) => {
     if (timeToFirstByte.isValid) return
     timeToFirstByte.update({ value, attrs: { navigationEntry: attribution.navigationEntry } })
-  })
+  }
+  registerVital(() => onTTFB(handleTTFB))
 } else {
   if (!timeToFirstByte.isValid) {
     const entry = {}

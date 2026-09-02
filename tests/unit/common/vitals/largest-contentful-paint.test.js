@@ -10,7 +10,7 @@ const lcpAttribution = {
     id: 'someid',
     element: { tagName: 'sometagName' }
   },
-  element: '#someid',
+  target: '#someid',
   timeToFirstByte: 1,
   resourceLoadDelay: 2,
   resourceLoadDuration: 3,
@@ -43,7 +43,7 @@ describe('lcp', () => {
         eid: lcpAttribution.lcpEntry.id,
         elUrl: 'http://domain.com/page', // url is cleaned so query & hash removed
         elTag: lcpAttribution.lcpEntry.element.tagName,
-        element: lcpAttribution.element,
+        element: lcpAttribution.target,
         timeToFirstByte: lcpAttribution.timeToFirstByte,
         resourceLoadDelay: lcpAttribution.resourceLoadDelay,
         resourceLoadDuration: lcpAttribution.resourceLoadDuration,
@@ -74,6 +74,14 @@ describe('lcp', () => {
       })
       done()
     }))
+  })
+
+  test('does NOT throw if web-vitals registration throws', async () => {
+    jest.doMock('web-vitals/attribution', () => ({
+      onLCP: jest.fn(() => { throw new TypeError('performance.getEntriesByType is not a function') })
+    }))
+    const { largestContentfulPaint } = await import('../../../../src/common/vitals/largest-contentful-paint')
+    expect(largestContentfulPaint.isValid).toEqual(false)
   })
 
   test('does NOT report if not browser scoped', (done) => {

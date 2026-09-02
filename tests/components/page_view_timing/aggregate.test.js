@@ -14,20 +14,35 @@ jest.mock('web-vitals/attribution', () => ({
   })),
   onFCP: jest.fn((cb) => cb({
     value: 1,
-    attribution: {}
+    attribution: {
+      timeToFirstByte: 12,
+      firstByteToFCP: 23,
+      loadState: 'dom-interactive'
+    }
   })),
   onINP: jest.fn((cb) => cb({
     value: 8,
+    id: 'v4-1234',
+    entries: [{ name: 'pointerdown', startTime: 8853.8, duration: 8 }],
     attribution: {
       interactionType: 'pointer',
       interactionTime: 8853.8,
       interactionTarget: 'button',
+      inputDelay: 1,
+      nextPaintTime: 8861.8,
+      processingDuration: 5,
+      presentationDelay: 2,
       loadState: 'complete'
     }
   })),
   onLCP: jest.fn((cb) => cb({
     value: 1,
-    attribution: {}
+    attribution: {
+      timeToFirstByte: 12,
+      resourceLoadDelay: 2,
+      resourceLoadDuration: 3,
+      elementRenderDelay: 4
+    }
   }))
 }))
 
@@ -165,17 +180,17 @@ test('does not obfuscate timing names or attribute keys', async () => {
 
   const lcp = findTimings(VITAL_NAMES.LARGEST_CONTENTFUL_PAINT)
   const checkLcpAttrs = (obj) => expect(lcp.attributes).toEqual(expect.arrayContaining([expect.objectContaining(obj)]))
-  checkLcpAttrs({ key: 'timeToFirstByte' })
-  checkLcpAttrs({ key: 'resourceLoadDelay' })
-  checkLcpAttrs({ key: 'resourceLoadDuration' })
-  checkLcpAttrs({ key: 'resourceLoadTime' })
-  checkLcpAttrs({ key: 'elementRenderDelay' })
+  checkLcpAttrs({ key: 'timeToFirstByte', value: 12 })
+  checkLcpAttrs({ key: 'resourceLoadDelay', value: 2 })
+  checkLcpAttrs({ key: 'resourceLoadDuration', value: 3 })
+  checkLcpAttrs({ key: 'resourceLoadTime', value: 3 })
+  checkLcpAttrs({ key: 'elementRenderDelay', value: 4 })
 
   const fcp = findTimings(VITAL_NAMES.FIRST_CONTENTFUL_PAINT)
   const checkFcpAttrs = (obj) => expect(fcp.attributes).toEqual(expect.arrayContaining([expect.objectContaining(obj)]))
-  checkFcpAttrs({ key: 'timeToFirstByte' })
-  checkFcpAttrs({ key: 'firstByteToFCP' })
-  checkFcpAttrs({ key: 'loadState' })
+  checkFcpAttrs({ key: 'timeToFirstByte', value: 12 })
+  checkFcpAttrs({ key: 'firstByteToFCP', value: 23 })
+  checkFcpAttrs({ key: 'loadState', value: 'dom-interactive' })
 
   const fi = findTimings(VITAL_NAMES.FIRST_INTERACTION)
   const checkFiAttrs = (obj) => expect(fi.attributes).toEqual(expect.arrayContaining([expect.objectContaining(obj)]))
@@ -185,16 +200,16 @@ test('does not obfuscate timing names or attribute keys', async () => {
 
   const inp = findTimings(VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)
   const checkInpAttrs = (obj) => expect(inp.attributes).toEqual(expect.arrayContaining([expect.objectContaining(obj)]))
-  checkInpAttrs({ key: 'metricId' })
+  checkInpAttrs({ key: 'metricId', value: 'v4-1234' })
   checkInpAttrs({ key: 'eventTarget', value: 'button' })
-  checkInpAttrs({ key: 'eventTime' })
+  checkInpAttrs({ key: 'eventTime', value: 8853.8 })
   checkInpAttrs({ key: 'interactionTarget', value: 'button' })
-  checkInpAttrs({ key: 'interactionTime' })
+  checkInpAttrs({ key: 'interactionTime', value: 8853.8 })
   checkInpAttrs({ key: 'interactionType', value: 'pointer' })
-  checkInpAttrs({ key: 'inputDelay' })
-  checkInpAttrs({ key: 'nextPaintTime' })
-  checkInpAttrs({ key: 'processingDuration' })
-  checkInpAttrs({ key: 'presentationDelay' })
+  checkInpAttrs({ key: 'inputDelay', value: 1 })
+  checkInpAttrs({ key: 'nextPaintTime', value: 8861.8 })
+  checkInpAttrs({ key: 'processingDuration', value: 5 })
+  checkInpAttrs({ key: 'presentationDelay', value: 2 })
   checkInpAttrs({ key: 'loadState', value: 'complete' })
 
   const globalAttrs = []

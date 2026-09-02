@@ -11,9 +11,9 @@ const clsAttribution = {
   loadState: 'dom-content-loaded'
 }
 let mockReturnVal = 0.123
-const getFreshCLSImport = async (codeToRun) => {
+const getFreshCLSImport = async (codeToRun, attribution = clsAttribution) => {
   jest.doMock('web-vitals/attribution', () => ({
-    onCLS: jest.fn(cb => cb({ value: mockReturnVal, attribution: clsAttribution, id: 'beepboop' }))
+    onCLS: jest.fn(cb => cb({ value: mockReturnVal, attribution, id: 'beepboop' }))
   }))
   const { cumulativeLayoutShift } = await import('../../../../src/common/vitals/cumulative-layout-shift')
   codeToRun(cumulativeLayoutShift)
@@ -28,6 +28,28 @@ describe('cls', () => {
         done()
       })
     })
+  })
+  test('omits largestShiftTarget when undefined (web-vitals v6 when the shift target node was removed)', (done) => {
+    mockReturnVal = 0.123
+    getFreshCLSImport(metric => {
+      metric.subscribe(({ value, attrs }) => {
+        expect(value).toEqual(0.123)
+        expect(attrs).toStrictEqual({
+          metricId: 'beepboop',
+          largestShiftTime: clsAttribution.largestShiftTime,
+          largestShiftValue: clsAttribution.largestShiftValue,
+          loadState: clsAttribution.loadState
+        })
+        done()
+      })
+    }, { ...clsAttribution, largestShiftTarget: undefined })
+  })
+  test('does NOT throw if web-vitals registration throws', async () => {
+    jest.doMock('web-vitals/attribution', () => ({
+      onCLS: jest.fn(() => { throw new TypeError('performance.getEntriesByType is not a function') })
+    }))
+    const { cumulativeLayoutShift } = await import('../../../../src/common/vitals/cumulative-layout-shift')
+    expect(cumulativeLayoutShift.isValid).toEqual(false)
   })
   test('does NOT report if not browser scoped', (done) => {
     jest.doMock('../../../../src/common/constants/runtime', () => ({

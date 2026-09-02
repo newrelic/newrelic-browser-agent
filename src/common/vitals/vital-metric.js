@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 export class VitalMetric {
@@ -17,7 +17,8 @@ export class VitalMetric {
     const state = {
       value: this.roundingMethod(value),
       name: this.name,
-      attrs
+      // optional web-vitals attribution fields are omitted rather than being serialized as null attributes
+      attrs: Object.fromEntries(Object.entries(attrs).filter(([, attrValue]) => attrValue !== undefined))
     }
 
     this.history.push(state)

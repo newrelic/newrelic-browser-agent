@@ -36,5 +36,4 @@ NREUM.init = {
     enabled: true
   }
 }
-NREUM.feature_flags = ['soft_nav']
 NREUM.info = { beacon: 'bam.nr-data.net', errorBeacon: 'bam.nr-data.net', licenseKey: '{{{latestUsProdLicenseKey}}}', applicationID: '1431915022', sa: 1 }

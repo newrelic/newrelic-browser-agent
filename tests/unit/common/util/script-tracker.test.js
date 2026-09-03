@@ -1257,6 +1257,85 @@ init@https://cdn.example.com/gecko-app.js:20:10`
       expect(timings.scriptEnd).toBe(500)
     })
 
+    test('scriptEnd stays live after a manifest asset widens it -- a later, larger completion of the entry script\'s own correlation is not lost', async () => {
+      // Regression test: timings.scriptStart/scriptEnd (as produced by findScriptTimings) are timingFactory get/set
+      // properties backed by a live lookup off the entry script's own correlation. The manifest-widening tests
+      // above hand-build a plain `timings` object, which never exercises that getter/setter machinery at all --
+      // this test goes through the real findScriptTimings() so it actually catches the case where assigning
+      // timings.scriptEnd during manifest widening would otherwise permanently pin an override and silence any
+      // later increase in the entry script's own live value.
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const correlationModule = await import('../../../../src/common/v2/script-correlation')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'sibling.js' }] })
+
+      // Entry script has fetched but not finished executing yet (no dom.end resolved) when register() is called --
+      // its correlation is created via the same PerformanceObserver bookkeeping production code relies on.
+      const entryResourceEntry = { name: 'https://cdn.example.com/entry.js', initiatorType: 'script', startTime: 50, responseEnd: 50 }
+      performanceObserverCallback({ getEntries: () => [entryResourceEntry] })
+
+      mockNavigationEntry = { name: 'https://example.com/' }
+      mockStack = `Error
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at Object.register (${scriptTrackerModule.thisFile}:5:10)
+    at main (https://cdn.example.com/entry.js:15:20)`
+
+      const timings = scriptTrackerModule.findScriptTimings({ id: 'mfe-1' })
+      expect(timings.scriptEnd).toBe(50) // own correlation only -- dom.end hasn't resolved yet
+
+      const siblingCorrelation = new correlationModule.ScriptCorrelation('https://cdn.example.com/sibling.js')
+      siblingCorrelation.dom.start = 60
+      siblingCorrelation.dom.end = 120
+      scriptTrackerModule.scriptCorrelations.set('https://cdn.example.com/sibling.js', siblingCorrelation)
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/sibling.js', initiatorType: 'script', startTime: 55, responseEnd: 100 }
+      ])
+
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+      expect(timings.scriptEnd).toBe(120) // widened by the manifest asset's own (larger) window
+
+      // The entry script's own DOM load event fires afterward, resolving to a value larger than the manifest
+      // asset's. Pre-fix, timings.scriptEnd would have been permanently pinned at 120 the moment the manifest
+      // asset widened it above, silencing this later, larger value entirely.
+      const entryCorrelation = scriptTrackerModule.findCorrelation('https://cdn.example.com/entry.js')
+      entryCorrelation.dom.end = 300
+      expect(timings.scriptEnd).toBe(300)
+    })
+
+    test('widens scriptStart/scriptEnd from a manifest asset even when the registering script itself is inline', async () => {
+      // Regression test: findScriptTimings returns early for an inline registering script (no distinct file URL
+      // to attribute to), *before* scriptStart/scriptEnd are ever converted into timingFactory getters -- they stay
+      // plain `0` values on `timings`. A manifest asset's widening must still land on those plain values directly
+      // (as it always did pre-fix) rather than being silently lost because the live-getter/accumulator machinery
+      // (which only gets wired up for a real, stack-attributable script) was never set up for this timings object.
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const correlationModule = await import('../../../../src/common/v2/script-correlation')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'secondary.js' }] })
+
+      mockNavigationEntry = { name: 'https://example.com/page.html' }
+      global.performance.getEntriesByType = jest.fn((type) => (type === 'navigation' ? [mockNavigationEntry] : []))
+      mockStack = `Error
+    at findScriptTimings (https://example.com/page.html:10:15)
+    at callFunction (https://example.com/page.html:20:5)`
+
+      const timings = scriptTrackerModule.findScriptTimings({ id: 'inline-mfe' })
+      expect(timings.type).toBe('inline')
+      expect(timings.scriptStart).toBe(0)
+      expect(timings.scriptEnd).toBe(0)
+
+      const secondaryCorrelation = new correlationModule.ScriptCorrelation('https://cdn.example.com/secondary.js')
+      secondaryCorrelation.dom.start = 40
+      secondaryCorrelation.dom.end = 90
+      scriptTrackerModule.scriptCorrelations.set('https://cdn.example.com/secondary.js', secondaryCorrelation)
+      global.performance.getEntriesByType = jest.fn((type) => (type === 'resource'
+        ? [{ name: 'https://cdn.example.com/secondary.js', initiatorType: 'script', startTime: 40, responseEnd: 90 }]
+        : []))
+
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.scriptStart).toBe(40)
+      expect(timings.scriptEnd).toBe(90)
+    })
+
     test('accumulates totalWeight across multiple buffered manifest assets, script and non-script alike', async () => {
       const manifestModule = await import('../../../../src/common/v2/manifest')
       const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'app.js' }, { matcher: 'styles.css' }] })
@@ -1309,6 +1388,58 @@ init@https://cdn.example.com/gecko-app.js:20:10`
         getEntries: () => [{ name: 'https://cdn.example.com/b.js', initiatorType: 'script', startTime: 30, responseEnd: 50, transferSize: 600 }]
       })
       expect(timings.totalWeight).toBe(1000)
+    })
+
+    test('does not double-count totalWeight when the manifest lists the same asset as the .register calling script itself', async () => {
+      // Regression test: findScriptTimings already attributes the entry script's own transferSize via
+      // applyPerformanceEntry/applyResourceWeight. If a manifest also lists that same URL as one of its assets
+      // (a self-referential manifest), applyManifestTimings must not add its bytes a second time.
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'entry.js' }] })
+
+      const entryResourceEntry = { name: 'https://cdn.example.com/entry.js', initiatorType: 'script', startTime: 100, responseEnd: 150, transferSize: 4321 }
+      performanceObserverCallback({ getEntries: () => [entryResourceEntry] })
+
+      mockNavigationEntry = { name: 'https://example.com/' }
+      mockStack = `Error
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at Object.register (${scriptTrackerModule.thisFile}:5:10)
+    at main (https://cdn.example.com/entry.js:15:20)`
+
+      const timings = scriptTrackerModule.findScriptTimings({ id: 'mfe-1' })
+      expect(timings.totalWeight).toBe(4321) // entry script's own bytes, counted once
+
+      global.performance.getEntriesByType = jest.fn(() => [entryResourceEntry])
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.totalWeight).toBe(4321) // unchanged -- the manifest's "entry.js" asset is the same resource, not a second one
+    })
+
+    test('does not double-count totalWeight when a self-referential manifest asset resolves late, after the entry script', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'entry.js' }] })
+
+      const entryResourceEntry = { name: 'https://cdn.example.com/entry.js', initiatorType: 'script', startTime: 100, responseEnd: 150, transferSize: 4321 }
+      performanceObserverCallback({ getEntries: () => [entryResourceEntry] })
+
+      mockNavigationEntry = { name: 'https://example.com/' }
+      mockStack = `Error
+    at findScriptTimings (${scriptTrackerModule.thisFile}:1:1)
+    at Object.register (${scriptTrackerModule.thisFile}:5:10)
+    at main (https://cdn.example.com/entry.js:15:20)`
+
+      const timings = scriptTrackerModule.findScriptTimings({ id: 'mfe-1' })
+      expect(timings.totalWeight).toBe(4321)
+
+      // Nothing in the performance buffer yet from the manifest's point of view -- it has to resolve late.
+      global.performance.getEntriesByType = jest.fn(() => [])
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+      expect(timings.totalWeight).toBe(4321)
+
+      // The same resource entry the entry script already used arrives again through the shared late-resolution
+      // observer -- must still not double-count.
+      performanceObserverCallback({ getEntries: () => [entryResourceEntry] })
+      expect(timings.totalWeight).toBe(4321)
     })
 
     test('sets renderBlocking true if any matched manifest asset (including non-script) is "blocking"', async () => {

@@ -61,12 +61,26 @@ export class Instrument extends InstrumentBase {
         handle('ws-complete', [nrData, targets], undefined, this.featureName, this.ee)
       })
     }
-    if (securityPolicyViolationEnabled && typeof globalScope.ReportingObserver === 'function') {
-      const cspObserver = new globalScope.ReportingObserver((reports) => { // csp-violation reports do not have timestamps of their own
-        reports.forEach(report => handle('spv', [report, now()], undefined, FEATURE_NAMES.genericEvents, this.ee))
-      }, { types: ['csp-violation'], buffered: true })
-      cspObserver.observe()
-      this.removeOnAbort.signal.addEventListener('abort', () => cspObserver.disconnect(), { once: true })
+    if (securityPolicyViolationEnabled) {
+      /** ReportingObserver's `csp-violation` type isn't reliably enabled everywhere out of the box:
+       *  - Safari only delivers it when the page sets a report-to CSP directive -- https://bugs.webkit.org/show_bug.cgi?id=320750;
+       *  - Firefox ships it behind the `dom.reporting.enabled` pref, which defaults to false;
+       * So it's only used for violations that occur before the agent loaded, targeting Chromium browsers. `buffered: true` replays
+       * that backlog in the observer's first callback invocation, after which it's disconnected and all future violations are
+       * covered by securitypolicyviolation, which is reliable across all browsers. */
+      if (typeof globalScope.ReportingObserver === 'function') {
+        const cspObserver = new globalScope.ReportingObserver((reports) => {
+          reports.forEach(report => {
+            handle('spv', [normalizeCspViolation(report), now()], undefined, FEATURE_NAMES.genericEvents, this.ee)
+          })
+          cspObserver.disconnect()
+        }, { types: ['csp-violation'], buffered: true })
+        cspObserver.observe()
+      }
+
+      globalScope.addEventListener('securitypolicyviolation', (evt) => {
+        handle('spv', [normalizeCspViolation(evt), evt.timeStamp], undefined, FEATURE_NAMES.genericEvents, this.ee)
+      }, eventListenerOpts(false, this.removeOnAbort.signal))
     }
     if (isBrowserScope) {
       wrapFetch(this.ee, agentRef)
@@ -133,6 +147,27 @@ export class Instrument extends InstrumentBase {
     /** If any of the sources are active, import the aggregator. otherwise deregister */
     if (genericEventSourceConfigs.some(x => x)) this.importAggregator(agentRef, () => import(/* webpackChunkName: "generic_events-aggregate" */ '../aggregate'))
     else this.deregisterDrain()
+  }
+}
+/** `Report.body` (ReportingObserver) and `SecurityPolicyViolationEvent` (securitypolicyviolation) describe the same
+ * violation with differently-named/shaped fields -- collapse both into one shape so downstream code doesn't care
+ * which mechanism produced it. `source` is either of those: a Report (fields under `.body`, URLs as blockedURL/
+ * documentURL) or the event (fields at the top level, URLs as blockedURI/documentURI). Also normalizes disposition's
+ * "reporting" (Report body) to "report" (event) so the value is consistent regardless of source. */
+function normalizeCspViolation (source) {
+  const body = source.body ?? source
+  return {
+    blockedUrl: body.blockedURL ?? source.blockedURI,
+    documentUrl: body.documentURL ?? source.documentURI,
+    effectiveDirective: body.effectiveDirective,
+    originalPolicy: body.originalPolicy,
+    sourceFile: body.sourceFile,
+    statusCode: body.statusCode,
+    lineNumber: body.lineNumber,
+    columnNumber: body.columnNumber,
+    disposition: body.disposition === 'reporting' ? 'report' : body.disposition,
+    sample: body.sample,
+    referrer: body.referrer
   }
 }
 

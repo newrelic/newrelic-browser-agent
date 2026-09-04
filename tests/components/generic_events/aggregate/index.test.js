@@ -328,25 +328,21 @@ describe('sub-features', () => {
   })
 
   test('should record security policy violations when enabled', () => {
-    const report = {
-      type: 'csp-violation',
-      url: 'https://test.com',
-      body: {
-        blockedURL: 'https://malicious.example',
-        documentURL: 'https://test.com',
-        effectiveDirective: 'script-src',
-        originalPolicy: "default-src 'self'",
-        sourceFile: 'https://test.com/index.js',
-        statusCode: 200,
-        lineNumber: 10,
-        columnNumber: 4,
-        disposition: 'enforce',
-        sample: 'inline-script',
-        referrer: 'https://referrer.test'
-      }
+    const violation = {
+      blockedUrl: 'https://malicious.example',
+      documentUrl: 'https://test.com',
+      effectiveDirective: 'script-src',
+      originalPolicy: "default-src 'self'",
+      sourceFile: 'https://test.com/index.js',
+      statusCode: 200,
+      lineNumber: 10,
+      columnNumber: 4,
+      disposition: 'enforce',
+      sample: 'inline-script',
+      referrer: 'https://referrer.test'
     }
 
-    genericEventsAggregate.ee.emit('spv', [report, performance.now()])
+    genericEventsAggregate.ee.emit('spv', [violation, performance.now()])
 
     const capturedEvent = genericEventsAggregate.events.get()[0]
 

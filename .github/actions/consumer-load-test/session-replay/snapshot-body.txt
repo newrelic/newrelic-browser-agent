@@ -1136,40 +1136,6 @@
                     "attributes": {
                       "id": "browser-agent",
                       "crossorigin": "anonymous",
-                      "src": "https://js-agent.newrelic.com/internal/staging-latest.js",
-                      "defer": ""
-                    },
-                    "childNodes": [],
-                    "id": 149
-                  },
-                  {
-                    "type": 3,
-                    "textContent": "\n            ",
-                    "id": 150
-                  },
-                  {
-                    "type": 2,
-                    "tagName": "script",
-                    "attributes": {
-                      "id": "browser-agent",
-                      "crossorigin": "anonymous",
-                      "src": "https://js-agent.newrelic.com/internal/staging-experiments.js",
-                      "defer": ""
-                    },
-                    "childNodes": [],
-                    "id": 151
-                  },
-                  {
-                    "type": 3,
-                    "textContent": "\n            ",
-                    "id": 152
-                  },
-                  {
-                    "type": 2,
-                    "tagName": "script",
-                    "attributes": {
-                      "id": "browser-agent",
-                      "crossorigin": "anonymous",
                       "src": "https://js-agent.newrelic.com/internal/staging-postamble.js",
                       "defer": ""
                     },

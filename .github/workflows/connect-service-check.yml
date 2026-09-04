@@ -1,0 +1,62 @@
+name: Connect Service Browser-Config Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'NR region to run the connect handshake against.'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - us-prod
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    # A single GitHub Environment holding all of this action's secrets/vars
+    # (grouped for organization + optional protection rules), NOT to be
+    # confused with the `environment` workflow input below (which NR region
+    # to run the connect handshake against) - the two are unrelated axes.
+    environment: 'APM Connect Tests'
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0
+
+      # Credentials/account are flat secrets/vars inside the "APM Connect
+      # Tests" environment above, named per NR region
+      # (CONNECT_CHECK_LICENSE_KEY_STAGING / _US_PROD - same for
+      # CONNECT_CHECK_NERDGRAPH_API_KEY_*; CONNECT_CHECK_ACCOUNT_ID_* is a
+      # variable, not a secret, since an account ID isn't sensitive) -
+      # selected here via a plain expression ternary so nothing sensitive
+      # ever passes through a step output or bash variable.
+      - name: Run connect-service-check
+        id: check
+        uses: ./.github/actions/connect-service-check
+        with:
+          environment: ${{ inputs.environment }}
+          account_id: >-
+            ${{
+              inputs.environment == 'staging' && vars.CONNECT_CHECK_ACCOUNT_ID_STAGING ||
+              vars.CONNECT_CHECK_ACCOUNT_ID_US_PROD
+            }}
+          license_key: >-
+            ${{
+              inputs.environment == 'staging' && secrets.CONNECT_CHECK_LICENSE_KEY_STAGING ||
+              secrets.CONNECT_CHECK_LICENSE_KEY_US_PROD
+            }}
+          nerdgraph_api_key: >-
+            ${{
+              inputs.environment == 'staging' && secrets.CONNECT_CHECK_NERDGRAPH_API_KEY_STAGING ||
+              secrets.CONNECT_CHECK_NERDGRAPH_API_KEY_US_PROD
+            }}
+          report_file: connect-check-report.md
+
+      - name: Publish report to job summary
+        if: always()
+        run: cat connect-check-report.md >> "$GITHUB_STEP_SUMMARY" || echo "No report file was produced." >> "$GITHUB_STEP_SUMMARY"

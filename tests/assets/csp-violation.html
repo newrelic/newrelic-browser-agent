@@ -7,11 +7,20 @@
   <head>
     <title>RUM Unit Test</title>
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; connect-src *;">
+    <script>
+      // This runs before the agent loader below, so this violation should only be caught by the agent's
+      // ReportingObserver buffered replay (Chromium-reliable), not by the securitypolicyviolation listener,
+      // which can't attach in time to see it.
+      var preInjectionScript = document.createElement('script');
+      preInjectionScript.src = 'https://example.com/pre-injection';
+      document.head.appendChild(preInjectionScript);
+    </script>
     {init} {config} {loader}
   </head>
   <body>Instrumented
     <script>
-      // This script will trigger a CSP violation
+      // This runs after the agent has loaded, so this violation is caught by the securitypolicyviolation
+      // listener, which works reliably on every browser.
       var script = document.createElement('script');
       script.src = 'https://example.com';
       document.body.appendChild(script);

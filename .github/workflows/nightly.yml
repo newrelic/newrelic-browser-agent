@@ -60,8 +60,8 @@ jobs:
           file-name-filter: '.min.js'
           trigger: 'nightly'
 
-  verify-ab-assets:
-    name: Verify A/B Assets
+  verify-internal-promotion-assets:
+    name: Verify Internal Promotion Assets
     timeout-minutes: 60
     runs-on: ubuntu-latest
     defaults:
@@ -72,19 +72,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
-      - name: Verify a/b assets
+      - name: Verify internal promotion assets
         uses: ./.github/actions/fastly-verify
         with:
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: js-agent.newrelic.com
           asset_path: |
             internal/dev-released.js \
-            internal/dev-latest.js \
-            internal/dev-experiments.js \
             internal/dev-postamble.js \
             internal/staging-released.js \
-            internal/staging-latest.js \
-            internal/staging-experiments.js \
             internal/staging-postamble.js \
             internal/prod-released.js \
             internal/prod-postamble.js \

@@ -84,11 +84,11 @@ describe('Content Security Policy', () => {
     const CSP_HTML_PATH = '/tests/assets/csp-violation.html'
     const expectedSpv = {
       eventType: 'SecurityPolicyViolation',
-      blockedUri: 'https://example.com/',
+      blockedUrl: 'https://example.com/',
       columnNumber: expect.any(Number),
       currentUrl: expect.stringContaining(CSP_HTML_PATH),
       disposition: 'enforce',
-      documentUri: expect.stringContaining(CSP_HTML_PATH),
+      documentUrl: expect.stringContaining(CSP_HTML_PATH),
       effectiveDirective: 'script-src-elem',
       lineNumber: 18,
       originalPolicy: expect.stringMatching(/^default-src 'self' 'unsafe-inline'; connect-src \*;?$/),

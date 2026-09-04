@@ -6,6 +6,7 @@
 import { globalScope, isBrowserScope } from '../../../common/constants/runtime'
 import { handle } from '../../../common/event-emitter/handle'
 import { eventListenerOpts, windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
+import { now } from '../../../common/timing/now'
 import { debounce } from '../../../common/util/invoke'
 import { setupAddPageActionAPI } from '../../../loaders/api/addPageAction'
 import { setupFinishedAPI } from '../../../loaders/api/finished'
@@ -60,10 +61,12 @@ export class Instrument extends InstrumentBase {
         handle('ws-complete', [nrData, targets], undefined, this.featureName, this.ee)
       })
     }
-    if (securityPolicyViolationEnabled) {
-      globalScope.addEventListener('securitypolicyviolation', (evt) => {
-        handle('spv', [evt], undefined, FEATURE_NAMES.genericEvents, this.ee)
-      }, eventListenerOpts(false, this.removeOnAbort.signal))
+    if (securityPolicyViolationEnabled && typeof globalScope.ReportingObserver === 'function') {
+      const cspObserver = new globalScope.ReportingObserver((reports) => { // csp-violation reports do not have timestamps of their own
+        reports.forEach(report => handle('spv', [report, now()], undefined, FEATURE_NAMES.genericEvents, this.ee))
+      }, { types: ['csp-violation'], buffered: true })
+      cspObserver.observe()
+      this.removeOnAbort.signal.addEventListener('abort', () => cspObserver.disconnect(), { once: true })
     }
     if (isBrowserScope) {
       wrapFetch(this.ee, agentRef)

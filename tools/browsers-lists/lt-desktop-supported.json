@@ -40,15 +40,15 @@
   "safari": [
     {
       "browserName": "Safari",
-      "platformName": "macOS Sequoia",
+      "platformName": "macOS Tahoe",
       "browserVersion": "latest",
-			"comment": "mOS version 15 aka Sequoia will only have safari 18 on LT"
+			"comment": "mOS version 26 aka Tahoe maps to safari 26 on LT"
     },
     {
       "browserName": "Safari",
-      "platformName": "macOS Sonoma",
+      "platformName": "macOS Sequoia",
       "browserVersion": "latest",
-			"comment": "mOS version 14 aka Sonoma will only have safari 17 on LT"
+			"comment": "mOS version 15 aka Sequoia will only have safari 18 on LT"
     }
   ]
 }

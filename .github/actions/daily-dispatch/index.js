@@ -50,6 +50,61 @@ const reviewerCommentEvents = (pr) => pr.timelineItems.nodes.flatMap((item) => {
   return []
 })
 
+// Renders one PR-list section (title, PR links, assignee/age/status context lines).
+// `statusSuffix(pr)` returns the bucket-specific trailing note for the context line, or ''.
+const renderPrSection = (blocks, textLines, { emoji, title, prList, emptyText, mttmHours, statusSuffix }) => {
+  if (prList.length === 0) {
+    blocks.push(sectionBlock(`*${emoji} ${title}*\n${emptyText}`))
+    textLines.push(`${title}: none`)
+    blocks.push(dividerBlock())
+    return
+  }
+
+  blocks.push(sectionBlock(`*${emoji} ${title}*\n${prList.length} PR${prList.length === 1 ? '' : 's'}, oldest first:`))
+  textLines.push(`${title}: ${prList.length}`)
+
+  // Capped low, and one Slack block per PR (not two), to keep the overall payload
+  // comfortably under Slack's 50-block-per-message limit now that PRs are split
+  // across four sections instead of one.
+  const maxDetailed = 6
+  for (const pr of prList.slice(0, maxDetailed)) {
+    const assignees = pr.assignees.nodes.map((assignee) => assignee.login)
+    const authorLogin = pr.author?.login
+
+    const prLink = `<${pr.url}|#${pr.number} ${escapeSlack(pr.title)}>`
+    const assigneeMentions = assignees.filter((login) => login !== authorLogin).map(mentionFor)
+
+    let prText
+    if (assignees.length > 0) {
+      prText = assigneeMentions.length > 0
+        ? `${prLink}\n*Assigned to:* ${assigneeMentions.join(' ')}`
+        : prLink
+    } else {
+      const availableReviewers = Object.keys(githubToSlack).filter((login) => login !== authorLogin).map(mentionFor).join(' ')
+      prText = `${prLink}\n${availableReviewers} please take a look.`
+    }
+
+    const createdDate = new Date(pr.createdAt)
+    const formattedDate = createdDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    const prAgeHours = (Date.now() - createdDate) / (1000 * 60 * 60)
+    const ageIndicator = mttmHours === null ? '' : (prAgeHours <= mttmHours ? '🟢 ' : '🔴 ')
+
+    let statusText = `${ageIndicator}Open since ${formattedDate}`
+    statusText += statusSuffix(pr, assigneeMentions)
+    if (assignees.length === 0) {
+      statusText += ' • 🔴 No assignees yet'
+    }
+
+    blocks.push(sectionBlock(`${prText}\n_${statusText}_`))
+  }
+  blocks.push(dividerBlock())
+
+  if (prList.length > maxDetailed) {
+    blocks.push(contextBlock(`_...and ${prList.length - maxDetailed} more_`))
+    blocks.push(dividerBlock())
+  }
+}
+
 const headerBlock = (text) => ({ type: 'header', text: { type: 'plain_text', text, emoji: true } })
 const sectionBlock = (text) => ({ type: 'section', text: { type: 'mrkdwn', text } })
 const contextBlock = (text) => ({ type: 'context', elements: [{ type: 'mrkdwn', text }] })
@@ -76,6 +131,7 @@ do {
             reviewDecision
             createdAt
             headRefName
+            authorAssociation
             author {
               login
             }
@@ -145,10 +201,29 @@ const releasePR = prs.find((pr) =>
   pr.title.toLowerCase().includes('release-please')
 )
 
-// Filter and sort PRs needing review, oldest first
-const needsReview = prs
-  .filter((pr) => !pr.isDraft && !hasBlockedLabel(pr.labels) && pr.reviewDecision !== 'APPROVED')
-  .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+// External contributors (not org members/owners/collaborators) get their own
+// section - everyone else is bucketed by where they sit in the review cycle.
+const isExternal = (pr) => !['MEMBER', 'OWNER', 'COLLABORATOR'].includes(pr.authorAssociation)
+const byCreatedAtAsc = (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+
+const eligible = prs.filter((pr) => !pr.isDraft && !hasBlockedLabel(pr.labels) && pr.reviewDecision !== 'APPROVED')
+const externalPrs = eligible.filter(isExternal).sort(byCreatedAtAsc)
+const internalPrs = eligible.filter((pr) => !isExternal(pr))
+
+const reviewState = (pr) => {
+  const reviewerActivity = reviewerCommentEvents(pr).sort((a, b) => b - a)[0]
+  const lastCommitDate = pr.commits.nodes.length > 0
+    ? new Date(pr.commits.nodes[pr.commits.nodes.length - 1].commit.committedDate)
+    : null
+
+  if (!reviewerActivity) return 'neverReviewed'
+  if (!lastCommitDate || lastCommitDate <= reviewerActivity) return 'needsRevisions'
+  return 'needsReReview'
+}
+
+const neverReviewed = internalPrs.filter((pr) => reviewState(pr) === 'neverReviewed').sort(byCreatedAtAsc)
+const needsRevisions = internalPrs.filter((pr) => reviewState(pr) === 'needsRevisions').sort(byCreatedAtAsc)
+const needsReReview = internalPrs.filter((pr) => reviewState(pr) === 'needsReReview').sort(byCreatedAtAsc)
 
 // Fetch open issues
 const issues = []
@@ -228,6 +303,53 @@ const formatDuration = (hours) => {
   return `${days}d ${remainingHours}h`
 }
 
+// Fetch repo stats and per-environment deployment history in one shot
+const deploymentEnvironments = ['nr1-dev', 'nr1-staging', 'nr1-us-prod', 'nr1-eu-prod', 'nr1-jp-prod', 'public-release']
+
+const repoStatsAndDeploysQuery = `
+  query($owner: String!, $repo: String!, ${deploymentEnvironments.map((_, i) => `$env${i}: [String!]`).join(', ')}) {
+    repository(owner: $owner, name: $repo) {
+      stargazerCount
+      forkCount
+      watchers { totalCount }
+      ${deploymentEnvironments.map((_, i) => `
+      env${i}: deployments(environments: $env${i}, last: 10, orderBy: {field: CREATED_AT, direction: DESC}) {
+        nodes {
+          createdAt
+          commit { oid }
+          statuses(first: 10) {
+            nodes { state createdAt }
+          }
+        }
+      }`).join('\n')}
+    }
+  }
+`
+
+const repoStatsAndDeploysVars = { owner, repo }
+deploymentEnvironments.forEach((env, i) => { repoStatsAndDeploysVars[`env${i}`] = [env] })
+
+const repoStatsAndDeploysResponse = await octokit.graphql(repoStatsAndDeploysQuery, repoStatsAndDeploysVars)
+const repoStats = {
+  stars: repoStatsAndDeploysResponse.repository.stargazerCount,
+  forks: repoStatsAndDeploysResponse.repository.forkCount,
+  watchers: repoStatsAndDeploysResponse.repository.watchers.totalCount,
+}
+
+// A deployment's `latestStatus` goes INACTIVE once a newer deployment supersedes it in the
+// same environment - that's normal lifecycle, not a failure - so we scan each deployment's
+// full status history for a SUCCESS entry instead of trusting latestStatus alone.
+const lastSuccessfulDeploys = deploymentEnvironments.map((env, i) => {
+  const deployments = repoStatsAndDeploysResponse.repository[`env${i}`].nodes
+  for (const deployment of deployments) {
+    const successStatus = deployment.statuses.nodes.find((status) => status.state === 'SUCCESS')
+    if (successStatus) {
+      return { env, deployedAt: new Date(successStatus.createdAt), sha: deployment.commit.oid }
+    }
+  }
+  return { env, deployedAt: null, sha: null }
+})
+
 // Fetch workflow runs from the last 24 hours
 const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
 const workflowRuns = await octokit.rest.actions.listWorkflowRunsForRepo({
@@ -294,6 +416,10 @@ const metrics = {
   currentVersion,
   upcomingVersion,
   failedWorkflowCount: activeFailedRuns.length,
+  externalPrCount: externalPrs.length,
+  neverReviewedCount: neverReviewed.length,
+  needsRevisionsCount: needsRevisions.length,
+  needsReReviewCount: needsReReview.length,
 }
 
 for (const login of Object.keys(githubToSlack)) {
@@ -316,6 +442,44 @@ const textLines = ['Browser Agent Daily Dispatch']
 
 blocks.push(headerBlock('🌅 Browser Agent Daily Dispatch'))
 blocks.push(dividerBlock())
+
+// Build size status - the size-compare job in pull-request-checks.yml comments this
+// tag on every PR (including release-please's), so it's expected to exist once checks
+// finish running on the release PR.
+const ASSET_SIZE_COMMENT_TAG = '<!-- browser_agent asset size report -->'
+const sizeColorEmoji = { green: '🟢', yellow: '🟡', red: '🔴' }
+const sizeColorSeverity = { green: 0, yellow: 1, red: 2 }
+
+let buildSizeLines = null
+let buildSizePending = false
+
+if (releasePR) {
+  const { data: releaseComments } = await octokit.rest.issues.listComments({
+    owner,
+    repo,
+    issue_number: releasePR.number,
+    per_page: 100,
+  })
+  const sizeComment = releaseComments.find((comment) => comment.body?.includes(ASSET_SIZE_COMMENT_TAG))
+
+  if (sizeComment) {
+    // Each data row: | agent | asset | ![size](...color=X) | ![deltaMain](...color=Y) | ![deltaRelease](...color=Z) |
+    // Matched per-line (not across the whole body) so the header/separator rows can't
+    // bleed into a following data row via a `\s*` that would otherwise cross the newline.
+    const rowPattern = /^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*!\[([^\]]*)]\([^)]*color=(\w+)\)\s*\|\s*!\[([^\]]*)]\([^)]*color=(\w+)\)\s*\|\s*!\[([^\]]*)]\([^)]*color=(\w+)\)\s*\|\s*$/
+    buildSizeLines = sizeComment.body.split('\n')
+      .map((line) => line.match(rowPattern))
+      .filter(Boolean)
+      .map((match) => {
+        const [, agent, asset, size, sizeColor, deltaMain, deltaMainColor, deltaRelease, deltaReleaseColor] = match
+        const worstColor = [sizeColor, deltaMainColor, deltaReleaseColor].sort((a, b) => (sizeColorSeverity[b] ?? 0) - (sizeColorSeverity[a] ?? 0))[0]
+        const emoji = sizeColorEmoji[worstColor] ?? '⚪'
+        return `${emoji} ${agent}/${asset}: ${size.trim()} (Δ main ${deltaMain.trim()}, Δ release ${deltaRelease.trim()})`
+      })
+  } else {
+    buildSizePending = true
+  }
+}
 
 // Version Status
 let versionText = `*📦 Version Status*\nThe Browser Agent is currently on version *${currentVersion}*`
@@ -341,6 +505,12 @@ if (releasePR) {
     versionText += '\n' + changeLines.join('\n')
   }
   textLines.push(`Next release: ${nextVersion} (#${releasePR.number})`)
+
+  if (buildSizeLines && buildSizeLines.length > 0) {
+    versionText += '\n\n*📏 Build Size vs Latest Release*\n' + buildSizeLines.join('\n')
+  } else if (buildSizePending) {
+    versionText += `\n\n📏 Build size report not yet available — see checks on <${releasePR.url}/checks|#${releasePR.number}>.`
+  }
 } else {
   versionText += '\nNo release is currently staged.'
 }
@@ -348,70 +518,45 @@ if (releasePR) {
 blocks.push(sectionBlock(versionText))
 blocks.push(dividerBlock())
 
-// PRs Needing Review
-if (needsReview.length === 0) {
-  blocks.push(sectionBlock('*👀 PRs Needing Review*\n✅ No open PRs currently need review.'))
-  textLines.push('PRs Needing Review: none')
-} else {
-  blocks.push(sectionBlock(`*👀 PRs Needing Review*\n${needsReview.length} PR${needsReview.length === 1 ? '' : 's'} awaiting review, oldest first:`))
-  textLines.push(`PRs Needing Review: ${needsReview.length}`)
+// External Contributor PRs
+renderPrSection(blocks, textLines, {
+  emoji: '🌍',
+  title: 'External Contributor PRs',
+  prList: externalPrs,
+  emptyText: '✅ No open PRs from external contributors.',
+  mttmHours,
+  statusSuffix: (pr) => ` • ${pr.authorAssociation}`,
+})
 
-  const maxDetailed = 12
-  for (const pr of needsReview.slice(0, maxDetailed)) {
-    const assignees = pr.assignees.nodes.map((assignee) => assignee.login)
-    const authorLogin = pr.author?.login
+// Never Reviewed
+renderPrSection(blocks, textLines, {
+  emoji: '🆕',
+  title: 'Never Reviewed',
+  prList: neverReviewed,
+  emptyText: '✅ No open PRs are awaiting a first review.',
+  mttmHours,
+  statusSuffix: () => ' • no review activity yet',
+})
 
-    const reviewerActivity = reviewerCommentEvents(pr).sort((a, b) => b - a)[0]
+// Needs Revisions (feedback given, author hasn't pushed since)
+renderPrSection(blocks, textLines, {
+  emoji: '🟠',
+  title: 'Needs Revisions',
+  prList: needsRevisions,
+  emptyText: '✅ No open PRs are waiting on author revisions.',
+  mttmHours,
+  statusSuffix: (pr) => ` • 🟠 This PR has been reviewed without new commits, ${pr.author?.login ? mentionFor(pr.author.login) : 'author'} please take a look.`,
+})
 
-    const lastCommitDate = pr.commits.nodes.length > 0
-      ? new Date(pr.commits.nodes[pr.commits.nodes.length - 1].commit.committedDate)
-      : null
-
-    const hasUnaddressedFeedback = reviewerActivity && (!lastCommitDate || lastCommitDate <= reviewerActivity)
-
-    const prLink = `<${pr.url}|#${pr.number} ${escapeSlack(pr.title)}>`
-    const assigneeMentions = assignees.filter((login) => login !== authorLogin).map(mentionFor)
-
-    let prText
-    if (assignees.length > 0) {
-      prText = assigneeMentions.length > 0
-        ? `${prLink}\n*Assigned to:*\n${assigneeMentions.join('\n')}`
-        : prLink
-    } else {
-      const availableReviewers = Object.keys(githubToSlack).filter((login) => login !== authorLogin).map(mentionFor).join(' ')
-      prText = `${prLink}\n${availableReviewers} please take a look.`
-    }
-    blocks.push(sectionBlock(prText))
-
-    const createdDate = new Date(pr.createdAt)
-    const formattedDate = createdDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-    const prAgeHours = (Date.now() - createdDate) / (1000 * 60 * 60)
-    const ageIndicator = mttmHours === null ? '' : (prAgeHours <= mttmHours ? '🟢 ' : '🔴 ')
-
-    let statusText = `${ageIndicator}Open since ${formattedDate}`
-    if (hasUnaddressedFeedback) {
-      statusText += ` • 🟠 This PR has been reviewed without new commits, ${authorLogin ? mentionFor(authorLogin) : 'author'} please take a look.`
-    } else if (reviewerActivity) {
-      // Only reachable when reviewerActivity is truthy, i.e. there is at least one tracked reviewer comment.
-      if (assigneeMentions.length > 0) {
-        statusText += ` • 🟠 ${assigneeMentions.join(' ')} please take a look.`
-      }
-      // No assignees: skip this message entirely - the "No assignees yet" segment below covers it.
-    } else {
-      statusText += ' • no review activity yet'
-    }
-    if (assignees.length === 0) {
-      statusText += ' • 🔴 No assignees yet'
-    }
-    blocks.push(contextBlock(statusText))
-    blocks.push(dividerBlock())
-  }
-
-  if (needsReview.length > maxDetailed) {
-    blocks.push(contextBlock(`_...and ${needsReview.length - maxDetailed} more PR${needsReview.length - maxDetailed === 1 ? '' : 's'} awaiting review_`))
-    blocks.push(dividerBlock())
-  }
-}
+// Needs Re-Review (author pushed after feedback, reviewer hasn't looked again)
+renderPrSection(blocks, textLines, {
+  emoji: '🔁',
+  title: 'Needs Re-Review',
+  prList: needsReReview,
+  emptyText: '✅ No open PRs are waiting on a re-review.',
+  mttmHours,
+  statusSuffix: (pr, assigneeMentions) => (assigneeMentions.length > 0 ? ` • 🟠 ${assigneeMentions.join(' ')} please take a look.` : ''),
+})
 
 // Mean Time to Merge
 let mttmText = '*⏱️ Mean Time to Merge (Last 30 Days)*\n'
@@ -451,6 +596,21 @@ if (issues.length === 0) {
   }
   textLines.push(`Open Issues: ${issues.length}`)
 }
+blocks.push(dividerBlock())
+
+// Repository Stats
+blocks.push(sectionBlock(`*📊 Repository Stats*\n⭐ ${repoStats.stars} stars · 🍴 ${repoStats.forks} forks · 👀 ${repoStats.watchers} watchers`))
+textLines.push(`Repository Stats: ${repoStats.stars} stars, ${repoStats.forks} forks, ${repoStats.watchers} watchers`)
+blocks.push(dividerBlock())
+
+// Deployment Status
+const deployLines = lastSuccessfulDeploys.map(({ env, deployedAt, sha }) => {
+  if (!deployedAt) return `*${env}*: no successful deployment found in recent history`
+  const formattedDate = deployedAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  return `*${env}*: ${formattedDate} (\`${sha.slice(0, 7)}\`)`
+})
+blocks.push(sectionBlock(`*🚀 Deployment Status*\nLast successful deployment per environment:\n${deployLines.join('\n')}`))
+textLines.push(`Deployment Status: ${lastSuccessfulDeploys.filter((d) => d.deployedAt).length}/${lastSuccessfulDeploys.length} environments have a known successful deploy`)
 
 const payload = JSON.stringify({ text: textLines.join(' | '), blocks })
 const metricsJson = JSON.stringify(metrics)

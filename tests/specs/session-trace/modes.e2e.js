@@ -176,7 +176,9 @@ describe('respects feature flags', () => {
 
     ;[sessionTraceHarvests] = await Promise.all([
       sessionTraceCapture.waitForResult({ timeout: 10000 }),
-      $('#trigger').click()
+      browser.execute(function () { // this is less flaky than $('#trigger').click() on safari
+        document.getElementById('trigger').click()
+      })
     ])
 
     expect(sessionTraceHarvests.length).toBeGreaterThanOrEqual(1)

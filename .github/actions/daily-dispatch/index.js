@@ -456,6 +456,77 @@ do {
 
 const prsCreatedSinceLastRun = recentlyCreatedPRs.filter((pr) => new Date(pr.createdAt) >= sinceLastRunCutoff)
 
+// Fetch PRs with any activity since the last run (any state, ordered by UPDATED_AT since a
+// review comment on a PR created months ago still counts) so we can find new review comments
+// left by each tracked reviewer since then - same non-overlapping-delta approach as created PRs.
+const recentlyUpdatedPRs = []
+let updatedCursor = null
+
+do {
+  const response = await octokit.graphql(`
+    query($owner: String!, $repo: String!, $cursor: String) {
+      repository(owner: $owner, name: $repo) {
+        pullRequests(first: 50, states: [OPEN, MERGED, CLOSED], after: $cursor, orderBy: {field: UPDATED_AT, direction: DESC}) {
+          nodes {
+            updatedAt
+            author {
+              login
+            }
+            timelineItems(last: 50, itemTypes: [PULL_REQUEST_REVIEW, ISSUE_COMMENT, PULL_REQUEST_REVIEW_THREAD]) {
+              nodes {
+                __typename
+                ... on PullRequestReview {
+                  author {
+                    login
+                  }
+                  createdAt
+                }
+                ... on IssueComment {
+                  author {
+                    login
+                  }
+                  createdAt
+                }
+                ... on PullRequestReviewThread {
+                  comments(first: 1) {
+                    nodes {
+                      author {
+                        login
+                      }
+                      createdAt
+                    }
+                  }
+                }
+              }
+            }
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }
+    }
+  `, { owner, repo, cursor: updatedCursor })
+
+  const connection = response.repository.pullRequests
+  recentlyUpdatedPRs.push(...connection.nodes)
+  const oldestInPage = connection.nodes[connection.nodes.length - 1]
+  // PRs are ordered newest-updated first, so once the oldest PR on this page hasn't
+  // been touched since the cutoff, every later page is too - stop paging.
+  updatedCursor = connection.pageInfo.hasNextPage && oldestInPage && new Date(oldestInPage.updatedAt) >= sinceLastRunCutoff
+    ? connection.pageInfo.endCursor
+    : null
+} while (updatedCursor)
+
+const hasReviewActivitySince = (pr, login, cutoff) => pr.timelineItems.nodes.some((item) => {
+  if (item.author?.login === login && item.createdAt && new Date(item.createdAt) >= cutoff) return true
+  if (item.__typename === 'PullRequestReviewThread' && item.comments?.nodes) {
+    return item.comments.nodes.some((comment) => comment.author?.login === login && new Date(comment.createdAt) >= cutoff)
+  }
+  return false
+})
+
 // Mean time to cycle: the gap between a reviewer comment and the next commit,
 // or between a commit and the next reviewer comment - i.e. every alternation
 // between "reviewer spoke" and "author pushed" across each open PR's timeline.
@@ -508,6 +579,7 @@ for (const login of Object.keys(githubToSlack)) {
 
   metrics[`prsCreatedBy.${login}`] = prs.filter((pr) => pr.author?.login === login).length
   metrics[`prsCreatedSinceLastRun.${login}`] = prsCreatedSinceLastRun.filter((pr) => pr.author?.login === login).length
+  metrics[`prsReviewedSinceLastRun.${login}`] = recentlyUpdatedPRs.filter((pr) => hasReviewActivitySince(pr, login, sinceLastRunCutoff)).length
 }
 
 // Build the daily dispatch Slack Block Kit payload

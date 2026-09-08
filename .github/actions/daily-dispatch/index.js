@@ -405,14 +405,22 @@ const linkForBranch = (branch) => {
 const upcomingVersionMatch = releasePR?.title.match(/(\d+\.\d+\.\d+)/)
 const upcomingVersion = upcomingVersionMatch ? upcomingVersionMatch[1] : ''
 
-// Fetch PRs actually created in the last 30 days (any state) for a real "PRs created per
-// person" rate. prsCreatedBy below is a snapshot of currently-open PRs, which double-counts
-// a long-lived PR on every daily sample instead of counting it once - averaging that snapshot
-// doesn't converge to "PRs created per week/month". This is a real, non-overlapping count
-// instead: each dispatch run reports "created in the trailing N days", so query these with
-// average(), not sum() - summing would multiply the count by however many samples fall in range.
-const createdLookbackDays = 30
-const createdLookbackCutoff = new Date(Date.now() - createdLookbackDays * 24 * 60 * 60 * 1000)
+// Find when this workflow last completed successfully, so we can report "PRs created since
+// then" as a clean, non-overlapping delta per run - summing these deltas in NRQL over any
+// window (a week, a month, a quarter) then gives an exact count for that window, with no
+// double-counting and no need to pick a fixed lookback window up front. Self-correcting if a
+// run is skipped or fails: the next run just covers the larger gap back to the last success.
+const previousRuns = await octokit.rest.actions.listWorkflowRuns({
+  owner,
+  repo,
+  workflow_id: 'daily-dispatch.yml',
+  status: 'success',
+  per_page: 5,
+})
+const previousRun = previousRuns.data.workflow_runs.find((run) => run.id !== github.context.runId)
+// Fall back to a 24h window if this is the very first run of the workflow.
+const sinceLastRunCutoff = previousRun ? new Date(previousRun.created_at) : new Date(Date.now() - 24 * 60 * 60 * 1000)
+
 const recentlyCreatedPRs = []
 let createdCursor = null
 
@@ -440,15 +448,13 @@ do {
   recentlyCreatedPRs.push(...connection.nodes)
   const oldestInPage = connection.nodes[connection.nodes.length - 1]
   // PRs are ordered newest-created first, so once the oldest PR on this page is
-  // already past the lookback cutoff, every later page is too - stop paging.
-  createdCursor = connection.pageInfo.hasNextPage && oldestInPage && new Date(oldestInPage.createdAt) >= createdLookbackCutoff
+  // already past the cutoff, every later page is too - stop paging.
+  createdCursor = connection.pageInfo.hasNextPage && oldestInPage && new Date(oldestInPage.createdAt) >= sinceLastRunCutoff
     ? connection.pageInfo.endCursor
     : null
 } while (createdCursor)
 
-const createdCutoff7Days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-const prsCreatedLast7Days = recentlyCreatedPRs.filter((pr) => new Date(pr.createdAt) >= createdCutoff7Days)
-const prsCreatedLast30Days = recentlyCreatedPRs.filter((pr) => new Date(pr.createdAt) >= createdLookbackCutoff)
+const prsCreatedSinceLastRun = recentlyCreatedPRs.filter((pr) => new Date(pr.createdAt) >= sinceLastRunCutoff)
 
 // Mean time to cycle: the gap between a reviewer comment and the next commit,
 // or between a commit and the next reviewer comment - i.e. every alternation
@@ -501,8 +507,7 @@ for (const login of Object.keys(githubToSlack)) {
   ).length
 
   metrics[`prsCreatedBy.${login}`] = prs.filter((pr) => pr.author?.login === login).length
-  metrics[`prsCreatedLast7Days.${login}`] = prsCreatedLast7Days.filter((pr) => pr.author?.login === login).length
-  metrics[`prsCreatedLast30Days.${login}`] = prsCreatedLast30Days.filter((pr) => pr.author?.login === login).length
+  metrics[`prsCreatedSinceLastRun.${login}`] = prsCreatedSinceLastRun.filter((pr) => pr.author?.login === login).length
 }
 
 // Build the daily dispatch Slack Block Kit payload

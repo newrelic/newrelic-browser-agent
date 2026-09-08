@@ -405,6 +405,51 @@ const linkForBranch = (branch) => {
 const upcomingVersionMatch = releasePR?.title.match(/(\d+\.\d+\.\d+)/)
 const upcomingVersion = upcomingVersionMatch ? upcomingVersionMatch[1] : ''
 
+// Fetch PRs actually created in the last 30 days (any state) for a real "PRs created per
+// person" rate. prsCreatedBy below is a snapshot of currently-open PRs, which double-counts
+// a long-lived PR on every daily sample instead of counting it once - averaging that snapshot
+// doesn't converge to "PRs created per week/month". This is a real, non-overlapping count
+// instead: each dispatch run reports "created in the trailing N days", so query these with
+// average(), not sum() - summing would multiply the count by however many samples fall in range.
+const createdLookbackDays = 30
+const createdLookbackCutoff = new Date(Date.now() - createdLookbackDays * 24 * 60 * 60 * 1000)
+const recentlyCreatedPRs = []
+let createdCursor = null
+
+do {
+  const response = await octokit.graphql(`
+    query($owner: String!, $repo: String!, $cursor: String) {
+      repository(owner: $owner, name: $repo) {
+        pullRequests(first: 50, states: [OPEN, MERGED, CLOSED], after: $cursor, orderBy: {field: CREATED_AT, direction: DESC}) {
+          nodes {
+            createdAt
+            author {
+              login
+            }
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }
+    }
+  `, { owner, repo, cursor: createdCursor })
+
+  const connection = response.repository.pullRequests
+  recentlyCreatedPRs.push(...connection.nodes)
+  const oldestInPage = connection.nodes[connection.nodes.length - 1]
+  // PRs are ordered newest-created first, so once the oldest PR on this page is
+  // already past the lookback cutoff, every later page is too - stop paging.
+  createdCursor = connection.pageInfo.hasNextPage && oldestInPage && new Date(oldestInPage.createdAt) >= createdLookbackCutoff
+    ? connection.pageInfo.endCursor
+    : null
+} while (createdCursor)
+
+const createdCutoff7Days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+const prsCreatedLast7Days = recentlyCreatedPRs.filter((pr) => new Date(pr.createdAt) >= createdCutoff7Days)
+const prsCreatedLast30Days = recentlyCreatedPRs.filter((pr) => new Date(pr.createdAt) >= createdLookbackCutoff)
+
 // Mean time to cycle: the gap between a reviewer comment and the next commit,
 // or between a commit and the next reviewer comment - i.e. every alternation
 // between "reviewer spoke" and "author pushed" across each open PR's timeline.
@@ -456,6 +501,8 @@ for (const login of Object.keys(githubToSlack)) {
   ).length
 
   metrics[`prsCreatedBy.${login}`] = prs.filter((pr) => pr.author?.login === login).length
+  metrics[`prsCreatedLast7Days.${login}`] = prsCreatedLast7Days.filter((pr) => pr.author?.login === login).length
+  metrics[`prsCreatedLast30Days.${login}`] = prsCreatedLast30Days.filter((pr) => pr.author?.login === login).length
 }
 
 // Build the daily dispatch Slack Block Kit payload

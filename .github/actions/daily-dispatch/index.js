@@ -52,7 +52,7 @@ const reviewerCommentEvents = (pr) => pr.timelineItems.nodes.flatMap((item) => {
 
 // Renders one PR-list section (title, PR links, assignee/age/status context lines).
 // `statusSuffix(pr)` returns the bucket-specific trailing note for the context line, or ''.
-const renderPrSection = (blocks, textLines, { emoji, title, prList, emptyText, mttmHours, statusSuffix }) => {
+const renderPrSection = (blocks, textLines, { emoji, title, prList, emptyText, mttmHours, statusSuffix, showCount = true }) => {
   if (prList.length === 0) {
     blocks.push(sectionBlock(`*${emoji} ${title}*\n${emptyText}`))
     textLines.push(`${title}: none`)
@@ -60,7 +60,8 @@ const renderPrSection = (blocks, textLines, { emoji, title, prList, emptyText, m
     return
   }
 
-  blocks.push(sectionBlock(`*${emoji} ${title}*\n${prList.length} PR${prList.length === 1 ? '' : 's'}, oldest first:`))
+  const header = showCount ? `*${emoji} ${title}*\n${prList.length} PR${prList.length === 1 ? '' : 's'}, oldest first:` : `*${emoji} ${title}*`
+  blocks.push(sectionBlock(header))
   textLines.push(`${title}: ${prList.length}`)
 
   // Capped low, and one Slack block per PR (not two), to keep the overall payload
@@ -203,10 +204,19 @@ const releasePR = prs.find((pr) =>
 
 // External contributors (not org members/owners/collaborators) get their own
 // section - everyone else is bucketed by where they sit in the review cycle.
-const isExternal = (pr) => !['MEMBER', 'OWNER', 'COLLABORATOR'].includes(pr.authorAssociation)
+//
+// authorAssociation is under-reported (falls back to CONTRIBUTOR/NONE instead of
+// MEMBER) when the querying token can't see the author's org membership - which is
+// the case for the default GITHUB_TOKEN and any maintainer whose org membership is
+// private. Treat anyone we already track as a reviewer as internal regardless of
+// what authorAssociation reports, since that quirk only ever under-reports membership.
+const knownInternalLogins = new Set(Object.keys(githubToSlack))
+const isExternal = (pr) => !knownInternalLogins.has(pr.author?.login) && !['MEMBER', 'OWNER', 'COLLABORATOR'].includes(pr.authorAssociation)
 const byCreatedAtAsc = (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
 
-const eligible = prs.filter((pr) => !pr.isDraft && !hasBlockedLabel(pr.labels) && pr.reviewDecision !== 'APPROVED')
+// The release-please PR is release automation, not a contributor PR to review -
+// it's already covered by the Version Status section, so keep it out of all four buckets.
+const eligible = prs.filter((pr) => pr !== releasePR && !pr.isDraft && !hasBlockedLabel(pr.labels) && pr.reviewDecision !== 'APPROVED')
 const externalPrs = eligible.filter(isExternal).sort(byCreatedAtAsc)
 const internalPrs = eligible.filter((pr) => !isExternal(pr))
 
@@ -313,7 +323,7 @@ const repoStatsAndDeploysQuery = `
       forkCount
       watchers { totalCount }
       ${deploymentEnvironments.map((_, i) => `
-      env${i}: deployments(environments: $env${i}, last: 10, orderBy: {field: CREATED_AT, direction: DESC}) {
+      env${i}: deployments(environments: $env${i}, first: 10, orderBy: {field: CREATED_AT, direction: DESC}) {
         nodes {
           createdAt
           commit { oid }
@@ -330,10 +340,22 @@ const repoStatsAndDeploysVars = { owner, repo }
 deploymentEnvironments.forEach((env, i) => { repoStatsAndDeploysVars[`env${i}`] = [env] })
 
 const repoStatsAndDeploysResponse = await octokit.graphql(repoStatsAndDeploysQuery, repoStatsAndDeploysVars)
+
+let npmWeeklyDownloads = null
+try {
+  const npmWeeklyDownloadsResponse = await fetch(`https://api.npmjs.org/downloads/point/last-week/${packageJson.name}`)
+  if (npmWeeklyDownloadsResponse.ok) {
+    npmWeeklyDownloads = (await npmWeeklyDownloadsResponse.json()).downloads
+  }
+} catch (error) {
+  console.warn(`Failed to fetch npm weekly downloads: ${error.message}`)
+}
+
 const repoStats = {
   stars: repoStatsAndDeploysResponse.repository.stargazerCount,
   forks: repoStatsAndDeploysResponse.repository.forkCount,
   watchers: repoStatsAndDeploysResponse.repository.watchers.totalCount,
+  npmWeeklyDownloads,
 }
 
 // A deployment's `latestStatus` goes INACTIVE once a newer deployment supersedes it in the
@@ -443,6 +465,12 @@ const textLines = ['Browser Agent Daily Dispatch']
 blocks.push(headerBlock('🌅 Browser Agent Daily Dispatch'))
 blocks.push(dividerBlock())
 
+// Repository Stats
+const npmDownloadsText = repoStats.npmWeeklyDownloads === null ? 'unavailable' : `${repoStats.npmWeeklyDownloads.toLocaleString('en-US')} weekly NPM downloads`
+blocks.push(sectionBlock(`*📊 Repository Stats*\n⭐ ${repoStats.stars} stars · 🍴 ${repoStats.forks} forks · 👀 ${repoStats.watchers} watchers · 📥 ${npmDownloadsText}`))
+textLines.push(`Repository Stats: ${repoStats.stars} stars, ${repoStats.forks} forks, ${repoStats.watchers} watchers, ${npmDownloadsText}`)
+blocks.push(dividerBlock())
+
 // Build size status - the size-compare job in pull-request-checks.yml comments this
 // tag on every PR (including release-please's), so it's expected to exist once checks
 // finish running on the release PR.
@@ -471,10 +499,12 @@ if (releasePR) {
       .map((line) => line.match(rowPattern))
       .filter(Boolean)
       .map((match) => {
-        const [, agent, asset, size, sizeColor, deltaMain, deltaMainColor, deltaRelease, deltaReleaseColor] = match
-        const worstColor = [sizeColor, deltaMainColor, deltaReleaseColor].sort((a, b) => (sizeColorSeverity[b] ?? 0) - (sizeColorSeverity[a] ?? 0))[0]
+        // deltaMain is dropped - the release PR is synced with main, so it's ~always 0%.
+        const [, agent, asset, size, sizeColor, , , deltaRelease, deltaReleaseColor] = match
+        const worstColor = [sizeColor, deltaReleaseColor].sort((a, b) => (sizeColorSeverity[b] ?? 0) - (sizeColorSeverity[a] ?? 0))[0]
         const emoji = sizeColorEmoji[worstColor] ?? '⚪'
-        return `${emoji} ${agent}/${asset}: ${size.trim()} (Δ main ${deltaMain.trim()}, Δ release ${deltaRelease.trim()})`
+        const cleanDelta = deltaRelease.trim().replace(/\s+/g, '')
+        return `${emoji} ${agent}/${asset}: ${size.trim()} (${cleanDelta})`
       })
   } else {
     buildSizePending = true
@@ -517,6 +547,18 @@ if (releasePR) {
 
 blocks.push(sectionBlock(versionText))
 blocks.push(dividerBlock())
+
+// Release PR - kept separate from the review-state buckets below since it's release
+// automation (release-please), not a contributor PR that needs the same triage.
+renderPrSection(blocks, textLines, {
+  emoji: '🔖',
+  title: 'Release PR',
+  prList: releasePR ? [releasePR] : [],
+  emptyText: 'No release is currently staged.',
+  mttmHours,
+  statusSuffix: (pr) => ` • Review: ${pr.reviewDecision ?? 'PENDING'}`,
+  showCount: false,
+})
 
 // External Contributor PRs
 renderPrSection(blocks, textLines, {
@@ -596,11 +638,6 @@ if (issues.length === 0) {
   }
   textLines.push(`Open Issues: ${issues.length}`)
 }
-blocks.push(dividerBlock())
-
-// Repository Stats
-blocks.push(sectionBlock(`*📊 Repository Stats*\n⭐ ${repoStats.stars} stars · 🍴 ${repoStats.forks} forks · 👀 ${repoStats.watchers} watchers`))
-textLines.push(`Repository Stats: ${repoStats.stars} stars, ${repoStats.forks} forks, ${repoStats.watchers} watchers`)
 blocks.push(dividerBlock())
 
 // Deployment Status

@@ -50,7 +50,9 @@ export async function findApmApplicationGuid (client, { name, accountId }) {
   // The entitySearch query argument is itself a double-quoted GraphQL
   // string, so string literals *within* it (name, here) must use single
   // quotes - JSON.stringify's double quotes collide with the outer ones.
-  const safeName = name.replace(/'/g, "\\'")
+  const safeName = name
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'")
   const query = gql`
     {
       actor {

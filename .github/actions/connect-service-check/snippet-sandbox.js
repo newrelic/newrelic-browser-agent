@@ -41,7 +41,7 @@ export function extractNreumConfig (jsAgentLoader) {
 }
 
 function stripScriptTag (text) {
-  const match = text.match(/<script[^>]*>([\s\S]*?)<\/script>/i)
+  const match = text.match(/<script\b[^>]*>([\s\S]*?)<\/script\b[^>]*>/i)
   return match ? match[1] : text
 }
 

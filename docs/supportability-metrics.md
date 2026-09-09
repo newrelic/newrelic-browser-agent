@@ -57,6 +57,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 <!--- A Session Trace was discard due to session expiration --->
 * Session/Expired/SessionTrace/Seen
 * Session/Disabled/MissingPerformanceNavigationTiming/Seen
+<!--- Another page was running at the same time and already updated the session state --->
+* Session/RaceCondition/Seen
 
 ### AJAX
 <!--- Ajax Events were Excluded because they matched the Agent beacon --->

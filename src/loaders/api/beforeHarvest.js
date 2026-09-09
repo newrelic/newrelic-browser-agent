@@ -9,7 +9,7 @@ import { setupAPI } from './sharedHandlers'
 export function setupBeforeHarvestAPI (agent) {
   setupAPI(BEFORE_HARVEST, function (callback) {
     if (typeof callback !== 'function') {
-      warn(72)
+      warn(83)
       return
     }
     agent.runtime.beforeHarvest = callback

@@ -272,10 +272,10 @@ describe('prepareHarvest', () => {
       customStringAttribute: 'customStringAttribute',
       customNumAttribute: 2,
       customBooleanAttribute: true,
-      nullCustomAttribute: null,
-      [AJAX_ID]: expect.any(String) // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
+      nullCustomAttribute: null
     }
-    fakeAgent.info.jsAttributes = expectedCustomAttributes
+    fakeAgent.info.jsAttributes = { ...expectedCustomAttributes }
+    expectedCustomAttributes[AJAX_ID] = expect.any(String) // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
 
     const serializedPayload = ajaxAggregate.makeHarvestPayload(false)
     // serializedPayload from ajax comes back as an array of bodies now, so we just need to decode each one and flatten
@@ -288,6 +288,77 @@ describe('prepareHarvest', () => {
 
       expect(event).toEqual(expected) // event attributes serialized correctly
     })
+  })
+
+  test('does not obfuscate reserved/system fields', async () => {
+    const mockEvent = {
+      startTime: 1000,
+      endTime: 2000,
+      method: 'GET',
+      status: 200,
+      domain: 'example.com',
+      path: '/api/data',
+      requestSize: 123,
+      responseSize: 456,
+      type: 'XMLHttpRequest',
+      callbackDuration: 50,
+      customField1: 'customValue1',
+      customField2: 'customValue2',
+      requestHeaders: {
+        sensitiveRequestHeader1: 'sensitiveRequestHeaderValue1'
+      },
+      requestQuery: 'sensitiveRequestQuery',
+      requestBody: 'sensitiveRequestData',
+      responseHeaders: {
+        sensitiveResponseHeader1: 'sensitiveResponseHeaderValue1'
+      },
+      responseBody: 'sensitiveResponseBody',
+      spanId: 'sensitiveSpanId',
+      traceId: 'sensitiveTraceId',
+      'ajaxRequest.id': 'sensitiveAjaxRequestId',
+      spanTimestamp: 1111
+    }
+    ajaxAggregate.events.add(mockEvent)
+
+    const origObfuscate = fakeAgent.init.obfuscate
+    fakeAgent.init.obfuscate = [
+      { regex: /sensitive/g, replacement: 'OBFUSCATED', eventFilter: ['AjaxRequest'] },
+      { regex: /a/g, replacement: 'AAA', eventFilter: ['AjaxRequest'] },
+      { regex: /request/ig, replacement: 'REQUEST', eventFilter: ['AjaxRequest'] },
+      { regex: /response/ig, replacement: 'RESPONSE', eventFilter: ['AjaxRequest'] }
+    ]
+
+    const serializedPayload = ajaxAggregate.makeHarvestPayload(false)
+    const actualEvent = qp.decode(serializedPayload.body)[0]
+
+    expect(actualEvent).toEqual(expect.objectContaining({
+      type: 'ajax',
+      start: 1000,
+      end: 2000,
+      callbackEnd: 2000,
+      callbackDuration: 0,
+      method: 'GET',
+      status: 200,
+      domain: 'exAAAmple.com',
+      path: '/AAApi/dAAAtAAA',
+      requestBodySize: 123,
+      responseBodySize: 456,
+      requestedWith: 'XMLHttpRequest',
+      nodeId: '0',
+      guid: 'sensitiveSpanId',
+      traceId: 'sensitiveTraceId',
+      timestamp: 1111
+    }))
+
+    const checkChildren = (expectedObject) => expect(actualEvent.children).toEqual(expect.arrayContaining([expect.objectContaining(expectedObject)]))
+    checkChildren({ key: 'ajaxRequest.id', value: 'sensitiveAjaxRequestId' })
+    checkChildren({ key: 'requestHeaders', value: '{"OBFUSCATEDREQUESTHeAAAder1":"OBFUSCATEDREQUESTHeAAAderVAAAlue1"}' })
+    checkChildren({ key: 'requestQuery', value: 'OBFUSCATEDREQUESTQuery' })
+    checkChildren({ key: 'requestBody', value: 'OBFUSCATEDREQUESTDAAAtAAA' })
+    checkChildren({ key: 'responseHeaders', value: '{"OBFUSCATEDRESPONSEHeAAAder1":"OBFUSCATEDRESPONSEHeAAAderVAAAlue1"}' })
+    checkChildren({ key: 'responseBody', value: 'OBFUSCATEDRESPONSEBody' })
+
+    fakeAgent.init.obfuscate = origObfuscate
   })
 
   test('correctly exits if maxPayload is too small', async () => {

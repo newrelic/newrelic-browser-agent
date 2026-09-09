@@ -9,6 +9,7 @@ import { now } from '../../../common/timing/now'
 import { cleanURL } from '../../../common/url/clean-url'
 import { NODE_TYPE, INTERACTION_STATUS, INTERACTION_TYPE, API_TRIGGER_NAME, IPL_TRIGGER_NAME, NO_LONG_TASK_WINDOW } from '../constants'
 import { BelNode } from './bel-node'
+import { createStringAdders } from '../../../common/payloads/payloads'
 
 /**
  * link https://github.com/newrelic/nr-querypack/blob/main/schemas/bel/7.qpschema
@@ -139,7 +140,7 @@ export class Interaction extends BelNode {
    */
   serialize (firstStartTimeOfPayload, agentRef, interactionObfuscator, ajaxObfuscator) {
     const isFirstIxnOfPayload = firstStartTimeOfPayload === undefined
-    const addString = getAddStringContext(interactionObfuscator)
+    const { addString, addStringRaw } = createStringAdders(getAddStringContext, interactionObfuscator)
     const nodeList = []
     let ixnType
     if (this.trigger === IPL_TRIGGER_NAME) ixnType = INTERACTION_TYPE.INITIAL_PAGE_LOAD
@@ -154,7 +155,7 @@ export class Interaction extends BelNode {
       numeric(this.end - this.start), // end -- relative to start
       numeric(0), // callbackEnd -- relative to start; not used by BrowserInteraction events so these are always 0
       numeric(0), // not relative; always 0 for BrowserInteraction
-      addString(this.trigger),
+      addStringRaw(this.trigger),
       addString(cleanURL(this.initialPageURL, true)),
       addString(cleanURL(this.oldURL, true)),
       addString(cleanURL(this.newURL, true)),
@@ -162,12 +163,12 @@ export class Interaction extends BelNode {
       ixnType,
       nullable(this.queueTime, numeric, true) + nullable(this.appTime, numeric, true) +
       nullable(this.oldRoute, addString, true) + nullable(this.newRoute, addString, true) +
-      addString(this.id),
-      addString(this.nodeId),
+      addStringRaw(this.id),
+      addStringRaw(this.nodeId),
       nullable(this.firstPaint, numeric, true) + nullable(this.firstContentfulPaint, numeric)
     ]
     const customAttributes = { ...agentRef.info.jsAttributes, ...this.customAttributes } // attrs specific to this interaction should have precedence over the general custom attrs
-    const allAttachedNodes = addCustomAttributes(customAttributes || {}, addString) // start with all custom attributes
+    const allAttachedNodes = addCustomAttributes(customAttributes || {}, { addKey: addStringRaw, addVal: addString }) // start with all custom attributes
     if (agentRef.info.atts) allAttachedNodes.push('a,' + addString(agentRef.info.atts)) // add apm provided attributes
     /* Querypack encoder+decoder quirkiness:
        - If first ixn node of payload is being processed, its children's start time must be offset by this node's start. (firstStartTime should be undefined.)

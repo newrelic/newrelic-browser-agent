@@ -5,7 +5,6 @@
 import { FeatureBase } from './feature-base'
 import { drain } from '../../common/drain/drain'
 import { FEATURE_NAMES } from '../../loaders/features/features'
-import { Harvester } from '../../common/harvest/harvester'
 import { EventBuffer } from './event-buffer'
 import { handle } from '../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../metrics/constants'
@@ -21,7 +20,6 @@ export class AggregateBase extends FeatureBase {
    */
   constructor (agentRef, featureName) {
     super(agentRef, featureName)
-    this.doOnceForAllAggregate(agentRef)
 
     /** @type {Boolean} indicates if custom attributes are combined in each event payload for size estimation purposes. this is set to true in derived classes that need to evaluate custom attributes separately from the event payload */
     this.customAttributesAreSeparate = false
@@ -176,16 +174,6 @@ export class AggregateBase extends FeatureBase {
     this.isRetrying = result.sent && result.retry
     if (this.isRetrying) this.events.reloadSave(this.harvestOpts)
     this.events.clearSave(this.harvestOpts)
-  }
-
-  /**
-   * These are actions related to shared resources that should be initialized once by whichever feature Aggregate subclass loads first.
-   * This method should run after checkConfiguration, which may reset the agent's info/runtime object that is used here.
-   */
-  doOnceForAllAggregate (agentRef) {
-    // Note: obfuscator is now created per-feature for their specific event types
-
-    if (!agentRef.runtime.harvester) agentRef.runtime.harvester = new Harvester(agentRef)
   }
 
   /**

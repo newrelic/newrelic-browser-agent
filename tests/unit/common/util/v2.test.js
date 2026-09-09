@@ -3,7 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getVersion2Attributes, getRegisteredTargetsFromFilename, findTargetsFromStackTrace, getRegisteredTargetsFromId } from '../../../../src/common/v2/utils'
+import { getVersion2Attributes, getRegisteredTargetsFromFilename, findTargetsFromStackTrace, getRegisteredTargetsFromId, dedupeRegisteredEntitiesByAsset, dedupeTargetsByInstance, isMfeTarget } from '../../../../src/common/v2/utils'
+import { V2_TYPES } from '../../../../src/common/v2/constants'
+
+// mirrors the inline v2Target shape eagerly created in loaders/configure/configure.js
+const makeV2Target = (agentRef) => ({
+  type: V2_TYPES.BA,
+  instance: agentRef.agentIdentifier,
+  get id () { return agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid },
+  get attributes () {
+    return {
+      'entity.guid': agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid,
+      appId: agentRef.info.applicationID
+    }
+  }
+})
 
 describe('v2 utilities', () => {
   describe('getRegisteredTargetsFromFilename', () => {
@@ -179,6 +193,147 @@ describe('v2 utilities', () => {
       const result = getRegisteredTargetsFromFilename('app.js', agentRef)
       expect(result).toEqual([])
     })
+
+    test('collapses multiple registrations of the same asset to a single target', () => {
+      const registeredEntities = Array.from({ length: 30 }, (_, i) => ({
+        metadata: {
+          timings: {
+            asset: 'https://example.com/mfe.js'
+          },
+          target: {
+            id: 'viz-dev',
+            name: 'Viz (dev)',
+            type: 'MFE',
+            instance: `instance-${i}`,
+            blocked: false
+          }
+        }
+      }))
+
+      const agentRef = {
+        runtime: { registeredEntities },
+        init: {
+          api: {
+            register: {
+              enabled: true,
+              duplicate_data_to_container: false
+            }
+          }
+        }
+      }
+
+      const result = getRegisteredTargetsFromFilename('mfe.js', agentRef)
+      expect(result).toHaveLength(1)
+    })
+
+    test('does not collapse two distinct MFEs (different ids) registered from the same inline script', () => {
+      // mirrors register-api.html: two different MFEs (agent1/agent2) both registered from the same
+      // inline <script> block, so both resolve the same `timings.asset` (the page's own URL) -- these
+      // must each keep receiving their own copy of matched auto-detected events, since they are
+      // genuinely different registered entities, not duplicate registrations of the same one.
+      const registeredEntities = [
+        {
+          metadata: {
+            timings: { asset: 'https://example.com/page.html' },
+            target: { id: '1', name: 'agent1', type: 'MFE', instance: 'instance-1', blocked: false }
+          }
+        },
+        {
+          metadata: {
+            timings: { asset: 'https://example.com/page.html' },
+            target: { id: '2', name: 'agent2', type: 'MFE', instance: 'instance-2', blocked: false }
+          }
+        }
+      ]
+
+      const agentRef = {
+        runtime: { registeredEntities },
+        init: {
+          api: {
+            register: {
+              enabled: true,
+              duplicate_data_to_container: false
+            }
+          }
+        }
+      }
+
+      const result = getRegisteredTargetsFromFilename('page.html', agentRef)
+      expect(result).toHaveLength(2)
+      expect(result.map(t => t.id).sort()).toEqual(['1', '2'])
+    })
+  })
+
+  describe('dedupeRegisteredEntitiesByAsset', () => {
+    test('returns empty array for empty/undefined input', () => {
+      expect(dedupeRegisteredEntitiesByAsset([])).toEqual([])
+      expect(dedupeRegisteredEntitiesByAsset(undefined)).toEqual([])
+    })
+
+    test('returns single entity with defined asset unchanged', () => {
+      const entity = { metadata: { timings: { asset: 'a.js' }, target: { blocked: false } } }
+      expect(dedupeRegisteredEntitiesByAsset([entity])).toEqual([entity])
+    })
+
+    test('collapses multiple entities sharing the same defined asset', () => {
+      const entities = Array.from({ length: 5 }, () => ({
+        metadata: { timings: { asset: 'shared.js' }, target: { blocked: false } }
+      }))
+      const result = dedupeRegisteredEntitiesByAsset(entities)
+      expect(result).toHaveLength(1)
+      expect(entities).toContain(result[0])
+    })
+
+    test('prefers a non-blocked target as the canonical entity for a shared asset+id', () => {
+      const blockedA = { metadata: { timings: { asset: 'shared.js' }, target: { id: 'viz-dev', blocked: true } } }
+      const blockedB = { metadata: { timings: { asset: 'shared.js' }, target: { id: 'viz-dev', blocked: true } } }
+      const active = { metadata: { timings: { asset: 'shared.js' }, target: { id: 'viz-dev', blocked: false } } }
+
+      const result = dedupeRegisteredEntitiesByAsset([blockedA, blockedB, active])
+      expect(result).toHaveLength(1)
+      expect(result[0]).toBe(active)
+    })
+
+    test('falls back to first-match-wins when all sharing an asset+id are blocked', () => {
+      const first = { metadata: { timings: { asset: 'shared.js' }, target: { id: 'viz-dev', blocked: true } } }
+      const second = { metadata: { timings: { asset: 'shared.js' }, target: { id: 'viz-dev', blocked: true } } }
+
+      const result = dedupeRegisteredEntitiesByAsset([first, second])
+      expect(result).toHaveLength(1)
+      expect(result[0]).toBe(first)
+    })
+
+    test('does not collapse entities that share an asset but have different ids (distinct MFEs registered from the same script)', () => {
+      const mfe1 = { metadata: { timings: { asset: 'shared.js' }, target: { id: '1', blocked: false } } }
+      const mfe2 = { metadata: { timings: { asset: 'shared.js' }, target: { id: '2', blocked: false } } }
+
+      const result = dedupeRegisteredEntitiesByAsset([mfe1, mfe2])
+      expect(result).toHaveLength(2)
+      expect(result).toEqual([mfe1, mfe2])
+    })
+
+    test('never collapses entities with an undefined asset', () => {
+      const entities = Array.from({ length: 5 }, () => ({
+        metadata: { timings: { asset: undefined }, target: { blocked: false } }
+      }))
+      const result = dedupeRegisteredEntitiesByAsset(entities)
+      expect(result).toHaveLength(5)
+    })
+
+    test('dedupes shared assets while leaving unresolved-asset entities untouched', () => {
+      const assetA = Array.from({ length: 3 }, () => ({ metadata: { timings: { asset: 'a.js' }, target: { blocked: false } } }))
+      const assetB = Array.from({ length: 2 }, () => ({ metadata: { timings: { asset: 'b.js' }, target: { blocked: false } } }))
+      const unresolved = Array.from({ length: 2 }, () => ({ metadata: { timings: { asset: undefined }, target: { blocked: false } } }))
+
+      const result = dedupeRegisteredEntitiesByAsset([...assetA, ...assetB, ...unresolved])
+      expect(result).toHaveLength(4) // 1 for asset A, 1 for asset B, 2 untouched unresolved
+    })
+
+    test('handles entities missing metadata.timings entirely without crashing', () => {
+      const entities = Array.from({ length: 5 }, () => ({ metadata: { target: { blocked: false } } }))
+      const result = dedupeRegisteredEntitiesByAsset(entities)
+      expect(result).toHaveLength(5)
+    })
   })
 
   describe('getRegisteredTargetsFromId', () => {
@@ -273,7 +428,7 @@ describe('v2 utilities', () => {
   })
 
   describe('findTargetsFromStackTrace', () => {
-    test('returns empty array when register.enabled is false', () => {
+    test('returns the container target when register.enabled is false', () => {
       const agentRef = {
         init: {
           api: {
@@ -284,11 +439,15 @@ describe('v2 utilities', () => {
         },
         runtime: {
           registeredEntities: []
-        }
+        },
+        info: {}
       }
+      agentRef.runtime.v2Target = makeV2Target(agentRef)
 
       const result = findTargetsFromStackTrace(agentRef)
-      expect(result).toEqual([])
+      expect(result).toHaveLength(1)
+      expect(result[0]).toBe(agentRef.runtime.v2Target)
+      expect(isMfeTarget(result[0])).toBe(false)
     })
 
     test('returns empty array when agentRef is falsy', () => {
@@ -339,12 +498,54 @@ describe('v2 utilities', () => {
         },
         runtime: {
           registeredEntities: null // This will cause an error
-        }
+        },
+        info: {}
       }
+      agentRef.runtime.v2Target = makeV2Target(agentRef)
 
-      // Should not throw, should return empty array
+      // Should not throw, should return the container target
       const result = findTargetsFromStackTrace(agentRef)
-      expect(result).toEqual([])
+      expect(result).toHaveLength(1)
+      expect(result[0]).toBe(agentRef.runtime.v2Target)
+      expect(isMfeTarget(result[0])).toBe(false)
+    })
+  })
+
+  describe('dedupeTargetsByInstance', () => {
+    test('returns empty array for empty input', () => {
+      expect(dedupeTargetsByInstance([])).toEqual([])
+    })
+
+    test('collapses duplicate instances, preserving first occurrence', () => {
+      const first = { instance: 'a', name: 'first' }
+      const dup = { instance: 'a', name: 'duplicate' }
+      const second = { instance: 'b', name: 'second' }
+
+      const result = dedupeTargetsByInstance([first, dup, second])
+      expect(result).toEqual([first, second])
+    })
+
+    test('collapses multiple undefined targets to a single entry', () => {
+      const result = dedupeTargetsByInstance([undefined, undefined, undefined])
+      expect(result).toEqual([undefined])
+    })
+
+    test('preserves distinct real targets alongside a single undefined entry', () => {
+      const a = { instance: 'a' }
+      const b = { instance: 'b' }
+
+      const result = dedupeTargetsByInstance([a, undefined, b, undefined])
+      expect(result).toEqual([a, undefined, b])
+    })
+  })
+
+  describe('isMfeTarget', () => {
+    test('returns true only for targets with type MFE', () => {
+      expect(isMfeTarget({ type: 'MFE' })).toBe(true)
+      expect(isMfeTarget({ type: 'BA' })).toBe(false)
+      expect(isMfeTarget(undefined)).toBe(false)
+      expect(isMfeTarget(null)).toBe(false)
+      expect(isMfeTarget({})).toBe(false)
     })
   })
 
@@ -364,6 +565,7 @@ describe('v2 utilities', () => {
         }
       }
     }
+    mockAggregateInstance.agentRef.runtime.v2Target = makeV2Target(mockAggregateInstance.agentRef)
 
     describe('parent.type attribute validation', () => {
       test('uses target.parent.type when provided', () => {
@@ -437,6 +639,7 @@ describe('v2 utilities', () => {
       test('returns container attributes when target is not valid', () => {
         const invalidTarget = {
           id: 'mfe-id',
+          type: 'MFE',
           parent: {
             id: 'container-entity-guid',
             type: 'BA'
@@ -458,7 +661,7 @@ describe('v2 utilities', () => {
         expect(result).toEqual({
           'source.id': 'mfe-id',
           'source.name': undefined,
-          'source.type': undefined,
+          'source.type': 'MFE',
           'parent.id': 'container-entity-guid',
           'parent.type': 'BA'
         })
@@ -492,6 +695,25 @@ describe('v2 utilities', () => {
           'source.type': 'MFE',
           'parent.id': 'parent-id',
           'parent.type': 'MFE'
+        })
+      })
+
+      test('returns container attributes when no target is given', () => {
+        const result = getVersion2Attributes(undefined, mockAggregateInstance)
+
+        expect(result).toEqual({
+          'entity.guid': 'container-entity-guid',
+          appId: 'app-123'
+        })
+      })
+
+      test('returns container attributes when given the real container target', () => {
+        const containerTarget = mockAggregateInstance.agentRef.runtime.v2Target
+        const result = getVersion2Attributes(containerTarget, mockAggregateInstance)
+
+        expect(result).toEqual({
+          'entity.guid': 'container-entity-guid',
+          appId: 'app-123'
         })
       })
 

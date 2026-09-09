@@ -10,7 +10,7 @@ const config = {
     }, {
       regex: /fakeid/g
     }, {
-      regex: /pii/g,
+      regex: /pii/ig,
       replacement: 'OBFUSCATED'
     }, {
       regex: /comma/g,
@@ -77,18 +77,24 @@ describe('obfuscate rules', () => {
     expect(timingEventsHarvests.length).toBeGreaterThan(0)
     timingEventsHarvests.forEach(harvest => {
       checkPayload(harvest.request.body)
+      expect(harvest.request.body[0].attributes.some(attr => attr.key === 'customPiiAttribute' && attr.value === 'customOBFUSCATEDAttribute OBFUSCATED')).toBe(true)
       checkPayload(harvest.request.query)
     })
     expect(ajaxEventsHarvests.length).toBeGreaterThan(0)
-    ajaxEventsHarvests.forEach(harvest => checkPayload(harvest.request.body))
+    ajaxEventsHarvests.forEach(harvest => {
+      expect(harvest.request.body[0].children.some(x => x.key === 'customPiiAttribute' && x.value === 'customOBFUSCATEDAttribute OBFUSCATED')).toBe(true)
+      checkPayload(harvest.request.body)
+    })
     expect(errorsHarvests.length).toBeGreaterThan(0)
     errorsHarvests.forEach(harvest => {
       checkPayload(harvest.request.body)
+      expect(harvest.request.body.err[0].custom.customPiiAttribute).toBe('customOBFUSCATEDAttribute OBFUSCATED')
       checkPayload(harvest.request.query)
     })
     expect(insightsHarvests.length).toBeGreaterThan(0)
     insightsHarvests.forEach(harvest => {
       checkPayload(harvest.request.body)
+      expect(harvest.request.body.ins.some(x => x.customPiiAttribute === 'customOBFUSCATEDAttribute OBFUSCATED')).toBe(true)
       checkPayload(harvest.request.query)
     })
     expect(tracesHarvests.length).toBeGreaterThan(0)
@@ -99,11 +105,13 @@ describe('obfuscate rules', () => {
     expect(interactionEventsHarvests.length).toBeGreaterThan(0)
     interactionEventsHarvests.forEach(harvest => {
       checkPayload(harvest.request.body)
+      expect(harvest.request.body[0].children.some(x => x.key === 'customPiiAttribute' && x.value === 'customOBFUSCATEDAttribute OBFUSCATED')).toBe(true)
       checkPayload(harvest.request.query)
     })
     expect(logsHarvests.length).toBe(2)
     logsHarvests.forEach(harvest => {
       checkPayload(harvest.request.body)
+      expect(JSON.parse(harvest.request.body)[0].common.attributes.customPiiAttribute).toBe('customOBFUSCATEDAttribute OBFUSCATED')
       checkPayload(harvest.request.query)
     })
   })
@@ -142,7 +150,6 @@ describe('obfuscate rules', () => {
 
 function checkPayload (payload, customStringCheck) {
   expect(payload).toBeDefined() // payload exists
-
   var strPayload = JSON.stringify(payload)
 
   expect(strPayload.includes('pii')).toBeFalsy() // pii was obfuscated

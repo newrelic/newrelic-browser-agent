@@ -15,7 +15,7 @@ function buildInstance (agentRef) {
 function buildAgent (observationModeEnabled) {
   return {
     ee: { emit: jest.fn(), abort: jest.fn() },
-    init: { observation_mode: { enabled: observationModeEnabled } },
+    init: { observation_mode: { enabled: observationModeEnabled }, feature_flags: [] },
     runtime: {
       appMetadata: {},
       activatedFeatures: undefined,

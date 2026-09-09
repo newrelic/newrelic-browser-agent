@@ -57,7 +57,7 @@ export class SessionEntity {
     this.key = key
 
     this.ee = agentRef.ee
-    wrapEvents(this.ee)
+    wrapEvents(this.ee, agentRef)
     this.setup(opts)
 
     /**

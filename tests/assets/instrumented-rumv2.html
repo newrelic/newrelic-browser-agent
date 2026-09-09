@@ -6,13 +6,12 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
+    {init} 
+    {config}
     <script>
-      window.NREUM||(NREUM={});
-      NREUM.init = {
-        browser_consent_mode: { enabled: true }
-      }
+      NREUM.init.feature_flags = ['rum_v2']
     </script>
-    {config} {loader}
+    {loader}
   </head>
   <body>Instrumented!</body>
 </html>

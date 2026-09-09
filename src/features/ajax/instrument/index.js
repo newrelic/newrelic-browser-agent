@@ -20,6 +20,7 @@ import { SUPPORTABILITY_METRIC } from '../../metrics/constants'
 import { now } from '../../../common/timing/now'
 import { hasUndefinedHostname } from '../../../common/deny-list/deny-list'
 import { extractUrl } from '../../../common/url/extract-url'
+import { addUrl } from '../../../common/url/add-url'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
@@ -479,19 +480,6 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
 
     ctx.loadCaptureCalled = true
   }
-}
-
-function addUrl (ctx, url) {
-  var parsed = parseUrl(url)
-  var params = ctx.params || ctx
-
-  params.hostname = parsed.hostname
-  params.port = parsed.port
-  params.protocol = parsed.protocol
-  params.host = parsed.hostname + ':' + parsed.port
-  params.pathname = parsed.pathname
-  ctx.parsedOrigin = parsed
-  ctx.sameOrigin = parsed.sameOrigin
 }
 
 function parseResponseHeaders (headerStr) {

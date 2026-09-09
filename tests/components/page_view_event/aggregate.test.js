@@ -1,5 +1,6 @@
 import { setupAgent } from '../setup-agent'
 import { Instrument as PageViewEvent } from '../../../src/features/page_view_event/instrument'
+import { setupAgentSession } from '../../../src/features/utils/agent-session'
 import * as sendModule from '../../../src/common/harvest/send'
 import { TextEncoder } from 'util'
 
@@ -24,9 +25,7 @@ test('PageViewEvent does not throw on Harvester driven processes', () => {
   expect(mainAgent.runtime.harvester.triggerHarvestFor(pveAggregate, { isFinalHarvest: true }).ranSend).toEqual(false) // mimics what the harvester does on EoL
 
   pveAggregate.events.add(undefined) // ensure request even if sendRum() puts empty body into buffer
-  expect(mainAgent.runtime.harvester.triggerHarvestFor(pveAggregate, {
-    sendEmptyBody: true
-  }).ranSend).toEqual(true) // mimics the manual trigger in PVE `sendRum`; this should return true as it actually tries to "send"
+  expect(mainAgent.runtime.harvester.triggerHarvestFor(pveAggregate).ranSend).toEqual(true) // mimics the manual trigger in PVE `sendRum`; this should return true as it actually tries to "send"
 })
 
 test('PageViewEvent reports SM on invalid timestamp', () => {
@@ -210,6 +209,8 @@ describe('RUM call', () => {
     test('sets appMetadata from cached app without waiting for RUM call/response', async () => {
       const cachedApp = { agents: [{ entityGuid: 'cached-guid' }], nrServerTime: someServerTime }
       const agentWithCache = setupAgent()
+      // These tests seed a cached RUM response before the real bootstrap runs, so the session needs to exist upfront.
+      setupAgentSession(agentWithCache)
       agentWithCache.runtime.appMetadata = {}
       agentWithCache.runtime.session.state.cachedRumResponse = { app: cachedApp, ...featFlags }
 
@@ -222,6 +223,8 @@ describe('RUM call', () => {
     test('activates features immediately without waiting for RUM call/response', async () => {
       const cachedApp = { agents: [{ entityGuid: 'cached-guid' }], nrServerTime: someServerTime }
       const agentWithCache = setupAgent()
+      // These tests seed a cached RUM response before the real bootstrap runs, so the session needs to exist upfront.
+      setupAgentSession(agentWithCache)
       agentWithCache.runtime.session.state.cachedRumResponse = { app: cachedApp, ...featFlags }
 
       expect(agentWithCache.runtime.activatedFeatures).toBeUndefined()
@@ -296,6 +299,8 @@ describe('RUM call', () => {
     test('does not emit rumresp a second time when RUM call succeeds', async () => {
       const cachedApp = { agents: [{ entityGuid: 'test-guid' }], nrServerTime: someServerTime }
       const agentWithCache = setupAgent()
+      // These tests seed a cached RUM response before the real bootstrap runs, so the session needs to exist upfront.
+      setupAgentSession(agentWithCache)
       agentWithCache.info.errorBeacon = 'fake-beacon'
       agentWithCache.runtime.session.state.cachedRumResponse = { app: cachedApp, ...featFlags }
 

@@ -4,7 +4,7 @@
  */
 import { handle } from '../../common/event-emitter/handle'
 import { warn } from '../../common/util/console'
-import { V2_TYPES } from '../../common/v2/utils'
+import { V2_TYPES } from '../../common/v2/constants'
 import { FEATURE_NAMES } from '../features/features'
 import { now } from '../../common/timing/now'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
@@ -20,6 +20,7 @@ import { subscribeToPageUnload } from '../../common/window/page-visibility'
 import { findScriptTimings } from '../../common/v2/script-tracker'
 import { trackMFEVitals } from '../../common/v2/mfe-vitals'
 import { generateRandomHexString } from '../../common/ids/unique-id'
+import { cleanURL } from '../../common/url/clean-url'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPI} RegisterAPI
@@ -47,7 +48,9 @@ export const warnings = {
   experimental: single(() => warn(54, 'newrelic.register')),
   disabled: single(() => warn(55)),
   invalidTarget: single((target) => warn(48, target)),
-  deregistered: single(() => warn(68))
+  deregistered: single(() => warn(68)),
+  duplicateName: single((target) => warn(81, target)),
+  duplicateId: single((target) => warn(82, target))
 }
 
 /**
@@ -78,14 +81,18 @@ function register (agentRef, target) {
   target.blocked = false
   if (typeof target.tags !== 'object' || target.tags === null || Array.isArray(target.tags)) target.tags = {}
   target.parent ??= {
-    get id () { return agentRef.runtime.appMetadata.agents[0].entityGuid }, // getter because this is asyncronously set
+    get id () { return agentRef.runtime.appMetadata.agents?.[0].entityGuid }, // getter because this is asynchronously set
     type: V2_TYPES.BA
   }
 
-  const timings = findScriptTimings()
+  // The script timings for this entity, which will be used to populate part of the MicroFrontEndTiming custom event.
+  const timings = findScriptTimings(target)
 
-  // Track MFE vitals for this entity
+  // Track MFE vitals for this entity, which will be used to populate part of the MicroFrontEndTiming custom event.
   const vitals = trackMFEVitals(target, timings)
+
+  // the URL of the page at the time this entity was registered, which will be used to populate part of the MicroFrontEndTiming custom event.
+  const registerUrl = cleanURL('' + location)
 
   const attrs = {}
 
@@ -133,6 +140,16 @@ function register (agentRef, target) {
   /** primary cases that can block the register API from working at init time */
   if (!agentRef.init.api.register.enabled) block(warnings.disabled)
   if (!hasValidValue(target.id) || !hasValidValue(target.name)) block(() => warnings.invalidTarget(target))
+  /** warn if we see obviously unstable things with MFE targets */
+  registeredEntities.forEach((entity) => {
+    try {
+      const { name, id } = entity.metadata.target
+      if (name === target.name && id !== target.id) warnings.duplicateName(target)
+      if (id === target.id && name !== target.name) warnings.duplicateId(target)
+    } catch (e) {
+      // something unexpected went wrong...
+    }
+  })
 
   /** @type {RegisterAPI} */
   const api = {
@@ -154,7 +171,10 @@ function register (agentRef, target) {
       get customAttributes () { return attrs },
       target,
       timings,
-      vitals
+      vitals,
+      events: {
+        latestTimestamp: undefined
+      }
     }
   }
 
@@ -196,6 +216,11 @@ function register (agentRef, target) {
     const eventData = {
       assetUrl: timings.asset, // the url of the script that was registered, or undefined if it could not be determined (inline or no match)
       assetType: timings.type, // the type of asset that was associated with the timings, one of 'script', 'link' (if preloaded and found in the resource timing buffer), 'preload' (if preloaded but not found in the resource timing buffer), or "unknown" if it could not be determined
+      registerUrl, // the url of the page at the time this entity was registered
+      deregisterUrl: cleanURL('' + location), // the url of the page at the time this entity was deregistered (or unloaded)
+      // generic_events' addEvent() injects pageUrl/currentUrl on every custom event by default; override them away here in favor of registerUrl/deregisterUrl above
+      pageUrl: undefined,
+      currentUrl: undefined,
       timeAlive: timings.reportedAt - timings.registeredAt, // registeredAt to reportedAt
       timeToBeRequested: timings.fetchStart, // origin to fetchStart
       timeToExecute, // scriptStart to scriptEnd
@@ -203,10 +228,10 @@ function register (agentRef, target) {
       timeToLoad: timeToFetch + timeToExecute, // fetch time and script time together
       timeToRegister: timings.registeredAt, // timestamp when register() was called
       // leave room to extend these with more data keys as needed
-      ...(vitals.fcp.value >= 0 && { 'nr.vitals.fcp.value': vitals.fcp.value }), // FCP vital object with value and metadata
-      ...(vitals.lcp.value >= 0 && { 'nr.vitals.lcp.value': vitals.lcp.value }), // LCP vital object with value and metadata
-      ...(vitals.cls.value >= 0 && { 'nr.vitals.cls.value': vitals.cls.value }), // CLS vital object with value and metadata
-      ...(vitals.inp.value >= 0 && { 'nr.vitals.inp.value': vitals.inp.value }) // INP vital object with value and metadata
+      ...(vitals.fcp.value >= 0 && { 'vitals.fcp.value': vitals.fcp.value }), // FCP vital object with value and metadata
+      ...(vitals.lcp.value >= 0 && { 'vitals.lcp.value': vitals.lcp.value }), // LCP vital object with value and metadata
+      ...(vitals.cls.value >= 0 && { 'vitals.cls.value': vitals.cls.value }), // CLS vital object with value and metadata
+      ...(vitals.inp.value >= 0 && { 'vitals.inp.value': vitals.inp.value }) // INP vital object with value and metadata
     }
 
     api.recordCustomEvent('MicroFrontEndTiming', eventData)
@@ -234,8 +259,9 @@ function register (agentRef, target) {
   const report = (methodToCall, args, target) => {
     /** Even if we are blocked, if registering we should still return a child register API so nested API calls do not throw errors */
     if (isBlocked() && methodToCall !== register) return
-    /** set the timestamp before the async part of waiting for the rum response for better accuracy */
-    const timestamp = now()
+    /** use the timestamp captured inside the iframe for this call, if one was supplied (see iframe-message-handler.js); otherwise fall back to now(). Consume it immediately so a stale value can't leak into a later call that isn't preceded by a fresh iframe message (e.g. deregister() via page unload) */
+    const timestamp = api.metadata.events.latestTimestamp ?? now()
+    api.metadata.events.latestTimestamp = undefined
     const methodName = METHOD_NAMES.get(methodToCall) || 'unknown'
     handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodName}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)
     try {

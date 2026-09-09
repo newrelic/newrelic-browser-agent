@@ -19,7 +19,7 @@ export function activateFeatures (flags, agentRef) {
   // let any window level subscribers know that the agent is running, per install docs
   dispatchGlobalEvent({
     loaded: true,
-    drained: true,
+    drained: !agentRef.init.feature_flags.includes('rum_v2'), // v2 RUM always call activateFeatures before any group is drained (in waitForFlags)
     type: 'lifecycle',
     name: 'load',
     feature: undefined,

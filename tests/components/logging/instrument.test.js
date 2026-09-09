@@ -32,7 +32,7 @@ test('should subscribe to wrap-logger events and buffer them', async () => {
 
   const message = faker.string.uuid()
   myLoggerSuite.myTestLogger(message)
-  expect(loggingUtilsModule.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, message, customAttributes, 'error', true, undefined)
+  expect(loggingUtilsModule.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, message, customAttributes, 'error', true, mainAgent.runtime.v2Target)
 })
 
 test('wrapLogger should not re-wrap or overwrite context if called more than once', async () => {
@@ -44,12 +44,12 @@ test('wrapLogger should not re-wrap or overwrite context if called more than onc
 
   let message = faker.string.uuid()
   myLoggerSuite.myTestLogger(message)
-  expect(loggingUtilsModule.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, message, customAttributes, 'error', true, undefined) // undefined target
+  expect(loggingUtilsModule.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, message, customAttributes, 'error', true, mainAgent.runtime.v2Target) // container target
 
   const newCustomAttributes = { args: faker.string.uuid() }
   /** re-wrap the logger with a NEW context, new events should NOT get that context because the wrapper should early-exit */
   wrapLogger(loggingInstrument.ee, myLoggerSuite, 'myTestLogger', { customAttributes: newCustomAttributes, level: 'info' }, undefined, mainAgent)
   message = faker.string.uuid()
   myLoggerSuite.myTestLogger(message)
-  expect(loggingUtilsModule.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, message, newCustomAttributes, 'info', true, undefined) // undefined target
+  expect(loggingUtilsModule.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, message, newCustomAttributes, 'info', true, mainAgent.runtime.v2Target) // container target
 })

@@ -31,26 +31,27 @@ function validateVitals (timingEvent, options = {}) {
   const { expectFCP = false, expectLCP = false, expectCLS = false, expectINP = false } = options
 
   // Parse vitals from JSON strings
-  const fcp = timingEvent['nr.vitals.fcp.value']
-  const lcp = timingEvent['nr.vitals.lcp.value']
-  const cls = timingEvent['nr.vitals.cls.value']
-  const inp = timingEvent['nr.vitals.inp.value']
+  const fcp = timingEvent['vitals.fcp.value']
+  const lcp = timingEvent['vitals.lcp.value']
+  const cls = timingEvent['vitals.cls.value']
+  const inp = timingEvent['vitals.inp.value']
 
   if (expectFCP) {
     expect(fcp).toBeDefined()
     expect(fcp).not.toBeUndefined()
     expect(fcp).toBeGreaterThan(0)
-    expect(fcp).toBeLessThan(10000) // Less than 10 seconds
   } else if (fcp !== undefined) {
     // If FCP is present (but not required), validate it's reasonable
     expect(fcp).toBeGreaterThanOrEqual(0)
   }
+  // Whenever FCP is present at all, it must never exceed the stale-clock cap - a defensive guard against a
+  // tab-freeze/clock-drift scenario reporting a multi-hour "FCP" (see mfe-vitals.js's fcp.value getter)
+  if (fcp !== undefined) expect(fcp).toBeLessThan(10000)
 
   if (expectLCP) {
     expect(lcp).toBeDefined()
     expect(lcp).not.toBeUndefined()
     expect(lcp).toBeGreaterThan(0)
-    expect(lcp).toBeLessThan(10000)
     // LCP should be >= FCP if both are present
     if (fcp !== undefined) {
       expect(lcp).toBeGreaterThanOrEqual(fcp)
@@ -58,6 +59,8 @@ function validateVitals (timingEvent, options = {}) {
   } else if (lcp !== undefined) {
     expect(lcp).toBeGreaterThanOrEqual(0)
   }
+  // LCP can never be observed before FCP, so if FCP was ever dropped as stale, LCP must never leak through either
+  if (fcp === undefined) expect(lcp).toBeUndefined()
 
   if (expectCLS) {
     expect(cls).toBeDefined()
@@ -157,7 +160,7 @@ describe('Register API - MFE Vitals Tracking', () => {
     validateVitals(timing, { expectCLS: true })
 
     // Parse vitals for metadata validation
-    const cls = timing['nr.vitals.cls.value']
+    const cls = timing['vitals.cls.value']
     expect(cls).toBeGreaterThan(0)
   })
 
@@ -264,8 +267,8 @@ describe('Register API - MFE Vitals Tracking', () => {
 
     // Vitals should be independent - not necessarily equal
     // Both should have FCP values but they can be different
-    const mainFcp = mainTiming['nr.vitals.fcp.value']
-    const secondFcp = secondTiming['nr.vitals.fcp.value']
+    const mainFcp = mainTiming['vitals.fcp.value']
+    const secondFcp = secondTiming['vitals.fcp.value']
     expect(mainFcp).toBeGreaterThan(0)
     expect(secondFcp).toBeGreaterThan(0)
   })
@@ -302,14 +305,14 @@ describe('Register API - MFE Vitals Tracking', () => {
 
     // Vitals should be null or 0 for MFE with no matching content
     // FCP should be null since no content was added within the MFE scope
-    expect(timing['nr.vitals.fcp.value']).toBeUndefined()
-    expect(timing['nr.vitals.lcp.value']).toBeUndefined()
+    expect(timing['vitals.fcp.value']).toBeUndefined()
+    expect(timing['vitals.lcp.value']).toBeUndefined()
     // CLS might be null (unsupported) or have value 0 (supported but no shifts)
-    if (timing['nr.vitals.cls.value'] !== undefined) {
-      const cls = timing['nr.vitals.cls.value']
+    if (timing['vitals.cls.value'] !== undefined) {
+      const cls = timing['vitals.cls.value']
       expect(cls).toBe(0)
     }
-    expect(timing['nr.vitals.inp.value']).toBeUndefined()
+    expect(timing['vitals.inp.value']).toBeUndefined()
   })
 
   it('should give up tracking vitals if FCP is not observed within 10 seconds, reporting no timings', async () => {
@@ -331,7 +334,9 @@ describe('Register API - MFE Vitals Tracking', () => {
     await browser.pause(11000)
 
     // Render content AFTER the timeout should have fired - since observers should already be
-    // disconnected at this point, this should NOT be picked up as FCP/LCP/CLS/INP
+    // disconnected at this point, this should NOT be picked up as FCP/LCP/CLS/INP. The element is
+    // sized to also qualify as the largest contentful paint candidate, so this also exercises the
+    // FCP -> LCP cascade: LCP must never be reported once FCP has been dropped as stale/never-observed.
     await browser.execute(function () {
       const div = document.createElement('div')
       div.textContent = 'Late content after FCP timeout'
@@ -355,10 +360,10 @@ describe('Register API - MFE Vitals Tracking', () => {
 
     // No vitals should have been captured - the 10s FCP timeout should have disconnected
     // all observers before the late content was ever rendered
-    expect(timing['nr.vitals.fcp.value']).toBeUndefined()
-    expect(timing['nr.vitals.lcp.value']).toBeUndefined()
-    expect(timing['nr.vitals.cls.value']).toBeUndefined()
-    expect(timing['nr.vitals.inp.value']).toBeUndefined()
+    expect(timing['vitals.fcp.value']).toBeUndefined()
+    expect(timing['vitals.lcp.value']).toBeUndefined()
+    expect(timing['vitals.cls.value']).toBeUndefined()
+    expect(timing['vitals.inp.value']).toBeUndefined()
   })
 
   it('should stop tracking vitals after deregistration', async () => {
@@ -410,7 +415,7 @@ describe('Register API - MFE Vitals Tracking', () => {
     // The vitals should have been captured at deregistration and not changed
     // (We can't easily re-check since it's already been reported, but we verify the observers were disconnected)
     // This test primarily validates that deregistration stops tracking
-    expect(firstTimingEvents[0]['nr.vitals.fcp.value']).toBeDefined() // Vitals were captured
+    expect(firstTimingEvents[0]['vitals.fcp.value']).toBeDefined() // Vitals were captured
   })
 
   it.withBrowsersMatching(supportsLargestContentfulPaint)('should include vitals in timing event structure', async () => {
@@ -452,8 +457,8 @@ describe('Register API - MFE Vitals Tracking', () => {
     expect(timing.timeToRegister).toBeGreaterThanOrEqual(0)
 
     // At least FCP and LCP should have values for this test case
-    expect(timing['nr.vitals.fcp.value']).not.toBeUndefined()
-    expect(timing['nr.vitals.lcp.value']).not.toBeUndefined()
+    expect(timing['vitals.fcp.value']).not.toBeUndefined()
+    expect(timing['vitals.lcp.value']).not.toBeUndefined()
   })
 
   it('should independently detect FCP for two MFE instances sharing the same id in separate DOM trees', async () => {
@@ -516,7 +521,7 @@ describe('Register API - MFE Vitals Tracking', () => {
     validateVitals(eventB, { expectFCP: true })
 
     // Tree B was rendered ~300ms after Tree A, so its FCP timestamp should reflect that later render
-    expect(eventB['nr.vitals.fcp.value'] - eventA['nr.vitals.fcp.value']).toBeGreaterThanOrEqual(300)
+    expect(eventB['vitals.fcp.value'] - eventA['vitals.fcp.value']).toBeGreaterThanOrEqual(300)
   })
 
   it.withBrowsersMatching(supportsLargestContentfulPaint)('should independently measure LCP size for two MFE instances sharing the same id', async () => {
@@ -618,7 +623,7 @@ describe('Register API - MFE Vitals Tracking', () => {
 
     // ...but since there's only one DOM tree to claim, exactly one of them should have
     // observed FCP from it, and the other should have never observed anything at all.
-    const claimedCount = [eventA, eventB].filter(e => e['nr.vitals.fcp.value'] !== undefined).length
+    const claimedCount = [eventA, eventB].filter(e => e['vitals.fcp.value'] !== undefined).length
     expect(claimedCount).toBe(1)
   })
 
@@ -743,22 +748,22 @@ describe('Register API - MFE Vitals Tracking', () => {
   //   expect(timing['source.id']).toBe('metadata-test-mfe')
 
   //   // FCP metadata
-  //   if (timing['nr.vitals.fcp.value'] !== null) {
-  //     const fcp = JSON.parse(timing['nr.vitals.fcp.value'])
+  //   if (timing['vitals.fcp.value'] !== null) {
+  //     const fcp = JSON.parse(timing['vitals.fcp.value'])
   //     expect(fcp.loadState).toBeDefined()
   //   }
 
   //   // LCP metadata - should have element info
-  //   if (timing['nr.vitals.lcp.value'] !== null) {
-  //     const lcp = JSON.parse(timing['nr.vitals.lcp.value'])
+  //   if (timing['vitals.lcp.value'] !== null) {
+  //     const lcp = JSON.parse(timing['vitals.lcp.value'])
   //     expect(lcp.elTag).toBe('DIV')
   //     expect(lcp.eid).toBe('hero-section')
   //     expect(lcp.size).toBe(480000) // 800 * 600
   //   }
 
   //   // CLS metadata - should have shift info if supported
-  //   if (timing['nr.vitals.cls.value'] !== null) {
-  //     const cls = timing['nr.vitals.cls.value']
+  //   if (timing['vitals.cls.value'] !== null) {
+  //     const cls = timing['vitals.cls.value']
   //     if (cls > 0) {
   //       expect(cls.largestShiftTarget).toBeDefined()
   //       expect(cls.largestShiftTime).toBeGreaterThanOrEqual(0)
@@ -768,8 +773,8 @@ describe('Register API - MFE Vitals Tracking', () => {
   //   }
 
   //   // INP metadata - should have interaction info if supported
-  //   if (timing['nr.vitals.inp.value'] !== null) {
-  //     const inp = timing['nr.vitals.inp.value']
+  //   if (timing['vitals.inp.value'] !== null) {
+  //     const inp = timing['vitals.inp.value']
   //     expect(inp.interactionTarget).toBeDefined()
   //     expect(inp.interactionTime).toBeGreaterThanOrEqual(0)
   //     expect(inp.interactionType).toBeDefined()

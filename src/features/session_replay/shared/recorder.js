@@ -204,7 +204,8 @@ export class Recorder {
 
     // We are making an effort to try to keep payloads manageable for unloading.  If they reach the unload limit before their interval,
     // it will send immediately.  This often happens on the first snapshot, which can be significantly larger than the other payloads.
-    if (((this.events.hasSnapshot && this.events.hasMeta) || payloadSize > IDEAL_PAYLOAD_SIZE) && !this.isErrorMode) {
+    // (the aggregate may not exist yet/at all if its own bootstrap hasn't finished or failed -- nothing to harvest for in that case.)
+    if (((this.events.hasSnapshot && this.events.hasMeta) || payloadSize > IDEAL_PAYLOAD_SIZE) && !this.isErrorMode && this.srInstrument.featAggregate) {
       // if we've made it to the ideal size of ~16kb before the interval timer, we should send early.
       this.agentRef.runtime.harvester.triggerHarvestFor(this.srInstrument.featAggregate)
     }

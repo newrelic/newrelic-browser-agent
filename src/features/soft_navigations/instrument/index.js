@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { gosNREUMOriginals } from '../../../common/window/nreum'
@@ -30,7 +30,7 @@ export class Instrument extends InstrumentBase {
 
     if (!isBrowserScope || !gosNREUMOriginals().o.MO) return // soft navigations is not supported outside web env or browsers without the mutation observer API
 
-    const historyEE = wrapHistory(this.ee)
+    const historyEE = wrapHistory(this.ee, agentRef)
     try {
       this.removeOnAbort = new AbortController()
     } catch (e) {}

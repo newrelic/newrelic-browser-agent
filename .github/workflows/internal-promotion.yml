@@ -262,7 +262,7 @@ jobs:
         with:
           notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          message: ":rocket: New Browser Agent version promoted to \\`staging\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
+          payload: '{"text": ":rocket: New Browser Agent version promoted to `staging` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>.", "blocks": [{"type": "section", "text": {"type": "mrkdwn", "text": ":rocket: New Browser Agent version promoted to `staging` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."}}]}'
 
   # Step 3: Deploy to EU Production
   deploy-eu-prod:
@@ -344,7 +344,7 @@ jobs:
         with:
           notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          message: ":rocket: New Browser Agent version promoted to \\`eu-prod\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
+          payload: '{"text": ":rocket: New Browser Agent version promoted to `eu-prod` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>.", "blocks": [{"type": "section", "text": {"type": "mrkdwn", "text": ":rocket: New Browser Agent version promoted to `eu-prod` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."}}]}'
 
 
   # Step 4: Deploy to Japan Production
@@ -427,7 +427,7 @@ jobs:
         with:
           notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          message: ":rocket: New Browser Agent version promoted to \\`jp-prod\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
+          payload: '{"text": ":rocket: New Browser Agent version promoted to `jp-prod` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>.", "blocks": [{"type": "section", "text": {"type": "mrkdwn", "text": ":rocket: New Browser Agent version promoted to `jp-prod` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."}}]}'
 
   
   # Step 5: Deploy to US Production
@@ -510,7 +510,7 @@ jobs:
         with:
           notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
           dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          message: ":rocket: New Browser Agent version promoted to \\`us-prod\\` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."
+          payload: '{"text": ":rocket: New Browser Agent version promoted to `us-prod` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>.", "blocks": [{"type": "section", "text": {"type": "mrkdwn", "text": ":rocket: New Browser Agent version promoted to `us-prod` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."}}]}'
 
   # Verify promotion status for PR gating
   # This job can be used as a required status check to block release-please PR merges

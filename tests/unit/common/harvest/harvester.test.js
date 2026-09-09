@@ -1,5 +1,6 @@
 import { Harvester } from '../../../../src/common/harvest/harvester'
 import { send } from '../../../../src/common/harvest/send'
+import { RUM } from '../../../../src/loaders/features/features'
 
 let mockEolCb
 jest.mock('../../../../src/common/unload/eol', () => ({
@@ -21,11 +22,11 @@ beforeEach(() => {
   mockEolCb = undefined
 })
 
-test('Harvester does not start timer loop on initialization', () => {
+test('Harvester does not subscribe to EOL or start timer loop on initialization', () => {
   jest.spyOn(global, 'setTimeout')
 
   const harvester = new Harvester(fakeAgent)
-  expect(mockEolCb).not.toBeUndefined()
+  expect(mockEolCb).toBeUndefined()
   expect(harvester.agentRef).toEqual(fakeAgent)
   expect(global.setTimeout).not.toHaveBeenCalled()
 })
@@ -53,24 +54,28 @@ test('On harvest interval, triggerHarvest runs for every aggregate', () => {
 })
 
 describe('On EOL harvest', () => {
-  test('triggerHarvestFor runs for every aggregate', () => {
+  test('triggerHarvestFor runs for every aggregate', async () => {
     const harvester = new Harvester(fakeAgent)
     harvester.triggerHarvestFor = jest.fn()
+    harvester.startTimer() // EOL is only subscribed once the timer starts
 
     expect(harvester.initializedAggregates.length).toEqual(0)
     harvester.initializedAggregates.push({ harvestOpts: {} }, { harvestOpts: {} })
     mockEolCb()
+    await null // the actual harvest work is deferred to a microtask -- see Harvester#startTimer
     expect(harvester.triggerHarvestFor).toHaveBeenCalledTimes(2)
     expect(harvester.triggerHarvestFor).toHaveBeenLastCalledWith(expect.any(Object), { isFinalHarvest: true })
   })
 
-  test('all aggregates beforeUnload provided are called prior to triggering harvest', () => {
+  test('all aggregates beforeUnload provided are called prior to triggering harvest', async () => {
     const harvester = new Harvester(fakeAgent)
     harvester.triggerHarvestFor = jest.fn(() => performance.now())
+    harvester.startTimer() // EOL is only subscribed once the timer starts
 
     const secondBeforeUnload = jest.fn(() => performance.now())
     harvester.initializedAggregates.push({ harvestOpts: { } }, { harvestOpts: { beforeUnload: secondBeforeUnload } })
     mockEolCb()
+    await null // the actual harvest work is deferred to a microtask -- see Harvester#startTimer
     expect(harvester.triggerHarvestFor).toHaveBeenCalledTimes(2)
     expect(secondBeforeUnload).toHaveBeenCalledTimes(1)
 
@@ -85,6 +90,7 @@ describe('On EOL harvest', () => {
 describe('send', () => {
   beforeAll(() => {
     fakeAgent.info.errorBeacon = 'test'
+    fakeAgent.info.licenseKey = 'license-key'
     fakeAgent.init.proxy = {}
     fakeAgent.runtime = { obfuscator: { obfuscateString: jest.fn() } }
   })
@@ -106,6 +112,57 @@ describe('send', () => {
   })
   test('does send if sendEmptyBody', () => {
     expect(send(fakeAgent, { endpoint: 'someEndpoint', targetApp: 'someApp', payload: { body: '' }, localOpts: { sendEmptyBody: true }, submitMethod: jest.fn() })).toEqual(true)
+  })
+
+  test('formats v1 rum URL without endpoint segment', () => {
+    const submitMethod = jest.fn()
+
+    send(fakeAgent, {
+      endpoint: RUM,
+      payload: { body: { foo: 'bar' } },
+      localOpts: {},
+      submitMethod,
+      endpointVersion: 1
+    })
+
+    expect(submitMethod).toHaveBeenCalledWith(expect.objectContaining({
+      url: expect.stringContaining('https://test/1/license-key?')
+    }))
+    expect(submitMethod).toHaveBeenCalledWith(expect.objectContaining({
+      url: expect.not.stringContaining('/rum/1/license-key')
+    }))
+  })
+
+  test('formats v2 rum URL with endpoint segment', () => {
+    const submitMethod = jest.fn()
+
+    send(fakeAgent, {
+      endpoint: RUM,
+      payload: { body: { foo: 'bar' } },
+      localOpts: {},
+      submitMethod,
+      endpointVersion: 2
+    })
+
+    expect(submitMethod).toHaveBeenCalledWith(expect.objectContaining({
+      url: expect.stringContaining('https://test/rum/2/license-key?')
+    }))
+  })
+
+  test('does not append a question mark for raw requests with no query params', () => {
+    const submitMethod = jest.fn()
+
+    send(fakeAgent, {
+      endpoint: 'browser/connect/2/license-key',
+      payload: { body: { apps: [{ appId: 'app-id' }] } },
+      localOpts: {},
+      submitMethod,
+      raw: true
+    })
+
+    expect(submitMethod).toHaveBeenCalledWith(expect.objectContaining({
+      url: 'https://test/browser/connect/2/license-key'
+    }))
   })
 })
 

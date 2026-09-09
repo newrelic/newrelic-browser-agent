@@ -68,7 +68,7 @@ export class Instrument extends InstrumentBase {
     if (isBrowserScope) {
       wrapFetch(this.ee, agentRef)
       wrapXhr(this.ee, agentRef)
-      historyEE = wrapHistory(this.ee)
+      historyEE = wrapHistory(this.ee, agentRef)
 
       if (agentRef.init.user_actions.enabled) {
         OBSERVED_EVENTS.forEach(eventType =>

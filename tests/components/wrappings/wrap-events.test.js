@@ -148,7 +148,7 @@ test('should send event when adding event listener', async () => {
     ],
     el,
     'addEventListener',
-    []
+    [undefined]
   )
 
   const originalHandler = Object.entries(eeHandler.mock.calls[0][0][1])
@@ -192,7 +192,7 @@ test('should support listener object with handleEvent method', async () => {
     ],
     el,
     'addEventListener',
-    []
+    [undefined]
   )
 
   const event = new Event('click', { bubbles: true, cancelable: false })

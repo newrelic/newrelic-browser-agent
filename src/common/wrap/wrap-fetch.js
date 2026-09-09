@@ -47,8 +47,8 @@ export function wrapFetch (sharedEE, agentRef) {
 
   ee.on(prefix + 'end', function (err, res, targets) {
     var ctx = this
-    // undefined target reports to container
-    ctx.targets = targets || [undefined]
+    // default target reports to container
+    ctx.targets = targets || [agentRef.runtime.v2Target]
     if (res) {
       var size = res.headers.get('content-length')
       if (size !== null) {

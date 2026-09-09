@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -24,16 +24,17 @@ const flag = `nr@wrapped:${contextId}`
  * `document` (if in a browser scope). Adds custom events in context of a new emitter scoped only to these methods.
  * @param {Object} sharedEE - The shared event emitter on which a new scoped
  *     event emitter will be based.
+ * @param {*} [agentRef] - The agent reference, used to attribute wrapped calls to the correct v2 target.
  * @returns {Object} Scoped event emitter with a debug ID of `events`.
  */
-export function wrapEvents (sharedEE) {
+export function wrapEvents (sharedEE, agentRef) {
   var ee = scopedEE(sharedEE)
 
   // Notice if our wrapping never ran yet, the falsy NaN will not early return; but if it has,
   // then we increment the count to track # of feats using this at runtime.
   if (wrapped[ee.debugId]++) return ee
   wrapped[ee.debugId] = 1 // otherwise, first feature to wrap events
-  var wrapFn = wfn(ee, true)
+  var wrapFn = wfn(ee, true, agentRef)
 
   // Guard against instrumenting environments w/o necessary features
   if ('getPrototypeOf' in Object) {

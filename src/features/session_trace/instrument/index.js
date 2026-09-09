@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { handle } from '../../../common/event-emitter/handle'
@@ -33,8 +33,8 @@ export class Instrument extends InstrumentBase {
     }
 
     const thisInstrumentEE = this.ee
-    wrapHistory(thisInstrumentEE)
-    this.eventsEE = wrapEvents(thisInstrumentEE)
+    wrapHistory(thisInstrumentEE, agentRef)
+    this.eventsEE = wrapEvents(thisInstrumentEE, agentRef)
 
     this.eventsEE.on(FN_START, function (args, target) {
       this.bstStart = now()

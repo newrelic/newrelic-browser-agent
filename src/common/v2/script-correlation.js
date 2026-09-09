@@ -18,6 +18,8 @@ export class ScriptCorrelation {
   constructor (url) {
     /** @type {string} The cleaned URL of the script */
     this.url = url
+    /** @type {Set<string>} MFE target ids that have already claimed this correlation via a completed `findScriptTimings()` call. Keyed per target rather than a single flag so one script that registers multiple distinct MFEs (each with its own id) doesn't have the second MFE's registration mistaken for a stale reuse of the first's. */
+    this.claimedBy = new Set()
   }
 
   /**

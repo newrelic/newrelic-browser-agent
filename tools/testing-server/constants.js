@@ -78,7 +78,8 @@ module.exports.rumFlags = (flags = {}, app = {}) => ({
     agents: app.agents || [
       { entityGuid: mockEntityGuid() }
     ],
-    nrServerTime: app.nrServerTime || Date.now()
+    nrServerTime: app.nrServerTime || Date.now(),
+    igp: app.igp || 'mock-igp-token'
   }
 })
 

@@ -15,7 +15,9 @@ test('init props exist and return expected defaults', () => {
   expect(config.api).toEqual({
     register: {
       enabled: false,
-      duplicate_data_to_container: false
+      duplicate_data_to_container: false,
+      allow_iframe_bridge: false,
+      iframe_domains: []
     }
   })
   expect(config.distributed_tracing).toEqual({

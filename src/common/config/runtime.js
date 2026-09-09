@@ -43,7 +43,10 @@ const RuntimeModel = {
   disabled: false,
   /** @type {Map<string, {staged: boolean, priority: number}>} */
   drainRegistry: new Map(),
+  connector: undefined,
   harvester: undefined,
+  /** eagerly-created in configure() -- the v2 target representing the container (main) agent, see common/v2/utils#V2Target */
+  v2Target: undefined,
   isolatedBacklog: false,
   isRecording: false, // true when actively recording, false when paused or stopped
   loaderType: undefined,
@@ -57,7 +60,8 @@ const RuntimeModel = {
   registeredEntities: [],
   /** a proxy is set in agent-session to track jsAttributes changes for harvesting mechanics */
   jsAttributesMetadata: { bytes: 0 },
-  get harvestCount () { return ++_harvestCount }
+  get harvestCount () { return ++_harvestCount },
+  listeningForIframeMessages: false
 }
 
 export const mergeRuntime = (runtime) => {

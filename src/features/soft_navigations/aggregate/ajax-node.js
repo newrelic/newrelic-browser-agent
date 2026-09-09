@@ -42,7 +42,7 @@ export class AjaxNode extends BelNode {
   }
 
   serialize (parentStartTimestamp, agentRef, ajaxObfuscator) {
-    const { addString, addStringWithTruncation } = createStringAdders(getAddStringContext, ajaxObfuscator)
+    const { addString, addStringRaw, addStringWithTruncation } = createStringAdders(getAddStringContext, ajaxObfuscator)
 
     const nodeList = []
 
@@ -54,22 +54,25 @@ export class AjaxNode extends BelNode {
       numeric(this.end - this.start), // end is relative to start
       numeric(this.callbackEnd - this.end), // callbackEnd is relative to end
       numeric(this.callbackDuration), // not relative
-      addString(this.method),
+      addStringRaw(this.method),
       numeric(this.status),
       addString(this.domain),
       addString(this.path),
       numeric(this.txSize),
       numeric(this.rxSize),
       this.requestedWith,
-      addString(this.nodeId),
-      nullable(this.spanId, addString, true) + nullable(this.traceId, addString, true) + nullable(this.spanTimestamp, numeric)
+      addStringRaw(this.nodeId),
+      nullable(this.spanId, addStringRaw, true) + nullable(this.traceId, addStringRaw, true) + nullable(this.spanTimestamp, numeric)
     ]
     // Regular attributes: obfuscate only
     const regularAttrs = addCustomAttributes({
-      [AJAX_ID]: this[AJAX_ID],
       ...(this.targetAttributes || {}),
       ...(this.gql || {})
-    }, addString)
+    }, { addKey: addStringRaw, addVal: addString })
+
+    regularAttrs.push(...addCustomAttributes({
+      [AJAX_ID]: this[AJAX_ID]
+    }, { addKey: addStringRaw, addVal: addStringRaw }))
 
     // Payload attributes: obfuscate then truncate
     const payloadAttrs = addCustomAttributes({
@@ -78,7 +81,7 @@ export class AjaxNode extends BelNode {
       ...(this.requestQuery ? { requestQuery: this.requestQuery } : {}),
       ...(this.responseBody ? { responseBody: this.responseBody } : {}),
       ...(this.responseHeaders ? { responseHeaders: this.responseHeaders } : {})
-    }, addStringWithTruncation)
+    }, { addKey: addStringRaw, addVal: addStringWithTruncation })
 
     let allAttachedNodes = [...regularAttrs, ...payloadAttrs]
     this.children.forEach(node => allAttachedNodes.push(node.serialize())) // no children is expected under ajax nodes at this time

@@ -8,6 +8,7 @@ export const EVENTS = 'events'
 export const JSERRORS = 'jserrors'
 export const BLOBS = 'browser/blobs'
 export const RUM = 'rum'
+export const CONNECT = 'connect'
 export const LOGS = 'browser/logs'
 
 export const FEATURE_NAMES = {

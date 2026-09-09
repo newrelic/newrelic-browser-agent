@@ -31,7 +31,7 @@ export class Instrument extends InstrumentBase {
     })
 
     /** emitted by wrap-logger function */
-    this.ee.on('wrap-logger-end', function handleLog ([message], _, __, targets = []) {
+    this.ee.on('wrap-logger-end', function handleLog ([message], _, __, targets = [agentRef.runtime.v2Target]) {
       const { level, customAttributes, autoCaptured } = this
       targets.forEach(target => {
         bufferLog(instanceEE, message, customAttributes, level, autoCaptured, target)

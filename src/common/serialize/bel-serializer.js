@@ -40,7 +40,16 @@ export function getAddStringContext (obfuscator, truncator) {
   }
 }
 
-export function addCustomAttributes (attrs, addString) {
+/**
+ * Attributes are serialized according to their types, using the provided serializers.  Only the first 64 attributes will be added to the payload.
+ * @param attrs
+ * @param serializers
+ * @param {function} serializers.addKey -function for serializing attribute keys
+ * @param {function} serializers.addVal - function for serializing attribute values
+ * @returns {*[]}
+ */
+export function addCustomAttributes (attrs, serializers) {
+  const { addKey, addVal } = serializers
   var attrParts = []
 
   Object.entries(attrs || {}).forEach(([key, val]) => {
@@ -48,13 +57,13 @@ export function addCustomAttributes (attrs, addString) {
     var type = 5
     var serializedValue
     // add key to string table first
-    key = addString(key, false)
+    key = addKey(key)
 
     switch (typeof val) {
       case 'object':
         if (val) {
           // serialize objects to strings
-          serializedValue = addString(stringify(val))
+          serializedValue = addVal(stringify(val))
         } else {
           // null attribute type
           type = 9
@@ -73,7 +82,7 @@ export function addCustomAttributes (attrs, addString) {
         type = 9
         break
       default:
-        serializedValue = addString(val)
+        serializedValue = addVal(val)
     }
 
     attrParts.push([type, key + (serializedValue ? ',' + serializedValue : '')])

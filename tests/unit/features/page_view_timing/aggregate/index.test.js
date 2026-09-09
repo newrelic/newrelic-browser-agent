@@ -392,7 +392,9 @@ function getAgentInternalFormat (inputInQueryPackDecodedFormat) {
   agentFormat.forEach(timingNode => {
     timingNode.attrs = {}
     timingNode.attributes.forEach(attr => {
-      timingNode.attrs[attr.key] = attr.value
+      if (attr.type === 'trueAttribute') timingNode.attrs[attr.key] = true
+      else if (attr.type === 'falseAttribute') timingNode.attrs[attr.key] = false
+      else timingNode.attrs[attr.key] = attr.value
     })
     delete timingNode.attributes
   })

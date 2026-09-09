@@ -46,6 +46,10 @@ export class Instrument extends InstrumentBase {
       }) // could handle specific fail-state behaviors with a .catch block here
     }
 
+    // If the aggregate never successfully loads (missing session prerequisite, or the aggregate module itself
+    // fails to import/construct), any preload recording that already started needs to be stopped.
+    this.abortHandler = this.#abort
+
     this.importAggregator(this.agentRef, () => import(/* webpackChunkName: "session_replay-aggregate" */ '../aggregate'), this)
 
     /** If the recorder is running, we can pass error events on to the agg to help it switch to full mode later */
@@ -108,6 +112,11 @@ export class Instrument extends InstrumentBase {
           this.recorder.startRecording(TRIGGERS.API, MODE.FULL)
         }) // could handle specific fail-state behaviors with a .catch block here
     }
+  }
+
+  /** Stops any preload recording that already started if the aggregate never ends up successfully loading. */
+  #abort () {
+    this.recorder?.stopRecording()
   }
 }
 

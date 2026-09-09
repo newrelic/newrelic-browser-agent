@@ -30,6 +30,7 @@ beforeEach(() => {
   featureName = faker.string.uuid()
   agentBase = {
     agentIdentifier,
+    features: {},
     ee: {
       abort: jest.fn()
     },
@@ -41,12 +42,14 @@ beforeEach(() => {
       [featureName]: { autoStart: true },
       [FEATURE_NAMES.pageViewEvent]: { autoStart: true },
       [FEATURE_NAMES.pageViewTiming]: { autoStart: true },
-      [FEATURE_NAMES.sessionReplay]: { autoStart: true }
+      [FEATURE_NAMES.sessionReplay]: { autoStart: true },
+      api: { register: { allow_iframe_bridge: false } }
     },
     runtime: {
       loaderType: 'browser-test',
       harvester: {
-        initializedAggregates: []
+        initializedAggregates: [],
+        startTimer: jest.fn()
       }
     }
   }

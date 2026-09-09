@@ -43,9 +43,10 @@ export default (env, asyncChunkName) => {
         cacheGroups: {
           defaultVendors: false,
           default: false,
-          ...webpackCacheGroup(asyncChunkName, (module, { chunkGraph }) => chunkGraph.getModuleChunks(module).filter(chunk => !['recorder', 'compressor'].includes(chunk.name)).length > 0),
+          ...webpackCacheGroup(asyncChunkName, (module, { chunkGraph }) => chunkGraph.getModuleChunks(module).filter(chunk => !['recorder', 'compressor', 'iframe-message-handler'].includes(chunk.name)).length > 0),
           ...webpackCacheGroup(asyncChunkName + '-recorder', (module, { chunkGraph }) => chunkGraph.getModuleChunks(module).filter(chunk => !['recorder'].includes(chunk.name)).length === 0),
-          ...webpackCacheGroup(asyncChunkName + '-compressor', (module, { chunkGraph }) => chunkGraph.getModuleChunks(module).filter(chunk => !['compressor'].includes(chunk.name)).length === 0)
+          ...webpackCacheGroup(asyncChunkName + '-compressor', (module, { chunkGraph }) => chunkGraph.getModuleChunks(module).filter(chunk => !['compressor'].includes(chunk.name)).length === 0),
+          ...webpackCacheGroup(asyncChunkName + '-iframe-message-handler', (module, { chunkGraph }) => chunkGraph.getModuleChunks(module).filter(chunk => !['iframe-message-handler'].includes(chunk.name)).length === 0)
         }
       }
     },

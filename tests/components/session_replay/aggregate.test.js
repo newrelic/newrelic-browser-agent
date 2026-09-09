@@ -194,8 +194,13 @@ describe('Session Replay Payload Validation', () => {
 
     const urlParams = new URLSearchParams(harvestContents.qs.attributes)
     expect(Number(urlParams.get('session.durationMs'))).toBeGreaterThan(0)
-    expect(harvestContents.body).toEqual(expect.any(Uint8Array))
+    // makeHarvestPayload/getHarvestContents now return the raw, uncompressed body -- compression happens afterward, once beforeHarvest has had a chance to see it
+    expect(harvestContents.body).toEqual(expect.any(Array))
     expect(harvestContents.body.length).toBeGreaterThan(0)
+
+    const compressed = sessionReplayAggregate.compress(harvestContents)
+    expect(compressed.body).toEqual(expect.any(Uint8Array))
+    expect(compressed.body.length).toBeGreaterThan(0)
   })
 
   test('payload - unminified', async () => {
@@ -245,8 +250,12 @@ describe('Session Replay Harvest Behaviors', () => {
     expect(harvestContents.qs).toMatchObject(createAnyQueryMatcher())
     expect(harvestContents.qs.attributes.includes('content_encoding=gzip')).toEqual(true)
     expect(harvestContents.qs.attributes.includes('isFirstChunk=true')).toEqual(true)
-    expect(harvestContents.body).toEqual(expect.any(Uint8Array))
-    expect(JSON.parse(strFromU8(gunzipSync(harvestContents.body)))).toEqual(expect.any(Array))
+    // raw payload stays readable (array of events) until compress() runs, after beforeHarvest
+    expect(harvestContents.body).toEqual(expect.any(Array))
+
+    const compressed = sessionReplayAggregate.compress(harvestContents)
+    expect(compressed.body).toEqual(expect.any(Uint8Array))
+    expect(JSON.parse(strFromU8(gunzipSync(compressed.body)))).toEqual(expect.any(Array))
   })
 
   test('uncompressed payload is provided to harvester when fflate import fails', async () => {

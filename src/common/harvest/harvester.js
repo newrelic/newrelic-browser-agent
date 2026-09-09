@@ -59,23 +59,41 @@ export class Harvester {
     if (!submitMethod) return output
 
     const shouldRetryOnFail = !localOpts.isFinalHarvest && submitMethod === xhrMethod // always retry all features harvests except for final
-    output.payload = aggregateInst.makeHarvestPayload(shouldRetryOnFail, localOpts)
+    const payload = aggregateInst.makeHarvestPayload(shouldRetryOnFail, localOpts)
 
-    if (!output.payload) return output
+    if (!payload) return output
+    const filteredPayload = this.agentRef.runtime.beforeHarvest?.({ feature: aggregateInst.featureName, payload }) // execute any user-defined beforeHarvest callback if it exists
+    if (filteredPayload === null) {
+      aggregateInst.postHarvestCleanup({ sent: false })
+      return output // if the beforeHarvest callback returns null, skip sending this harvest
+    }
+    output.payload = filteredPayload || payload // if the beforeHarvest callback returns undefined, it will send the original payload
 
-    send(this.agentRef, {
-      endpoint: FEATURE_TO_ENDPOINT[aggregateInst.featureName],
-      payload: output.payload,
-      localOpts,
-      submitMethod,
-      harvesterObfuscator: this.obfuscator,
-      cbFinished,
-      raw: aggregateInst.harvestOpts.raw,
-      featureName: aggregateInst.featureName,
-      endpointVersion: output.endpointVersion
-    })
-    output.ranSend = true // Set to true if we attempted to send (even if send() returned false due to missing errorBeacon in tests)
+    if (aggregateInst.harvestOpts.compress) { // some features (e.g. session replay) compress their payload body; this must happen after beforeHarvest so the hook sees a readable payload
+      const compressedPayload = aggregateInst.harvestOpts.compress(output.payload)
+      if (!compressedPayload) { // the feature determined the payload can't be sent (e.g. too large) and already handled its own abort/cleanup
+        output.payload = undefined
+        return output
+      }
+      output.payload = compressedPayload
+    }
 
+    if (!this.agentRef.init.observation_mode.enabled) {
+      send(this.agentRef, {
+        endpoint: FEATURE_TO_ENDPOINT[aggregateInst.featureName],
+        payload: output.payload,
+        localOpts,
+        submitMethod,
+        harvesterObfuscator: this.obfuscator,
+        cbFinished,
+        raw: aggregateInst.harvestOpts.raw,
+        featureName: aggregateInst.featureName,
+        endpointVersion: output.endpointVersion
+      })
+      output.ranSend = true // Set to true if we attempted to send (even if send() returned false due to missing errorBeacon in tests)
+    } else {
+      aggregateInst.postHarvestCleanup({ sent: false })
+    }
     return output
 
     /**

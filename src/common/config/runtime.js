@@ -28,6 +28,8 @@ const RuntimeModel = {
   activatedFeatures: undefined,
   /** Agent-specific metadata found in the RUM call response. ex. entityGuid */
   appMetadata: {},
+  /** @type {function | undefined} a method that applies behaviors before each harvest. Set only by the beforeHarvest API */
+  beforeHarvest: () => {},
   /** @type {boolean} */
   configured: false,
   get consented () {

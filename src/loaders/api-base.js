@@ -237,4 +237,18 @@ export class ApiBase {
   consent (accept) {
     return this.#callMethod(CONSENT, accept)
   }
+
+  /**
+   *
+   * @param {Function} callback A function that will be called before each harvest. The callback you provide will be fired with a single object argument `{ feature, payload }`, where `feature` is the name of the feature the harvest belongs to (e.g. `"jserrors"`, `"generic_events"`, `"session_replay"`, `"ajax"`, ...) and `payload` is the payload that is about to be sent to New Relic. Use `feature` to decide how (or whether) to act on a given harvest.
+   * This will occur directly before the agent is about to send the payload to New Relic.
+   * The callback is allowed to modify the payload -and as such- what you return from this callback matters. Note that you should only ever return the payload itself (not the `{ feature, payload }` wrapper). The following are valid return cases:
+   * - Modify `payload` and return it to have the changes apply to the harvest
+   * - Return null to skip sending the harvest.
+   * - Return nothing (undefined) to send the original payload.
+   * @returns
+   */
+  beforeHarvest (callback) {
+    return this.#callMethod('beforeHarvest', callback)
+  }
 }

@@ -48,7 +48,7 @@
   // config
   window.NREUM={
     init: {
-      feature_flags: ['register'{{#if (isEnvironment args.environment 'staging')}}, 'rum_v2'{{/if}}],
+      feature_flags: ['register'],
       distributed_tracing: {
         enabled: true
       },

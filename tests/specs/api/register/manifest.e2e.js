@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { testMFEErrorsRequest, testErrorsRequest, testMFEInsRequest, testMFEAjaxEventsRequest, testLogsRequest } from '../../../../tools/testing-server/utils/expect-tests'
+import { testMFEErrorsRequest, testErrorsRequest, testMFEInsRequest, testMFEAjaxEventsRequest, testLogsRequest, testRumRequest } from '../../../../tools/testing-server/utils/expect-tests'
+import { rumFlags } from '../../../../tools/testing-server/constants'
+import { LOGGING_MODE } from '../../../../src/features/logging/constants'
 
 function getAttr (event, key) {
   const child = event.children?.find(c => c.key === key)
@@ -14,6 +16,17 @@ function loadScript (src) {
   const script = document.createElement('script')
   script.src = src
   document.head.appendChild(script)
+}
+
+// The test server's default RUM response cycles the auto-captured logging sample rate (OFF/ERROR/WARN/INFO/DEBUG/TRACE)
+// across every RUM call in the run, so a test asserting on auto-captured console.log (INFO level) activity would
+// otherwise flakily drop it whenever the cycle lands below INFO. Pin it before navigating so INFO-level logs are
+// always captured.
+async function mockInfoLoggingRumResponse () {
+  await browser.testHandle.scheduleReply('bamServer', {
+    test: testRumRequest,
+    body: JSON.stringify(rumFlags({ log: LOGGING_MODE.INFO, logapi: LOGGING_MODE.INFO }))
+  })
 }
 
 function loadSecondaryScript () {
@@ -444,6 +457,37 @@ describe('Register API - Manifest', () => {
     expect(mfeLogs.some(log => log.message === 'log from manifest secondary asset 2')).toBe(true)
   })
 
+  it('attributes errors from TWO independent manifest-listed scripts to the same MFE via a `g`-flagged RegExp matcher', async () => {
+    // A global-flagged RegExp matcher carries lastIndex state across test() calls -- without resetting it before
+    // every call, matching the first script's error would advance lastIndex and cause the second script's error
+    // (matched against the very same matcher object) to silently fail to attribute.
+    const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testMFEErrorsRequest }
+    ])
+
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+      init: { feature_flags: ['register'] }
+    })).then(() => browser.waitForAgentLoad())
+
+    await browser.execute(function () {
+      window.globalRegexErrorsApi = newrelic.register({
+        id: 'global-regex-errors-mfe',
+        name: 'GlobalRegexErrorsMFE',
+        manifest: { assets: [{ matcher: /mfe-manifest-secondary(-2)?\.js$/g, type: 'script' }] }
+      })
+    })
+    await browser.execute(loadScript, './js/mfe/mfe-manifest-secondary.js')
+    await browser.execute(loadScript, './js/mfe/mfe-manifest-secondary-2.js')
+
+    const mfeErrorHarvests = await mfeErrorsCapture.waitForResult({ timeout: 10000 })
+    const mfeErrors = mfeErrorHarvests
+      .flatMap(({ request: { body } }) => body.err)
+      .filter(err => err.custom?.['source.id'] === 'global-regex-errors-mfe')
+
+    expect(mfeErrors.some(err => err.params.message.includes('error from manifest secondary asset') && !err.params.message.includes('2'))).toBe(true)
+    expect(mfeErrors.some(err => err.params.message.includes('error from manifest secondary asset 2'))).toBe(true)
+  })
+
   it('attributes AJAX calls from TWO independent manifest-listed scripts to the same MFE', async () => {
     const [mfeAjaxCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testMFEAjaxEventsRequest }
@@ -540,6 +584,7 @@ describe('Register API - Manifest', () => {
       { test: testMFEAjaxEventsRequest }
     ])
 
+    await mockInfoLoggingRumResponse()
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
       init: { feature_flags: ['register'], logging: { enabled: true } }
     })).then(() => browser.waitForAgentLoad())
@@ -585,6 +630,7 @@ describe('Register API - Manifest', () => {
       { test: testMFEAjaxEventsRequest }
     ])
 
+    await mockInfoLoggingRumResponse()
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
       init: { feature_flags: ['register'], logging: { enabled: true } }
     })).then(() => browser.waitForAgentLoad())

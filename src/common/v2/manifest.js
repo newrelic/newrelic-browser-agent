@@ -71,7 +71,9 @@ function parseAsset (entry) {
   }
 
   if (isRegExp(matcher)) {
-    return { pattern: matcher, test: (url) => matcher.test(cleanURL(url)), isScript }
+    // Reset lastIndex before every test -- a `g`/`y` flagged matcher otherwise carries state across calls
+    // (this closure is reused for every event), causing intermittent, input-order-dependent match failures.
+    return { pattern: matcher, test: (url) => { matcher.lastIndex = 0; return matcher.test(cleanURL(url)) }, isScript }
   }
 
   if (typeof matcher === 'string' && matcher.length > 0) {

@@ -173,5 +173,17 @@ describe('manifest utilities', () => {
       const parsed = parseManifest({ assets: [{ matcher: /\/checkout\/loader$/, type: 'script' }] })
       expect(matchManifestAsset(parsed, 'https://cdn.example.com/checkout/loader', { scriptsOnly: true })).toBe(true)
     })
+
+    test('a `g`/`y` flagged RegExp matcher matches consistently across repeated calls', () => {
+      // A global/sticky regex advances its own lastIndex on every successful test() -- without resetting it before
+      // each call, matching the same URL twice in a row (or matching several different URLs against the same
+      // matcher, as happens on every ajax/error/log/websocket event) would silently start failing.
+      const parsed = parseManifest({ assets: [{ matcher: /bundle\.js/g }] })
+      const url = 'https://cdn.example.com/bundle.js'
+
+      expect(matchManifestAsset(parsed, url)).toBe(true)
+      expect(matchManifestAsset(parsed, url)).toBe(true)
+      expect(matchManifestAsset(parsed, url)).toBe(true)
+    })
   })
 })

@@ -71,6 +71,15 @@ export class Harvester {
     }
     output.payload = filteredPayload || payload // if the beforeHarvest callback returns undefined, it will send the original payload
 
+    if (aggregateInst.harvestOpts.compress) { // some features (e.g. session replay) compress their payload body; this must happen after beforeHarvest so the hook sees a readable payload
+      const compressedPayload = aggregateInst.harvestOpts.compress(output.payload)
+      if (!compressedPayload) { // the feature determined the payload can't be sent (e.g. too large) and already handled its own abort/cleanup
+        output.payload = undefined
+        return output
+      }
+      output.payload = compressedPayload
+    }
+
     if (!this.agentRef.init.observation_mode.enabled) {
       send(this.agentRef, {
         endpoint: FEATURE_TO_ENDPOINT[aggregateInst.featureName],

@@ -57,6 +57,8 @@ export class Aggregate extends AggregateBase {
     this.recorder = this.instrumentClass?.recorder
 
     this.harvestOpts.raw = true
+    /** invoked by the harvester after beforeHarvest runs, so the hook always sees a readable (uncompressed) payload */
+    this.harvestOpts.compress = this.compress.bind(this)
 
     this.isSessionTrackingEnabled = canEnableSessionTracking(agentRef.init) && !!agentRef.runtime.session
 
@@ -235,20 +237,6 @@ export class Aggregate extends AggregateBase {
 
     this.reportSupportabilityMetric('SessionReplay/Harvest/Attempts')
 
-    let len = 0
-    if (!!this.gzipper && !!this.u8) {
-      payload.body = this.gzipper(this.u8(`[${payload.body.map(({ __serialized }) => (__serialized)).join(',')}]`))
-      len = payload.body.length
-    } else {
-      for (let idx in payload.body) delete payload.body[idx].__serialized
-      len = stringify(payload.body).length
-    }
-
-    if (len > MAX_PAYLOAD_SIZE) {
-      this.abort(ABORT_REASONS.TOO_BIG, len)
-      return
-    }
-
     if (!this.agentRef.runtime.session.state.sessionReplaySentFirstChunk) this.#writeToStorage({ sessionReplaySentFirstChunk: true })
     this.recorder.clearBuffer()
 
@@ -259,6 +247,33 @@ export class Aggregate extends AggregateBase {
     this.recorder.retryPayload = payload
 
     return payload
+  }
+
+  /**
+   * Compresses (or stringifies) the payload body returned by makeHarvestPayload. Called by the harvester
+   * after beforeHarvest runs, so it must not mutate the passed-in payload — makeHarvestPayload's caller may
+   * still hold the same object as `this.recorder.retryPayload` for a future retry, and that cached copy needs
+   * to stay in its original (uncompressed) shape so a retried harvest goes through beforeHarvest again unchanged.
+   * @param {object} payload - the (possibly beforeHarvest-modified) payload, with body as an array of rrweb events
+   * @returns {object|null} a new payload object with a compressed/stringified body, or null if the payload was too large (in which case the feature aborts itself)
+   */
+  compress (payload) {
+    let body, len
+    if (!!this.gzipper && !!this.u8) {
+      // re-serialize fresh rather than trusting each event's cached `__serialized` string, so edits made in a beforeHarvest hook are respected
+      body = this.gzipper(this.u8(`[${payload.body.map(({ __serialized, ...evt }) => stringify(evt)).join(',')}]`))
+      len = body.length
+    } else {
+      body = payload.body.map(({ __serialized, ...evt }) => evt)
+      len = stringify(body).length
+    }
+
+    if (len > MAX_PAYLOAD_SIZE) {
+      this.abort(ABORT_REASONS.TOO_BIG, len)
+      return null
+    }
+
+    return { ...payload, body }
   }
 
   /**

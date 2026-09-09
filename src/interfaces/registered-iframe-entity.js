@@ -180,7 +180,11 @@ export class RegisteredIframeEntity {
    */
   #setupVitalsListeners () {
     VITALS.forEach(([vitalFn, property]) => {
-      registerVital(() => vitalFn(({ value }) => {
+      registerVital(() => vitalFn(({ value, entries: vitalEntries }) => {
+        /* web-vitals v6 reports a synthetic INP (value 8, no entries) after bfcache restores when
+          every interaction stayed below the duration threshold; skip those so only measured
+          interactions are reported, matching the guard in src/common/vitals/interaction-to-next-paint.js */
+        if (property === 'inp' && !vitalEntries?.length) return
         this.metadata.vitals[property].value = value
         this.#postMessageToParent(IFRAME_VITALS_UPDATE, {
           entries: [{ property, value }]

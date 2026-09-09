@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { IFRAME_API_RESPONSE } from '../../../src/common/constants/iframe-constants'
+import { IFRAME_API_RESPONSE, IFRAME_VITALS_UPDATE } from '../../../src/common/constants/iframe-constants'
 
 describe('RegisteredIframeEntity blocked state', () => {
   let RegisteredIframeEntity
@@ -97,6 +97,46 @@ describe('RegisteredIframeEntity blocked state', () => {
     expect(onLCP).toHaveBeenCalledTimes(1)
     expect(onFCP).toHaveBeenCalledTimes(1)
     expect(onINP).toHaveBeenCalledTimes(1)
+  })
+
+  /** Re-imports the entity with web-vitals mocks that capture each registered callback, then completes registration */
+  const registerWithCapturedVitals = async () => {
+    jest.resetModules()
+    const callbacks = {}
+    const capture = (property) => jest.fn((cb) => { callbacks[property] = cb })
+    jest.doMock('web-vitals', () => ({ onCLS: capture('cls'), onFCP: capture('fcp'), onINP: capture('inp'), onLCP: capture('lcp') }))
+    const { RegisteredIframeEntity: Entity } = await import('../../../src/interfaces/registered-iframe-entity')
+
+    const entity = new Entity({ id: 'my-id', name: 'my-name' })
+    await flushMicrotasks()
+    respondToLastMessage({ target: { id: 'my-id', name: 'my-name', blocked: false } })
+    await flushMicrotasks()
+    postMessage.mockClear()
+    return { entity, callbacks }
+  }
+
+  it('does NOT forward the synthetic no-entries INP report web-vitals v6 emits after bfcache restores', async () => {
+    const { entity, callbacks } = await registerWithCapturedVitals()
+
+    callbacks.inp({ value: 8, entries: [] })
+    await flushMicrotasks()
+
+    expect(entity.metadata.vitals.inp.value).toBeNull()
+    expect(postMessage).not.toHaveBeenCalled()
+  })
+
+  it('still forwards measured INP, and a zero CLS with no layout-shift entries', async () => {
+    const { entity, callbacks } = await registerWithCapturedVitals()
+
+    callbacks.cls({ value: 0, entries: [] })
+    callbacks.inp({ value: 120, entries: [{ name: 'pointerdown', duration: 120 }] })
+    await flushMicrotasks()
+
+    expect(entity.metadata.vitals.cls.value).toBe(0)
+    expect(entity.metadata.vitals.inp.value).toBe(120)
+    expect(postMessage).toHaveBeenCalledTimes(2)
+    expect(postMessage.mock.calls[0][0]).toMatchObject({ type: IFRAME_VITALS_UPDATE, entries: [{ property: 'cls', value: 0 }] })
+    expect(postMessage.mock.calls[1][0]).toMatchObject({ type: IFRAME_VITALS_UPDATE, entries: [{ property: 'inp', value: 120 }] })
   })
 
   it('becomes blocked when the registration response reports the container blocked the target', async () => {

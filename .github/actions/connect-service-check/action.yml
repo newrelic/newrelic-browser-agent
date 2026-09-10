@@ -1,0 +1,48 @@
+# This composite action creates a throwaway APM app, connects to it,
+# mutates every browser-monitoring setting NerdGraph exposes, connects
+# again, and diffs the resulting snippet against this repo's own
+# src/common/config/*.js models - surfacing regressions in either
+# direction (APM connect <-> browser agent init, and NerdGraph schema <->
+# browser agent init). The throwaway app is deleted at the end regardless
+# of outcome. See the connect-service-check plan for full design rationale.
+
+name: 'Connect Service Browser-Config Check'
+
+inputs:
+  environment:
+    description: 'Which NR region to run the connect handshake against (staging, us-prod).'
+    required: true
+  account_id:
+    description: 'Numeric NR account ID that owns the license key, used to scope the entitySearch lookup.'
+    required: true
+  license_key:
+    description: 'APM license key used for preconnect/connect.'
+    required: true
+  nerdgraph_api_key:
+    description: 'User API key used for all NerdGraph calls.'
+    required: true
+  report_file:
+    description: 'Path to write the markdown report to.'
+    required: false
+    default: 'connect-check-report.md'
+
+outputs:
+  report_file:
+    description: 'Path to the markdown report that was written.'
+    value: ${{ inputs.report_file }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
+    - name: Run connect-service-check
+      run: |
+        node $GITHUB_ACTION_PATH/index.js \
+          --environment ${{ inputs.environment }} \
+          --account-id ${{ inputs.account_id }} \
+          --license-key "${{ inputs.license_key }}" \
+          --nerdgraph-api-key "${{ inputs.nerdgraph_api_key }}" \
+          --report-file ${{ inputs.report_file }}
+      shell: bash

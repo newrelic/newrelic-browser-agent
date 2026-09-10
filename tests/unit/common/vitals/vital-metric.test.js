@@ -39,6 +39,11 @@ describe('vital-metric', () => {
     })
   })
 
+  test('omits attrs whose value is undefined', () => {
+    vitalMetric.update({ value: 1, attrs: { kept: 'yes', alsoKept: 0, dropped: undefined, keptNull: null } })
+    expect(vitalMetric.current.attrs).toStrictEqual({ kept: 'yes', alsoKept: 0, keptNull: null })
+  })
+
   test('rounding', () => {
     // default rounding
     vitalMetric.update({ value: 1.234 })

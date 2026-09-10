@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.321.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.320.1...v1.321.0) (2026-08-31)
+
+
+### Features
+
+* Add instrumentation to track races between tabs ([#1838](https://github.com/newrelic/newrelic-browser-agent/issues/1838)) ([f678c3a](https://github.com/newrelic/newrelic-browser-agent/commit/f678c3a60f53455eb5d43eab90ab28e081b18a83))
+* improve v2 target standardization ([#1826](https://github.com/newrelic/newrelic-browser-agent/issues/1826)) ([1a18e10](https://github.com/newrelic/newrelic-browser-agent/commit/1a18e10f4754f6516fdac82020fe5cc5eed489a4))
+* Introduce v2 PageView & decouple connect service call ([#1824](https://github.com/newrelic/newrelic-browser-agent/issues/1824)) ([a07609a](https://github.com/newrelic/newrelic-browser-agent/commit/a07609a36f9891d85001711ba2d723fef096421b))
+* MicroFrontEndTiming attributes changes ([#1837](https://github.com/newrelic/newrelic-browser-agent/issues/1837)) ([a282ba0](https://github.com/newrelic/newrelic-browser-agent/commit/a282ba0afbc9291aaaef165050da813bfc79f8b6))
+
+
+### Bug Fixes
+
+* Ensure Session Replay's custom masker applies to non-inputs ([#1840](https://github.com/newrelic/newrelic-browser-agent/issues/1840)) ([db9faa5](https://github.com/newrelic/newrelic-browser-agent/commit/db9faa52730585c8ecbd1100e00a3b6fe94c2ab9))
+
 ## [1.320.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.320.0...v1.320.1) (2026-08-12)
 
 

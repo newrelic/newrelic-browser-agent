@@ -5,13 +5,14 @@
 import { onLCP } from 'web-vitals/attribution'
 import { VitalMetric } from './vital-metric'
 import { VITAL_NAMES } from './constants'
+import { registerVital } from './register-vital'
 import { initiallyHidden, isBrowserScope } from '../constants/runtime'
 import { cleanURL } from '../url/clean-url'
 
 export const largestContentfulPaint = new VitalMetric(VITAL_NAMES.LARGEST_CONTENTFUL_PAINT)
 
 if (isBrowserScope) {
-  onLCP(({ value, attribution }) => {
+  const handleLCP = ({ value, attribution }) => {
   /* Largest Contentful Paint - As of WV v3, it still imperfectly tries to detect document vis state asap and isn't supposed to report if page starts hidden. */
     if (initiallyHidden || largestContentfulPaint.isValid) return
 
@@ -28,9 +29,10 @@ if (isBrowserScope) {
       attrs.eid = lcpEntry.id
       if (lcpEntry.element?.tagName) attrs.elTag = lcpEntry.element.tagName
     }
-    if (attribution.element) attrs.element = attribution.element
+    if (attribution.target) attrs.element = attribution.target // renamed from `element` in web-vitals v4->v5; NR attr name kept for backwards compatibility
     if (attribution.url) attrs.elUrl = cleanURL(attribution.url)
 
     largestContentfulPaint.update({ value, attrs })
-  })
+  }
+  registerVital(() => onLCP(handleLCP))
 }

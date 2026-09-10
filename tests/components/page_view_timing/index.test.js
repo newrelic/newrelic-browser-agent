@@ -13,6 +13,8 @@ jest.mock('web-vitals/attribution', () => ({
   })),
   onINP: jest.fn((cb) => cb({
     value: 8,
+    id: 'v4-1234',
+    entries: [{ name: 'pointerdown', startTime: 8853.8, duration: 8 }],
     attribution: {
       interactionType: 'pointer',
       interactionTime: 8853.8,

@@ -7,6 +7,7 @@
 import { onCLS, onFCP, onINP, onLCP } from 'web-vitals'
 // internal
 import { globalScope, isBrowserScope } from '../common/constants/runtime'
+import { registerVital } from '../common/vitals/register-vital'
 import { isIFrameWindow } from '../common/dom/iframe'
 import { now } from '../common/timing/now'
 import { warn } from '../common/util/console'
@@ -179,12 +180,16 @@ export class RegisteredIframeEntity {
    */
   #setupVitalsListeners () {
     VITALS.forEach(([vitalFn, property]) => {
-      vitalFn(({ value }) => {
+      registerVital(() => vitalFn(({ value, entries: vitalEntries }) => {
+        /* web-vitals v6 reports a synthetic INP (value 8, no entries) after bfcache restores when
+          every interaction stayed below the duration threshold; skip those so only measured
+          interactions are reported, matching the guard in src/common/vitals/interaction-to-next-paint.js */
+        if (property === 'inp' && !vitalEntries?.length) return
         this.metadata.vitals[property].value = value
         this.#postMessageToParent(IFRAME_VITALS_UPDATE, {
           entries: [{ property, value }]
         })
-      }, { reportAllChanges: property === 'cls' || property === 'inp' })
+      }, { reportAllChanges: property === 'cls' || property === 'inp' }))
     })
   }
 

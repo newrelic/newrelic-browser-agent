@@ -29,6 +29,14 @@ describe('fcp', () => {
     })
   })
 
+  test('does NOT throw if web-vitals registration throws', async () => {
+    jest.doMock('web-vitals/attribution', () => ({
+      onFCP: jest.fn(() => { throw new TypeError('performance.getEntriesByType is not a function') })
+    }))
+    const { firstContentfulPaint } = await import('../../../../src/common/vitals/first-contentful-paint')
+    expect(firstContentfulPaint.isValid).toEqual(false)
+  })
+
   test('reports fcp from paintEntries if ios<16', (done) => {
     jest.doMock('../../../../src/common/constants/runtime', () => ({
       __esModule: true,

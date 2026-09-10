@@ -38,7 +38,7 @@ describe('Connector', () => {
       init: { feature_flags: [] },
       info: { licenseKey: 'license-key', applicationID: 'app-id' },
       runtime: { appMetadata: {}, session: undefined },
-      ee: { abort: jest.fn() }
+      ee: { abort: jest.fn(), buffer: jest.fn(), emit: jest.fn() }
     }
 
     new Connector(agent)
@@ -56,7 +56,7 @@ describe('Connector', () => {
       init: { feature_flags: ['rum_v2'] },
       info: { licenseKey: 'license-key', applicationID: 'app-id' },
       runtime: { appMetadata: {}, session: undefined },
-      ee: { abort: jest.fn() }
+      ee: { abort: jest.fn(), buffer: jest.fn(), emit: jest.fn() }
     }
 
     new Connector(agent)
@@ -91,7 +91,7 @@ describe('Connector', () => {
           write: jest.fn()
         }
       },
-      ee: { abort: jest.fn() }
+      ee: { abort: jest.fn(), buffer: jest.fn(), emit: jest.fn() }
     }
 
     new Connector(agent)
@@ -116,7 +116,7 @@ describe('Connector', () => {
         appMetadata: {},
         session
       },
-      ee: { abort: jest.fn() }
+      ee: { abort: jest.fn(), buffer: jest.fn(), emit: jest.fn() }
     }
 
     new Connector(agent)
@@ -148,7 +148,7 @@ describe('Connector', () => {
         appMetadata: {},
         session: undefined
       },
-      ee: { abort: jest.fn() }
+      ee: { abort: jest.fn(), buffer: jest.fn(), emit: jest.fn() }
     }
 
     new Connector(agent)
@@ -185,7 +185,7 @@ describe('Connector', () => {
           write: jest.fn()
         }
       },
-      ee: { abort: jest.fn() }
+      ee: { abort: jest.fn(), buffer: jest.fn(), emit: jest.fn() }
     }
 
     new Connector(agent)
@@ -231,7 +231,7 @@ describe('Connector', () => {
           write: jest.fn()
         }
       },
-      ee: { abort: jest.fn() }
+      ee: { abort: jest.fn(), buffer: jest.fn(), emit: jest.fn() }
     }
 
     new Connector(agent)
@@ -272,7 +272,7 @@ describe('Connector', () => {
           write: jest.fn()
         }
       },
-      ee: { abort: jest.fn() }
+      ee: { abort: jest.fn(), buffer: jest.fn(), emit: jest.fn() }
     }
 
     new Connector(agent)
@@ -296,7 +296,7 @@ describe('Connector', () => {
           write: jest.fn()
         }
       },
-      ee: { abort: jest.fn() }
+      ee: { abort: jest.fn(), buffer: jest.fn(), emit: jest.fn() }
     }
 
     new Connector(agent)
@@ -333,7 +333,7 @@ describe('Connector', () => {
           write: jest.fn()
         }
       },
-      ee: { abort: jest.fn() }
+      ee: { abort: jest.fn(), buffer: jest.fn(), emit: jest.fn() }
     }
 
     new Connector(agent)
@@ -378,7 +378,7 @@ describe('Connector', () => {
         appMetadata: {},
         session
       },
-      ee: { abort: jest.fn() }
+      ee: { abort: jest.fn(), buffer: jest.fn(), emit: jest.fn() }
     }
 
     new Connector(agent)

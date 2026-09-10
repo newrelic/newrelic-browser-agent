@@ -36,5 +36,4 @@ NREUM.init = {
     enabled: true
   }
 }
-NREUM.feature_flags = ['soft_nav']
 NREUM.info = { beacon: 'staging-bam-cell.nr-data.net', errorBeacon: 'staging-bam-cell.nr-data.net', licenseKey: '{{{latestStagingLicenseKey}}}', applicationID: '77606036', sa: 1 }

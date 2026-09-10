@@ -181,6 +181,57 @@ describe('Register API - General Behaviors', () => {
     expect(errorsHarvests2.length).toEqual(errorsHarvests.length)
   })
 
+  it('should warn (#81) when a second entity shares a name with a different id', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register'] } }))
+
+    const warnings = await browser.execute(function () {
+      const captured = []
+      const originalDebug = console.debug
+      console.debug = function (...args) { captured.push(args[0]) }
+      window.agent1 = newrelic.register({ id: 'shared-name-1', name: 'shared-name' })
+      window.agent2 = newrelic.register({ id: 'shared-name-2', name: 'shared-name' })
+      console.debug = originalDebug
+      return captured
+    })
+
+    expect(warnings.some(msg => msg.includes('#81'))).toEqual(true)
+    expect(warnings.some(msg => msg.includes('#82'))).toEqual(false)
+  })
+
+  it('should warn (#82) when a second entity shares an id with a different name', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register'] } }))
+
+    const warnings = await browser.execute(function () {
+      const captured = []
+      const originalDebug = console.debug
+      console.debug = function (...args) { captured.push(args[0]) }
+      window.agent1 = newrelic.register({ id: 'shared-id', name: 'agent1' })
+      window.agent2 = newrelic.register({ id: 'shared-id', name: 'agent2' })
+      console.debug = originalDebug
+      return captured
+    })
+
+    expect(warnings.some(msg => msg.includes('#82'))).toEqual(true)
+    expect(warnings.some(msg => msg.includes('#81'))).toEqual(false)
+  })
+
+  it('should not warn when a second registration is an intentional duplicate (same id and name)', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register'] } }))
+
+    const warnings = await browser.execute(function () {
+      const captured = []
+      const originalDebug = console.debug
+      console.debug = function (...args) { captured.push(args[0]) }
+      window.agent1 = newrelic.register({ id: 'same-id', name: 'same-name' })
+      window.agent2 = newrelic.register({ id: 'same-id', name: 'same-name' })
+      console.debug = originalDebug
+      return captured
+    })
+
+    expect(warnings.some(msg => msg.includes('#81'))).toEqual(false)
+    expect(warnings.some(msg => msg.includes('#82'))).toEqual(false)
+  })
+
   it('should create independent registrations with same id', async () => {
     const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testMFEErrorsRequest }

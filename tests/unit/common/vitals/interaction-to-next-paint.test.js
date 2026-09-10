@@ -14,9 +14,9 @@ const inpAttribution = {
   presentationDelay: 0,
   loadState: 'complete'
 }
-const getFreshINPImport = async (codeToRun) => {
+const getFreshINPImport = async (codeToRun, attribution = inpAttribution, entries = [{}]) => {
   jest.doMock('web-vitals/attribution', () => ({
-    onINP: jest.fn(cb => cb({ value: 8, attribution: inpAttribution, id: 'ruhroh' }))
+    onINP: jest.fn(cb => cb({ value: 8, attribution, id: 'ruhroh', entries }))
   }))
   const { interactionToNextPaint } = await import('../../../../src/common/vitals/interaction-to-next-paint')
   codeToRun(interactionToNextPaint)
@@ -41,6 +41,52 @@ describe('inp', () => {
       })
       done()
     }))
+  })
+
+  test('omits interactionTarget when web-vitals could not resolve the target (undefined as of v6)', (done) => {
+    getFreshINPImport(metric => metric.subscribe(({ value, attrs }) => {
+      expect(value).toEqual(8)
+      expect(attrs).toStrictEqual({
+        interactionTime: inpAttribution.interactionTime,
+        eventTime: inpAttribution.interactionTime,
+        interactionType: inpAttribution.interactionType,
+        inputDelay: inpAttribution.inputDelay,
+        nextPaintTime: inpAttribution.nextPaintTime,
+        processingDuration: inpAttribution.processingDuration,
+        presentationDelay: inpAttribution.presentationDelay,
+        loadState: inpAttribution.loadState,
+        metricId: 'ruhroh'
+      })
+      done()
+    }), { ...inpAttribution, interactionTarget: undefined })
+  })
+
+  test('does NOT report the synthetic no-entries INP web-vitals v6 emits after a bfcache restore', (done) => {
+    const dummyAttribution = {
+      // Mimic web-vitals v6 dummy INP attribution, reported when the interaction count went up with no event entry (bfcache restore / soft nav)
+      processedEventEntries: [],
+      longAnimationFrameEntries: [],
+      inputDelay: 0,
+      processingDuration: 0,
+      presentationDelay: 8,
+      loadState: 'complete'
+    }
+
+    getFreshINPImport(metric => {
+      metric.subscribe(() => {
+        console.log('should not have reported...')
+        expect(1).toEqual(2)
+      })
+      setTimeout(done, 1000)
+    }, dummyAttribution, [])
+  })
+
+  test('does NOT throw if web-vitals registration throws', async () => {
+    jest.doMock('web-vitals/attribution', () => ({
+      onINP: jest.fn(() => { throw new TypeError('performance.getEntriesByType is not a function') })
+    }))
+    const { interactionToNextPaint } = await import('../../../../src/common/vitals/interaction-to-next-paint')
+    expect(interactionToNextPaint.isValid).toEqual(false)
   })
 
   test('does NOT report if not browser scoped', (done) => {

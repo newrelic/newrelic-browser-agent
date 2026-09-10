@@ -35,6 +35,28 @@ describe('ttfb', () => {
     }))
   })
 
+  test('does NOT throw if web-vitals registration throws', async () => {
+    const mockPerformance = {
+      getEntriesByType: jest.fn().mockReturnValue([{ responseStart: 100 }])
+    }
+    global.PerformanceNavigationTiming = jest.fn()
+    jest.doMock('../../../../src/common/constants/runtime', () => ({
+      __esModule: true,
+      isiOS: false,
+      isBrowserScope: true,
+      getNavigationEntry: () => mockPerformance?.getEntriesByType('navigation')?.[0],
+      globalScope: {
+        performance: mockPerformance
+      }
+    }))
+    jest.doMock('web-vitals/attribution', () => ({
+      onTTFB: jest.fn(() => { throw new TypeError('performance.getEntriesByType is not a function') })
+    }))
+
+    const { timeToFirstByte } = await import('../../../../src/common/vitals/time-to-first-byte')
+    expect(timeToFirstByte.isValid).toEqual(false)
+  })
+
   test('does NOT report if not browser scoped', (done) => {
     jest.doMock('../../../../src/common/constants/runtime', () => ({
       __esModule: true,

@@ -21,6 +21,7 @@ import { findScriptTimings, applyManifestTimings } from '../../common/v2/script-
 import { trackMFEVitals } from '../../common/v2/mfe-vitals'
 import { generateRandomHexString } from '../../common/ids/unique-id'
 import { parseManifest } from '../../common/v2/manifest'
+import { cleanURL } from '../../common/url/clean-url'
 
 const TIMING_METHODS = ['entry', 'scripts', 'all']
 
@@ -52,6 +53,8 @@ export const warnings = {
   invalidTarget: single((target) => warn(48, target)),
   deregistered: single(() => warn(68)),
   invalidTimingMethod: single((value) => warn(80, value))
+  duplicateName: single((target) => warn(81, target)),
+  duplicateId: single((target) => warn(82, target))
 }
 
 /**
@@ -91,13 +94,17 @@ function register (agentRef, target) {
     target.timingMethod = undefined
   }
 
+  // The script timings for this entity, which will be used to populate part of the MicroFrontEndTiming custom event.
   const timings = findScriptTimings(target)
   // Always applied when a manifest is present -- totalWeight/renderBlocking accumulate from manifest assets
   // regardless of timingMethod; actual timing widening inside stays gated to 'scripts'/'all' (see applyManifestTimings).
   if (target.manifest) applyManifestTimings(timings, target)
 
-  // Track MFE vitals for this entity
+  // Track MFE vitals for this entity, which will be used to populate part of the MicroFrontEndTiming custom event.
   const vitals = trackMFEVitals(target, timings)
+
+  // the URL of the page at the time this entity was registered, which will be used to populate part of the MicroFrontEndTiming custom event.
+  const registerUrl = cleanURL('' + location)
 
   const attrs = {}
 
@@ -145,6 +152,16 @@ function register (agentRef, target) {
   /** primary cases that can block the register API from working at init time */
   if (!agentRef.init.api.register.enabled) block(warnings.disabled)
   if (!hasValidValue(target.id) || !hasValidValue(target.name)) block(() => warnings.invalidTarget(target))
+  /** warn if we see obviously unstable things with MFE targets */
+  registeredEntities.forEach((entity) => {
+    try {
+      const { name, id } = entity.metadata.target
+      if (name === target.name && id !== target.id) warnings.duplicateName(target)
+      if (id === target.id && name !== target.name) warnings.duplicateId(target)
+    } catch (e) {
+      // something unexpected went wrong...
+    }
+  })
 
   /** @type {RegisterAPI} */
   const api = {
@@ -211,6 +228,11 @@ function register (agentRef, target) {
     const eventData = {
       assetUrl: timings.asset, // the url of the script that was registered, or undefined if it could not be determined (inline or no match)
       assetType: timings.type, // the type of asset that was associated with the timings, one of 'script', 'link' (if preloaded and found in the resource timing buffer), 'preload' (if preloaded but not found in the resource timing buffer), or "unknown" if it could not be determined
+      registerUrl, // the url of the page at the time this entity was registered
+      deregisterUrl: cleanURL('' + location), // the url of the page at the time this entity was deregistered (or unloaded)
+      // generic_events' addEvent() injects pageUrl/currentUrl on every custom event by default; override them away here in favor of registerUrl/deregisterUrl above
+      pageUrl: undefined,
+      currentUrl: undefined,
       timeAlive: timings.reportedAt - timings.registeredAt, // registeredAt to reportedAt
       timeToBeRequested: timings.fetchStart, // origin to fetchStart
       timeToExecute, // scriptStart to scriptEnd
@@ -221,10 +243,10 @@ function register (agentRef, target) {
       // renderBlocking: true if any detected asset was 'blocking', false if only 'non-blocking' assets were seen, omitted entirely if no detected asset reported the attribute at all
       ...(timings.renderBlocking !== undefined && { renderBlocking: timings.renderBlocking }),
       // leave room to extend these with more data keys as needed
-      ...(vitals.fcp.value >= 0 && { 'nr.vitals.fcp.value': vitals.fcp.value }), // FCP vital object with value and metadata
-      ...(vitals.lcp.value >= 0 && { 'nr.vitals.lcp.value': vitals.lcp.value }), // LCP vital object with value and metadata
-      ...(vitals.cls.value >= 0 && { 'nr.vitals.cls.value': vitals.cls.value }), // CLS vital object with value and metadata
-      ...(vitals.inp.value >= 0 && { 'nr.vitals.inp.value': vitals.inp.value }) // INP vital object with value and metadata
+      ...(vitals.fcp.value >= 0 && { 'vitals.fcp.value': vitals.fcp.value }), // FCP vital object with value and metadata
+      ...(vitals.lcp.value >= 0 && { 'vitals.lcp.value': vitals.lcp.value }), // LCP vital object with value and metadata
+      ...(vitals.cls.value >= 0 && { 'vitals.cls.value': vitals.cls.value }), // CLS vital object with value and metadata
+      ...(vitals.inp.value >= 0 && { 'vitals.inp.value': vitals.inp.value }) // INP vital object with value and metadata
     }
 
     api.recordCustomEvent('MicroFrontEndTiming', eventData)

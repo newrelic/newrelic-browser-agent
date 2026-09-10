@@ -641,6 +641,8 @@ describe('API tests', () => {
         warnings.disabled = single(() => warn(55))
         warnings.invalidTarget = single((target) => warn(48, target))
         warnings.deregistered = single(() => warn(68))
+        warnings.duplicateName = single((target) => warn(81, target))
+        warnings.duplicateId = single((target) => warn(82, target))
       })
 
       test('should return api object', () => {
@@ -702,6 +704,75 @@ describe('API tests', () => {
 
         myApi.setUserId('userid')
         expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar2', 'application.version': 'appversion', 'enduser.id': 'userid' })
+      })
+
+      describe('duplicate entity detection', () => {
+        test('should warn #81 when a second entity shares a name with a different id', () => {
+          const sharedName = faker.string.uuid()
+          agent.register({ id: faker.string.uuid(), name: sharedName })
+          console.debug.mockClear()
+
+          agent.register({ id: faker.string.uuid(), name: sharedName })
+
+          expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#81'))).toEqual(true)
+          expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#82'))).toEqual(false)
+        })
+
+        test('should warn #82 when a second entity shares an id with a different name', () => {
+          const sharedId = faker.string.uuid()
+          agent.register({ id: sharedId, name: faker.string.uuid() })
+          console.debug.mockClear()
+
+          agent.register({ id: sharedId, name: faker.string.uuid() })
+
+          expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#82'))).toEqual(true)
+          expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#81'))).toEqual(false)
+        })
+
+        test('should not warn when a second entity shares both id and name (intentional duplicate)', () => {
+          const sameId = faker.string.uuid()
+          const sameName = faker.string.uuid()
+          agent.register({ id: sameId, name: sameName })
+          console.debug.mockClear()
+
+          agent.register({ id: sameId, name: sameName })
+
+          expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#81'))).toEqual(false)
+          expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#82'))).toEqual(false)
+        })
+
+        test('should not warn when a second entity shares neither id nor name', () => {
+          agent.register({ id: faker.string.uuid(), name: faker.string.uuid() })
+          console.debug.mockClear()
+
+          agent.register({ id: faker.string.uuid(), name: faker.string.uuid() })
+
+          expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#81'))).toEqual(false)
+          expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#82'))).toEqual(false)
+        })
+
+        test('should pass the newly registered target as the warning argument', () => {
+          const sharedName = faker.string.uuid()
+          agent.register({ id: faker.string.uuid(), name: sharedName })
+          console.debug.mockClear()
+
+          const newId = faker.string.uuid()
+          agent.register({ id: newId, name: sharedName })
+
+          const warningCall = console.debug.mock.calls.find(call => call[0].includes('#81'))
+          expect(warningCall[1]).toMatchObject({ id: newId, name: sharedName })
+        })
+
+        test('should not warn again for a target that was already flagged (single-fire warning)', () => {
+          const sharedName = faker.string.uuid()
+          agent.register({ id: faker.string.uuid(), name: sharedName })
+          agent.register({ id: faker.string.uuid(), name: sharedName })
+          console.debug.mockClear()
+
+          agent.register({ id: faker.string.uuid(), name: sharedName })
+
+          expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#81'))).toEqual(false)
+        })
       })
 
       describe('noticeError', () => {
@@ -957,6 +1028,8 @@ describe('API tests', () => {
           expect(attrs).toHaveProperty('timeToFetch')
           expect(attrs).toHaveProperty('timeToRegister')
           expect(attrs).toHaveProperty('timeAlive')
+          expect(attrs).toHaveProperty('registerUrl')
+          expect(attrs).toHaveProperty('deregisterUrl')
 
           // All values should be numbers
           expect(typeof attrs.timeToLoad).toBe('number')
@@ -964,6 +1037,39 @@ describe('API tests', () => {
           expect(typeof attrs.timeToFetch).toBe('number')
           expect(typeof attrs.timeToRegister).toBe('number')
           expect(typeof attrs.timeAlive).toBe('number')
+          expect(typeof attrs.registerUrl).toBe('string')
+          expect(typeof attrs.deregisterUrl).toBe('string')
+
+          // pageUrl/currentUrl are generic_events defaults injected on every custom event;
+          // MicroFrontEndTiming opts out of them in favor of registerUrl/deregisterUrl
+          expect(attrs.pageUrl).toBeUndefined()
+          expect(attrs.currentUrl).toBeUndefined()
+        })
+
+        test('should capture registerUrl and deregisterUrl independently, at each respective time', () => {
+          const registerUrl = String(location)
+
+          try {
+            const myApi = agent.register({ id, name })
+
+            // Navigate before deregistering so registerUrl and deregisterUrl are provably
+            // captured at different times rather than both just reading the same current value.
+            window.history.pushState(null, '', '/deregistered-page')
+            const deregisterUrl = String(location)
+            expect(deregisterUrl).not.toBe(registerUrl)
+
+            myApi.deregister()
+
+            const timingCall = handleModule.handle.mock.calls.find(call =>
+              call[0] === 'api-recordCustomEvent' && call[1][1] === 'MicroFrontEndTiming'
+            )
+            const attrs = timingCall[1][2]
+
+            expect(attrs.registerUrl).toBe(registerUrl)
+            expect(attrs.deregisterUrl).toBe(deregisterUrl)
+          } finally {
+            window.history.pushState(null, '', registerUrl)
+          }
         })
 
         test('should not report timing twice on multiple deregister calls', () => {

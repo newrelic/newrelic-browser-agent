@@ -88,4 +88,27 @@ describe('customMasker', () => {
     const element2 = { type: 'string', classList: { contains: () => true } }
     expect(sessionReplaySharedUtils.customMasker(text, element2)).toEqual('   \n   ')
   })
+
+  // A text node's container element (e.g. a plain <div>/<span>) has no `.type` property at all -- unlike the
+  // `{ type: 'string' }` cases above. The unmask check must not be gated behind having a `.type`.
+  test('should return input text as masked when the element has no "type" property and is not decorated with unmask option', async () => {
+    const text = 'foobar'
+    const element = {}
+
+    expect(sessionReplaySharedUtils.customMasker(text, element)).toEqual('******')
+  })
+
+  test('should return input text as-is when the element has no "type" property but is decorated with unmask option via data attribute', async () => {
+    const text = 'foobar'
+    const element = { dataset: { nrUnmask: true } }
+
+    expect(sessionReplaySharedUtils.customMasker(text, element)).toEqual('foobar')
+  })
+
+  test('should return input text as-is when the element has no "type" property but is decorated with unmask option via class', async () => {
+    const text = 'foobar'
+    const element = { classList: { contains: () => true } }
+
+    expect(sessionReplaySharedUtils.customMasker(text, element)).toEqual('foobar')
+  })
 })

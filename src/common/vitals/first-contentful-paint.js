@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { onFCP } from 'web-vitals/attribution'
@@ -7,6 +7,7 @@ import { onFCP } from 'web-vitals/attribution'
 import { iOSBelow16, initiallyHidden, isBrowserScope } from '../constants/runtime'
 import { VITAL_NAMES } from './constants'
 import { VitalMetric } from './vital-metric'
+import { registerVital } from './register-vital'
 
 export const firstContentfulPaint = new VitalMetric(VITAL_NAMES.FIRST_CONTENTFUL_PAINT)
 
@@ -27,7 +28,7 @@ if (isBrowserScope) {
     // ignore
     }
   } else {
-    onFCP(({ value, attribution }) => {
+    const handleFCP = ({ value, attribution }) => {
       if (initiallyHidden || firstContentfulPaint.isValid) return
       const attrs = {
         timeToFirstByte: attribution.timeToFirstByte,
@@ -35,6 +36,7 @@ if (isBrowserScope) {
         loadState: attribution.loadState
       }
       firstContentfulPaint.update({ value, attrs })
-    })
+    }
+    registerVital(() => onFCP(handleFCP))
   }
 }

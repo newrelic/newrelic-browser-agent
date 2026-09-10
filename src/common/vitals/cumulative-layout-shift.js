@@ -1,16 +1,17 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { onCLS } from 'web-vitals/attribution'
 import { VITAL_NAMES } from './constants'
 import { VitalMetric } from './vital-metric'
+import { registerVital } from './register-vital'
 import { isBrowserScope } from '../constants/runtime'
 
 export const cumulativeLayoutShift = new VitalMetric(VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT, (x) => x)
 
 if (isBrowserScope) {
-  onCLS(({ value, attribution, id }) => {
+  const handleCLS = ({ value, attribution, id }) => {
     const attrs = {
       metricId: id,
       largestShiftTarget: attribution.largestShiftTarget,
@@ -19,5 +20,6 @@ if (isBrowserScope) {
       loadState: attribution.loadState
     }
     cumulativeLayoutShift.update({ value, attrs })
-  }, { reportAllChanges: true })
+  }
+  registerVital(() => onCLS(handleCLS, { reportAllChanges: true }))
 }

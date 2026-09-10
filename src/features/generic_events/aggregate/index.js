@@ -15,7 +15,8 @@ import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
 import { EVENT_TYPES } from '../../../common/constants/events'
-import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
+import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate, getRegisteredTargetsFromResourceUrl } from '../../../common/v2/utils'
+import { findCorrelation } from '../../../common/v2/script-tracker'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -229,7 +230,26 @@ export class Aggregate extends AggregateBase {
               firstParty
             }
 
-            this.addEvent(event)
+            const targets = getRegisteredTargetsFromResourceUrl(name, this.agentRef)
+            if (targets.length) {
+              targets.forEach(target => this.addEvent({ ...event }, target))
+              return
+            }
+
+            this.addEvent({ ...event }, undefined)
+
+            // This resource entry can resolve before a self-registering script has actually executed and called
+            // register() on itself (responseEnd fires before script parse/execution). If this URL belongs to a
+            // <script> we're tracking that hasn't finished loading yet, retry resolution once it has -- reporting
+            // a second (deliberately duplicate) copy under the real target if one shows up by then. One-shot,
+            // self-cleans via `once: true`, so there's nothing to leak if the script never registers.
+            const correlation = findCorrelation(cleanURL(name))
+            if (correlation?.dom.value && !correlation.dom.end) {
+              const retryAttribution = () => {
+                getRegisteredTargetsFromResourceUrl(name, this.agentRef).forEach(target => this.addEvent({ ...event }, target))
+              }
+              ;['load', 'error'].forEach(evtType => correlation.dom.value.addEventListener(evtType, retryAttribution, { once: true }))
+            }
           } catch (err) {
             this.ee.emit('internal-error', [err, 'GenericEvents-Resource'])
           }

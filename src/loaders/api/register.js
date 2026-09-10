@@ -17,10 +17,13 @@ import { single } from '../../common/util/invoke'
 import { measure } from './measure'
 import { recordCustomEvent } from './recordCustomEvent'
 import { subscribeToPageUnload } from '../../common/window/page-visibility'
-import { findScriptTimings } from '../../common/v2/script-tracker'
+import { findScriptTimings, applyManifestTimings } from '../../common/v2/script-tracker'
 import { trackMFEVitals } from '../../common/v2/mfe-vitals'
 import { generateRandomHexString } from '../../common/ids/unique-id'
+import { parseManifest } from '../../common/v2/manifest'
 import { cleanURL } from '../../common/url/clean-url'
+
+const TIMING_METHODS = ['entry', 'scripts', 'all']
 
 /**
  * @typedef {import('./register-api-types').RegisterAPI} RegisterAPI
@@ -49,6 +52,7 @@ export const warnings = {
   disabled: single(() => warn(55)),
   invalidTarget: single((target) => warn(48, target)),
   deregistered: single(() => warn(68)),
+  invalidTimingMethod: single((value) => warn(80, value)),
   duplicateName: single((target) => warn(81, target)),
   duplicateId: single((target) => warn(82, target))
 }
@@ -84,9 +88,17 @@ function register (agentRef, target) {
     get id () { return agentRef.runtime.appMetadata.agents?.[0].entityGuid }, // getter because this is asynchronously set
     type: V2_TYPES.BA
   }
+  target.manifest = parseManifest(target.manifest)
+  if (target.timingMethod !== undefined && !TIMING_METHODS.includes(target.timingMethod)) {
+    warnings.invalidTimingMethod(target.timingMethod)
+    target.timingMethod = undefined
+  }
 
   // The script timings for this entity, which will be used to populate part of the MicroFrontEndTiming custom event.
   const timings = findScriptTimings(target)
+  // Always applied when a manifest is present -- totalWeight/renderBlocking accumulate from manifest assets
+  // regardless of timingMethod; actual timing widening inside stays gated to 'scripts'/'all' (see applyManifestTimings).
+  if (target.manifest) applyManifestTimings(timings, target)
 
   // Track MFE vitals for this entity, which will be used to populate part of the MicroFrontEndTiming custom event.
   const vitals = trackMFEVitals(target, timings)
@@ -227,6 +239,9 @@ function register (agentRef, target) {
       timeToFetch, // fetchStart to fetchEnd
       timeToLoad: timeToFetch + timeToExecute, // fetch time and script time together
       timeToRegister: timings.registeredAt, // timestamp when register() was called
+      totalWeight: timings.totalWeight, // sum of transferSize bytes across every detected asset (entry script + matched manifest assets)
+      // renderBlocking: true if any detected asset was 'blocking', false if only 'non-blocking' assets were seen, omitted entirely if no detected asset reported the attribute at all
+      ...(timings.renderBlocking !== undefined && { renderBlocking: timings.renderBlocking }),
       // leave room to extend these with more data keys as needed
       ...(vitals.fcp.value >= 0 && { 'vitals.fcp.value': vitals.fcp.value }), // FCP vital object with value and metadata
       ...(vitals.lcp.value >= 0 && { 'vitals.lcp.value': vitals.lcp.value }), // LCP vital object with value and metadata

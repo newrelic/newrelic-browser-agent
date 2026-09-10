@@ -18,12 +18,18 @@
  */
 
 /**
+ * @typedef {import('../../common/v2/manifest').AssetFile} AssetFile
+ */
+
+/**
  * @typedef {Object} RegisterAPIConstructor
  * @property {string} id - The unique id for the registered entity. This will be assigned to any synthesized entities.
  * @property {string} name - The readable name for the registered entity. This will be assigned to any synthesized entities.
  * @property {{[key: string]: any}} [tags] - The tags for the registered entity as key-value pairs. This will be assigned to any synthesized entities. Tags are converted to source.* attributes (e.g., {environment: 'production'} becomes source.environment: 'production').
  * @property {RegisterAPITarget} [parent] - The parent target for the registered entity. If none was supplied, it will assume the entity guid from the main agent.
  * @property {string} [parentId] - The parentId for the registered entity. If none was supplied, it will assume the entity guid from the main agent.
+ * @property {{assets?: Array<AssetFile>}} [manifest] - An optional manifest describing the MFE's known assets (scripts, stylesheets, images, fonts, etc.) as `AssetFile` entries, used to improve the accuracy of event attribution (errors, logs, ajax, websockets), attribute `BrowserPerformance` resource events (any asset type, not just scripts) and, depending on `timingMethod`, MicroFrontEndTiming values. Each `AssetFile`'s script-capability is inferred from a `.js` suffix on a string `matcher` (a RegExp `matcher` is never inferred as a script), unless overridden via `type: 'script'` or explicitly disabled via `type: 'asset'`. An `AssetFile` with an invalid `matcher` or an unrecognized `type` is discarded/ignored (with a console warning) rather than applied. If omitted, the agent falls back to its existing behavior of only evaluating the script that called `register()` (resource attribution still applies to that script).
+ * @property {'entry'|'scripts'|'all'} [timingMethod] - Controls which manifest assets are used to calculate MicroFrontEndTiming values: 'entry' (the default) leaves timing based entirely on the script that called `register()`, unaffected by the manifest; 'scripts' widens the timing window across all script assets; 'all' widens it across every asset.
  */
 
 /**
@@ -39,18 +45,22 @@
  * @property {string} name - The name returned for the registered entity.
  * @property {{[key: string]: any}} [tags] - The tags for the registered entity as key-value pairs.
  * @property {string} [parentId] - The parentId for the registered entity. If none was supplied, it will assume the entity guid from the main agent.
+ * @property {import('../../common/v2/manifest').ParsedManifest} [manifest] - The parsed manifest for the registered entity, if one was supplied.
+ * @property {'entry'|'scripts'|'all'} [timingMethod] - The timing method supplied for the registered entity, if any.
  */
 
 /**
  * @typedef {Object} RegisterAPITimings
  * @property {number} registeredAt - The timestamp when the registered entity was created.
  * @property {number} [reportedAt] - The timestamp when the registered entity was deregistered.
- * @property {number} fetchStart - The timestamp when the registered entity began fetching (performance.start).
- * @property {number} fetchEnd - The timestamp when the registered entity finished fetching (performance.end).
- * @property {number} scriptStart - The timestamp when script initialization began (max of dom.start or performance.end, or performance.end if no dom.start).
- * @property {number} scriptEnd - The timestamp when script loading completed (dom.end or registeredAt if no dom.end).
+ * @property {number} fetchStart - The timestamp when the registered entity began fetching (performance.start). When a manifest with timingMethod 'scripts'|'all' is supplied, this widens to the earliest fetchStart across all matched manifest assets.
+ * @property {number} fetchEnd - The timestamp when the registered entity finished fetching (performance.end). When a manifest with timingMethod 'scripts'|'all' is supplied, this widens to the latest fetchEnd across all matched manifest assets.
+ * @property {number} scriptStart - The timestamp when script initialization began (max of dom.start or performance.end, or performance.end if no dom.start). When a manifest with timingMethod 'scripts'|'all' is supplied, this widens to the earliest scriptStart across all matched manifest script assets (non-script assets are excluded).
+ * @property {number} scriptEnd - The timestamp when script loading completed (dom.end or registeredAt if no dom.end). When a manifest with timingMethod 'scripts'|'all' is supplied, this widens to the latest scriptEnd across all matched manifest script assets (non-script assets are excluded).
  * @property {Object} [asset] - The asset path (if found) for the registered entity.
  * @property {string} type - The type of timing associated with the registered entity, 'script' or 'link' if found with the performance resource API, 'fetch' for dynamic imports, 'inline' if found to be associated with the root document URL, or 'unknown' if no associated resource could be found.
+ * @property {number} totalWeight - The sum of `transferSize` (bytes) across every asset detected for the registered entity -- the entry script, plus, when a manifest is supplied, every matched manifest asset (script or non-script). Unlike fetchStart/fetchEnd/scriptStart/scriptEnd above, this is never gated behind `timingMethod` -- manifest assets contribute their bytes even at the 'entry' default/unset. Cross-origin assets without a Timing-Allow-Origin header report 0 bytes per the Resource Timing spec.
+ * @property {boolean} [renderBlocking] - True if any detected asset (entry script or matched manifest asset) has a `renderBlockingStatus` of 'blocking'; false if none were 'blocking' but at least one reported 'non-blocking'; left `undefined` if no detected asset reported the attribute at all (e.g. unsupported browser). A single 'blocking' asset always wins over any number of 'non-blocking' ones, regardless of resolution order.
  */
 
 /**

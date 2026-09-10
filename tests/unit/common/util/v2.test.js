@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getVersion2Attributes, getRegisteredTargetsFromFilename, findTargetsFromStackTrace, getRegisteredTargetsFromId, dedupeRegisteredEntitiesByAsset, dedupeTargetsByInstance, isMfeTarget } from '../../../../src/common/v2/utils'
+import { parseManifest } from '../../../../src/common/v2/manifest'
+import { getVersion2Attributes, getRegisteredTargetsFromFilename, getRegisteredTargetsFromResourceUrl, findTargetsFromStackTrace, getRegisteredTargetsFromId, dedupeRegisteredEntitiesByAsset, dedupeTargetsByInstance, isMfeTarget } from '../../../../src/common/v2/utils'
 import { V2_TYPES } from '../../../../src/common/v2/constants'
 
 // mirrors the inline v2Target shape eagerly created in loaders/configure/configure.js
@@ -261,6 +262,359 @@ describe('v2 utilities', () => {
       const result = getRegisteredTargetsFromFilename('page.html', agentRef)
       expect(result).toHaveLength(2)
       expect(result.map(t => t.id).sort()).toEqual(['1', '2'])
+    })
+
+    test('matches via a manifest script asset when timings.asset does not match', () => {
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://example.com/root.js' },
+                target: {
+                  id: 'mfe-1',
+                  name: 'MFE 1',
+                  type: 'MFE',
+                  manifest: parseManifest({ assets: [{ matcher: 'lazy-chunk.js' }] })
+                }
+              }
+            }
+          ]
+        },
+        init: {
+          api: {
+            register: {
+              enabled: true,
+              duplicate_data_to_container: false
+            }
+          }
+        }
+      }
+
+      const result = getRegisteredTargetsFromFilename('https://cdn.example.com/lazy-chunk.js?v=2', agentRef)
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe('mfe-1')
+    })
+
+    test('matches two independent manifest script assets on the same target, each via its own filename', () => {
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://example.com/root.js' },
+                target: {
+                  id: 'mfe-1',
+                  name: 'MFE 1',
+                  type: 'MFE',
+                  manifest: parseManifest({ assets: [{ matcher: 'secondary-a.js' }, { matcher: 'secondary-b.js' }] })
+                }
+              }
+            }
+          ]
+        },
+        init: {
+          api: {
+            register: {
+              enabled: true,
+              duplicate_data_to_container: false
+            }
+          }
+        }
+      }
+
+      const resultA = getRegisteredTargetsFromFilename('https://cdn.example.com/secondary-a.js', agentRef)
+      expect(resultA).toHaveLength(1)
+      expect(resultA[0].id).toBe('mfe-1')
+
+      const resultB = getRegisteredTargetsFromFilename('https://cdn.example.com/secondary-b.js', agentRef)
+      expect(resultB).toHaveLength(1)
+      expect(resultB[0].id).toBe('mfe-1')
+    })
+
+    test('does not collapse two distinct MFEs whose manifests both match the same script filename (overlapping manifests)', () => {
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: undefined },
+                target: {
+                  id: 'mfe-1',
+                  name: 'MFE 1',
+                  type: 'MFE',
+                  manifest: parseManifest({ assets: [{ matcher: 'shared-chunk.js' }] })
+                }
+              }
+            },
+            {
+              metadata: {
+                timings: { asset: undefined },
+                target: {
+                  id: 'mfe-2',
+                  name: 'MFE 2',
+                  type: 'MFE',
+                  manifest: parseManifest({ assets: [{ matcher: 'shared-chunk.js' }] })
+                }
+              }
+            }
+          ]
+        },
+        init: {
+          api: {
+            register: {
+              enabled: true,
+              duplicate_data_to_container: false
+            }
+          }
+        }
+      }
+
+      const result = getRegisteredTargetsFromFilename('https://cdn.example.com/shared-chunk.js', agentRef)
+      expect(result).toHaveLength(2)
+      expect(result.map(t => t.id).sort()).toEqual(['mfe-1', 'mfe-2'])
+    })
+
+    test('does not match a manifest asset that is not a script (e.g. an image), even for stack-based attribution', () => {
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://example.com/root.js' },
+                target: {
+                  id: 'mfe-1',
+                  name: 'MFE 1',
+                  type: 'MFE',
+                  manifest: parseManifest({ assets: [{ matcher: 'logo.png' }] })
+                }
+              }
+            }
+          ]
+        },
+        init: {
+          api: {
+            register: {
+              enabled: true,
+              duplicate_data_to_container: false
+            }
+          }
+        }
+      }
+
+      const result = getRegisteredTargetsFromFilename('https://cdn.example.com/logo.png', agentRef)
+      expect(result).toEqual([])
+    })
+
+    test('does not fall back to timings.asset when a manifest is present but excludes the caller script (registrar scenario)', () => {
+      // Models a platform-level registrar script that calls register() on behalf of an MFE, using a manifest that
+      // names only that MFE's own file -- the registrar's own resolved script (timings.asset) must never attribute
+      // to the MFE just because it happened to be the one that called register().
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://example.com/registrar.js' },
+                target: {
+                  id: 'mfe-1',
+                  name: 'MFE 1',
+                  type: 'MFE',
+                  manifest: parseManifest({ assets: [{ matcher: 'mfe-own-file.js' }] })
+                }
+              }
+            }
+          ]
+        },
+        init: {
+          api: {
+            register: {
+              enabled: true,
+              duplicate_data_to_container: false
+            }
+          }
+        }
+      }
+
+      const result = getRegisteredTargetsFromFilename('registrar.js', agentRef)
+      expect(result).toEqual([])
+    })
+  })
+
+  describe('getRegisteredTargetsFromResourceUrl', () => {
+    test('returns empty array when url is falsy', () => {
+      const agentRef = { runtime: { registeredEntities: [] } }
+      expect(getRegisteredTargetsFromResourceUrl(null, agentRef)).toEqual([])
+      expect(getRegisteredTargetsFromResourceUrl('', agentRef)).toEqual([])
+      expect(getRegisteredTargetsFromResourceUrl(undefined, agentRef)).toEqual([])
+    })
+
+    test('returns empty array when no registered entities', () => {
+      const agentRef = {
+        runtime: { registeredEntities: [] },
+        init: { api: { register: { enabled: true, duplicate_data_to_container: false } } }
+      }
+
+      const result = getRegisteredTargetsFromResourceUrl('https://cdn.example.com/app.js', agentRef)
+      expect(result).toEqual([])
+    })
+
+    test('returns empty array when no matching entities', () => {
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://example.com/other.js' },
+                target: { id: 'mfe-1', name: 'MFE 1' }
+              }
+            }
+          ]
+        },
+        init: { api: { register: { enabled: true, duplicate_data_to_container: false } } }
+      }
+
+      const result = getRegisteredTargetsFromResourceUrl('https://cdn.example.com/app.js', agentRef)
+      expect(result).toEqual([])
+    })
+
+    test('matches an exact (cleaned) URL against timings.asset when no manifest is present', () => {
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://cdn.example.com/app.js?v=1' },
+                target: { id: 'mfe-1', name: 'MFE 1', type: 'MFE' }
+              }
+            }
+          ]
+        },
+        init: { api: { register: { enabled: true, duplicate_data_to_container: false } } }
+      }
+
+      const result = getRegisteredTargetsFromResourceUrl('https://cdn.example.com/app.js?v=2', agentRef)
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe('mfe-1')
+    })
+
+    test('does not match on a mere URL suffix, unlike stack-trace attribution', () => {
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://cdn.example.com/vendor/app.js' },
+                target: { id: 'mfe-1', name: 'MFE 1', type: 'MFE' }
+              }
+            }
+          ]
+        },
+        init: { api: { register: { enabled: true, duplicate_data_to_container: false } } }
+      }
+
+      const result = getRegisteredTargetsFromResourceUrl('https://other.example.com/app.js', agentRef)
+      expect(result).toEqual([])
+    })
+
+    test('matches a non-script manifest asset (e.g. an image), unlike stack-trace attribution', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://example.com/root.js' },
+                target: {
+                  id: 'mfe-1',
+                  name: 'MFE 1',
+                  type: 'MFE',
+                  manifest: manifestModule.parseManifest({ assets: [{ matcher: 'logo.png' }] })
+                }
+              }
+            }
+          ]
+        },
+        init: { api: { register: { enabled: true, duplicate_data_to_container: false } } }
+      }
+
+      const result = getRegisteredTargetsFromResourceUrl('https://cdn.example.com/logo.png', agentRef)
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe('mfe-1')
+    })
+
+    test('does not fall back to timings.asset when a manifest is present but excludes the caller script (registrar scenario)', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://example.com/registrar.js' },
+                target: {
+                  id: 'mfe-1',
+                  name: 'MFE 1',
+                  type: 'MFE',
+                  manifest: manifestModule.parseManifest({ assets: [{ matcher: 'mfe-own-file.js' }] })
+                }
+              }
+            }
+          ]
+        },
+        init: { api: { register: { enabled: true, duplicate_data_to_container: false } } }
+      }
+
+      const result = getRegisteredTargetsFromResourceUrl('https://example.com/registrar.js', agentRef)
+      expect(result).toEqual([])
+    })
+
+    test('returns multiple targets when multiple entities match, and collapses duplicate registrations of the same MFE', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const agentRef = {
+        runtime: {
+          registeredEntities: [
+            {
+              metadata: {
+                timings: { asset: 'https://example.com/root.js' },
+                target: {
+                  id: 'mfe-1',
+                  name: 'MFE 1',
+                  type: 'MFE',
+                  manifest: manifestModule.parseManifest({ assets: [{ matcher: 'shared.css' }] })
+                }
+              }
+            },
+            {
+              metadata: {
+                timings: { asset: 'https://example.com/root2.js' },
+                target: {
+                  id: 'mfe-2',
+                  name: 'MFE 2',
+                  type: 'MFE',
+                  manifest: manifestModule.parseManifest({ assets: [{ matcher: 'shared.css' }] })
+                }
+              }
+            },
+            {
+              // duplicate registration of mfe-1 -- same id, same resolved asset -- must collapse to one target
+              metadata: {
+                timings: { asset: 'https://example.com/root.js' },
+                target: {
+                  id: 'mfe-1',
+                  name: 'MFE 1',
+                  type: 'MFE',
+                  manifest: manifestModule.parseManifest({ assets: [{ matcher: 'shared.css' }] })
+                }
+              }
+            }
+          ]
+        },
+        init: { api: { register: { enabled: true, duplicate_data_to_container: false } } }
+      }
+
+      const result = getRegisteredTargetsFromResourceUrl('https://cdn.example.com/shared.css', agentRef)
+      expect(result).toHaveLength(2)
+      expect(result.map(t => t.id).sort()).toEqual(['mfe-1', 'mfe-2'])
     })
   })
 

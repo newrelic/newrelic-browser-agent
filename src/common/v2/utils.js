@@ -4,6 +4,8 @@
  */
 
 import { extractUrlsFromStack, getDeepStackTrace } from './script-tracker'
+import { matchManifestAsset } from './manifest'
+import { cleanURL } from '../url/clean-url'
 import { V2_TYPES } from './constants'
 
 /**
@@ -48,6 +50,36 @@ export function getRegisteredTargetsFromId (id, agentRef) {
 }
 
 /**
+ * Returns the registered target(s) whose resource matches a given resource URL -- used to attribute `BrowserPerformance`
+ * (PerformanceResourceTiming) events, which never have a JS call stack to walk (they're fired for declarative
+ * `<script src>`/`<link>`/`<img>` tags, not JS execution), so stack-trace attribution (see {@link findTargetsFromStackTrace})
+ * doesn't apply. Unlike {@link getRegisteredTargetsFromFilename}, this matches manifest assets of ANY type (scripts,
+ * images, fonts, css, etc.) -- non-script assets can't produce a JS stack frame to match against, but they can and do
+ * produce their own resource timing entries. Returns an empty array if no target is found.
+ * @param {string} url - the resource's URL, as reported by the Performance API
+ * @param {*} agentRef
+ * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget[]}
+ */
+export function getRegisteredTargetsFromResourceUrl (url, agentRef) {
+  if (!isValid(url, agentRef)) return []
+  const registeredEntities = agentRef.runtime.registeredEntities
+  const cleanedUrl = cleanURL(url)
+  const matches = registeredEntities?.filter(entity => {
+    const manifest = entity.metadata.target?.manifest
+    if (manifest) {
+      // A manifest was supplied -- it is the sole source of truth for attribution. The caller-script fallback
+      // below never applies here, so e.g. a registrar script that calls register() on behalf of many MFEs (each
+      // with its own manifest naming only that MFE's own files) never has ITS OWN activity attributed just because
+      // it happened to be the one that called register().
+      return matchManifestAsset(manifest, url, { scriptsOnly: false })
+    }
+    // No manifest -- fall back to matching the resolved URL of whatever script called register().
+    return !!entity.metadata.timings?.asset && cleanURL(entity.metadata.timings.asset) === cleanedUrl
+  })
+  return dedupeRegisteredEntitiesByAsset(matches).map(entity => entity.metadata.target)
+}
+
+/**
  * Returns the registered target(s) associated with a given filename if found in the resource timing API during registration. Returns an empty array if no target is found.
  * Multiple registrations that resolve to the same underlying script asset AND represent the same logical MFE (i.e.
  * share the same customer-supplied `target.id`) are collapsed to a single target via
@@ -63,7 +95,16 @@ export function getRegisteredTargetsFromId (id, agentRef) {
 export function getRegisteredTargetsFromFilename (filename, agentRef) {
   if (!isValid(filename, agentRef)) return []
   const registeredEntities = agentRef.runtime.registeredEntities
-  const matches = registeredEntities?.filter(entity => entity.metadata.timings?.asset?.endsWith(filename))
+  const matches = registeredEntities?.filter(entity => {
+    const manifest = entity.metadata.target?.manifest
+    if (manifest) {
+      // See the identical case in getRegisteredTargetsFromResourceUrl above: once a manifest exists, it is the
+      // sole source of truth for attribution -- the caller-script fallback below never applies.
+      return matchManifestAsset(manifest, filename, { scriptsOnly: true })
+    }
+    // No manifest -- fall back to matching the resolved URL of whatever script called register().
+    return !!entity.metadata.timings?.asset?.endsWith(filename)
+  })
   return dedupeRegisteredEntitiesByAsset(matches).map(entity => entity.metadata.target)
 }
 

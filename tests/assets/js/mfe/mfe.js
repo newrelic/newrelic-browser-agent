@@ -11,6 +11,16 @@ const wait = function wait (ms) {
   })
 }
 
+// Busy-wait synchronously for a minimum duration before this script's top-level code finishes (and its load event
+// fires). Without this, the top-level code above is fast enough (sub-millisecond) that, under load, dom.start and
+// dom.end can round to the same floored millisecond (now() is Math.floor(performance.now())), making
+// MicroFrontEndTiming's timeToExecute (scriptEnd - scriptStart) flake to 0 instead of reflecting real execution time.
+const busyWaitMs = (ms) => {
+  const end = performance.now() + ms
+  while (performance.now() < end) { /* spin */ }
+}
+busyWaitMs(15)
+
 wait(1000).then(() => {
   const api = newrelic.register({
     id: '1',

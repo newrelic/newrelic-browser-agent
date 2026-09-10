@@ -3,6 +3,7 @@ import * as handleModule from '../../../../src/common/event-emitter/handle'
 import { setupAgent } from '../../setup-agent'
 import { OBSERVED_EVENTS } from '../../../../src/features/generic_events/constants'
 import { FEATURE_NAMES } from '../../../../src/loaders/features/features'
+import { globalScope } from '../../../../src/common/constants/runtime'
 
 let mainAgent
 let genericEventsInstrument
@@ -198,6 +199,103 @@ describe('User frustrations - XMLHttpRequest', () => {
     xhr2.send()
     expect(handleSpy).toHaveBeenCalledWith('uaXhr', [], undefined, FEATURE_NAMES.genericEvents, expect.any(Object))
     expect(eeEmitSpy).toHaveBeenCalledWith('uaXhr', [], undefined)
+  })
+})
+
+describe('security policy violation reporting', () => {
+  let handleSpy, addEventListenerSpy, origReportingObserver
+
+  beforeEach(() => {
+    handleSpy = jest.spyOn(handleModule, 'handle')
+    addEventListenerSpy = jest.spyOn(globalScope, 'addEventListener')
+    origReportingObserver = global.ReportingObserver
+    mainAgent.init.feature_flags = []
+  })
+
+  afterEach(() => {
+    global.ReportingObserver = origReportingObserver
+    jest.restoreAllMocks()
+  })
+
+  function getSpvListener () {
+    return addEventListenerSpy.mock.calls.find(([type]) => type === 'securitypolicyviolation')[1]
+  }
+
+  function mockSpvEvent (fields) {
+    const evt = new Event('securitypolicyviolation')
+    Object.defineProperties(evt, Object.fromEntries(Object.entries(fields).map(([key, value]) => [key, { value }])))
+    return evt
+  }
+
+  test('processes the buffered pre-attach batch, disconnects, and still reports post-attach violations via securitypolicyviolation', () => {
+    let observerCallback
+    const disconnectMock = jest.fn()
+    const observeMock = jest.fn()
+    global.ReportingObserver = jest.fn((cb) => {
+      observerCallback = cb
+      return { observe: observeMock, disconnect: disconnectMock }
+    })
+
+    const instrument = new GenericEvents(mainAgent)
+
+    const bufferedReport = {
+      type: 'csp-violation',
+      body: {
+        blockedURL: 'https://malicious.example/buffered',
+        documentURL: 'https://test.com',
+        effectiveDirective: 'script-src',
+        originalPolicy: "default-src 'self'",
+        sourceFile: 'https://test.com/index.js',
+        statusCode: 200,
+        lineNumber: 10,
+        columnNumber: 4,
+        disposition: 'enforce',
+        sample: 'inline',
+        referrer: 'https://referrer.test'
+      }
+    }
+
+    observerCallback([bufferedReport])
+
+    expect(observeMock).toHaveBeenCalledTimes(1)
+    expect(disconnectMock).toHaveBeenCalledTimes(1)
+    expect(handleSpy).toHaveBeenCalledWith('spv', [expect.objectContaining({
+      blockedUrl: 'https://malicious.example/buffered',
+      documentUrl: 'https://test.com'
+    }), expect.any(Number)], undefined, FEATURE_NAMES.genericEvents, instrument.ee)
+
+    handleSpy.mockClear()
+
+    getSpvListener()(mockSpvEvent({
+      blockedURI: 'https://malicious.example/post-attach',
+      documentURI: 'https://test.com',
+      effectiveDirective: 'script-src',
+      sourceFile: 'https://test.com/index.js',
+      lineNumber: 20,
+      columnNumber: 4
+    }))
+    expect(handleSpy).toHaveBeenCalledWith('spv', [expect.objectContaining({
+      blockedUrl: 'https://malicious.example/post-attach'
+    }), expect.any(Number)], undefined, FEATURE_NAMES.genericEvents, instrument.ee)
+  })
+
+  test('still reports via securitypolicyviolation when ReportingObserver is unsupported', () => {
+    global.ReportingObserver = undefined
+
+    const instrument = new GenericEvents(mainAgent)
+
+    getSpvListener()(mockSpvEvent({
+      blockedURI: 'https://malicious.example',
+      documentURI: 'https://test.com',
+      effectiveDirective: 'script-src',
+      sourceFile: 'https://test.com/index.js',
+      lineNumber: 10,
+      columnNumber: 4
+    }))
+
+    expect(handleSpy).toHaveBeenCalledWith('spv', [expect.objectContaining({
+      blockedUrl: 'https://malicious.example'
+    }), expect.any(Number)], undefined, FEATURE_NAMES.genericEvents, instrument.ee)
   })
 })
 

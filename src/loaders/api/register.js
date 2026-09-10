@@ -52,7 +52,7 @@ export const warnings = {
   disabled: single(() => warn(55)),
   invalidTarget: single((target) => warn(48, target)),
   deregistered: single(() => warn(68)),
-  invalidTimingMethod: single((value) => warn(80, value))
+  invalidTimingMethod: single((value) => warn(80, value)),
   duplicateName: single((target) => warn(81, target)),
   duplicateId: single((target) => warn(82, target))
 }

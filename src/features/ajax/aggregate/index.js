@@ -212,6 +212,10 @@ export class Aggregate extends AggregateBase {
         ...(event.responseHeaders ? { responseHeaders: event.responseHeaders } : {})
       }, { addKey: addStringRaw, addVal: addStringWithTruncation })
 
+      // .length is UTF-16 code units, not true UTF-8 byte size, so this undercounts multi-byte characters -- but it reuses the
+      // already-serialized payloadAttrs strings instead of re-stringifying/byte-counting, which is worth the imprecision here.
+      if (payloadAttrs.length) this.reportSupportabilityMetric('Ajax/Events/Payload/Bytes-Added', payloadAttrs.join(';').length)
+
       const attrParts = [...regularAttrs, ...payloadAttrs]
       fields.unshift(numeric(attrParts.length))
 

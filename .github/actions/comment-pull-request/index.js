@@ -3,8 +3,14 @@ import { args } from './args.js'
 
 const octokit = github.getOctokit(args.githubToken)
 
-let commentBody = args.comment.split('\n')
-commentBody = commentBody.concat(args.commentTag.split('\n'))
+const comment = process.env.COMMENT
+if (!comment) {
+  throw new Error('COMMENT environment variable is required')
+}
+const commentTag = process.env.COMMENT_TAG || ''
+
+let commentBody = comment.split('\n')
+commentBody = commentBody.concat(commentTag.split('\n'))
 
 while (commentBody.length > 0 && commentBody[0].trim() === '') {
   // Do not start the comment with an empty line
@@ -19,8 +25,8 @@ while (commentBody.length > 0 && commentBody[commentBody.length - 1].trim() === 
 // Trim surrounding whitespace
 commentBody = commentBody.map(c => c.trim())
 
-let comment
-if (args.commentTag && args.commentTag.toString().trim() !== '') {
+let existingComment
+if (commentTag.trim() !== '') {
   for await (const { data: comments} of octokit.paginate.iterator(
     octokit.rest.issues.listComments,
     {
@@ -29,19 +35,19 @@ if (args.commentTag && args.commentTag.toString().trim() !== '') {
       issue_number: args.prNumber
     }
   )) {
-    comment = comments.find(c => c?.body?.includes(args.commentTag.trim()))
-    if (comment) {
+    existingComment = comments.find(c => c?.body?.includes(commentTag.trim()))
+    if (existingComment) {
       break
     }
   }
 }
 
-if (comment) {
+if (existingComment) {
   await octokit.rest.issues.updateComment({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
     issue_number: args.prNumber,
-    comment_id: comment.id,
+    comment_id: existingComment.id,
     body: commentBody.join('\n')
   })
 } else {

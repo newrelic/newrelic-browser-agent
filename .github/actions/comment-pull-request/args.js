@@ -11,12 +11,6 @@ export const args = yargs(hideBin(process.argv))
   .string('githubToken')
   .describe('githubToken', 'Github authentication token')
 
-  .string('comment')
-  .describe('comment', 'The comment to place on the pull request')
-
-  .string('commentTag')
-  .describe('commentTag', 'The tag to use for updating an existing comment on the pull request')
-
   .demandOption(['prNumber', 'githubToken'])
 
   .argv

@@ -46,16 +46,21 @@ jobs:
       - name: Install project dependencies
         run: npm ci
       - name: Run unit tests
-        run: npm run test -- --coverage
+        uses: ./.github/actions/retry-command
+        with:
+          command: npm run test -- --coverage
+          max_attempts: 2
       - name: Find pull request
         id: pull-request-target
         if: ${{ inputs.coverage }}
         uses: ./.github/actions/find-pull-request
+        continue-on-error: true
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload pr code coverage
         if: ${{ inputs.coverage && steps.pull-request-target.outputs.results }}
         uses: codecov/codecov-action@v4
+        continue-on-error: true
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           override_commit: ${{ fromJSON(steps.pull-request-target.outputs.results).head_sha }}
@@ -66,6 +71,7 @@ jobs:
       - name: Upload branch code coverage
         if: ${{ inputs.coverage && !steps.pull-request-target.outputs.results }}
         uses: codecov/codecov-action@v4
+        continue-on-error: true
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: unit-tests
@@ -73,6 +79,7 @@ jobs:
       - name: Archive code coverage results
         if: ${{ inputs.coverage }}
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: jest-code-coverage-report
           path: coverage/

@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.322.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.321.0...v1.322.0) (2026-09-11)
+
+
+### Features
+
+* Add registration validation warnings ([#1839](https://github.com/newrelic/newrelic-browser-agent/issues/1839)) ([e26bc9b](https://github.com/newrelic/newrelic-browser-agent/commit/e26bc9baf07c3ffb36993ca18b3c498ef2b88be2))
+* Include observer API for SPV events ([#1848](https://github.com/newrelic/newrelic-browser-agent/issues/1848)) ([5f66da2](https://github.com/newrelic/newrelic-browser-agent/commit/5f66da2e0836917a625fc5eca5cc9916936f35dc))
+* MFE Manifest ([#1827](https://github.com/newrelic/newrelic-browser-agent/issues/1827)) ([17c6750](https://github.com/newrelic/newrelic-browser-agent/commit/17c67500b245a2dacce6bfad50262c59e24833bf))
+
+
+### Bug Fixes
+
+* Upgrade web-vitals from 4.2.4 to 6.2.1 to plug a listener leak ([#1846](https://github.com/newrelic/newrelic-browser-agent/issues/1846)) ([8858daa](https://github.com/newrelic/newrelic-browser-agent/commit/8858daa97eb136dd91c55196e6053a3e23e1d2ac))
+
 ## [1.321.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.320.1...v1.321.0) (2026-08-31)
 
 

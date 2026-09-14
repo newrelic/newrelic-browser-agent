@@ -5,6 +5,47 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "5f66da2e0836917a625fc5eca5cc9916936f35dc",
+          "message": "Include observer API for SPV events",
+          "issues": [
+            "1848"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "17c67500b245a2dacce6bfad50262c59e24833bf",
+          "message": "MFE Manifest",
+          "issues": [
+            "1827"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "8858daa97eb136dd91c55196e6053a3e23e1d2ac",
+          "message": "Upgrade web-vitals from 4.2.4 to 6.2.1 to plug a listener leak",
+          "issues": [
+            "1846"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "e26bc9baf07c3ffb36993ca18b3c498ef2b88be2",
+          "message": "Add registration validation warnings",
+          "issues": [
+            "1839"
+          ]
+        }
+      ],
+      "version": "1.322.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "4f50a270-9f6c-4e09-b994-9570e78a1faf",
+      "createTime": "2026-09-11T02:57:52.395Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "a282ba0afbc9291aaaef165050da813bfc79f8b6",
           "message": "MicroFrontEndTiming attributes changes",
           "issues": [
@@ -4242,5 +4283,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-08-31T17:35:32.244Z"
+  "updateTime": "2026-09-11T02:57:52.395Z"
 }

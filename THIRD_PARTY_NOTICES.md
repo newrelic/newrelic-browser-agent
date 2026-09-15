@@ -322,7 +322,7 @@ SOFTWARE.
 
 ### web-vitals
 
-This product includes source derived from [web-vitals](https://github.com/GoogleChrome/web-vitals) ([v4.2.4](https://github.com/GoogleChrome/web-vitals/tree/v4.2.4)), distributed under the [Apache-2.0 License](https://github.com/GoogleChrome/web-vitals/blob/v4.2.4/LICENSE):
+This product includes source derived from [web-vitals](https://github.com/GoogleChrome/web-vitals) ([v6.2.1](https://github.com/GoogleChrome/web-vitals/tree/v6.2.1)), distributed under the [Apache-2.0 License](https://github.com/GoogleChrome/web-vitals/blob/v6.2.1/LICENSE):
 
 ```
 

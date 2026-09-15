@@ -8,10 +8,13 @@ jest.unmock('../../../../../src/common/serialize/bel-serializer')
 jest.unmock('../../../../../src/common/util/obfuscate')
 jest.unmock('../../../../../src/common/payloads/payloads')
 
+jest.mock('../../../../../src/common/event-emitter/handle', () => ({ handle: jest.fn() }))
+
 const someAgent = {
   agentIdentifier: 'abcd',
   info: {},
-  runtime: { obfuscator: new Obfuscator({ init: { obfuscate: [] } }) }
+  runtime: { obfuscator: new Obfuscator({ init: { obfuscate: [] } }) },
+  ee: {}
 }
 const someAjaxEvent = {
   method: 'POST',
@@ -85,6 +88,33 @@ test('Ajax serialize output is correct', () => {
   expect(ajn.serialize(0, someAgent)).toEqual("2,4,sg,sg,,,'POST,5p,'google.com,'/,3f,co,1,'1,'some_span_id,'some_trace_id,lx;5,'operationName,'Anonymous;5,'operationType,'QUERY;5,'operationFramework,'GraphQL;5,'ajaxRequest.id,'1234")
   // The start (and end) timestamp should translate based on "parent" timestamp passed in:
   expect(ajn.serialize(512, someAgent)).toEqual("2,4,e8,sg,,,'POST,5p,'google.com,'/,3f,co,1,'1,'some_span_id,'some_trace_id,lx;5,'operationName,'Anonymous;5,'operationType,'QUERY;5,'operationFramework,'GraphQL;5,'ajaxRequest.id,'1234")
+})
+
+test('serialize does not report Ajax/Events/Payload/Bytes-Added SM when there are no payload attributes', () => {
+  const { handle } = require('../../../../../src/common/event-emitter/handle')
+  const ajn = new AjaxNode(someAjaxEvent)
+
+  ajn.serialize(0, someAgent)
+
+  expect(handle).not.toHaveBeenCalled()
+})
+
+test('serialize reports Ajax/Events/Payload/Bytes-Added SM when payload attributes are present', () => {
+  const { handle } = require('../../../../../src/common/event-emitter/handle')
+  const ajaxEventWithPayload = {
+    ...someAjaxEvent,
+    requestBody: 'fooBody',
+    requestHeaders: { 'content-type': 'application/json' },
+    responseBody: 'barBody',
+    responseHeaders: { 'content-type': 'application/json' }
+  }
+  const ajn = new AjaxNode(ajaxEventWithPayload)
+
+  ajn.serialize(0, someAgent)
+
+  expect(handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Ajax/Events/Payload/Bytes-Added', expect.any(Number)], undefined, 'metrics', someAgent.ee)
+  const [, [, bytesAdded]] = handle.mock.calls[0]
+  expect(bytesAdded).toBeGreaterThan(0)
 })
 
 test('obfuscation happens before truncation and result stays under 4KB in browser interactions', () => {

@@ -72,6 +72,8 @@ CDN bundle. See [testing.md](.claude/docs/testing.md) for the full breakdown.
   above it, following the file's existing format. This is **not**
   CI-enforced today (no equivalent of `check:warning-codes` exists for it),
   so it's easy to silently skip — treat it as required anyway.
+- Match existing patterns in the file/directory you're editing over
+  introducing a new abstraction, especially in `src/common` and `src/features/*`.
 
 ## Build size: loader vs. aggregate
 
@@ -93,8 +95,6 @@ site running the agent; aggregate-side growth doesn't. CI reports bundle size
 deltas per PR ([.github/actions/size-diff](.github/actions/size-diff)) — pay
 attention to which bundle(s) grew, not just the total, and call out any
 loader-size increase (and why it couldn't be avoided) in the PR description.
-- Match existing patterns in the file/directory you're editing over
-  introducing a new abstraction, especially in `src/common` and `src/features/*`.
 
 ## Testing
 

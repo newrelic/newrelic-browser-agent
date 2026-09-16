@@ -142,6 +142,27 @@ const options = {
 }
 ```
 
+## AJAX deny list
+
+The browser agent can be configured to exclude specific domains or paths from `AjaxRequest` event tracking using the `ajax.deny_list` setting in the `init` configuration.
+
+```javascript
+const options = {
+  info: { ... },
+  loader_config: { ... },
+  init: {
+    ajax: {
+      deny_list: ["mywebsite.com/photos"]
+    },
+    ...
+  }
+}
+```
+
+<b>Important:</b> Updating the deny list via the app settings page or NerdGraph only updates the `NREUM.init` configuration shown in the copy/paste snippet on the app's *Application settings* page. It doesn't take effect automatically for an agent installed via NPM. If you configure the deny list using one of those methods, you must manually copy over the updated configuration, then rebuild and redeploy your application for the change to take effect.
+
+See [Configure AjaxRequest events](https://docs.newrelic.com/docs/browser/new-relic-browser/configuration/configure-ajax-request-events/) for more information.
+
 ## Options Parameter
 
 The `options` parameter used, or passed in, when instantiating the `BrowserAgent` class can include the following arguments:

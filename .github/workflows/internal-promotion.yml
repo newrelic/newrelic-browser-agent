@@ -177,6 +177,70 @@ jobs:
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
 
+  # NRQL health check for dev - compares event rates before/after deploy, never blocks promotion.
+  # See the "Continue Promotion" / "Rollback" buttons in the Slack message this feeds.
+  health-check-dev:
+    needs: [deploy-dev]
+    environment: change-tracking
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 15
+    outputs:
+      slack_payload: ${{ steps.health-check.outputs.slack_payload }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run NRQL health check
+        id: health-check
+        uses: ./.github/actions/nrql-health-check
+        with:
+          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          account_id: ${{ secrets.NR_BROWSER_MONITORING_ACCOUNT_ID }}
+          entity_guid: ${{ secrets.NR_ENTITY_GUID_NR1_DEV }}
+          env_name: dev
+          run_url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          rollback_url: https://github.com/${{ github.repository }}/actions/workflows/internal-promotion.yml
+
+  # Notify dev deployment, with health-check summary and dashboard snapshot
+  notify-dev:
+    needs: [deploy-dev, health-check-dev]
+    if: always() && needs.deploy-dev.result == 'success'
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate dashboard snapshot
+        id: snapshot
+        continue-on-error: true
+        uses: ./.github/actions/newrelic-dashboard-snapshot
+        with:
+          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          dashboard_guid: ${{ secrets.NR_DASHBOARD_GUID_NR1_DEV }}
+      - name: Upload snapshot image to S3
+        id: s3-upload-image
+        if: steps.snapshot.outputs.snapshot_dir != ''
+        continue-on-error: true
+        uses: ./.github/actions/s3-upload
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          local_dir: ${{ steps.snapshot.outputs.snapshot_dir }}
+          bucket_dir: slack/images
+      - name: Set image URL
+        id: publish-image
+        if: steps.s3-upload-image.outputs.results != ''
+        run: |
+          KEY=$(echo '${{ steps.s3-upload-image.outputs.results }}' | jq -r '.[0].Key')
+          echo "image_url=https://staging-js-agent.newrelic.com/$KEY" >> "$GITHUB_OUTPUT"
+      - name: Send Slack notification
+        uses: ./.github/actions/slack-notification
+        with:
+          notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
+          browser_agent_dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
+          payload: ${{ needs.health-check-dev.outputs.slack_payload }}
+          dashboard_url: 'https://staging.onenr.io/0EjOe0py5w6'
+          image_url: ${{ steps.publish-image.outputs.image_url }}
+
   # Step 2: Deploy to Staging
   deploy-staging:
     # For workflow_dispatch: only on main or release-please branches
@@ -250,19 +314,69 @@ jobs:
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
 
-  # Notify staging deployment
+  # NRQL health check for staging - compares event rates before/after deploy, never blocks promotion.
+  # See the "Continue Promotion" / "Rollback" buttons in the Slack message this feeds.
+  health-check-staging:
+    needs: [deploy-staging]
+    environment: change-tracking
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 15
+    outputs:
+      slack_payload: ${{ steps.health-check.outputs.slack_payload }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run NRQL health check
+        id: health-check
+        uses: ./.github/actions/nrql-health-check
+        with:
+          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          account_id: ${{ secrets.NR_BROWSER_MONITORING_ACCOUNT_ID }}
+          entity_guid: ${{ secrets.NR_ENTITY_GUID_NR1_STAGING }}
+          env_name: staging
+          run_url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          rollback_url: https://github.com/${{ github.repository }}/actions/workflows/internal-promotion.yml
+
+  # Notify staging deployment, with health-check summary and dashboard snapshot
   notify-staging:
-    needs: [resolve-version, deploy-staging]
-    runs-on: ubuntu-latest
+    needs: [resolve-version, deploy-staging, health-check-staging]
+    if: always() && needs.deploy-staging.result == 'success'
+    runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      - name: Generate dashboard snapshot
+        id: snapshot
+        continue-on-error: true
+        uses: ./.github/actions/newrelic-dashboard-snapshot
+        with:
+          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          dashboard_guid: ${{ secrets.NR_DASHBOARD_GUID_NR1_STAGING }}
+      - name: Upload snapshot image to S3
+        id: s3-upload-image
+        if: steps.snapshot.outputs.snapshot_dir != ''
+        continue-on-error: true
+        uses: ./.github/actions/s3-upload
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          local_dir: ${{ steps.snapshot.outputs.snapshot_dir }}
+          bucket_dir: slack/images
+      - name: Set image URL
+        id: publish-image
+        if: steps.s3-upload-image.outputs.results != ''
+        run: |
+          KEY=$(echo '${{ steps.s3-upload-image.outputs.results }}' | jq -r '.[0].Key')
+          echo "image_url=https://staging-js-agent.newrelic.com/$KEY" >> "$GITHUB_OUTPUT"
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
           notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
-          dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          payload: '{"text": ":rocket: New Browser Agent version promoted to `staging` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>.", "blocks": [{"type": "section", "text": {"type": "mrkdwn", "text": ":rocket: New Browser Agent version promoted to `staging` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."}}]}'
+          browser_agent_dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
+          payload: ${{ needs.health-check-staging.outputs.slack_payload }}
+          dashboard_url: 'https://staging.onenr.io/0nQxLG5N7QV'
+          image_url: ${{ steps.publish-image.outputs.image_url }}
 
   # Step 3: Deploy to EU Production
   deploy-eu-prod:
@@ -332,19 +446,69 @@ jobs:
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
 
-  # Notify EU production deployment
+  # NRQL health check for eu-prod - compares event rates before/after deploy, never blocks promotion.
+  # See the "Continue Promotion" / "Rollback" buttons in the Slack message this feeds.
+  health-check-eu-prod:
+    needs: [deploy-eu-prod]
+    environment: change-tracking
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 15
+    outputs:
+      slack_payload: ${{ steps.health-check.outputs.slack_payload }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run NRQL health check
+        id: health-check
+        uses: ./.github/actions/nrql-health-check
+        with:
+          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          account_id: ${{ secrets.NR_BROWSER_MONITORING_ACCOUNT_ID }}
+          entity_guid: ${{ secrets.NR_ENTITY_GUID_NR1_EU_PROD }}
+          env_name: eu-prod
+          run_url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          rollback_url: https://github.com/${{ github.repository }}/actions/workflows/internal-promotion.yml
+
+  # Notify EU production deployment, with health-check summary and dashboard snapshot
   notify-eu-prod:
-    needs: [resolve-version, deploy-eu-prod]
-    runs-on: ubuntu-latest
+    needs: [resolve-version, deploy-eu-prod, health-check-eu-prod]
+    if: always() && needs.deploy-eu-prod.result == 'success'
+    runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      - name: Generate dashboard snapshot
+        id: snapshot
+        continue-on-error: true
+        uses: ./.github/actions/newrelic-dashboard-snapshot
+        with:
+          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          dashboard_guid: ${{ secrets.NR_DASHBOARD_GUID_NR1_EU_PROD }}
+      - name: Upload snapshot image to S3
+        id: s3-upload-image
+        if: steps.snapshot.outputs.snapshot_dir != ''
+        continue-on-error: true
+        uses: ./.github/actions/s3-upload
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          local_dir: ${{ steps.snapshot.outputs.snapshot_dir }}
+          bucket_dir: slack/images
+      - name: Set image URL
+        id: publish-image
+        if: steps.s3-upload-image.outputs.results != ''
+        run: |
+          KEY=$(echo '${{ steps.s3-upload-image.outputs.results }}' | jq -r '.[0].Key')
+          echo "image_url=https://staging-js-agent.newrelic.com/$KEY" >> "$GITHUB_OUTPUT"
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
           notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
-          dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          payload: '{"text": ":rocket: New Browser Agent version promoted to `eu-prod` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>.", "blocks": [{"type": "section", "text": {"type": "mrkdwn", "text": ":rocket: New Browser Agent version promoted to `eu-prod` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."}}]}'
+          browser_agent_dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
+          payload: ${{ needs.health-check-eu-prod.outputs.slack_payload }}
+          dashboard_url: 'https://staging.onenr.io/0nQxLG5NXQV'
+          image_url: ${{ steps.publish-image.outputs.image_url }}
 
 
   # Step 4: Deploy to Japan Production
@@ -415,19 +579,69 @@ jobs:
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
 
-  # Notify JP production deployment
+  # NRQL health check for jp-prod - compares event rates before/after deploy, never blocks promotion.
+  # See the "Continue Promotion" / "Rollback" buttons in the Slack message this feeds.
+  health-check-jp-prod:
+    needs: [deploy-jp-prod]
+    environment: change-tracking
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 15
+    outputs:
+      slack_payload: ${{ steps.health-check.outputs.slack_payload }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run NRQL health check
+        id: health-check
+        uses: ./.github/actions/nrql-health-check
+        with:
+          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          account_id: ${{ secrets.NR_BROWSER_MONITORING_ACCOUNT_ID }}
+          entity_guid: ${{ secrets.NR_ENTITY_GUID_NR1_JP_PROD }}
+          env_name: jp-prod
+          run_url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          rollback_url: https://github.com/${{ github.repository }}/actions/workflows/internal-promotion.yml
+
+  # Notify JP production deployment, with health-check summary and dashboard snapshot
   notify-jp-prod:
-    needs: [resolve-version, deploy-jp-prod]
-    runs-on: ubuntu-latest
+    needs: [resolve-version, deploy-jp-prod, health-check-jp-prod]
+    if: always() && needs.deploy-jp-prod.result == 'success'
+    runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      - name: Generate dashboard snapshot
+        id: snapshot
+        continue-on-error: true
+        uses: ./.github/actions/newrelic-dashboard-snapshot
+        with:
+          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          dashboard_guid: ${{ secrets.NR_DASHBOARD_GUID_NR1_JP_PROD }}
+      - name: Upload snapshot image to S3
+        id: s3-upload-image
+        if: steps.snapshot.outputs.snapshot_dir != ''
+        continue-on-error: true
+        uses: ./.github/actions/s3-upload
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          local_dir: ${{ steps.snapshot.outputs.snapshot_dir }}
+          bucket_dir: slack/images
+      - name: Set image URL
+        id: publish-image
+        if: steps.s3-upload-image.outputs.results != ''
+        run: |
+          KEY=$(echo '${{ steps.s3-upload-image.outputs.results }}' | jq -r '.[0].Key')
+          echo "image_url=https://staging-js-agent.newrelic.com/$KEY" >> "$GITHUB_OUTPUT"
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
           notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
-          dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          payload: '{"text": ":rocket: New Browser Agent version promoted to `jp-prod` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>.", "blocks": [{"type": "section", "text": {"type": "mrkdwn", "text": ":rocket: New Browser Agent version promoted to `jp-prod` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."}}]}'
+          browser_agent_dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
+          payload: ${{ needs.health-check-jp-prod.outputs.slack_payload }}
+          dashboard_url: 'https://staging.onenr.io/0gR7nJbxkwo'
+          image_url: ${{ steps.publish-image.outputs.image_url }}
 
   
   # Step 5: Deploy to US Production
@@ -498,19 +712,69 @@ jobs:
           user: ${{ github.actor }}
           groupId: '${{ github.run_id }}-${{ github.sha }}'
 
-  # Notify US production deployment
+  # NRQL health check for us-prod - compares event rates before/after deploy. There's no next stage to
+  # gate, so this is purely informational/Slack per the ticket, same as every other environment's check.
+  health-check-us-prod:
+    needs: [deploy-us-prod]
+    environment: change-tracking
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 15
+    outputs:
+      slack_payload: ${{ steps.health-check.outputs.slack_payload }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run NRQL health check
+        id: health-check
+        uses: ./.github/actions/nrql-health-check
+        with:
+          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          account_id: ${{ secrets.NR_BROWSER_MONITORING_ACCOUNT_ID }}
+          entity_guid: ${{ secrets.NR_ENTITY_GUID_NR1_US_PROD }}
+          env_name: us-prod
+          run_url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          rollback_url: https://github.com/${{ github.repository }}/actions/workflows/internal-promotion.yml
+
+  # Notify US production deployment, with health-check summary and dashboard snapshot
   notify-us-prod:
-    needs: [resolve-version, deploy-us-prod]
-    runs-on: ubuntu-latest
+    needs: [resolve-version, deploy-us-prod, health-check-us-prod]
+    if: always() && needs.deploy-us-prod.result == 'success'
+    runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      - name: Generate dashboard snapshot
+        id: snapshot
+        continue-on-error: true
+        uses: ./.github/actions/newrelic-dashboard-snapshot
+        with:
+          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          dashboard_guid: ${{ secrets.NR_DASHBOARD_GUID_NR1_US_PROD }}
+      - name: Upload snapshot image to S3
+        id: s3-upload-image
+        if: steps.snapshot.outputs.snapshot_dir != ''
+        continue-on-error: true
+        uses: ./.github/actions/s3-upload
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          local_dir: ${{ steps.snapshot.outputs.snapshot_dir }}
+          bucket_dir: slack/images
+      - name: Set image URL
+        id: publish-image
+        if: steps.s3-upload-image.outputs.results != ''
+        run: |
+          KEY=$(echo '${{ steps.s3-upload-image.outputs.results }}' | jq -r '.[0].Key')
+          echo "image_url=https://staging-js-agent.newrelic.com/$KEY" >> "$GITHUB_OUTPUT"
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
           notifications_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL }}
-          dem_platform_ops_channel_url: ${{ secrets.SLACK_DEM_PLATFORM_OPS_WEBHOOK_URL }}
-          payload: '{"text": ":rocket: New Browser Agent version promoted to `us-prod` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>.", "blocks": [{"type": "section", "text": {"type": "mrkdwn", "text": ":rocket: New Browser Agent version promoted to `us-prod` environment.  See <https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }}|workflow run>."}}]}'
+          browser_agent_dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
+          payload: ${{ needs.health-check-us-prod.outputs.slack_payload }}
+          dashboard_url: 'https://staging.onenr.io/0qQap7o0Zj1'
+          image_url: ${{ steps.publish-image.outputs.image_url }}
 
   # Verify promotion status for PR gating
   # This job can be used as a required status check to block release-please PR merges

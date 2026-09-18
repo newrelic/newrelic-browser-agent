@@ -35,16 +35,16 @@ const EVENT_TYPES = [
 // (afterMean >= EPSILON) without a division-by-near-zero blowing up the z-score for quiet streams.
 const EPSILON = 0.5
 
-function mean(values) {
+function mean (values) {
   return values.reduce((sum, v) => sum + v, 0) / values.length
 }
 
-function stddev(values, avg) {
+function stddev (values, avg) {
   const variance = values.reduce((sum, v) => sum + (v - avg) ** 2, 0) / values.length
   return Math.sqrt(variance)
 }
 
-function evaluate(beforeCounts, afterCounts) {
+function evaluate (beforeCounts, afterCounts) {
   const beforeMean = mean(beforeCounts)
   const afterMean = mean(afterCounts)
   const beforeStd = stddev(beforeCounts, beforeMean)
@@ -58,7 +58,7 @@ function evaluate(beforeCounts, afterCounts) {
   return { beforeMean, afterMean, significant }
 }
 
-async function run() {
+async function run () {
   const deployTime = Date.now()
   const beforeStart = deployTime - windowMinutes * 60 * 1000
   const afterEnd = deployTime + windowMinutes * 60 * 1000
@@ -170,7 +170,8 @@ run().catch((error) => {
   // Never fail the job over this - it's informational only and must not block the promotion pipeline.
   const githubOutput = process.env.GITHUB_OUTPUT
   if (githubOutput) {
+    const failureText = `⚠️ Health check for ${envName} failed to run: ${error.message}`
     appendFileSync(githubOutput, 'regression_detected=false\n')
-    appendFileSync(githubOutput, `slack_payload<<EOF\n${JSON.stringify({ text: `⚠️ Health check for ${envName} failed to run: ${error.message}`, blocks: [] })}\nEOF\n`)
+    appendFileSync(githubOutput, `slack_payload<<EOF\n${JSON.stringify({ text: failureText, blocks: [] })}\nEOF\n`)
   }
 })

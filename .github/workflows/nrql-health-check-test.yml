@@ -17,7 +17,7 @@ on:
           - jp-prod
           - us-prod
       window_minutes:
-        description: 'Minutes before/after "now" to compare (shrink this for faster test iterations)'
+        description: 'Minutes before/after "now" to compare. Keep at 3+ - with only 1-2 one-minute buckets per side, stddev is ~0 and everything with any traffic flags as significant.'
         required: false
         type: string
         default: '10'

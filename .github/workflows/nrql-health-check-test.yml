@@ -1,0 +1,108 @@
+# Standalone manual trigger for testing the nrql-health-check action (and the Slack message it
+# produces) against a single environment, without running the full internal-promotion pipeline.
+name: NRQL Health Check (manual test)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to check'
+        required: true
+        type: choice
+        default: staging
+        options:
+          - dev
+          - staging
+          - eu-prod
+          - jp-prod
+          - us-prod
+      window_minutes:
+        description: 'Minutes before/after "now" to compare. Keep at 3+ - with only 1-2 one-minute buckets per side, stddev is ~0 and everything with any traffic flags as significant.'
+        required: false
+        type: string
+        default: '10'
+      slack_channel:
+        description: 'Slack channel(s) to post the test message to'
+        required: false
+        type: choice
+        default: browser_agent_dev
+        options:
+          - browser_agent_dev
+          - notifications
+          - both
+
+permissions:
+  contents: read
+
+jobs:
+  health-check:
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    environment: change-tracking
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve per-environment secret suffix and dashboard link
+        id: resolve
+        run: |
+          ENV="${{ inputs.environment }}"
+          SUFFIX=$(echo "$ENV" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+          echo "secret_suffix=$SUFFIX" >> "$GITHUB_OUTPUT"
+
+          case "$ENV" in
+            dev) DASHBOARD_URL="https://staging.onenr.io/0EjOe0py5w6" ;;
+            staging) DASHBOARD_URL="https://staging.onenr.io/0nQxLG5N7QV" ;;
+            eu-prod) DASHBOARD_URL="https://staging.onenr.io/0nQxLG5NXQV" ;;
+            jp-prod) DASHBOARD_URL="https://staging.onenr.io/0gR7nJbxkwo" ;;
+            us-prod) DASHBOARD_URL="https://staging.onenr.io/0qQap7o0Zj1" ;;
+          esac
+          echo "dashboard_url=$DASHBOARD_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Run NRQL health check
+        id: health-check
+        uses: ./.github/actions/nrql-health-check
+        with:
+          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          account_id: ${{ secrets.NR_BROWSER_MONITORING_ACCOUNT_ID }}
+          entity_guid: ${{ secrets[format('NR_ENTITY_GUID_NR1_{0}', steps.resolve.outputs.secret_suffix)] }}
+          env_name: ${{ inputs.environment }}
+          window_minutes: ${{ inputs.window_minutes }}
+          run_url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          rollback_url: https://github.com/${{ github.repository }}/actions/workflows/internal-promotion.yml
+
+      - name: Generate dashboard snapshot
+        id: snapshot
+        continue-on-error: true
+        uses: ./.github/actions/newrelic-dashboard-snapshot
+        with:
+          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          dashboard_guid: ${{ secrets[format('NR_DASHBOARD_GUID_NR1_{0}', steps.resolve.outputs.secret_suffix)] }}
+
+      - name: Upload snapshot image to S3
+        id: s3-upload-image
+        if: steps.snapshot.outputs.snapshot_dir != ''
+        continue-on-error: true
+        uses: ./.github/actions/s3-upload
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          local_dir: ${{ steps.snapshot.outputs.snapshot_dir }}
+          bucket_dir: slack/images
+
+      - name: Set image URL
+        id: publish-image
+        if: steps.s3-upload-image.outputs.results != ''
+        run: |
+          KEY=$(echo '${{ steps.s3-upload-image.outputs.results }}' | jq -r '.[0].Key')
+          echo "image_url=https://staging-js-agent.newrelic.com/$KEY" >> "$GITHUB_OUTPUT"
+
+      - name: Send Slack notification
+        uses: ./.github/actions/slack-notification
+        with:
+          browser_agent_dev_channel_url: ${{ (inputs.slack_channel == 'browser_agent_dev' || inputs.slack_channel == 'both') && secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL || '' }}
+          notifications_channel_url: ${{ (inputs.slack_channel == 'notifications' || inputs.slack_channel == 'both') && secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL || '' }}
+          payload: ${{ steps.health-check.outputs.slack_payload }}
+          dashboard_url: ${{ steps.resolve.outputs.dashboard_url }}
+          image_url: ${{ steps.publish-image.outputs.image_url }}

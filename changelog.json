@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "055b9171ef6393da18ee64cc156c51af4ac1498e",
+          "message": "Add internal adoption metrics for AJAX Payloads",
+          "issues": [
+            "1842"
+          ]
+        }
+      ],
+      "version": "1.323.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "4839256d-7a24-4fb8-8efa-10cd5b662618",
+      "createTime": "2026-09-18T19:50:31.322Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "5f66da2e0836917a625fc5eca5cc9916936f35dc",
           "message": "Include observer API for SPV events",
           "issues": [
@@ -4283,5 +4300,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-09-11T02:57:52.395Z"
+  "updateTime": "2026-09-18T19:50:31.322Z"
 }

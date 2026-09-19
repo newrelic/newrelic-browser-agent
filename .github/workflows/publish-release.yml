@@ -123,6 +123,61 @@ jobs:
           fastly_service: staging-js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
 
+  # Build this release and append its asset size report to the github
+  # release notes (absolute sizes only, no comparison against prior releases).
+  publish-asset-size-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Install dependencies
+        run: npm ci
+      - name: Running cdn build
+        run: npm run cdn:build:prod
+      - name: Running npm build
+        run: |
+          npm run npm:build:esm
+          npm run npm:build:cjs
+          npm run npm:build:types
+      - name: Measuring npm pack size
+        run: npm pack --json --dry-run --ignore-scripts > ./build/npm-pack.json
+      - name: Capturing build size stats
+        uses: ./.github/actions/size-diff
+        with:
+          mode: capture
+          label: release
+          display_label: ${{ github.event.release.tag_name }}
+          build_dir: ${{ github.workspace }}/build
+          target_dir: ${{ github.workspace }}
+          npm_pack_file: ${{ github.workspace }}/build/npm-pack.json
+          output_file: ${{ github.workspace }}/build/size-stats-release.json
+      - name: Generating asset size report
+        uses: ./.github/actions/size-diff
+        with:
+          mode: compare
+          stats_files: |
+            release=./build/size-stats-release.json
+      - name: Append asset size report to release notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          {
+            printf '%s\n' "${{ github.event.release.body }}"
+            printf '\n## Asset Size Report\n\n'
+            printf 'Built asset sizes for %s:\n\n' "$TAG"
+            cat ./build/size_report.md
+          } > ./build/release_notes.md
+          gh release edit "$TAG" --notes-file ./build/release_notes.md --repo ${{ github.repository }}
+
   # NOTE: NR1 environment deployments are now manual via the internal-promotion workflow
   # Auto-publishing of internal A/B scripts has been removed per CDD NR-355574
 

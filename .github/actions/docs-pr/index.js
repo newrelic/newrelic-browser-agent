@@ -61,6 +61,7 @@ const frontMatter = {
 }
 const bodyContent = {
   version: args.tag,
+  releaseUrl: `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/releases/tag/${args.tag}`,
   features: [],
   bugs: [],
   security: [],

@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
 
 @Component({
-  selector: 'app-about',
-  template: `
+    selector: 'app-about',
+    template: `
     <div class="about-container">
       <h1>About Us</h1>
       <p>This is the demo application's About page.</p>
@@ -16,7 +16,7 @@ import { Component } from '@angular/core';
       <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis nec suscipit sem. Duis non aliquet mi, et pretium nulla.</p>
     </div>
   `,
-  styles: [`
+    styles: [`
     .about-container {
       max-width: 800px;
       margin: 50px auto;
@@ -51,6 +51,7 @@ import { Component } from '@angular/core';
       background-color: #f5f5f5;
       border-left: 4px solid #dd0031;
     }
-  `]
+  `],
+    standalone: false
 })
 export class AboutComponent {}

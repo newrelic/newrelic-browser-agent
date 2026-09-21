@@ -61,7 +61,7 @@ export const args = yargs(hideBin(process.argv))
     }
 
     if (argv.mode === 'compare') {
-      if (!argv.statsFile || argv.statsFile.length < 2) throw new Error('At least two --stats-file label=path pairs are required in compare mode')
+      if (!argv.statsFile || argv.statsFile.length < 1) throw new Error('At least one --stats-file label=path pair is required in compare mode')
     }
 
     return true

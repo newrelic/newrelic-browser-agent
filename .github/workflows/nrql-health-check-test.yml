@@ -70,38 +70,6 @@ jobs:
           run_url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
           rollback_url: https://github.com/${{ github.repository }}/actions/workflows/internal-promotion.yml
 
-      - name: Generate dashboard snapshot
-        id: snapshot
-        continue-on-error: true
-        uses: ./.github/actions/newrelic-dashboard-snapshot
-        with:
-          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
-          dashboard_guid: ${{ inputs.environment == 'dev' && secrets.NR_DASHBOARD_GUID_NR1_DEV
-            || inputs.environment == 'staging' && secrets.NR_DASHBOARD_GUID_NR1_STAGING
-            || inputs.environment == 'eu-prod' && secrets.NR_DASHBOARD_GUID_NR1_EU_PROD
-            || inputs.environment == 'jp-prod' && secrets.NR_DASHBOARD_GUID_NR1_JP_PROD
-            || secrets.NR_DASHBOARD_GUID_NR1_US_PROD }}
-
-      - name: Upload snapshot image to S3
-        id: s3-upload-image
-        if: steps.snapshot.outputs.snapshot_dir != ''
-        continue-on-error: true
-        uses: ./.github/actions/s3-upload
-        with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          local_dir: ${{ steps.snapshot.outputs.snapshot_dir }}
-          bucket_dir: slack/images
-
-      - name: Set image URL
-        id: publish-image
-        if: steps.s3-upload-image.outputs.results != ''
-        run: |
-          KEY=$(echo '${{ steps.s3-upload-image.outputs.results }}' | jq -r '.[0].Key')
-          echo "image_url=https://staging-js-agent.newrelic.com/$KEY" >> "$GITHUB_OUTPUT"
-
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
@@ -109,4 +77,3 @@ jobs:
           notifications_channel_url: ${{ (inputs.slack_channel == 'notifications' || inputs.slack_channel == 'both') && secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL || '' }}
           payload: ${{ steps.health-check.outputs.slack_payload }}
           dashboard_url: ${{ steps.resolve.outputs.dashboard_url }}
-          image_url: ${{ steps.publish-image.outputs.image_url }}

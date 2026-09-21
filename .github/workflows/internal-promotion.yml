@@ -199,7 +199,7 @@ jobs:
           run_url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
           rollback_url: https://github.com/${{ github.repository }}/actions/workflows/internal-promotion.yml
 
-  # Notify dev deployment, with health-check summary and dashboard snapshot
+  # Notify dev deployment, with health-check summary and dashboard link
   notify-dev:
     needs: [deploy-dev, health-check-dev]
     if: always() && needs.deploy-dev.result == 'success'
@@ -207,31 +207,6 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Generate dashboard snapshot
-        id: snapshot
-        continue-on-error: true
-        uses: ./.github/actions/newrelic-dashboard-snapshot
-        with:
-          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
-          dashboard_guid: ${{ secrets.NR_DASHBOARD_GUID_NR1_DEV }}
-      - name: Upload snapshot image to S3
-        id: s3-upload-image
-        if: steps.snapshot.outputs.snapshot_dir != ''
-        continue-on-error: true
-        uses: ./.github/actions/s3-upload
-        with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          local_dir: ${{ steps.snapshot.outputs.snapshot_dir }}
-          bucket_dir: slack/images
-      - name: Set image URL
-        id: publish-image
-        if: steps.s3-upload-image.outputs.results != ''
-        run: |
-          KEY=$(echo '${{ steps.s3-upload-image.outputs.results }}' | jq -r '.[0].Key')
-          echo "image_url=https://staging-js-agent.newrelic.com/$KEY" >> "$GITHUB_OUTPUT"
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
@@ -239,7 +214,6 @@ jobs:
           browser_agent_dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
           payload: ${{ needs.health-check-dev.outputs.slack_payload }}
           dashboard_url: 'https://staging.onenr.io/0EjOe0py5w6'
-          image_url: ${{ steps.publish-image.outputs.image_url }}
 
   # Step 2: Deploy to Staging
   deploy-staging:
@@ -336,7 +310,7 @@ jobs:
           run_url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
           rollback_url: https://github.com/${{ github.repository }}/actions/workflows/internal-promotion.yml
 
-  # Notify staging deployment, with health-check summary and dashboard snapshot
+  # Notify staging deployment, with health-check summary and dashboard link
   notify-staging:
     needs: [resolve-version, deploy-staging, health-check-staging]
     if: always() && needs.deploy-staging.result == 'success'
@@ -344,31 +318,6 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Generate dashboard snapshot
-        id: snapshot
-        continue-on-error: true
-        uses: ./.github/actions/newrelic-dashboard-snapshot
-        with:
-          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
-          dashboard_guid: ${{ secrets.NR_DASHBOARD_GUID_NR1_STAGING }}
-      - name: Upload snapshot image to S3
-        id: s3-upload-image
-        if: steps.snapshot.outputs.snapshot_dir != ''
-        continue-on-error: true
-        uses: ./.github/actions/s3-upload
-        with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          local_dir: ${{ steps.snapshot.outputs.snapshot_dir }}
-          bucket_dir: slack/images
-      - name: Set image URL
-        id: publish-image
-        if: steps.s3-upload-image.outputs.results != ''
-        run: |
-          KEY=$(echo '${{ steps.s3-upload-image.outputs.results }}' | jq -r '.[0].Key')
-          echo "image_url=https://staging-js-agent.newrelic.com/$KEY" >> "$GITHUB_OUTPUT"
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
@@ -376,7 +325,6 @@ jobs:
           browser_agent_dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
           payload: ${{ needs.health-check-staging.outputs.slack_payload }}
           dashboard_url: 'https://staging.onenr.io/0nQxLG5N7QV'
-          image_url: ${{ steps.publish-image.outputs.image_url }}
 
   # Step 3: Deploy to EU Production
   deploy-eu-prod:
@@ -468,7 +416,7 @@ jobs:
           run_url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
           rollback_url: https://github.com/${{ github.repository }}/actions/workflows/internal-promotion.yml
 
-  # Notify EU production deployment, with health-check summary and dashboard snapshot
+  # Notify EU production deployment, with health-check summary and dashboard link
   notify-eu-prod:
     needs: [resolve-version, deploy-eu-prod, health-check-eu-prod]
     if: always() && needs.deploy-eu-prod.result == 'success'
@@ -476,31 +424,6 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Generate dashboard snapshot
-        id: snapshot
-        continue-on-error: true
-        uses: ./.github/actions/newrelic-dashboard-snapshot
-        with:
-          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
-          dashboard_guid: ${{ secrets.NR_DASHBOARD_GUID_NR1_EU_PROD }}
-      - name: Upload snapshot image to S3
-        id: s3-upload-image
-        if: steps.snapshot.outputs.snapshot_dir != ''
-        continue-on-error: true
-        uses: ./.github/actions/s3-upload
-        with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          local_dir: ${{ steps.snapshot.outputs.snapshot_dir }}
-          bucket_dir: slack/images
-      - name: Set image URL
-        id: publish-image
-        if: steps.s3-upload-image.outputs.results != ''
-        run: |
-          KEY=$(echo '${{ steps.s3-upload-image.outputs.results }}' | jq -r '.[0].Key')
-          echo "image_url=https://staging-js-agent.newrelic.com/$KEY" >> "$GITHUB_OUTPUT"
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
@@ -508,7 +431,6 @@ jobs:
           browser_agent_dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
           payload: ${{ needs.health-check-eu-prod.outputs.slack_payload }}
           dashboard_url: 'https://staging.onenr.io/0nQxLG5NXQV'
-          image_url: ${{ steps.publish-image.outputs.image_url }}
 
 
   # Step 4: Deploy to Japan Production
@@ -601,7 +523,7 @@ jobs:
           run_url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
           rollback_url: https://github.com/${{ github.repository }}/actions/workflows/internal-promotion.yml
 
-  # Notify JP production deployment, with health-check summary and dashboard snapshot
+  # Notify JP production deployment, with health-check summary and dashboard link
   notify-jp-prod:
     needs: [resolve-version, deploy-jp-prod, health-check-jp-prod]
     if: always() && needs.deploy-jp-prod.result == 'success'
@@ -609,31 +531,6 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Generate dashboard snapshot
-        id: snapshot
-        continue-on-error: true
-        uses: ./.github/actions/newrelic-dashboard-snapshot
-        with:
-          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
-          dashboard_guid: ${{ secrets.NR_DASHBOARD_GUID_NR1_JP_PROD }}
-      - name: Upload snapshot image to S3
-        id: s3-upload-image
-        if: steps.snapshot.outputs.snapshot_dir != ''
-        continue-on-error: true
-        uses: ./.github/actions/s3-upload
-        with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          local_dir: ${{ steps.snapshot.outputs.snapshot_dir }}
-          bucket_dir: slack/images
-      - name: Set image URL
-        id: publish-image
-        if: steps.s3-upload-image.outputs.results != ''
-        run: |
-          KEY=$(echo '${{ steps.s3-upload-image.outputs.results }}' | jq -r '.[0].Key')
-          echo "image_url=https://staging-js-agent.newrelic.com/$KEY" >> "$GITHUB_OUTPUT"
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
@@ -641,7 +538,6 @@ jobs:
           browser_agent_dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
           payload: ${{ needs.health-check-jp-prod.outputs.slack_payload }}
           dashboard_url: 'https://staging.onenr.io/0gR7nJbxkwo'
-          image_url: ${{ steps.publish-image.outputs.image_url }}
 
   
   # Step 5: Deploy to US Production
@@ -734,7 +630,7 @@ jobs:
           run_url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
           rollback_url: https://github.com/${{ github.repository }}/actions/workflows/internal-promotion.yml
 
-  # Notify US production deployment, with health-check summary and dashboard snapshot
+  # Notify US production deployment, with health-check summary and dashboard link
   notify-us-prod:
     needs: [resolve-version, deploy-us-prod, health-check-us-prod]
     if: always() && needs.deploy-us-prod.result == 'success'
@@ -742,31 +638,6 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Generate dashboard snapshot
-        id: snapshot
-        continue-on-error: true
-        uses: ./.github/actions/newrelic-dashboard-snapshot
-        with:
-          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
-          dashboard_guid: ${{ secrets.NR_DASHBOARD_GUID_NR1_US_PROD }}
-      - name: Upload snapshot image to S3
-        id: s3-upload-image
-        if: steps.snapshot.outputs.snapshot_dir != ''
-        continue-on-error: true
-        uses: ./.github/actions/s3-upload
-        with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          local_dir: ${{ steps.snapshot.outputs.snapshot_dir }}
-          bucket_dir: slack/images
-      - name: Set image URL
-        id: publish-image
-        if: steps.s3-upload-image.outputs.results != ''
-        run: |
-          KEY=$(echo '${{ steps.s3-upload-image.outputs.results }}' | jq -r '.[0].Key')
-          echo "image_url=https://staging-js-agent.newrelic.com/$KEY" >> "$GITHUB_OUTPUT"
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
@@ -774,7 +645,6 @@ jobs:
           browser_agent_dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
           payload: ${{ needs.health-check-us-prod.outputs.slack_payload }}
           dashboard_url: 'https://staging.onenr.io/0qQap7o0Zj1'
-          image_url: ${{ steps.publish-image.outputs.image_url }}
 
   # Verify promotion status for PR gating
   # This job can be used as a required status check to block release-please PR merges

@@ -48,7 +48,7 @@ jobs:
       - name: Run unit tests
         uses: ./.github/actions/retry-command
         with:
-          command: npm run test -- --coverage
+          command: npm run test -- --coverage --maxWorkers=2
           max_attempts: 2
       - name: Find pull request
         id: pull-request-target

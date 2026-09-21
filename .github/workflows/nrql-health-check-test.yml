@@ -42,14 +42,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Resolve per-environment secret suffix and dashboard link
+      - name: Resolve per-environment dashboard link
         id: resolve
         run: |
-          ENV="${{ inputs.environment }}"
-          SUFFIX=$(echo "$ENV" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
-          echo "secret_suffix=$SUFFIX" >> "$GITHUB_OUTPUT"
-
-          case "$ENV" in
+          case "${{ inputs.environment }}" in
             dev) DASHBOARD_URL="https://staging.onenr.io/0EjOe0py5w6" ;;
             staging) DASHBOARD_URL="https://staging.onenr.io/0nQxLG5N7QV" ;;
             eu-prod) DASHBOARD_URL="https://staging.onenr.io/0nQxLG5NXQV" ;;
@@ -64,7 +60,11 @@ jobs:
         with:
           api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
           account_id: ${{ secrets.NR_BROWSER_MONITORING_ACCOUNT_ID }}
-          entity_guid: ${{ secrets[format('NR_ENTITY_GUID_NR1_{0}', steps.resolve.outputs.secret_suffix)] }}
+          entity_guid: ${{ inputs.environment == 'dev' && secrets.NR_ENTITY_GUID_NR1_DEV
+            || inputs.environment == 'staging' && secrets.NR_ENTITY_GUID_NR1_STAGING
+            || inputs.environment == 'eu-prod' && secrets.NR_ENTITY_GUID_NR1_EU_PROD
+            || inputs.environment == 'jp-prod' && secrets.NR_ENTITY_GUID_NR1_JP_PROD
+            || secrets.NR_ENTITY_GUID_NR1_US_PROD }}
           env_name: ${{ inputs.environment }}
           window_minutes: ${{ inputs.window_minutes }}
           run_url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -76,7 +76,11 @@ jobs:
         uses: ./.github/actions/newrelic-dashboard-snapshot
         with:
           api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
-          dashboard_guid: ${{ secrets[format('NR_DASHBOARD_GUID_NR1_{0}', steps.resolve.outputs.secret_suffix)] }}
+          dashboard_guid: ${{ inputs.environment == 'dev' && secrets.NR_DASHBOARD_GUID_NR1_DEV
+            || inputs.environment == 'staging' && secrets.NR_DASHBOARD_GUID_NR1_STAGING
+            || inputs.environment == 'eu-prod' && secrets.NR_DASHBOARD_GUID_NR1_EU_PROD
+            || inputs.environment == 'jp-prod' && secrets.NR_DASHBOARD_GUID_NR1_JP_PROD
+            || secrets.NR_DASHBOARD_GUID_NR1_US_PROD }}
 
       - name: Upload snapshot image to S3
         id: s3-upload-image

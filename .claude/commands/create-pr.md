@@ -24,6 +24,7 @@ it is CI-enforced by `.github/workflows/validate-pr.yml`.
      for the actual code changes.
    - Use both to understand the change well enough to describe it for an end
      user/consumer of the agent, not just restate commit subjects.
+   - Prompt me whether there are any related JIRA tickets, Github issues, or documentation.
 
 3. **Push the branch if needed.**
    - Check if the local branch has an upstream / is up to date with remote:

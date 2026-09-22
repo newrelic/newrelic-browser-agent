@@ -166,14 +166,14 @@ describe('capture_payloads', () => {
       'access-control-allow-origin': expect.stringContaining('bam-test-1.nr-local.net'),
       'access-control-expose-headers': 'X-NewRelic-App-Data, Date',
       'cache-control': 'no-cache, must-revalidate, proxy-revalidate',
-      connection: 'keep-alive',
       'content-length': expect.any(String),
       date: expect.any(String),
       expires: '0',
-      'keep-alive': 'timeout=72',
       pragma: 'no-cache',
       'surrogate-control': 'no-store',
       vary: 'Origin'
+      // connection: 'keep-alive', -- removed: LambdaTest's tunnel now strips hop-by-hop headers per spec compliance, so this is no longer observable
+      // 'keep-alive': 'timeout=72', -- removed: LambdaTest's tunnel now strips hop-by-hop headers per spec compliance, so this is no longer observable
     }))
   }
 

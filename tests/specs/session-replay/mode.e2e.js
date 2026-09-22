@@ -1,5 +1,5 @@
 import { srConfig, getSR } from '../util/helpers'
-import { testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testBlobReplayRequest, testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('Session Replay Sample Mode Validation', () => {
   afterEach(async () => {
@@ -120,31 +120,38 @@ describe('Session Replay Sample Mode Validation', () => {
   })
 
   it('ERROR (seen after init) => FULL', async () => {
+    const sessionReplayCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testBlobReplayRequest })
     await browser.enableSessionReplay(0, 100)
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
-      .then(() => browser.waitForSessionReplayRecording())
+    let [sessionReplayHarvests] = await Promise.all([
+      sessionReplayCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
+        .then(() => browser.waitForSessionReplayRecording())
+    ])
 
-    await browser.pause(1000) // Give the agent time to update the session replay state
     await expect(getSR()).resolves.toMatchObject({
       recording: true,
       initialized: true,
       events: expect.any(Array),
       mode: 2
     })
+    expect(sessionReplayHarvests.length).toBe(0)
 
-    await Promise.all([
+    ;[sessionReplayHarvests] = await Promise.all([
+      sessionReplayCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
       browser.execute(function () {
         newrelic.noticeError(new Error('test'))
-      }), browser.pause(1000)
+      })
     ])
 
-    await browser.pause(1000) // Give the agent time to update the session replay state
     await expect(getSR()).resolves.toMatchObject({
       recording: true,
       initialized: true,
       events: expect.any(Array),
       mode: 1
     })
+
+    // verify a harvest occurred when switching mode error => full
+    expect(sessionReplayHarvests.length).toBeGreaterThan(0)
   })
 
   it('ERROR (seen before init) => ERROR', async () => {

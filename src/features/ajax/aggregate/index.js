@@ -129,9 +129,9 @@ export class Aggregate extends AggregateBase {
     if (ctx.dt) {
       event.spanId = ctx.dt.spanId
       event.traceId = ctx.dt.traceId
-      event.spanTimestamp = Math.floor(
-        this.agentRef.runtime.timeKeeper.correctAbsoluteTimestamp(ctx.dt.timestamp)
-      )
+      // ctx.dt.timestampCorrected holds the already NR-server-time-corrected value (see distributed-tracing.js) if
+      // timeKeeper was ready when the request started -- reuse it if present, otherwise correct it here now, to avoid double-correcting.
+      event.spanTimestamp = ctx.dt.timestampCorrected ?? Math.floor(this.agentRef.runtime.timeKeeper.correctAbsoluteTimestamp(ctx.dt.timestamp))
     }
 
     if (event.gql) this.reportSupportabilityMetric('Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length)

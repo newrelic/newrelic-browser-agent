@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { generateSpanId, generateTraceId } from '../../../common/ids/unique-id'
@@ -29,23 +29,31 @@ export class DT {
     var spanId = generateSpanId()
     var traceId = generateTraceId()
     var timestamp = Date.now()
+    // Correct to NR server time when timeKeeper is available/ready; if it isn't connected yet (e.g. RUM hasn't
+    // completed), accept the uncorrected local timestamp. This only affects the receiving APM agent's computed
+    // transportDuration value on its Span -- it is not used for anything else in this payload.
+    var timestampCorrected
+    if (this.agentRef.runtime?.timeKeeper?.ready) {
+      timestampCorrected = Math.floor(this.agentRef.runtime.timeKeeper.correctAbsoluteTimestamp(timestamp))
+    }
 
     var payload = {
       spanId,
       traceId,
-      timestamp
+      timestamp,
+      timestampCorrected
     }
 
     if (parsedOrigin.sameOrigin ||
         (this.isAllowedOrigin(parsedOrigin) && this.useTraceContextHeadersForCors())) {
       payload.traceContextParentHeader = this.generateTraceContextParentHeader(spanId, traceId)
-      payload.traceContextStateHeader = this.generateTraceContextStateHeader(spanId, timestamp,
+      payload.traceContextStateHeader = this.generateTraceContextStateHeader(spanId, timestampCorrected ?? timestamp,
         accountId, agentId, trustKey)
     }
 
     if ((parsedOrigin.sameOrigin && !this.excludeNewrelicHeader()) ||
         (!parsedOrigin.sameOrigin && this.isAllowedOrigin(parsedOrigin) && this.useNewrelicHeaderForCors())) {
-      payload.newrelicHeader = this.generateTraceHeader(spanId, traceId, timestamp, accountId,
+      payload.newrelicHeader = this.generateTraceHeader(spanId, traceId, timestampCorrected ?? timestamp, accountId,
         agentId, trustKey)
     }
 

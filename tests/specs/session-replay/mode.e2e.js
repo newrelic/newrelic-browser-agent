@@ -206,7 +206,7 @@ describe('Session Replay Sample Mode Validation', () => {
     expect(errorsHarvests[0].request.body.err[0].params.hasReplay).toBeUndefined()
 
     ;[errorsHarvests] = await Promise.all([
-      errorsCapture.waitForResult({ timeout: 10000 }),
+      errorsCapture.waitForResult({ totalCount: 2, timeout: 10000 }),
       browser.execute(function () {
         newrelic.noticeError(new Error('after load'))
       })
@@ -227,7 +227,7 @@ describe('Session Replay Sample Mode Validation', () => {
     expect(errorsHarvests[0].request.body.err[0].params.hasReplay).toBeUndefined()
 
     ;[errorsHarvests] = await Promise.all([
-      errorsCapture.waitForResult({ timeout: 10000 }),
+      errorsCapture.waitForResult({ totalCount: 2, timeout: 10000 }),
       browser.execute(function () {
         var scr = document.createElement('script')
         scr.innerHTML = 'eval(\'1=2\')'

@@ -39,29 +39,7 @@ it is CI-enforced by `.github/workflows/validate-pr.yml`.
      branch). If one exists, you'll be **updating** it (`gh pr edit`), not
      creating a new one — say so.
 
-5. **Draft the title and description**, following
-   `.claude/docs/pr-guidelines.md` precisely:
-   - **Title:** `type(scope): description`, scope optional. `type` must be
-     one of `feat`, `fix`, `security`, `chore` — pick based on what the
-     change actually is (e.g. tooling/docs-only → `chore:`). Strip any
-     `NR-1234`/`NEWRELIC-1234` prefixes. Keep it at or under 70 characters —
-     it becomes the squash-merge commit message.
-   - **Description:**
-     1. A release-notes-quality summary paragraph (no heading above it),
-        70+ characters, describing the change for an end user/consumer of
-        the agent — unless the title starts with `chore:`, which is exempt
-        from the length check but should still have real prose.
-     2. A line containing only `---` to terminate the summary section (CI
-        greps for this exact marker).
-     3. Then the PR template sections, in order — re-read
-        `.github/pull_request_template.md` first in case it's changed:
-        - `### Overview` — what changed and why.
-        - `### Related Issue(s)` — link any GitHub/Jira issues found in
-          commit messages or branch name; `N/A` if none.
-        - `### Testing` — how to verify locally. If the diff touches both
-          jest and wdio coverage, call out both explicitly (they're equal
-          citizens per `.claude/docs/testing.md`); if only one, say why the
-          other wasn't applicable.
+5. **Draft the title and description**, following `.claude/docs/pr-guidelines.md`.
 
 6. **Show the full draft (title + body) to the user and ask for
    confirmation or edits before submitting anything to GitHub.** Do not run

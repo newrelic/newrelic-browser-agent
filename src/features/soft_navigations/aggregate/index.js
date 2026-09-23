@@ -92,6 +92,10 @@ export class Aggregate extends AggregateBase {
 
     registerHandler('ajax', this.#handleAjaxEvent.bind(this), this.featureName, this.ee)
     registerHandler('jserror', this.#handleJserror.bind(this), this.featureName, this.ee)
+    // POC (soft-nav spike, hybrid): a second, independent listener on the same 'pvtAdded' event page_view_timing
+    // already emits for session_trace -- see #handlePvtAdded for why this is additive to (not a replacement for)
+    // the direct largestContentfulPaint/cumulativeLayoutShift/interactionToNextPaint subscriptions above.
+    registerHandler('pvtAdded', this.#handlePvtAdded.bind(this), this.featureName, this.ee)
   }
 
   serializer (eventBuffer) {
@@ -204,6 +208,39 @@ export class Aggregate extends AggregateBase {
       }
       interaction.customAttributes[attrName] = value
     }, false) // buffered=false -- only react to vitals reported from now on; a metric's full history isn't relevant to a specific, later-created interaction
+  }
+
+  /**
+   * POC (soft-nav spike, hybrid): stamps `browserInteractionId` directly onto a soft-nav-scoped PageViewTiming
+   * node, so that event carries the same correlation key AjaxRequest/jserrors already use -- without this,
+   * PageViewTiming would only ever discriminate hard vs. soft navs via `navigationType`, with no way to join a
+   * specific timing node back to the route change that produced it.
+   *
+   * This listens to the *same* 'pvtAdded' event page_view_timing already emits for session_trace
+   * (`handle('pvtAdded', [name, value, attrs], ...)` in page_view_timing/aggregate/index.js#addTiming) rather than
+   * a new one -- multiple features can register handlers for the same event type, per contextual-ee.js's `emit()`,
+   * which calls every registered listener regardless of which feature group `handle()`/`registerHandler()` named.
+   *
+   * Deliberately additive to, not a replacement for, {@link #attachSoftNavVital}: the `attrs` object here is the
+   * *same reference* page_view_timing already stored inside its own buffered timing node (`timing.attrs === attrs`),
+   * so mutating it here retroactively tags that already-buffered node -- no return-trip event needed, unlike
+   * ajax/jserror correlation. But page_view_timing only calls `addTiming` for CLS on visibility change (reading
+   * `cumulativeLayoutShift.current`, i.e. whatever the latest snapshot happens to be at that moment), not on every
+   * update the way it does for LCP/INP -- so relying on this event alone for CLS would silently drop per-route-change
+   * correlation for any soft nav that isn't the one active when visibility changes. #attachSoftNavVital's direct
+   * VitalMetric subscriptions stay the source of truth for `interactionLCP`/`interactionCLS`/`interactionINP` on
+   * BrowserInteraction; this handler only ever adds `browserInteractionId` on the PageViewTiming side, opportunistically,
+   * whenever a soft-nav-scoped PVT node happens to get created.
+   * @param {string} name vital/timing name, e.g. 'lcp', 'cls', 'inp' -- unused here, kept to match the 'pvtAdded' signature
+   * @param {number} value unused here, kept to match the 'pvtAdded' signature
+   * @param {Object} attrs the same attrs object page_view_timing already stored on its own timing node
+   */
+  #handlePvtAdded (name, value, attrs) {
+    if (attrs?.navigationType !== 'soft-navigation') return
+    if (typeof attrs.navigationStartTime !== 'number') return
+    const interaction = this.getInteractionFor(attrs.navigationStartTime)
+    if (!interaction) return
+    attrs.browserInteractionId = interaction.id
   }
 
   /**

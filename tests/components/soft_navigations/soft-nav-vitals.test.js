@@ -102,3 +102,40 @@ test('reports a supportability metric when a soft-nav vital is missing navigatio
 
   expect(reportSpy).toHaveBeenCalledWith('SoftNav/Vital/interactionLCP/MissingStartTime')
 })
+
+// POC (soft-nav spike, hybrid): coverage for #handlePvtAdded, the second listener that stamps browserInteractionId
+// directly onto a PageViewTiming node by mutating the same attrs object reference page_view_timing already emits
+// on 'pvtAdded' -- see the method's JSDoc in aggregate/index.js for why this is additive to #attachSoftNavVital,
+// not a replacement.
+describe('pvtAdded (PageViewTiming browserInteractionId stamping)', () => {
+  test('mutates the shared attrs object with browserInteractionId for a soft-nav-scoped PVT node', () => {
+    softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
+    softNavAggregate.ee.emit('newURL', [200, 'new_location'])
+    softNavAggregate.ee.emit('newDom', [300])
+    const ixn = softNavAggregate.interactionInProgress
+    expect(ixn.status).toEqual(INTERACTION_STATUS.PF)
+
+    // This is exactly the shape page_view_timing's addTiming() emits: handle('pvtAdded', [name, value, attrs], ...)
+    const attrs = { navigationType: 'soft-navigation', navigationStartTime: 250 }
+    softNavAggregate.ee.emit('pvtAdded', ['lcp', 1800, attrs])
+
+    expect(attrs.browserInteractionId).toEqual(ixn.id)
+  })
+
+  test('does not stamp browserInteractionId for a hard-nav (non soft-nav) PVT node', () => {
+    softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
+
+    const attrs = { pageUrl: 'http://localhost/' } // no navigationType -- ordinary hard-nav timing node
+    softNavAggregate.ee.emit('pvtAdded', ['lcp', 1800, attrs])
+
+    expect(attrs.browserInteractionId).toBeUndefined()
+  })
+
+  test('leaves attrs untouched when no interaction can be matched', () => {
+    // No interaction active at all, and a timestamp with nothing to match.
+    const attrs = { navigationType: 'soft-navigation', navigationStartTime: -1 }
+    softNavAggregate.ee.emit('pvtAdded', ['cls', 0.12, attrs])
+
+    expect(attrs.browserInteractionId).toBeUndefined()
+  })
+})

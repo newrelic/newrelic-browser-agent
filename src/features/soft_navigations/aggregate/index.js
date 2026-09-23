@@ -6,6 +6,9 @@ import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { webdriverDetected } from '../../../common/util/webdriver-detection'
 import { loadTime } from '../../../common/vitals/load-time'
+import { largestContentfulPaint } from '../../../common/vitals/largest-contentful-paint'
+import { cumulativeLayoutShift } from '../../../common/vitals/cumulative-layout-shift'
+import { interactionToNextPaint } from '../../../common/vitals/interaction-to-next-paint'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { Obfuscator } from '../../../common/util/obfuscate'
@@ -42,6 +45,11 @@ export class Aggregate extends AggregateBase {
       this.initialPageLoadInteraction.done(loadEventTime)
       this.reportSupportabilityMetric('SoftNav/Interaction/InitialPageLoad/Duration/Ms', Math.round(loadEventTime))
     })
+
+    // POC (soft-nav spike): attach interaction-scoped vitals onto the BrowserInteraction that produced them.
+    this.#attachSoftNavVital(largestContentfulPaint, 'interactionLCP')
+    this.#attachSoftNavVital(cumulativeLayoutShift, 'interactionCLS')
+    this.#attachSoftNavVital(interactionToNextPaint, 'interactionINP')
 
     this.latestRouteSetByApi = null
     this.interactionInProgress = null // aside from the "page load" interaction, there can only ever be 1 ongoing at a time
@@ -165,6 +173,37 @@ export class Aggregate extends AggregateBase {
     if (saveIxn) return saveIxn // if an iPL was determined to be active and no route-change was found active for the same time, then iPL is deemed the one
     if (this.initialPageLoadInteraction?.isActiveDuring(timestamp)) return this.initialPageLoadInteraction // lowest precedence and also only if it's still in-progress
     // Time must be when no interaction is happening, so return undefined.
+  }
+
+  /**
+   * POC (soft-nav spike): correlates a web-vitals metric reported for a soft navigation back to the
+   * {@link Interaction} (BrowserInteraction) that our own click/history/mutation heuristic detected for that
+   * route change, and stamps it on as a custom attribute.
+   *
+   * There is no shared correlation id between our own heuristic-detected Interaction and the browser's native
+   * soft-navigation entry -- `getInteractionFor` (already used by #handleAjaxEvent/#handleJserror) does timestamp-based
+   * lookup, so this bridges the two detection systems via `navigationStartTime` rather than a real join key. This
+   * is also why late-firing metrics (INP and, on longer sessions, CLS) can go unattributed: by the time web-vitals
+   * reports them, the originating interaction may already be harvested and gone from `interactionsToHarvest`/
+   * `interactionInProgress` -- a real limitation, not a bug in this lookup, see the "harvest timing" consideration
+   * in the accompanying spike doc.
+   * @param {import('../../../common/vitals/vital-metric').VitalMetric} vitalMetric
+   * @param {string} attrName the BrowserInteraction custom attribute name this vital should be attached as
+   */
+  #attachSoftNavVital (vitalMetric, attrName) {
+    vitalMetric.subscribe(({ value, attrs }) => {
+      if (attrs?.navigationType !== 'soft-navigation') return
+      if (typeof attrs.navigationStartTime !== 'number') {
+        this.reportSupportabilityMetric(`SoftNav/Vital/${attrName}/MissingStartTime`)
+        return
+      }
+      const interaction = this.getInteractionFor(attrs.navigationStartTime)
+      if (!interaction) {
+        this.reportSupportabilityMetric(`SoftNav/Vital/${attrName}/Unattributed`)
+        return
+      }
+      interaction.customAttributes[attrName] = value
+    }, false) // buffered=false -- only react to vitals reported from now on; a metric's full history isn't relevant to a specific, later-created interaction
   }
 
   /**

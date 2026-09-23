@@ -12,7 +12,7 @@ export const interactionToNextPaint = new VitalMetric(VITAL_NAMES.INTERACTION_TO
 
 if (isBrowserScope) {
   /* Interaction-to-Next-Paint */
-  const handleINP = ({ value, attribution, id, entries }) => {
+  const handleINP = ({ value, attribution, id, entries, navigationType, navigationId, navigationInteractionId, navigationStartTime }) => {
     /* web-vitals v6 reports a synthetic INP (value 8, no entries, no interaction attribution) after bfcache restores when
       every interaction stayed below the duration threshold; skip those so only measured interactions are reported, as in v4 */
     if (!entries?.length) return
@@ -27,9 +27,14 @@ if (isBrowserScope) {
       nextPaintTime: attribution.nextPaintTime,
       processingDuration: attribution.processingDuration,
       presentationDelay: attribution.presentationDelay,
-      loadState: attribution.loadState
+      loadState: attribution.loadState,
+      navigationType,
+      navigationId,
+      navigationInteractionId,
+      navigationStartTime
     }
     interactionToNextPaint.update({ value, attrs })
   }
-  registerVital(() => onINP(handleINP))
+  // POC (soft-nav spike): reportSoftNavs resets INP measurement at each soft navigation.
+  registerVital(() => onINP(handleINP, { reportSoftNavs: true }))
 }

@@ -7,11 +7,12 @@ import { VITAL_NAMES } from './constants'
 import { VitalMetric } from './vital-metric'
 import { registerVital } from './register-vital'
 import { isBrowserScope } from '../constants/runtime'
+import { cleanURL } from '../url/clean-url'
 
 export const cumulativeLayoutShift = new VitalMetric(VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT, (x) => x)
 
 if (isBrowserScope) {
-  const handleCLS = ({ value, attribution, id, navigationType, navigationId, navigationInteractionId, navigationStartTime }) => {
+  const handleCLS = ({ value, attribution, id, navigationType, navigationId, navigationInteractionId, navigationStartTime, navigationURL }) => {
     const attrs = {
       metricId: id,
       largestShiftTarget: attribution.largestShiftTarget,
@@ -21,7 +22,8 @@ if (isBrowserScope) {
       navigationType,
       navigationId,
       navigationInteractionId,
-      navigationStartTime
+      navigationStartTime,
+      navigationURL: cleanURL(navigationURL) // the soft nav's destination URL per the browser itself
     }
     cumulativeLayoutShift.update({ value, attrs })
   }

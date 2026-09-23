@@ -103,12 +103,64 @@ test('reports a supportability metric when a soft-nav vital is missing navigatio
   expect(reportSpy).toHaveBeenCalledWith('SoftNav/Vital/interactionLCP/MissingStartTime')
 })
 
+test('treats navigationStartTime of 0 the same as missing, not as a valid timestamp', () => {
+  // web-vitals' initMetric() defaults navigationStartTime to 0 rather than leaving it undefined when no real
+  // value was supplied -- a plain `typeof !== 'number'` guard would incorrectly treat that default as usable.
+  softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
+  const ixn = softNavAggregate.interactionInProgress
+  const reportSpy = jest.spyOn(softNavAggregate, 'reportSupportabilityMetric')
+
+  largestContentfulPaint.update({
+    value: 1800,
+    attrs: { navigationType: 'soft-navigation', navigationStartTime: 0 }
+  })
+
+  expect(ixn.customAttributes.interactionLCP).toBeUndefined()
+  expect(reportSpy).toHaveBeenCalledWith('SoftNav/Vital/interactionLCP/MissingStartTime')
+})
+
+test('reports a supportability metric (but still attributes the vital) when navigationURL does not match the interaction', () => {
+  softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
+  softNavAggregate.ee.emit('newURL', [200, 'http://localhost/dashboard'])
+  softNavAggregate.ee.emit('newDom', [300])
+  const ixn = softNavAggregate.interactionInProgress
+  expect(ixn.newURL).toEqual('http://localhost/dashboard')
+  const reportSpy = jest.spyOn(softNavAggregate, 'reportSupportabilityMetric')
+
+  largestContentfulPaint.update({
+    value: 1800,
+    attrs: { navigationType: 'soft-navigation', navigationStartTime: 250, navigationURL: 'http://localhost/settings' }
+  })
+
+  // A URL mismatch is telemetry, not a hard gate -- the timestamp-based match still wins so a normalization
+  // difference between entry.name and interaction.newURL can't turn a good attribution into a false negative.
+  expect(ixn.customAttributes.interactionLCP).toEqual(1800)
+  expect(reportSpy).toHaveBeenCalledWith('SoftNav/Vital/interactionLCP/UrlMismatch')
+})
+
+test('does not report a UrlMismatch when navigationURL matches the interaction (after cleaning query/hash)', () => {
+  softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
+  softNavAggregate.ee.emit('newURL', [200, 'http://localhost/dashboard?tab=2#section'])
+  softNavAggregate.ee.emit('newDom', [300])
+  const ixn = softNavAggregate.interactionInProgress
+  const reportSpy = jest.spyOn(softNavAggregate, 'reportSupportabilityMetric')
+
+  largestContentfulPaint.update({
+    value: 1800,
+    // navigationURL is already cleaned (no query/hash) by the time it reaches here, per the vitals wrapper
+    attrs: { navigationType: 'soft-navigation', navigationStartTime: 250, navigationURL: 'http://localhost/dashboard' }
+  })
+
+  expect(ixn.customAttributes.interactionLCP).toEqual(1800)
+  expect(reportSpy).not.toHaveBeenCalledWith(expect.stringContaining('UrlMismatch'))
+})
+
 // POC (soft-nav spike, hybrid): coverage for #handlePvtAdded, the second listener that stamps browserInteractionId
 // directly onto a PageViewTiming node by mutating the same attrs object reference page_view_timing already emits
 // on 'pvtAdded' -- see the method's JSDoc in aggregate/index.js for why this is additive to #attachSoftNavVital,
 // not a replacement.
 describe('pvtAdded (PageViewTiming browserInteractionId stamping)', () => {
-  test('mutates the shared attrs object with browserInteractionId for a soft-nav-scoped PVT node', () => {
+  test('waits for the interaction to finish before mutating the shared attrs object with browserInteractionId', () => {
     softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
     softNavAggregate.ee.emit('newURL', [200, 'new_location'])
     softNavAggregate.ee.emit('newDom', [300])
@@ -119,7 +171,45 @@ describe('pvtAdded (PageViewTiming browserInteractionId stamping)', () => {
     const attrs = { navigationType: 'soft-navigation', navigationStartTime: 250 }
     softNavAggregate.ee.emit('pvtAdded', ['lcp', 1800, attrs])
 
+    // Same wait/release discipline as ajax/jserror correlation: not stamped yet while still pending-finish,
+    // since this interaction could still end up cancelled.
+    expect(attrs.browserInteractionId).toBeUndefined()
+
+    ixn.done()
+    expect(ixn.status).toEqual(INTERACTION_STATUS.FIN)
     expect(attrs.browserInteractionId).toEqual(ixn.id)
+  })
+
+  test('attaches browserInteractionId immediately when the interaction has already finished', () => {
+    softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
+    softNavAggregate.ee.emit('newURL', [200, 'new_location'])
+    softNavAggregate.ee.emit('newDom', [300])
+    const ixn = softNavAggregate.interactionInProgress
+    ixn.done()
+    expect(ixn.status).toEqual(INTERACTION_STATUS.FIN)
+
+    const attrs = { navigationType: 'soft-navigation', navigationStartTime: 250 }
+    softNavAggregate.ee.emit('pvtAdded', ['lcp', 1800, attrs])
+
+    expect(attrs.browserInteractionId).toEqual(ixn.id)
+  })
+
+  test('never stamps browserInteractionId if the interaction is cancelled instead of finished', () => {
+    softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
+    const ixn = softNavAggregate.interactionInProgress
+    expect(ixn.status).toEqual(INTERACTION_STATUS.IP)
+
+    const attrs = { navigationType: 'soft-navigation', navigationStartTime: 250 }
+    softNavAggregate.ee.emit('pvtAdded', ['lcp', 1800, attrs])
+    expect(attrs.browserInteractionId).toBeUndefined()
+
+    // Cancel it -- the hard click->URL->DOM sequence never completed, so it never meets the finish criteria and
+    // a competing UI event replaces/cancels it instead.
+    softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 110 }])
+    expect(ixn.status).toEqual(INTERACTION_STATUS.CAN)
+
+    // Would be a corrupt reference if set: this interaction is never harvested/sent as a BrowserInteraction event.
+    expect(attrs.browserInteractionId).toBeUndefined()
   })
 
   test('does not stamp browserInteractionId for a hard-nav (non soft-nav) PVT node', () => {
@@ -137,5 +227,15 @@ describe('pvtAdded (PageViewTiming browserInteractionId stamping)', () => {
     softNavAggregate.ee.emit('pvtAdded', ['cls', 0.12, attrs])
 
     expect(attrs.browserInteractionId).toBeUndefined()
+  })
+
+  test('never reports supportability metrics on failure, to avoid double-counting #attachSoftNavVital\'s reporting for the same underlying vital update', () => {
+    const reportSpy = jest.spyOn(softNavAggregate, 'reportSupportabilityMetric')
+
+    // Neither of these attribute-resolution failures should report anything via the pvtAdded path.
+    softNavAggregate.ee.emit('pvtAdded', ['lcp', 1800, { navigationType: 'soft-navigation' }]) // missing navigationStartTime
+    softNavAggregate.ee.emit('pvtAdded', ['lcp', 1800, { navigationType: 'soft-navigation', navigationStartTime: -1 }]) // unattributed
+
+    expect(reportSpy).not.toHaveBeenCalled()
   })
 })

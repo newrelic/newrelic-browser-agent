@@ -7,12 +7,13 @@ import { VitalMetric } from './vital-metric'
 import { VITAL_NAMES } from './constants'
 import { registerVital } from './register-vital'
 import { isBrowserScope } from '../constants/runtime'
+import { cleanURL } from '../url/clean-url'
 
 export const interactionToNextPaint = new VitalMetric(VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)
 
 if (isBrowserScope) {
   /* Interaction-to-Next-Paint */
-  const handleINP = ({ value, attribution, id, entries, navigationType, navigationId, navigationInteractionId, navigationStartTime }) => {
+  const handleINP = ({ value, attribution, id, entries, navigationType, navigationId, navigationInteractionId, navigationStartTime, navigationURL }) => {
     /* web-vitals v6 reports a synthetic INP (value 8, no entries, no interaction attribution) after bfcache restores when
       every interaction stayed below the duration threshold; skip those so only measured interactions are reported, as in v4 */
     if (!entries?.length) return
@@ -31,7 +32,8 @@ if (isBrowserScope) {
       navigationType,
       navigationId,
       navigationInteractionId,
-      navigationStartTime
+      navigationStartTime,
+      navigationURL: cleanURL(navigationURL) // the soft nav's destination URL per the browser itself
     }
     interactionToNextPaint.update({ value, attrs })
   }

@@ -66,5 +66,12 @@ test('a soft-nav-scoped LCP node in page_view_timing ends up carrying browserInt
 
   const lcpNode = timingsAggregate.events.get().find(tn => tn.name === VITAL_NAMES.LARGEST_CONTENTFUL_PAINT)
   expect(lcpNode).toBeTruthy()
+
+  // Same wait/release discipline as ajax/jserror correlation: not stamped while the interaction is still
+  // pending-finish, since it could still end up cancelled -- a PageViewTiming node must never carry a
+  // browserInteractionId for an interaction that ends up never being harvested.
+  expect(lcpNode.attrs.browserInteractionId).toBeUndefined()
+
+  ixn.done()
   expect(lcpNode.attrs.browserInteractionId).toEqual(ixn.id)
 })

@@ -17,6 +17,7 @@ import { AjaxNode } from './ajax-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
 import { EVENT_TYPES } from '../../../common/constants/events'
+import { cleanURL } from '../../../common/url/clean-url'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -196,18 +197,55 @@ export class Aggregate extends AggregateBase {
    */
   #attachSoftNavVital (vitalMetric, attrName) {
     vitalMetric.subscribe(({ value, attrs }) => {
-      if (attrs?.navigationType !== 'soft-navigation') return
-      if (typeof attrs.navigationStartTime !== 'number') {
-        this.reportSupportabilityMetric(`SoftNav/Vital/${attrName}/MissingStartTime`)
-        return
-      }
-      const interaction = this.getInteractionFor(attrs.navigationStartTime)
-      if (!interaction) {
-        this.reportSupportabilityMetric(`SoftNav/Vital/${attrName}/Unattributed`)
-        return
-      }
+      const interaction = this.#resolveSoftNavInteraction(attrs, attrName)
+      if (!interaction) return
       interaction.customAttributes[attrName] = value
     }, false) // buffered=false -- only react to vitals reported from now on; a metric's full history isn't relevant to a specific, later-created interaction
+  }
+
+  /**
+   * POC (soft-nav spike): shared correlation lookup used by both {@link #attachSoftNavVital} and
+   * {@link #handlePvtAdded} -- both need the exact same "is this a soft-nav-scoped vital, and if so which
+   * Interaction produced it" answer, so the guard/lookup logic (and its supportability-metric reporting) lives
+   * here once instead of twice.
+   *
+   * `attrs.navigationStartTime` is never actually `undefined` -- web-vitals' `initMetric()` defaults it to `0`
+   * whenever a real value isn't explicitly supplied (confirmed by reading node_modules/web-vitals directly), so
+   * the falsy check below (not a `typeof` check) is what actually distinguishes "no usable timestamp" from a
+   * real one.
+   *
+   * `attrs.navigationURL` (the soft nav's destination URL, sourced from the browser's own
+   * `PerformanceSoftNavigation` entry) is used only as a corroborating signal, not a hard gate: `entry.name` and
+   * `interaction.newURL` can differ in normalization (trailing slashes, how the SPA router formats the URL it
+   * handed to `history.pushState`) even when they refer to the same route, so rejecting a timestamp-based match
+   * outright on a URL mismatch risks turning good attributions into false negatives. A mismatch is reported as
+   * its own supportability metric instead, so real-world mismatch rates can inform whether it's ever safe to
+   * tighten this into a hard gate later.
+   * `report=false` (used by {@link #handlePvtAdded}) skips all supportability-metric reporting -- page_view_timing's
+   * 'pvtAdded' event fires for the *same* underlying vital update #attachSoftNavVital already reacts to directly
+   * (always for LCP/INP; occasionally for CLS, which page_view_timing only forwards on visibility change), so
+   * letting both call sites report on the same outcome would double-count every metric here. #attachSoftNavVital
+   * stays the single source of truth for attribution-success telemetry; #handlePvtAdded is opportunistic and silent.
+   * @param {Object} attrs the vitals metric's attrs (navigationType/navigationStartTime/navigationURL, etc.)
+   * @param {string} metricLabel used only to namespace the supportability metrics this reports on failure
+   * @param {boolean} [report] whether to report supportability metrics on failure/mismatch; default true
+   * @returns {import('./interaction').Interaction|undefined}
+   */
+  #resolveSoftNavInteraction (attrs, metricLabel, report = true) {
+    if (attrs?.navigationType !== 'soft-navigation') return undefined
+    if (!attrs.navigationStartTime) {
+      if (report) this.reportSupportabilityMetric(`SoftNav/Vital/${metricLabel}/MissingStartTime`)
+      return undefined
+    }
+    const interaction = this.getInteractionFor(attrs.navigationStartTime)
+    if (!interaction) {
+      if (report) this.reportSupportabilityMetric(`SoftNav/Vital/${metricLabel}/Unattributed`)
+      return undefined
+    }
+    if (report && attrs.navigationURL && interaction.newURL && attrs.navigationURL !== cleanURL(interaction.newURL)) {
+      this.reportSupportabilityMetric(`SoftNav/Vital/${metricLabel}/UrlMismatch`)
+    }
+    return interaction
   }
 
   /**
@@ -231,16 +269,24 @@ export class Aggregate extends AggregateBase {
    * VitalMetric subscriptions stay the source of truth for `interactionLCP`/`interactionCLS`/`interactionINP` on
    * BrowserInteraction; this handler only ever adds `browserInteractionId` on the PageViewTiming side, opportunistically,
    * whenever a soft-nav-scoped PVT node happens to get created.
+   *
+   * Same wait/release discipline as #handleAjaxEvent/#handleJserror, and for the same reason: `getInteractionFor`
+   * can return an interaction that's still in-progress or pending-finish (never one that's already cancelled, per
+   * its own contract). Stamping `browserInteractionId` immediately in that case would risk tagging this
+   * PageViewTiming node -- a *separate* event, harvested independently of BrowserInteraction -- with the id of an
+   * interaction that later gets cancelled and is therefore never actually sent. Unlike #attachSoftNavVital (which
+   * writes onto the Interaction object itself, so a cancelled interaction just discards the whole thing, attribute
+   * included), a wrong id here would ship as a dangling reference on a real, already-harvestable event. So: attach
+   * immediately only if already finished; otherwise wait for 'finished' and do nothing on 'cancelled'.
    * @param {string} name vital/timing name, e.g. 'lcp', 'cls', 'inp' -- unused here, kept to match the 'pvtAdded' signature
    * @param {number} value unused here, kept to match the 'pvtAdded' signature
    * @param {Object} attrs the same attrs object page_view_timing already stored on its own timing node
    */
   #handlePvtAdded (name, value, attrs) {
-    if (attrs?.navigationType !== 'soft-navigation') return
-    if (typeof attrs.navigationStartTime !== 'number') return
-    const interaction = this.getInteractionFor(attrs.navigationStartTime)
+    const interaction = this.#resolveSoftNavInteraction(attrs, 'pvtAdded', false)
     if (!interaction) return
-    attrs.browserInteractionId = interaction.id
+    if (interaction.status === INTERACTION_STATUS.FIN) attrs.browserInteractionId = interaction.id
+    else interaction.on('finished', () => { attrs.browserInteractionId = interaction.id }) // no 'cancelled' handler needed -- doing nothing is the correct "release"
   }
 
   /**

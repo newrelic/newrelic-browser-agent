@@ -140,36 +140,25 @@ export default class PopoverBody extends PureComponent<Prop> {
     }
 
     _getPopperModifiers(boundariesElement: any, allowPopperToEscapeBoundary: boolean) {
-        const offset = {
-            enabled: true,
-            offset: `0, 6`,
-        };
+        // react-popper 2.x wraps @popperjs/core (PopperJS v2), which replaced the old
+        // keyed-object modifiers config (`{ flip: {...}, preventOverflow: {...} }`) with
+        // an array of `{ name, options }` modifier descriptors.
+        const offsetModifier = { name: 'offset', options: { offset: [0, 6] } };
 
         if (
             boundariesElement &&
             !popperModifiers.has(boundariesElement) &&
             !allowPopperToEscapeBoundary
         ) {
-            const boundaryModifiers = {
-                flip: {
-                    boundariesElement,
-                    flipVariationsByContent: true,
-                    order: 250, // Execute before "preventOverflow".
-                },
-
-                preventOverflow: {
-                    boundariesElement,
-                },
-            };
-
-            popperModifiers.set(boundariesElement, {
-                offset,
-                ...boundaryModifiers,
-            });
+            popperModifiers.set(boundariesElement, [
+                offsetModifier,
+                { name: 'flip', options: { boundary: boundariesElement } },
+                { name: 'preventOverflow', options: { boundary: boundariesElement } },
+            ]);
         }
 
         // Only apply the offset for poppers that can escape, otherwise apply the full set of modifiers (which includes boundary configuration)
-        return allowPopperToEscapeBoundary ? { offset } : popperModifiers.get(boundariesElement);
+        return allowPopperToEscapeBoundary ? [offsetModifier] : popperModifiers.get(boundariesElement);
     }
 
     _getStyle(popoverBodyStyle: any) {

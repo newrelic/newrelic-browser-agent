@@ -90,13 +90,13 @@ export class Aggregate extends AggregateBase {
       registerHandler('bstApi', (...args) => this.traceStorage.storeNode(...args), this.featureName, this.ee)
       registerHandler('trace-jserror', (...args) => this.traceStorage.storeErrorAgg(...args), this.featureName, this.ee)
       registerHandler('pvtAdded', (...args) => this.traceStorage.processPVT(...args), this.featureName, this.ee)
+    }
 
-      if (this.mode === MODE.ERROR) {
-        /** A separate handler for noticing errors, and switching to "full" mode if running in "error" mode */
-        registerHandler('trace-jserror', () => {
-          if (this.mode === MODE.ERROR) this.switchToFull()
-        }, this.featureName, this.ee)
-      }
+    if (this.mode === MODE.ERROR) {
+      /** A separate handler for noticing errors, and switching to "full" mode if running in "error" mode */
+      registerHandler('trace-jserror', () => {
+        if (this.mode === MODE.ERROR) this.switchToFull()
+      }, this.featureName, this.ee)
     }
     this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })
 

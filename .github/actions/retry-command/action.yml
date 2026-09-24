@@ -41,11 +41,10 @@ runs:
           echo "::group::Attempt $attempt of $MAX_ATTEMPTS"
 
           if [ "$timeout_seconds" -gt 0 ]; then
-            timeout "${timeout_seconds}s" bash -c "$RETRY_COMMAND"
+            timeout "${timeout_seconds}s" bash -c "$RETRY_COMMAND" && exit_code=0 || exit_code=$?
           else
-            bash -c "$RETRY_COMMAND"
+            bash -c "$RETRY_COMMAND" && exit_code=0 || exit_code=$?
           fi
-          exit_code=$?
 
           echo "::endgroup::"
 

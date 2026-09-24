@@ -114,6 +114,10 @@ conventions and a known e2e flakiness gotcha (auto-captured log sampling).
 PR title and description format is CI-enforced. See the linked doc before
 drafting any PR title/description in this repo.
 
+@.claude/commands/create-pr.md
+
+Favor using the above command and its heuristics when creating an automated pull request.
+
 ## Architecture invariants
 
 @.claude/docs/architecture-invariants.md

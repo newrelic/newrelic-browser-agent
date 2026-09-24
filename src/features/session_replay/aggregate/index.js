@@ -141,11 +141,16 @@ export class Aggregate extends AggregateBase {
 
   switchToFull () {
     if (!this.entitled || this.blocked) return
+    const prevMode = this.mode
     this.mode = MODE.FULL
+    this.#writeToStorage({ sessionReplayMode: this.mode })
+
     // if the error was noticed AFTER the recorder was already imported....
     if (this.recorder && this.initialized) {
+      if (prevMode === MODE.ERROR) {
+        this.agentRef.runtime.harvester.triggerHarvestFor(this)
+      }
       if (!this.agentRef.runtime.isRecording) this.recorder.startRecording(TRIGGERS.SWITCH_TO_FULL, this.mode) // off --> full
-      this.#writeToStorage({ sessionReplayMode: this.mode })
     } else {
       this.initializeRecording(MODE.FULL, true, TRIGGERS.SWITCH_TO_FULL)
     }

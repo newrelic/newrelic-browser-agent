@@ -16,7 +16,7 @@ import { canCapturePayload, isLikelyHumanReadable, parseQueryString, createStrin
 import { Obfuscator } from '../../../common/util/obfuscate'
 import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate, isMfeTarget } from '../../../common/v2/utils'
 import { EVENT_TYPES } from '../../../common/constants/events'
-import { generateUuid } from '../../../common/ids/unique-id'
+import { generateSpanId, generateTraceId, generateUuid } from '../../../common/ids/unique-id'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -139,7 +139,20 @@ export class Aggregate extends AggregateBase {
     /** make a copy of the event for the MFE target if it exists */
     if (isMfeTarget(target)) {
       this.events.add({ ...event, targetAttributes: getVersion2Attributes(target, this) })
-      if (shouldDuplicate(target, this)) this.reportContainerEvent({ ...event, targetAttributes: getVersion2DuplicationAttributes(target, this) }, ctx)
+      if (shouldDuplicate(target, this)) {
+        const duplicateEvent = { ...event, targetAttributes: getVersion2DuplicationAttributes(target, this) }
+        /** the container-duplicate copy represents the same single real HTTP call as the MFE event above, so it
+         * needs its own independent trace/span identity -- otherwise the two would collide on the same
+         * spanId/traceId, and BELC could not create two separate Spans/Traces from them. Only the id namespace is
+         * independent; spanTimestamp is intentionally left as-is (event.spanTimestamp), since it still reflects the
+         * real call's actual timing. When `event.spanId` was never set (e.g. distributed tracing is disabled), there
+         * is no span identity to duplicate either -- both copies correctly end up with no spanId/traceId. */
+        if (event.spanId) {
+          duplicateEvent.spanId = generateSpanId()
+          duplicateEvent.traceId = generateTraceId()
+        }
+        this.reportContainerEvent(duplicateEvent, ctx)
+      }
     } else {
       this.reportContainerEvent(event, ctx)
     }

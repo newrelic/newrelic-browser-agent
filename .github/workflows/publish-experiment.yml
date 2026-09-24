@@ -36,6 +36,8 @@ concurrency:
 jobs:
   # Build and publish the branch to S3 experiments folder
   publish-experiment-to-s3:
+    # Skip automatic PR-triggered publishes for chore PRs; manual workflow_dispatch runs are unaffected.
+    if: github.event_name != 'pull_request' || !startsWith(github.event.pull_request.title, 'chore')
     runs-on: ubuntu-latest
     environment: nr1-experiments
     timeout-minutes: 30

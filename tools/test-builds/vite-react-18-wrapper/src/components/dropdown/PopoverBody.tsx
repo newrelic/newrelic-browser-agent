@@ -1,12 +1,10 @@
 import React, { createRef, PureComponent } from 'react';
 import { createPortal } from 'react-dom';
-import { Popper } from 'react-popper';
+import { autoUpdate, flip, offset, shift, useFloating, type Placement } from '@floating-ui/react';
 
 import ReferenceElement from './ReferenceElement';
 
 import { PopoverBodyContext, PopoverListContext } from './popover-context';
-
-const popperModifiers = new WeakMap();
 
 const PLACEMENT_TYPE = {
     TOP_START: 'top-start',
@@ -75,6 +73,36 @@ export function getScrollParent(base: HTMLElement, boundaryElement: HTMLElement)
     return node || boundaryElement;
 }
 
+type FloatingBodyProps = {
+    referenceElement: HTMLElement;
+    boundaryElement: HTMLElement;
+    allowEscape: boolean;
+    placement: Placement;
+    children: (bag: { ref: (node: HTMLElement | null) => void; style: React.CSSProperties }) => React.ReactElement | null;
+};
+
+/**
+ * Positions the Popover body relative to `referenceElement` (the trigger),
+ * replacing the old `react-popper` `<Popper>` render-prop component with
+ * `@floating-ui/react`'s `useFloating()` hook.
+ */
+function FloatingBody({ referenceElement, boundaryElement, allowEscape, placement, children }: FloatingBodyProps) {
+    const { refs, floatingStyles } = useFloating({
+        elements: { reference: referenceElement },
+        placement,
+        whileElementsMounted: autoUpdate,
+        middleware: allowEscape
+            ? [offset({ mainAxis: 6 })]
+            : [
+                offset({ mainAxis: 6 }),
+                flip({ boundary: boundaryElement }),
+                shift({ boundary: boundaryElement }),
+            ],
+    });
+
+    return children({ ref: refs.setFloating, style: floatingStyles });
+}
+
 /**
  * @nr1-docs
  *
@@ -139,28 +167,6 @@ export default class PopoverBody extends PureComponent<Prop> {
         onToggle?.(event, opened);
     }
 
-    _getPopperModifiers(boundariesElement: any, allowPopperToEscapeBoundary: boolean) {
-        // react-popper 2.x wraps @popperjs/core (PopperJS v2), which replaced the old
-        // keyed-object modifiers config (`{ flip: {...}, preventOverflow: {...} }`) with
-        // an array of `{ name, options }` modifier descriptors.
-        const offsetModifier = { name: 'offset', options: { offset: [0, 6] } };
-
-        if (
-            boundariesElement &&
-            !popperModifiers.has(boundariesElement) &&
-            !allowPopperToEscapeBoundary
-        ) {
-            popperModifiers.set(boundariesElement, [
-                offsetModifier,
-                { name: 'flip', options: { boundary: boundariesElement } },
-                { name: 'preventOverflow', options: { boundary: boundariesElement } },
-            ]);
-        }
-
-        // Only apply the offset for poppers that can escape, otherwise apply the full set of modifiers (which includes boundary configuration)
-        return allowPopperToEscapeBoundary ? [offsetModifier] : popperModifiers.get(boundariesElement);
-    }
-
     _getStyle(popoverBodyStyle: any) {
         const { style } = this.props;
 
@@ -202,13 +208,11 @@ export default class PopoverBody extends PureComponent<Prop> {
                     );
 
                     return createPortal(
-                        <Popper
-                            modifiers={this._getPopperModifiers(
-                                boundaryElement,
-                                false
-                            )}
-                            placement={DEFAULT_PLACEMENT as any}
+                        <FloatingBody
                             referenceElement={triggerNode}
+                            boundaryElement={boundaryElement}
+                            allowEscape={false}
+                            placement={DEFAULT_PLACEMENT as Placement}
                         >
                             {({ ref, style }) => {
                                 if (!opened) {
@@ -238,7 +242,7 @@ export default class PopoverBody extends PureComponent<Prop> {
                                     </ReferenceElement>
                                 );
                             }}
-                        </Popper>,
+                        </FloatingBody>,
 
                         portalTargetRef || triggerNode.ownerDocument.body
                     );

@@ -81,6 +81,10 @@ const args = yargs(hideBin(process.argv))
   .default('webview', false)
   .describe('webview', 'Run webview tests')
 
+  .boolean('framework')
+  .default('framework', false)
+  .describe('framework', 'Run framework informational tests')
+
   .string('B')
   .alias('B', 'report-to-bam')
   .describe('B', 'Supply a JSON string or file path with expected BAM configs to send agent traffic to BAM instead of local service')

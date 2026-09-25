@@ -1,0 +1,89 @@
+name: 'WDIO: Framework informational specs'
+
+# Informational-only framework compatibility checks (tests/framework-specs/**). Deliberately not
+# referenced by pull-request-checks.yml - only runs via manual dispatch or when chained from
+# another workflow (e.g. post-release-updates.yml).
+on:
+  workflow_dispatch:
+    inputs:
+      browser-target:
+        description: 'Which browser(s) and version(s) to target with the wdio test: chrome@latest OR chrome@* are examples'
+        required: false
+        type: string
+        default: 'chrome@latest'
+  workflow_call:
+    inputs:
+      ref:
+        description: 'Github branch ref to checkout and run tests on'
+        required: false
+        type: string
+      browser-target:
+        description: 'Which browser(s) and version(s) to target with the wdio test: chrome@latest OR chrome@* are examples'
+        required: false
+        type: string
+        default: 'chrome@latest'
+    secrets:
+      LAMBDA_USERNAME:
+        required: true
+      LAMBDA_ACCESS_KEY:
+        required: true
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      AWS_ROLE_ARN:
+        required: true
+      AWS_BUCKET:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  framework-specs:
+    name: WDIO Framework Informational Specs
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      LAMBDA_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+      LAMBDA_ACCESS_KEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing. Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Install dependencies
+        run: npm ci
+      - name: Bump framework test-build apps to latest stable versions
+        run: npm run test-builds:bump-latest
+      - name: Build npm package and framework test-build apps
+        run: npm run build:npm && npm run tools:test-builds
+      - name: Run WDIO framework informational tests
+        run: |
+          node --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
+            -T \
+            -b '${{ inputs.browser-target || 'chrome@latest' }}' \
+            --framework \
+            ${{ runner.debug && '-v -L -D -d' || '' }}
+        continue-on-error: true
+      - name: Generate framework informational report
+        run: npm run test-builds:framework-report
+      - name: Upload report to S3
+        id: s3-upload-report
+        uses: ./.github/actions/s3-upload
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          local_dir: .framework-results
+          bucket_dir: reports/framework-informational
+      - name: Summarize report URL
+        run: |
+          echo "### Framework informational report" >> "$GITHUB_STEP_SUMMARY"
+          echo "https://js-agent.newrelic.com/reports/framework-informational/report.html" >> "$GITHUB_STEP_SUMMARY"

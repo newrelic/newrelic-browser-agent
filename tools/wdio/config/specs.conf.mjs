@@ -10,7 +10,11 @@ export default function config () {
     return {
       specs: [path.join(
         path.resolve(__dirname, '../../..'),
-        args.webview ? 'tests/webview-specs/**/*.e2e.js' : 'tests/specs/**/*.e2e.js'
+        args.framework
+          ? 'tests/framework-specs/**/*.e2e.js'
+          : args.webview
+            ? 'tests/webview-specs/**/*.e2e.js'
+            : 'tests/specs/**/*.e2e.js'
       )]
     }
   } else {

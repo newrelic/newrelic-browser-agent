@@ -207,6 +207,8 @@
     "lt:update-browsers": "node ./tools/browsers-lists/lt-update-supported.mjs",
     "lt:upload-webview-assets": "node ./tools/lambda-test/upload-webview-assets.mjs",
     "tools:test-builds": "npm --prefix ./tools/test-builds run build-all",
+    "test-builds:bump-latest": "node ./tools/test-builds/bump-latest.mjs",
+    "test-builds:framework-report": "node ./tools/test-builds/generate-framework-report.mjs",
     "third-party-updates": "oss third-party manifest --includeOptDeps && oss third-party notices --includeOptDeps",
     "prepare": "husky install",
     "npm:build:esm": "npx babel --env-name npm-esm --out-dir dist/esm --out-file-extension .js ./src",

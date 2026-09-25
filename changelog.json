@@ -5,6 +5,31 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "b95f9cd065225ae4386a75bfa5e7acc4adb528d9",
+          "message": "Harvest SR on switch from ERROR to FULL mode",
+          "issues": [
+            "1864"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "055b9171ef6393da18ee64cc156c51af4ac1498e",
+          "message": "Add internal adoption metrics for AJAX Payloads",
+          "issues": [
+            "1842"
+          ]
+        }
+      ],
+      "version": "1.323.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "a0f78056-aae1-4e30-83e7-896a98e4fc3a",
+      "createTime": "2026-09-25T21:00:48.527Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "5f66da2e0836917a625fc5eca5cc9916936f35dc",
           "message": "Include observer API for SPV events",
           "issues": [
@@ -4283,5 +4308,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-09-11T02:57:52.395Z"
+  "updateTime": "2026-09-25T21:00:48.527Z"
 }

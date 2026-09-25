@@ -20,7 +20,7 @@ export const REPO_BASE = 'main'
 export const PR_BRANCH_NAME = 'release-automation--browsers-update'
 
 export const COMMIT_MESSAGE = 'chore: Post release repo updates'
-export const PR_BODY = `When this PR is merged, caniuse-lite database is updated, latest browserslist for SauceLabs is retrieved, and third-party dependencies docs are updates.
+export const PR_BODY = `When this PR is merged, caniuse-lite database is updated, latest browserslist for SauceLabs is retrieved, third-party dependencies docs are updated, and framework test-build apps (tools/test-builds/**) are bumped to their latest stable dependency versions.
 ---
 
 This PR was generated with post-release-updates GitHub action.`

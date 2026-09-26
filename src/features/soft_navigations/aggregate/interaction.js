@@ -7,6 +7,7 @@ import { generateUuid } from '../../../common/ids/unique-id'
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
 import { now } from '../../../common/timing/now'
 import { cleanURL } from '../../../common/url/clean-url'
+import { softNavApiSupported } from '../../../common/vitals/soft-navigation-support'
 import { NODE_TYPE, INTERACTION_STATUS, INTERACTION_TYPE, API_TRIGGER_NAME, IPL_TRIGGER_NAME, NO_LONG_TASK_WINDOW } from '../constants'
 import { BelNode } from './bel-node'
 import { createStringAdders } from '../../../common/payloads/payloads'
@@ -47,6 +48,8 @@ export class Interaction extends BelNode {
     this.forceSave = this.forceIgnore = false
     if (this.trigger === API_TRIGGER_NAME) this.createdByApi = true
     this.newURL = this.oldURL = (currentUrl || globalScope?.location.href)
+    // POC (soft-nav spike): lets customers query native-API vs. legacy-heuristic coverage, e.g. by userAgentOS, during rollout.
+    this.customAttributes.softNavApiSupported = softNavApiSupported
   }
 
   updateHistory (timestamp, newUrl) {

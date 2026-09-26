@@ -30,7 +30,7 @@ predictable and reviewable on the first pass.
 Most specs only need `cdn:build:local`/`cdn:watch`, but anything loading
 `test-builds/*-wrapper/**` (e.g. `tests/specs/npm/*.e2e.js`) needs the full
 `build:all`, since those pages run against the packaged npm tarball, not the
-CDN bundle. See [testing.md](.claude/docs/testing.md) for the full breakdown.
+CDN bundle. See [testing.md](.claude/rules/testing.md) for the full breakdown.
 
 ## Coding style
 
@@ -98,7 +98,9 @@ loader-size increase (and why it couldn't be avoided) in the PR description.
 
 ## Testing
 
-@.claude/docs/testing.md
+See [.claude/rules/testing.md](.claude/rules/testing.md) (auto-loaded every
+session — no import line needed, see
+[Extending this file](#extending-this-file)).
 
 A behavior change should ship with **both** a jest unit/component test and a
 wdio e2e spec confirming it, as the default expectation — not just whichever
@@ -109,7 +111,7 @@ conventions and a known e2e flakiness gotcha (auto-captured log sampling).
 
 ## Pull requests
 
-@.claude/docs/pr-guidelines.md
+See [.claude/rules/pr-guidelines.md](.claude/rules/pr-guidelines.md).
 
 PR title and description format is CI-enforced. See the linked doc before
 drafting any PR title/description in this repo.
@@ -120,7 +122,7 @@ Favor using the above command and its heuristics when creating an automated pull
 
 ## Architecture invariants
 
-@.claude/docs/architecture-invariants.md
+See [.claude/rules/architecture-invariants.md](.claude/rules/architecture-invariants.md).
 
 A short list of behaviors that look like bugs but are intentional. Read
 before "fixing" `deregister()`/`registeredEntities` retention or `register()`
@@ -128,9 +130,13 @@ manifest attribution.
 
 ## Known issues
 
-@.claude/docs/known-issues.md
+See [.claude/rules/known-issues.md](.claude/rules/known-issues.md).
 
 Confirmed-but-unfixed bugs, tracked by GitHub issue number.
+
+## Formatting
+
+See [.claude/rules/formatting.md](.claude/rules/formatting.md).
 
 ## Before you finish a task
 
@@ -151,16 +157,16 @@ or CI to catch them:
 6. New code that could live in either `instrument/` (loader) or `aggregate/`
    was placed in `aggregate/` unless there's a concrete reason it can't be —
    see [Build size: loader vs. aggregate](#build-size-loader-vs-aggregate).
-7. PR title/description follow [pr-guidelines.md](.claude/docs/pr-guidelines.md) exactly.
+7. PR title/description follow [pr-guidelines.md](.claude/rules/pr-guidelines.md) exactly.
 8. No unrelated "cleanup" of anything listed in
-   [architecture-invariants.md](.claude/docs/architecture-invariants.md).
+   [architecture-invariants.md](.claude/rules/architecture-invariants.md).
 
 ## Offer to open a PR when a task is done
 
 When the checklist above is satisfied and the change is committed on a
 non-`main` branch, don't just stop and wait to be asked — **offer** to open
 (or update) the PR, drafting the title/description per
-[pr-guidelines.md](.claude/docs/pr-guidelines.md) so the human only has to
+[pr-guidelines.md](.claude/rules/pr-guidelines.md) so the human only has to
 review and confirm, not dictate the format from scratch. Still treat actually
 running `gh pr create`/pushing as an action that needs the human's go-ahead
 first (per this repo's normal "confirm before shared-visibility actions"
@@ -173,9 +179,14 @@ user said they're still iterating, or there's no commit yet).
 Keep this root file short — it's loaded into every session. To add a new
 persistent, team-wide rule:
 
-1. Put the detailed content in a new `.claude/docs/<topic>.md` file.
-2. Add a short section here with an `@.claude/docs/<topic>.md` import line and
-   a one-sentence summary of when it matters.
+1. Put the detailed content in a new `.claude/rules/<topic>.md` file. Every
+   `.md` file under `.claude/rules/` is loaded automatically every session —
+   no import line needed, so this file doesn't need hand-maintaining as
+   `.claude/rules/` grows.
+2. Add a short section here (like the ones above) linking to it with a
+   one-sentence summary of when it matters, purely for human skimmability —
+   the content itself is already loaded regardless of whether this file
+   links to it.
 3. Keep anything personal, speculative, or credential-bearing out of this
-   file and out of `.claude/docs/` — that belongs in each engineer's own
+   file and out of `.claude/rules/` — that belongs in each engineer's own
    (gitignored) `.claude/settings.local.json` or personal notes, never here.

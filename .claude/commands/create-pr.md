@@ -4,7 +4,7 @@ description: Open (or update) a PR for the current branch against origin/main, d
 
 Open (or update) a pull request for the branch the user is currently on,
 targeting `origin/main`, using their own authenticated `gh` CLI identity.
-Follow `.claude/docs/pr-guidelines.md` exactly for title/description format —
+Follow `.claude/rules/pr-guidelines.md` exactly for title/description format —
 it is CI-enforced by `.github/workflows/validate-pr.yml`.
 
 ## Steps
@@ -39,7 +39,7 @@ it is CI-enforced by `.github/workflows/validate-pr.yml`.
      branch). If one exists, you'll be **updating** it (`gh pr edit`), not
      creating a new one — say so.
 
-5. **Draft the title and description**, following `.claude/docs/pr-guidelines.md`.
+5. **Draft the title and description**, following `.claude/rules/pr-guidelines.md`.
 
 6. **Show the full draft (title + body) to the user and ask for
    confirmation or edits before submitting anything to GitHub.** Do not run

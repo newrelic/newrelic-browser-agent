@@ -1,0 +1,79 @@
+# Standalone manual trigger for testing the nrql-health-check action (and the Slack message it
+# produces) against a single environment, without running the full internal-promotion pipeline.
+name: NRQL Health Check (manual test)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to check'
+        required: true
+        type: choice
+        default: staging
+        options:
+          - dev
+          - staging
+          - eu-prod
+          - jp-prod
+          - us-prod
+      window_minutes:
+        description: 'Minutes before/after "now" to compare. Keep at 3+ - with only 1-2 one-minute buckets per side, stddev is ~0 and everything with any traffic flags as significant.'
+        required: false
+        type: string
+        default: '10'
+      slack_channel:
+        description: 'Slack channel(s) to post the test message to'
+        required: false
+        type: choice
+        default: browser_agent_dev
+        options:
+          - browser_agent_dev
+          - notifications
+          - both
+
+permissions:
+  contents: read
+
+jobs:
+  health-check:
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    environment: change-tracking
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve per-environment dashboard link
+        id: resolve
+        run: |
+          case "${{ inputs.environment }}" in
+            dev) DASHBOARD_URL="https://staging.onenr.io/0EjOe0py5w6" ;;
+            staging) DASHBOARD_URL="https://staging.onenr.io/0nQxLG5N7QV" ;;
+            eu-prod) DASHBOARD_URL="https://staging.onenr.io/0nQxLG5NXQV" ;;
+            jp-prod) DASHBOARD_URL="https://staging.onenr.io/0gR7nJbxkwo" ;;
+            us-prod) DASHBOARD_URL="https://staging.onenr.io/0qQap7o0Zj1" ;;
+          esac
+          echo "dashboard_url=$DASHBOARD_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Run NRQL health check
+        id: health-check
+        uses: ./.github/actions/nrql-health-check
+        with:
+          api_key: ${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}
+          account_id: ${{ secrets.NR_BROWSER_MONITORING_ACCOUNT_ID }}
+          entity_guid: ${{ inputs.environment == 'dev' && secrets.NR_ENTITY_GUID_NR1_DEV
+            || inputs.environment == 'staging' && secrets.NR_ENTITY_GUID_NR1_STAGING
+            || inputs.environment == 'eu-prod' && secrets.NR_ENTITY_GUID_NR1_EU_PROD
+            || inputs.environment == 'jp-prod' && secrets.NR_ENTITY_GUID_NR1_JP_PROD
+            || secrets.NR_ENTITY_GUID_NR1_US_PROD }}
+          env_name: ${{ inputs.environment }}
+          window_minutes: ${{ inputs.window_minutes }}
+          run_url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          rollback_url: https://github.com/${{ github.repository }}/actions/workflows/internal-promotion.yml
+
+      - name: Send Slack notification
+        uses: ./.github/actions/slack-notification
+        with:
+          browser_agent_dev_channel_url: ${{ (inputs.slack_channel == 'browser_agent_dev' || inputs.slack_channel == 'both') && secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL || '' }}
+          notifications_channel_url: ${{ (inputs.slack_channel == 'notifications' || inputs.slack_channel == 'both') && secrets.SLACK_BROWSER_AGENT_NOTIFICATIONS_WEBHOOK_URL || '' }}
+          payload: ${{ steps.health-check.outputs.slack_payload }}
+          dashboard_url: ${{ steps.resolve.outputs.dashboard_url }}

@@ -6,8 +6,8 @@
   "dependencies": {
     "@floating-ui/react": "^0.27.20",
     "@newrelic/browser-agent": "file:../../../temp/newrelic-browser-agent-1.322.0.tgz",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "scripts": {
     "start": "vite",
@@ -17,8 +17,8 @@
   },
   "devDependencies": {
     "@types/node": "22.19.x",
-    "@types/react": "*",
-    "@types/react-dom": "^18.3.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react-swc": "3.11.0",
     "typescript": "4.9.5",
     "vite": "6.4.3"

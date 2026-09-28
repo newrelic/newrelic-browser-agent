@@ -16,12 +16,14 @@ export default class PopoverTrigger extends PureComponent<Prop> {
     static defaultProps = {};
     _triggerRef: any;
     _fallbackRef: any;
+    _nodeRef: any;
 
     constructor(props: Prop) {
         super(props);
 
         this._triggerRef = null;
         this._fallbackRef = createRef();
+        this._nodeRef = createRef();
     }
 
     /**
@@ -59,8 +61,9 @@ export default class PopoverTrigger extends PureComponent<Prop> {
         return (
             <PopoverTriggerContext.Consumer>
                 {(context: any) => (
-                    <ReferenceElement refSetter={context.setTriggerNode}>
+                    <ReferenceElement refSetter={context.setTriggerNode} nodeRef={this._nodeRef}>
                         <ReferenceCurrentRef
+                            nodeRef={this._nodeRef}
                             refSetter={(ref: HTMLElement | null) => {
                                 this._triggerRef = ref;
                             }}

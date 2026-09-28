@@ -1,8 +1,8 @@
-import { PureComponent } from 'react';
-import { findDOMNode } from 'react-dom';
+import { PureComponent, type RefObject } from 'react';
 
 type Prop = {
     children: any;
+    nodeRef: RefObject<Element | Text | null>;
     refSetter: (node: Element | Text | null) => void;
 };
 
@@ -26,11 +26,11 @@ export default class ReferenceElement extends PureComponent<Prop, State> {
     }
 
     componentDidMount() {
-        this._setRefNode(findDOMNode(this));
+        this._setRefNode(this.props.nodeRef.current);
     }
 
     componentDidUpdate() {
-        this._setRefNode(findDOMNode(this));
+        this._setRefNode(this.props.nodeRef.current);
     }
 
     componentWillUnmount() {
@@ -78,7 +78,6 @@ export default class ReferenceElement extends PureComponent<Prop, State> {
         this.events.clear();
     }
 
-    /* eslint-disable-next-line react/no-find-dom-node */
     _setRefNode(node: any) {
         if (node !== this.state.refNode) {
             this._removeEventListeners();

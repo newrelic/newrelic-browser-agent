@@ -115,6 +115,9 @@ export default class PopoverBody extends PureComponent<Prop> {
 
     _setOpenedState: ((event: React.MouseEvent, opened: boolean) => void) | null = null;
     _bodyRef: any;
+    _nodeRef: any;
+    _setFloatingRef: ((node: HTMLElement | null) => void) | null = null;
+    _mergedRef: (node: HTMLElement | null) => void;
 
     constructor(props: Prop) {
         super(props);
@@ -122,6 +125,17 @@ export default class PopoverBody extends PureComponent<Prop> {
         this._getStyle = this._getStyle.bind(this);
 
         this._bodyRef = createRef();
+        this._nodeRef = createRef();
+
+        // Stable identity across renders: `refs.setFloating` from useFloating()
+        // changes on every FloatingBody re-render if wrapped inline in JSX, which
+        // makes React detach/reattach the ref each time and re-triggers floating-ui's
+        // position calculation in a loop. Store the latest setter and expose one
+        // unchanging callback instead.
+        this._mergedRef = (node: HTMLElement | null) => {
+            this._setFloatingRef?.(node);
+            this._nodeRef.current = node;
+        };
 
         this.open = this.open.bind(this);
         this.close = this.close.bind(this);
@@ -215,6 +229,8 @@ export default class PopoverBody extends PureComponent<Prop> {
                             placement={DEFAULT_PLACEMENT as Placement}
                         >
                             {({ ref, style }) => {
+                                this._setFloatingRef = ref;
+
                                 if (!opened) {
                                     return null;
                                 }
@@ -226,9 +242,9 @@ export default class PopoverBody extends PureComponent<Prop> {
                                 };
 
                                 return (
-                                    <ReferenceElement refSetter={setBodyNode}>
+                                    <ReferenceElement refSetter={setBodyNode} nodeRef={this._nodeRef}>
                                         <div
-                                            ref={ref}
+                                            ref={this._mergedRef}
                                             style={this._getStyle(style)}
                                         >
                                             <div

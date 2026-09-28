@@ -1,8 +1,9 @@
 
-import { PureComponent } from 'react';
+import { PureComponent, type RefObject } from 'react';
 
 type Prop = {
     children: any;
+    nodeRef?: RefObject<HTMLElement | null>;
     refSetter: (ref: HTMLElement | null) => void;
 }
 export default class ReferenceCurrentRef extends PureComponent<Prop> {
@@ -18,8 +19,12 @@ export default class ReferenceCurrentRef extends PureComponent<Prop> {
     }
 
     _setRef() {
-        const { children } = this.props;
+        const { children, nodeRef } = this.props;
         const ref = children.ref && children.ref.current;
+
+        if (nodeRef) {
+            nodeRef.current = ref;
+        }
 
         this.props.refSetter(ref);
     }

@@ -21,6 +21,10 @@ beforeEach(() => {
   dtInstance = new DT(agent)
 })
 
+afterEach(() => {
+  jest.restoreAllMocks()
+})
+
 test('newrelic header has the correct format', () => {
   agent.init = {
     distributed_tracing: { enabled: true }
@@ -316,6 +320,73 @@ test.each([null, undefined])('trace headers are generated without trust key when
   expect(header.d.ac).toEqual(loaderConfig.accountID.toString())
   expect(header.d.ap).toEqual(loaderConfig.agentID.toString())
   expect(header.d.tk).toBeUndefined()
+})
+
+test('timestamp is corrected to NR server time when timeKeeper is ready', () => {
+  const rawNow = 1700000000123
+  const correctedNow = 1700000000000
+  jest.spyOn(Date, 'now').mockReturnValue(rawNow)
+
+  const correctAbsoluteTimestamp = jest.fn().mockReturnValue(correctedNow)
+  agent.runtime = {
+    timeKeeper: {
+      ready: true,
+      correctAbsoluteTimestamp
+    }
+  }
+  agent.init = {
+    distributed_tracing: { enabled: true }
+  }
+
+  const payload = dtInstance.generateTracePayload({ sameOrigin: true })
+
+  expect(correctAbsoluteTimestamp).toHaveBeenCalledWith(rawNow)
+  expect(payload.timestamp).toEqual(rawNow)
+  expect(payload.timestampCorrected).toEqual(correctedNow)
+
+  const header = JSON.parse(atob(payload.newrelicHeader))
+  expect(header.d.ti).toEqual(correctedNow)
+
+  const stateHeaderParts = payload.traceContextStateHeader.split('-')
+  expect(stateHeaderParts[stateHeaderParts.length - 1]).toEqual(correctedNow.toString())
+})
+
+test('timestamp is not corrected when timeKeeper exists but is not ready', () => {
+  const rawNow = 1700000000123
+  jest.spyOn(Date, 'now').mockReturnValue(rawNow)
+
+  const correctAbsoluteTimestamp = jest.fn()
+  agent.runtime = {
+    timeKeeper: {
+      ready: false,
+      correctAbsoluteTimestamp
+    }
+  }
+  agent.init = {
+    distributed_tracing: { enabled: true }
+  }
+
+  const payload = dtInstance.generateTracePayload({ sameOrigin: true })
+
+  expect(correctAbsoluteTimestamp).not.toHaveBeenCalled()
+  expect(payload.timestamp).toEqual(rawNow)
+  expect(payload.timestampCorrected).toBeUndefined()
+})
+
+test('timestamp is not corrected when timeKeeper has not been instantiated yet', () => {
+  const rawNow = 1700000000123
+  jest.spyOn(Date, 'now').mockReturnValue(rawNow)
+
+  // agent.runtime is intentionally left undefined here, matching the real agent's state before
+  // configure()/connect() has run and populated agentRef.runtime.timeKeeper
+  agent.init = {
+    distributed_tracing: { enabled: true }
+  }
+
+  const payload = dtInstance.generateTracePayload({ sameOrigin: true })
+
+  expect(payload.timestamp).toEqual(rawNow)
+  expect(payload.timestampCorrected).toBeUndefined()
 })
 
 test.each([null, undefined])('newrelic header is not added when btoa global is %s', (replacementBTOA) => {

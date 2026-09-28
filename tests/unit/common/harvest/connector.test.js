@@ -410,4 +410,51 @@ describe('Connector', () => {
     expect(session.write).not.toHaveBeenCalled()
     expect(agent.runtime.timeKeeper.ready).toEqual(false)
   })
+
+  test('readies timeKeeper from the serverTimeDiff written by the other tab when a race condition is hit', () => {
+    send.mockReturnValue(true)
+
+    const sessionState = {}
+    const session = {
+      state: { cachedRumResponse: undefined },
+      read: jest.fn(() => sessionState),
+      write: jest.fn()
+    }
+    const agent = {
+      init: { feature_flags: ['rum_v2'] },
+      info: { licenseKey: 'license-key', applicationID: 'app-id' },
+      runtime: {
+        appMetadata: {},
+        session
+      },
+      ee: { abort: jest.fn(), buffer: jest.fn(), emit: jest.fn() }
+    }
+
+    new Connector(agent)
+    // TimeKeeper was constructed before any serverTimeDiff existed in the session, so it isn't ready yet.
+    expect(agent.runtime.timeKeeper.ready).toEqual(false)
+
+    const cbFinished = send.mock.calls[0][1].cbFinished
+
+    // Simulate another tab winning the race: it wrote both the cached response and its own serverTimeDiff.
+    session.state.cachedRumResponse = {
+      app: { agents: [{ entityGuid: 'cached-guid' }], nrServerTime: Date.now() + 10000 },
+      err: 1
+    }
+    sessionState.serverTimeDiff = 500
+
+    cbFinished({
+      sent: true,
+      status: 200,
+      retry: false,
+      xhr: { status: 200 },
+      responseText: JSON.stringify({
+        app: { agents: [{ entityGuid: 'live-guid' }], nrServerTime: Date.now() + 10000 },
+        config: { err: 0 }
+      })
+    })
+
+    expect(agent.runtime.timeKeeper.ready).toEqual(true)
+    expect(agent.runtime.timeKeeper.localTimeDiff).toEqual(500)
+  })
 })

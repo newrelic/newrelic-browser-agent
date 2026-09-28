@@ -73,6 +73,8 @@ export class Connector {
       if (cachedResp) {
         // Report that we've seen a race condition on updating session state
         handle(SUPPORTABILITY_METRIC_CHANNEL, ['Session/RaceCondition/Seen'], undefined, FEATURE_NAMES.metrics, this.#agentRef.ee)
+        // The other tab/agent that wrote this cached response also wrote its own serverTimeDiff to the session around the same time. TimeKeeper was constructed before that happened, so re-check the session now to pick it up.
+        this.#agentRef.runtime.timeKeeper.processStoredDiff()
         // `cachedRumResponse` is stored flat (`{ app, ...flags }`, matching the old v1 RUM response), so re-nest it before applying.
         const { app, ...config } = cachedResp
         this.#applyConnectResponse({ app, config })

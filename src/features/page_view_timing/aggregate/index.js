@@ -16,6 +16,7 @@ import { firstPaint } from '../../../common/vitals/first-paint'
 import { interactionToNextPaint } from '../../../common/vitals/interaction-to-next-paint'
 import { largestContentfulPaint } from '../../../common/vitals/largest-contentful-paint'
 import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
+import { now } from '../../../common/timing/now'
 import { VITAL_NAMES } from '../../../common/vitals/constants'
 import { initiallyHidden, getNavigationEntry, initialLocation } from '../../../common/constants/runtime'
 import { eventOrigin } from '../../../common/util/event-origin'
@@ -100,6 +101,15 @@ export class Aggregate extends AggregateBase {
 
     attrs.webdriverDetected = webdriverDetected
 
+    // CLS's value is a unitless score (not a time offset), so its timestamp must be anchored to the current
+    // relative time instead. All other timing nodes' value is a ms offset from page origin, i.e. already the
+    // relative time at which they occurred.
+    const relativeTime = name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT ? now() : value
+    const timeKeeper = this.agentRef.runtime.timeKeeper
+    if (timeKeeper?.ready && Number.isFinite(relativeTime)) {
+      attrs.timestamp = Math.floor(timeKeeper.correctRelativeTimestamp(relativeTime))
+    }
+
     const timing = {
       name,
       value,
@@ -134,7 +144,7 @@ export class Aggregate extends AggregateBase {
 
   #getGlobalCustomAttributes () {
     const reservedAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elTag', 'elUrl', 'net-type',
-      'net-etype', 'net-rtt', 'net-dlink', 'webdriverDetected']
+      'net-etype', 'net-rtt', 'net-dlink', 'webdriverDetected', 'timestamp']
 
     return Object.fromEntries(
       Object.entries(this.agentRef.info.jsAttributes || {}).filter(([key]) => !reservedAttributes.includes(key))

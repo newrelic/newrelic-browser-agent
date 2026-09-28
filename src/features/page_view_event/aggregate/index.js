@@ -126,7 +126,7 @@ export class Aggregate extends AggregateBase {
       this.rumStartTime = now() // this should be reset at the beginning of each RUM call for proper timeKeeper calculation in coordination with postHarvestCleanup
       const timeKeeper = this.agentRef.runtime.timeKeeper
       if (timeKeeper?.ready) {
-        queryParameters.timestamp = Math.floor(timeKeeper.correctRelativeTimestamp(this.rumStartTime))
+        queryParameters.timestamp = timeKeeper.correctedOriginTime // a "PageView" is set to represent the page's (server adjusted) origin time rather than when event is recorded/harvested
       }
       return queryParameters
     }

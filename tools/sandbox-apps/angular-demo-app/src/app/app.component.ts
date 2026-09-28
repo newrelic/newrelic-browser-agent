@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
 
 @Component({
-  selector: 'app-root',
-  template: `
+    selector: 'app-root',
+    template: `
     <nav class="navbar">
       <div class="nav-container">
         <h1 class="logo">Demo App</h1>
@@ -14,7 +14,7 @@ import { Component } from '@angular/core';
     </nav>
     <router-outlet></router-outlet>
   `,
-  styles: [`
+    styles: [`
     .navbar {
       background-color: #dd0031;
       padding: 0;
@@ -60,7 +60,8 @@ import { Component } from '@angular/core';
       background-color: rgba(255,255,255,0.2);
       font-weight: bold;
     }
-  `]
+  `],
+    standalone: false
 })
 export class AppComponent {
   title = 'demo-app';

@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
 
 @Component({
-  selector: 'app-home',
-  template: `
+    selector: 'app-home',
+    template: `
     <div style="text-align:center" class="content">
       <h1>
         Welcome to {{title}}!
@@ -23,7 +23,7 @@ import { Component } from '@angular/core';
       </li>
     </ul>
   `,
-  styles: [`
+    styles: [`
     .content {
       padding: 20px;
     }
@@ -32,7 +32,8 @@ import { Component } from '@angular/core';
       list-style-type: none;
       padding: 0;
     }
-  `]
+  `],
+    standalone: false
 })
 export class HomeComponent {
   title = 'demo-app';

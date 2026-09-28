@@ -101,6 +101,36 @@ describe('storeXhr', () => {
     )
   })
 
+  describe('distributed tracing timestamp correction', () => {
+    beforeEach(() => {
+      delete getNREUMInitializedAgent(fakeAgent.agentIdentifier).features
+    })
+
+    test('does not re-correct a dt timestamp that is already corrected', () => {
+      const correctSpy = jest.spyOn(fakeAgent.runtime.timeKeeper, 'correctAbsoluteTimestamp')
+      context.dt = { spanId: 'span-1', traceId: 'trace-1', timestamp: 123456, timestampCorrected: 123456 }
+
+      ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
+
+      expect(correctSpy).not.toHaveBeenCalled()
+      const ajaxEvent = ajaxAggregate.events.get()[0]
+      expect(ajaxEvent.spanId).toEqual('span-1')
+      expect(ajaxEvent.traceId).toEqual('trace-1')
+      expect(ajaxEvent.spanTimestamp).toEqual(123456)
+    })
+
+    test('corrects a dt timestamp that has not been corrected yet', () => {
+      const correctSpy = jest.spyOn(fakeAgent.runtime.timeKeeper, 'correctAbsoluteTimestamp')
+      context.dt = { spanId: 'span-2', traceId: 'trace-2', timestamp: 654321 }
+
+      ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
+
+      expect(correctSpy).toHaveBeenCalledWith(654321)
+      const ajaxEvent = ajaxAggregate.events.get()[0]
+      expect(ajaxEvent.spanTimestamp).toEqual(Math.floor(correctSpy.mock.results[0].value))
+    })
+  })
+
   describe('data shapes', () => {
     beforeEach(() => {
       fakeAgent.features = {}

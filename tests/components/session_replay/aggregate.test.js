@@ -176,6 +176,24 @@ describe('Session Replay Error Mode Behaviors', () => {
     ee.get(mainAgent.agentIdentifier).emit(ERROR_DURING_REPLAY, ['test1'], undefined, FEATURE_NAMES.sessionReplay, ee.get(mainAgent.agentIdentifier))
 
     expect(sessionReplayAggregate.mode).toEqual(MODE.FULL)
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledWith(sessionReplayAggregate)
+  })
+
+  test('switchToFull from a non-ERROR mode does not force an extra harvest', async () => {
+    sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
+    await new Promise(process.nextTick)
+
+    // simulate failed harvest with retryable response -- this forces mode to OFF
+    sessionReplayAggregate.postHarvestCleanup({ sent: true, retry: true })
+    expect(sessionReplayAggregate.mode).toEqual(MODE.OFF)
+
+    mainAgent.runtime.harvester.triggerHarvestFor.mockClear()
+
+    // simulate successful retry -- switchToFull() runs here with prevMode === MODE.OFF, not MODE.ERROR
+    sessionReplayAggregate.postHarvestCleanup({ sent: true, retry: false })
+    expect(sessionReplayAggregate.mode).toEqual(MODE.FULL)
+
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).not.toHaveBeenCalled()
   })
 })
 

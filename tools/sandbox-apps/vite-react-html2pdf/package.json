@@ -13,13 +13,13 @@
   "dependencies": {
     "@newrelic/browser-agent": "file:../../../temp/newrelic-browser-agent-1.317.0.tgz",
     "buffer": "6.0.3",
-    "html2pdf.js": "0.12.1",
+    "html2pdf.js": "0.14.0",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react-swc": "4.1.0",
-    "vite": "7.1.6"
+    "vite": "7.3.5"
   },
   "author": "",
   "license": "ISC",

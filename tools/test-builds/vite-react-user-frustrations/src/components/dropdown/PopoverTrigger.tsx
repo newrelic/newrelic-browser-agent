@@ -1,78 +1,50 @@
-import React, { cloneElement, createRef, PureComponent } from 'react';
+import { cloneElement, useContext, useRef } from 'react';
 
 import { PopoverTriggerContext } from './popover-context';
 import ReferenceCurrentRef from './ReferenceCurrentRef';
 import ReferenceElement from './ReferenceElement';
 
 type Prop = {
-    children: any
+    children: any;
 }
+
+function renderTrigger(children: any, fallbackRef: any, triggerProps: any) {
+    if (
+        typeof children === 'string' ||
+        typeof children === 'number' ||
+        typeof children === 'boolean'
+    ) {
+        return <div ref={fallbackRef}>{children}</div>;
+    }
+
+    if (typeof children === 'function') {
+        const triggerElement = children(triggerProps);
+
+        return cloneElement(triggerElement, {
+            ref: triggerElement.ref || fallbackRef,
+        });
+    }
+
+    return cloneElement(children, {
+        ref: children.ref || fallbackRef,
+    });
+}
+
 /**
  * Child element of the `<Popover>` component.
  *
  * Controls the opening/closing of the Popover overlay.
  */
-export default class PopoverTrigger extends PureComponent<Prop> {
-    static defaultProps = {};
-    _triggerRef: any;
-    _fallbackRef: any;
-    _nodeRef: any;
+export default function PopoverTrigger({ children }: Prop) {
+    const context = useContext(PopoverTriggerContext) as any;
+    const fallbackRef = useRef(null);
+    const nodeRef = useRef(null);
 
-    constructor(props: Prop) {
-        super(props);
-
-        this._triggerRef = null;
-        this._fallbackRef = createRef();
-        this._nodeRef = createRef();
-    }
-
-    /**
-     * Focus the PopoverTrigger children.
-     */
-    focus() {
-        if (typeof this._triggerRef?.focus === 'function') this._triggerRef.focus();
-    }
-
-    renderTrigger(triggerProps: any) {
-        const { children } = this.props;
-
-        if (
-            typeof children === 'string' ||
-            typeof children === 'number' ||
-            typeof children === 'boolean'
-        ) {
-            return <div ref={this._fallbackRef}>{children}</div>;
-        }
-
-        if (typeof children === 'function') {
-            const triggerElement = children(triggerProps);
-
-            return cloneElement(triggerElement, {
-                ref: triggerElement.ref || this._fallbackRef,
-            });
-        }
-
-        return cloneElement(children, {
-            ref: children.ref || this._fallbackRef,
-        });
-    }
-
-    render() {
-        return (
-            <PopoverTriggerContext.Consumer>
-                {(context: any) => (
-                    <ReferenceElement refSetter={context.setTriggerNode} nodeRef={this._nodeRef}>
-                        <ReferenceCurrentRef
-                            nodeRef={this._nodeRef}
-                            refSetter={(ref: HTMLElement | null) => {
-                                this._triggerRef = ref;
-                            }}
-                        >
-                            {this.renderTrigger({ opened: context.opened, controlled: context.controlled })}
-                        </ReferenceCurrentRef>
-                    </ReferenceElement>
-                )}
-            </PopoverTriggerContext.Consumer>
-        );
-    }
+    return (
+        <ReferenceElement refSetter={context.setTriggerNode} nodeRef={nodeRef}>
+            <ReferenceCurrentRef nodeRef={nodeRef} refSetter={() => {}}>
+                {renderTrigger(children, fallbackRef, { opened: context.opened, controlled: context.controlled })}
+            </ReferenceCurrentRef>
+        </ReferenceElement>
+    );
 }

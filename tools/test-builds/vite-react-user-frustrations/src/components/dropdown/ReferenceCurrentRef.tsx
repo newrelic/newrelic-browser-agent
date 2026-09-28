@@ -1,35 +1,23 @@
-
-import { PureComponent, type RefObject } from 'react';
+import { useEffect, type RefObject } from 'react';
 
 type Prop = {
     children: any;
+    // `children.ref.current` can be a DOM node or, for a forwardRef component
+    // exposing an imperative handle (e.g. PopoverBody), the handle object.
     nodeRef?: RefObject<HTMLElement | null>;
-    refSetter: (ref: HTMLElement | null) => void;
+    refSetter: (ref: any) => void;
 }
-export default class ReferenceCurrentRef extends PureComponent<Prop> {
 
-    static defaultProps = {};
-
-    componentDidMount() {
-        this._setRef();
-    }
-
-    componentDidUpdate() {
-        this._setRef();
-    }
-
-    _setRef() {
-        const { children, nodeRef } = this.props;
+export default function ReferenceCurrentRef({ children, nodeRef, refSetter }: Prop) {
+    useEffect(() => {
         const ref = children.ref && children.ref.current;
 
         if (nodeRef) {
             nodeRef.current = ref;
         }
 
-        this.props.refSetter(ref);
-    }
+        refSetter(ref);
+    });
 
-    render() {
-        return this.props.children;
-    }
+    return children;
 }

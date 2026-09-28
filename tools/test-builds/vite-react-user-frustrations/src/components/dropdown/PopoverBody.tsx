@@ -1,4 +1,4 @@
-import React, { createRef, PureComponent } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { autoUpdate, flip, offset, shift, useFloating, type Placement } from '@floating-ui/react';
 
@@ -27,6 +27,12 @@ type Prop = {
     placementType?: string;
     style?: React.CSSProperties;
 }
+
+export type PopoverBodyHandle = {
+    open: (event: React.MouseEvent) => void;
+    close: (event: React.MouseEvent) => void;
+    toggle: (event: React.MouseEvent, opened: boolean) => void;
+};
 
 function isOverflownHorizontal(element: HTMLElement) {
     return element.scrollWidth > element.clientWidth;
@@ -110,166 +116,136 @@ function FloatingBody({ referenceElement, boundaryElement, allowEscape, placemen
  *
  * Contains the content of the Popover overlay.
  */
-export default class PopoverBody extends PureComponent<Prop> {
-    static PLACEMENT_TYPE = PLACEMENT_TYPE;
+const PopoverBody = forwardRef<PopoverBodyHandle, Prop>(function PopoverBody(props, ref) {
+    // Mirrors the class version reading `this.props`/`this.state` fresh on every
+    // call: the imperative handle and event listeners below are created once
+    // and read the latest props/callback through these refs instead of closing
+    // over values from the render that created them.
+    const propsRef = useRef(props);
+    propsRef.current = props;
 
-    _setOpenedState: ((event: React.MouseEvent, opened: boolean) => void) | null = null;
-    _bodyRef: any;
-    _nodeRef: any;
-    _setFloatingRef: ((node: HTMLElement | null) => void) | null = null;
-    _mergedRef: (node: HTMLElement | null) => void;
+    const setOpenedStateRef = useRef<((event: React.MouseEvent, opened: boolean) => void) | null>(null);
+    const nodeRef = useRef<HTMLElement | null>(null);
+    const setFloatingRef = useRef<((node: HTMLElement | null) => void) | null>(null);
 
-    constructor(props: Prop) {
-        super(props);
+    const handleRef = useRef<PopoverBodyHandle>({
+        open(event) {
+            const { onOpen, onToggle } = propsRef.current;
 
-        this._getStyle = this._getStyle.bind(this);
-
-        this._bodyRef = createRef();
-        this._nodeRef = createRef();
-
-        // Stable identity across renders: `refs.setFloating` from useFloating()
-        // changes on every FloatingBody re-render if wrapped inline in JSX, which
-        // makes React detach/reattach the ref each time and re-triggers floating-ui's
-        // position calculation in a loop. Store the latest setter and expose one
-        // unchanging callback instead.
-        this._mergedRef = (node: HTMLElement | null) => {
-            this._setFloatingRef?.(node);
-            this._nodeRef.current = node;
-        };
-
-        this.open = this.open.bind(this);
-        this.close = this.close.bind(this);
-        this.toggle = this.toggle.bind(this);
-    }
-
-    /**
-     * Closes the Popover body.
-     */
-    close(event: React.MouseEvent) {
-        const { onClose, onToggle } = this.props;
-
-        this._setOpenedState?.(event, false);
-        onClose?.(event);
-        onToggle?.(event, false);
-    }
-
-    /**
-     * Opens the Popover body.
-     */
-    open(event: React.MouseEvent) {
-        const { onOpen, onToggle } = this.props;
-
-        this._setOpenedState?.(event, true);
-        onOpen?.(event);
-        onToggle?.(event, true);
-    }
-
-    /**
-     * Toggles the Popover body.
-     */
-    toggle(event: React.MouseEvent, opened: boolean) {
-        const { onClose, onOpen, onToggle } = this.props;
-
-        this._setOpenedState?.(event, opened);
-
-        if (opened) {
+            setOpenedStateRef.current?.(event, true);
             onOpen?.(event);
-        } else {
+            onToggle?.(event, true);
+        },
+        close(event) {
+            const { onClose, onToggle } = propsRef.current;
+
+            setOpenedStateRef.current?.(event, false);
             onClose?.(event);
-        }
+            onToggle?.(event, false);
+        },
+        toggle(event, opened) {
+            const { onClose, onOpen, onToggle } = propsRef.current;
 
-        onToggle?.(event, opened);
-    }
+            setOpenedStateRef.current?.(event, opened);
 
-    _getStyle(popoverBodyStyle: any) {
-        const { style } = this.props;
+            if (opened) {
+                onOpen?.(event);
+            } else {
+                onClose?.(event);
+            }
 
+            onToggle?.(event, opened);
+        },
+    });
+
+    useImperativeHandle(ref, () => handleRef.current, []);
+
+    // Stable identity across renders: `refs.setFloating` from useFloating()
+    // changes on every FloatingBody re-render if wrapped inline in JSX, which
+    // makes React detach/reattach the ref each time and re-triggers floating-ui's
+    // position calculation in a loop. Store the latest setter and expose one
+    // unchanging callback instead.
+    const mergedRef = useRef((node: HTMLElement | null) => {
+        setFloatingRef.current?.(node);
+        nodeRef.current = node;
+    }).current;
+
+    function getStyle(popoverBodyStyle: any) {
         return {
             ...popoverBodyStyle,
-            ...style,
+            ...propsRef.current.style,
         };
     }
 
-    renderBody(portalTargetRef: any, boundaryRef: any) {
-        const { children } = this.props;
+    return (
+        <PopoverBodyContext.Consumer>
+            {(contextValue) => {
+                const {
+                    opened,
+                    triggerNode,
+                    setBodyNode,
+                    triggerRef,
+                    setOpenedState,
+                } = contextValue as {
+                    opened: any;
+                    triggerNode: any;
+                    setBodyNode: any;
+                    triggerRef: any;
+                    setOpenedState: any;
+                };
 
-        return (
-            <PopoverBodyContext.Consumer>
-                {(contextValue) => {
-                    const {
-                        opened,
-                        triggerNode,
-                        setBodyNode,
-                        triggerRef,
-                        setOpenedState,
-                    } = contextValue as {
-                        opened: any;
-                        triggerNode: any;
-                        setBodyNode: any;
-                        triggerRef: any;
-                        setOpenedState: any;
-                    };
+                setOpenedStateRef.current = setOpenedState;
 
-                    this._setOpenedState = setOpenedState;
+                if (!triggerNode) {
+                    return null;
+                }
 
-                    if (!triggerNode) {
-                        return null;
-                    }
+                const boundaryElement = getScrollParent(triggerNode, triggerNode.ownerDocument.body);
 
-                    const boundaryElement = getScrollParent(
-                        triggerNode,
-                        boundaryRef || portalTargetRef || triggerNode.ownerDocument.body
-                    );
+                return createPortal(
+                    <FloatingBody
+                        referenceElement={triggerNode}
+                        boundaryElement={boundaryElement}
+                        allowEscape={false}
+                        placement={DEFAULT_PLACEMENT as Placement}
+                    >
+                        {({ ref: floatingRef, style }) => {
+                            setFloatingRef.current = floatingRef;
 
-                    return createPortal(
-                        <FloatingBody
-                            referenceElement={triggerNode}
-                            boundaryElement={boundaryElement}
-                            allowEscape={false}
-                            placement={DEFAULT_PLACEMENT as Placement}
-                        >
-                            {({ ref, style }) => {
-                                this._setFloatingRef = ref;
+                            if (!opened) {
+                                return null;
+                            }
 
-                                if (!opened) {
-                                    return null;
-                                }
+                            const listContext = {
+                                triggerRef,
+                                triggerNode,
+                                bodyRef: handleRef.current,
+                            };
 
-                                const context = {
-                                    triggerRef,
-                                    triggerNode,
-                                    bodyRef: this,
-                                };
-
-                                return (
-                                    <ReferenceElement refSetter={setBodyNode} nodeRef={this._nodeRef}>
-                                        <div
-                                            ref={this._mergedRef}
-                                            style={this._getStyle(style)}
-                                        >
-                                            <div
-                                                ref={this._bodyRef}
-                                            >
-                                                <PopoverListContext.Provider value={context}>
-                                                    {children}
-                                                </PopoverListContext.Provider>
-                                            </div>
+                            return (
+                                <ReferenceElement refSetter={setBodyNode} nodeRef={nodeRef}>
+                                    <div
+                                        ref={mergedRef}
+                                        style={getStyle(style)}
+                                    >
+                                        <div>
+                                            <PopoverListContext.Provider value={listContext}>
+                                                {propsRef.current.children}
+                                            </PopoverListContext.Provider>
                                         </div>
-                                    </ReferenceElement>
-                                );
-                            }}
-                        </FloatingBody>,
+                                    </div>
+                                </ReferenceElement>
+                            );
+                        }}
+                    </FloatingBody>,
 
-                        portalTargetRef || triggerNode.ownerDocument.body
-                    );
-                }}
-            </PopoverBodyContext.Consumer>
-        );
-    }
+                    triggerNode.ownerDocument.body
+                );
+            }}
+        </PopoverBodyContext.Consumer>
+    );
+});
 
-    render() {
-        return (
-            this.renderBody(null, null)
-        );
-    }
-}
+PopoverBody.displayName = 'PopoverBody';
+
+export default PopoverBody;

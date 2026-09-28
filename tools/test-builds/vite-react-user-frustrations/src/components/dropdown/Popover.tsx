@@ -1,234 +1,169 @@
-import React, { cloneElement, createRef, PureComponent } from "react";
+import { cloneElement, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import ReferenceCurrentRef from "./ReferenceCurrentRef";
 import { PopoverBodyContext, PopoverTriggerContext } from "./popover-context";
+import type { PopoverBodyHandle } from "./PopoverBody";
 
 type Props = {
-  children: any;
-  onChange?: (evt: Event, opened: boolean) => void;
-  opened?: boolean;
+    children: any;
+    onChange?: (evt: Event, opened: boolean) => void;
+    opened?: boolean;
 };
-type State = {
-    opened: boolean;
-    triggerNode: HTMLElement | null;
-    triggerRef: any;
-    bodyNode: HTMLElement | null;
-    bodyRef: any;
-}
-export default class Popover extends PureComponent<Props, State> {
-    _sectionRefs: {};
-    _fallbackBodyRef: React.RefObject<unknown>;
-    _fallbackTriggerRef: React.RefObject<unknown>;
-    _onClickDelegated: any;
 
-    static getDerivedStateFromProps({ opened }: { opened?: boolean}) {
-            if (typeof opened === 'boolean') {
-                return {
-                    opened,
-                };
-            }
+export default function Popover({ children, onChange, opened: openedProp }: Props) {
+    const isControlled = typeof openedProp === 'boolean';
 
-            return null;
+    const [internalOpened, setInternalOpened] = useState(false);
+    const opened = isControlled ? !!openedProp : internalOpened;
+
+    const [triggerNode, setTriggerNodeState] = useState<HTMLElement | null>(null);
+    const [triggerRef, setTriggerRef] = useState<HTMLElement | null>(null);
+    const [bodyNode, setBodyNode] = useState<HTMLElement | null>(null);
+    const [bodyRef, setBodyRef] = useState<PopoverBodyHandle | null>(null);
+
+    const fallbackBodyRef = useRef(null);
+    const fallbackTriggerRef = useRef(null);
+    const triggerNodeRef = useRef<HTMLElement | null>(null);
+
+    // Mirrors the class version's `this.state`/`this.props` always being fresh:
+    // the stable handler functions below read through this ref instead of
+    // closing over the values from the render that created them.
+    const latestRef = useRef({ opened, triggerNode, bodyNode, bodyRef, isControlled, onChange });
+    latestRef.current = { opened, triggerNode, bodyNode, bodyRef, isControlled, onChange };
+
+    const setOpenedState = useRef((evt: Event, nextOpened?: boolean) => {
+        const { isControlled: currentControlled, onChange: currentOnChange } = latestRef.current;
+
+        if (currentControlled) {
+            currentOnChange?.(evt, nextOpened as boolean);
+
+            return;
         }
 
-        constructor(props: Props) {
-            super(props);
+        if (typeof nextOpened === 'undefined') {
+            setInternalOpened((prev) => !prev);
 
-            this.state = {
-                opened: false,
-                triggerNode: null,
-                triggerRef: null,
-                bodyNode: null,
-                bodyRef: null,
-            };
-
-            this._sectionRefs = {};
-
-            this._fallbackBodyRef = createRef();
-            this._fallbackTriggerRef = createRef();
-
-            this._onActionOutside = this._onActionOutside.bind(this);
-            this._onClick = this._onClick.bind(this);
-            this._setBodyNode = this._setBodyNode.bind(this);
-            this._setBodyRef = this._setBodyRef.bind(this);
-            this._setTriggerNode = this._setTriggerNode.bind(this);
-            this._setTriggerRef = this._setTriggerRef.bind(this);
-            this._setOpenedState = this._setOpenedState.bind(this);
-            this._delegateTriggerHandler = this._delegateTriggerHandler.bind(this);
-
-            this._onClickDelegated = this._delegateTriggerHandler(this._onClick);
+            return;
         }
 
-        componentWillUnmount() {
-            const oldRef = this.state.triggerNode;
+        setInternalOpened(nextOpened);
+    }).current;
 
-            // Clean up properly so there aren't any event handler leaks
-            if (oldRef) {
-                const oldWindow = oldRef.ownerDocument.defaultView;
-                oldWindow?.removeEventListener('click', this._onActionOutside);
-                oldWindow?.removeEventListener('click', this._onClickDelegated);
-            }
-        }
+    const onClick = useRef((evt: Event) => {
+        const { bodyRef: currentBodyRef, opened: currentOpened, isControlled: currentControlled, onChange: currentOnChange } = latestRef.current;
 
-        _delegateTriggerHandler(handler: (evt: Event) => void) {
-            return (evt: Event) => {
-                if (this.state.triggerNode && this.state.triggerNode.contains(evt.target as HTMLElement)) {
-                    return handler(evt);
-                }
-            };
-        }
-
-        _focusTrigger() {
-            this.state.triggerRef?.focus();
-        }
-
-        _isControlled() {
-            return typeof this.props.opened === 'boolean';
-        }
-
-        _onActionOutside(evt: Event) {
-            if (!this.state.opened) {
-                return;
-            }
-
-            for (let node: ParentNode | null = evt.target as ParentNode; node; node = node.parentNode) {
-                if (node === this.state.triggerNode || node === this.state.bodyNode) {
-                    return;
-                }
-            }
-
-            if (this._isControlled()) {
-                this.props.onChange?.(evt, false);
+        if (!evt.defaultPrevented) {
+            if (currentControlled) {
+                currentOnChange?.(evt, !currentOpened);
             } else {
-                this.state.bodyRef.close(evt);
+                currentBodyRef?.toggle(evt as unknown as MouseEvent, !currentOpened);
             }
         }
+    }).current;
 
-        _onClick(evt: Event) {
-            const { bodyRef, opened } = this.state;
+    const onClickDelegated = useRef((evt: Event) => {
+        const { triggerNode: currentTriggerNode } = latestRef.current;
 
-            if (!evt.defaultPrevented) {
-                if (this._isControlled()) {
-                    this.props.onChange?.(evt, !opened);
-                } else {
-                    bodyRef.toggle(evt, !opened);
-                }
-            }
+        if (currentTriggerNode && currentTriggerNode.contains(evt.target as HTMLElement)) {
+            return onClick(evt);
+        }
+    }).current;
+
+    const onActionOutside = useRef((evt: Event) => {
+        const {
+            opened: currentOpened,
+            triggerNode: currentTriggerNode,
+            bodyNode: currentBodyNode,
+            isControlled: currentControlled,
+            onChange: currentOnChange,
+            bodyRef: currentBodyRef,
+        } = latestRef.current;
+
+        if (!currentOpened) {
+            return;
         }
 
-        _setBodyNode(newRef: HTMLElement | null) {
-            const oldRef = this.state.bodyNode;
-
-            if (oldRef === newRef) {
+        for (let node: ParentNode | null = evt.target as ParentNode; node; node = node.parentNode) {
+            if (node === currentTriggerNode || node === currentBodyNode) {
                 return;
             }
-
-            this.setState({ bodyNode: newRef });
         }
 
-        _setBodyRef(bodyRef: HTMLElement | null) {
-            this.setState({ bodyRef });
+        if (currentControlled) {
+            currentOnChange?.(evt, false);
+        } else {
+            currentBodyRef?.close(evt as unknown as MouseEvent);
+        }
+    }).current;
+
+    const setTriggerNode = useRef((newRef: HTMLElement | null) => {
+        const oldRef = triggerNodeRef.current;
+
+        if (oldRef === newRef) {
+            return;
         }
 
+        if (oldRef) {
+            const oldWindow = oldRef.ownerDocument.defaultView;
 
-        _setOpenedState(evt: Event, opened: boolean) {
-            if (this._isControlled()) {
-                this.props.onChange?.(evt, opened);
-
-                return;
-            }
-
-            if (typeof opened === 'undefined') {
-                this.setState((prevState) => {
-                    return {
-                        opened: !prevState.opened,
-                    };
-                });
-
-                return;
-            }
-
-            this.setState({ opened });
+            oldWindow?.removeEventListener('click', onActionOutside);
+            oldWindow?.removeEventListener('click', onClickDelegated);
         }
 
-        _setTriggerNode(newRef: HTMLElement | null) {
-            const oldRef = this.state.triggerNode;
+        if (newRef) {
+            const newWindow = newRef.ownerDocument.defaultView;
 
-            if (oldRef === newRef) {
-                return;
-            }
+            newWindow?.addEventListener('click', onActionOutside);
+            newWindow?.addEventListener('click', onClickDelegated);
+        }
+
+        triggerNodeRef.current = newRef;
+        setTriggerNodeState(newRef);
+    }).current;
+
+    // Clean up properly so there aren't any event handler leaks.
+    useEffect(() => {
+        return () => {
+            const oldRef = triggerNodeRef.current;
 
             if (oldRef) {
                 const oldWindow = oldRef.ownerDocument.defaultView;
 
-                oldWindow?.removeEventListener('click', this._onActionOutside);
-                oldWindow?.removeEventListener('click', this._onClickDelegated);
+                oldWindow?.removeEventListener('click', onActionOutside);
+                oldWindow?.removeEventListener('click', onClickDelegated);
             }
+        };
+    }, [onActionOutside, onClickDelegated]);
 
-            if (newRef) {
-                const newWindow = newRef.ownerDocument.defaultView;
+    const triggerContextValue = useMemo(() => ({
+        controlled: isControlled,
+        opened,
+        setTriggerNode,
+    }), [isControlled, opened, setTriggerNode]);
 
-                newWindow?.addEventListener('click', this._onActionOutside);
-                newWindow?.addEventListener('click', this._onClickDelegated);
-            }
+    const bodyContextValue = useMemo(() => ({
+        opened,
+        setOpenedState,
+        setBodyNode,
+        triggerNode,
+        triggerRef,
+    }), [opened, setOpenedState, setBodyNode, triggerNode, triggerRef]);
 
-            this.setState({ triggerNode: newRef });
-        }
-
-        _setTriggerRef(triggerRef: HTMLElement | null) {
-            this.setState({ triggerRef });
-        }
-
-        renderBody() {
-            const { children } = this.props;
-
-            const context = {
-                opened: this.state.opened,
-                setOpenedState: this._setOpenedState,
-                setBodyNode: this._setBodyNode,
-                triggerNode: this.state.triggerNode,
-                triggerRef: this.state.triggerRef
-            };
-
-            return (
-                <PopoverBodyContext.Provider value={context}>
-                    <ReferenceCurrentRef refSetter={this._setBodyRef}>
-                        {cloneElement(children[1], {
-                            ref: children[1].ref || this._fallbackBodyRef,
-                        })}
-                    </ReferenceCurrentRef>
-                </PopoverBodyContext.Provider>
-            );
-        }
-
-        renderTrigger() {
-            const { children } = this.props;
-
-            const isControlled = this._isControlled();
-
-            const context = {
-                controlled: isControlled,
-                opened: this.state.opened,
-                setTriggerNode: this._setTriggerNode,
-            };
-
-            return (
-                <PopoverTriggerContext.Provider value={context}>
-                    <ReferenceCurrentRef refSetter={this._setTriggerRef}>
-                        {cloneElement(children[0], {
-                            ref: children[0].ref || this._fallbackTriggerRef,
-                        })}
-                    </ReferenceCurrentRef>
-                </PopoverTriggerContext.Provider>
-            );
-        }
-
-        render() {
-            return (
-                <>
-                    {this.renderTrigger()}
-                    {this.renderBody()}
-                </>
-            );
-        }
-
+    return (
+        <>
+            <PopoverTriggerContext.Provider value={triggerContextValue}>
+                <ReferenceCurrentRef refSetter={setTriggerRef}>
+                    {cloneElement(children[0], {
+                        ref: children[0].ref || fallbackTriggerRef,
+                    })}
+                </ReferenceCurrentRef>
+            </PopoverTriggerContext.Provider>
+            <PopoverBodyContext.Provider value={bodyContextValue}>
+                <ReferenceCurrentRef refSetter={setBodyRef}>
+                    {cloneElement(children[1], {
+                        ref: children[1].ref || fallbackBodyRef,
+                    })}
+                </ReferenceCurrentRef>
+            </PopoverBodyContext.Provider>
+        </>
+    );
 }

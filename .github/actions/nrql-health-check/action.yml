@@ -1,0 +1,58 @@
+# This composite action compares a pre-deploy and post-deploy NRQL window for every
+# browser agent NRDB event type and flags any statistically significant change in either
+# direction. It never fails the job - it's informational only, feeding the Slack message
+# an engineer reviews before approving the next promotion stage.
+
+name: 'NRQL Health Check'
+
+inputs:
+  api_key:
+    description: 'New Relic User API key with NRQL query access'
+    required: true
+  account_id:
+    description: 'New Relic account ID holding the RUM event data'
+    required: true
+  entity_guid:
+    description: 'Entity GUID of the application to check'
+    required: true
+  env_name:
+    description: 'Human-readable environment name (e.g. staging, eu-prod)'
+    required: true
+  window_minutes:
+    description: 'Minutes before and after deploy time to compare'
+    required: false
+    default: '10'
+  run_url:
+    description: 'URL of the current workflow run (Continue Promotion button target)'
+    required: true
+  rollback_url:
+    description: 'URL of the workflow_dispatch page used to roll back (Rollback button target)'
+    required: true
+
+outputs:
+  regression_detected:
+    description: 'true if any event type showed a statistically significant change'
+    value: ${{ steps.check.outputs.regression_detected }}
+  slack_payload:
+    description: 'Ready-to-send Slack payload JSON ({text, blocks}) for slack-notification. Caller still passes its own dashboard_url/image_url to slack-notification separately.'
+    value: ${{ steps.check.outputs.slack_payload }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install dependencies
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
+
+    - name: Run health check
+      id: check
+      env:
+        NR_API_KEY: ${{ inputs.api_key }}
+        NR_ACCOUNT_ID: ${{ inputs.account_id }}
+        NR_ENTITY_GUID: ${{ inputs.entity_guid }}
+        NR_ENV_NAME: ${{ inputs.env_name }}
+        NR_WINDOW_MINUTES: ${{ inputs.window_minutes }}
+        NR_RUN_URL: ${{ inputs.run_url }}
+        NR_ROLLBACK_URL: ${{ inputs.rollback_url }}
+      run: node $GITHUB_ACTION_PATH/index.js
+      shell: bash

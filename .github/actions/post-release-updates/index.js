@@ -109,6 +109,15 @@ try {
 }
 
 console.log('#############################')
+console.log('# Bumping framework versions #')
+console.log('#############################')
+await spawnAsync(
+  `npm${os.platform() === 'win32' ? '.cmd' : ''}`,
+  [ 'run', 'test-builds:bump-latest' ],
+  DEFAULT_SPAWN_OPTIONS
+)
+
+console.log('#############################')
 console.log('# Rebuilding Test Projects  #')
 console.log('#############################')
 await spawnAsync(

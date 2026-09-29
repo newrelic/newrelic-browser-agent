@@ -110,4 +110,20 @@ describe('metrics', () => {
       stats: { c: 1 }
     }]))
   })
+
+  it('should create a Framework/Vite/Detected SM when a modulepreload link is present', async () => {
+    await browser.url(await browser.testHandle.assetURL('vite-detected.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    const [supportabilityMetricsHarvests] = await Promise.all([
+      supportabilityMetricsCapture.waitForResult({ totalCount: 1 }),
+      await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
+    ])
+
+    const supportabilityMetrics = supportabilityMetricsHarvests[0].request.body.sm
+    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
+      params: { name: 'Framework/Vite/Detected' },
+      stats: { c: 1 }
+    }]))
+  })
 })

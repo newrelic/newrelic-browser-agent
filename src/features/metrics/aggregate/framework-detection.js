@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { isBrowserScope } from '../../../common/constants/runtime'
@@ -30,7 +30,9 @@ const FRAMEWORKS = {
   QWIK: 'Qwik',
   FLUTTER: 'Flutter',
 
-  ELECTRON: 'Electron'
+  ELECTRON: 'Electron',
+
+  VITE: 'Vite'
 }
 
 export function getFrameworks () {
@@ -75,6 +77,7 @@ export function getFrameworks () {
     if (Object.hasOwn(window, '_flutter')) frameworks.push(FRAMEWORKS.FLUTTER)
 
     if (detectElectron()) frameworks.push(FRAMEWORKS.ELECTRON)
+    if (detectVite()) frameworks.push(FRAMEWORKS.VITE)
   } catch (err) {
     // Possibly not supported
   }
@@ -194,6 +197,18 @@ function detectElectron () {
   try {
     return typeof navigator === 'object' && typeof navigator.userAgent === 'string' &&
       navigator.userAgent.indexOf('Electron') >= 0
+  } catch (err) {
+    return false
+  }
+}
+
+function detectVite () {
+  /* Heuristic only: Vite doesn't expose a window global in production builds. Detect its
+     default output conventions instead -- the modulepreload polyfill's <link> tags, and the
+     hashed assets/<name>-<hash>.js chunk naming -- either of which can also occur outside Vite. */
+  try {
+    return !!document.querySelector('link[rel="modulepreload"]') ||
+      !!document.querySelector('script[type="module"][src*="/assets/"]')
   } catch (err) {
     return false
   }

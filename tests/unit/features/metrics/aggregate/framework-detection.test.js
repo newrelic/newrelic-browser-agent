@@ -330,3 +330,23 @@ test('should detect electron from user agent', () => {
 
   global.navigator = currentNavigator
 })
+
+describe('vite', () => {
+  test('should detect vite from modulepreload link', () => {
+    document.body.innerHTML = '<link rel="modulepreload" href="/assets/index-abc12345.js">'
+
+    expect(getFrameworks()).toEqual(['Vite'])
+  })
+
+  test('should detect vite from hashed module script src', () => {
+    document.body.innerHTML = '<script type="module" src="/assets/index-abc12345.js"></script>'
+
+    expect(getFrameworks()).toEqual(['Vite'])
+  })
+
+  test('should not detect vite when neither signal is present', () => {
+    document.body.innerHTML = `<script src="${faker.internet.url()}/main.js"></script>`
+
+    expect(getFrameworks()).toEqual([])
+  })
+})

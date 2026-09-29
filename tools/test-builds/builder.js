@@ -57,18 +57,27 @@ async function build (folder) {
 }
 
 print('Bundling "Test Builds"')
-const packages = fs.readdirSync(__dirname, { withFileTypes: true })
-  .filter(dir => dir.isDirectory())
+// Framework informational apps live one level down in ./frameworks/<framework> - the folder name
+// is the framework's identity for tests/framework-specs and bump-latest.mjs
+// Pass --frameworks to build only those apps (used by the framework informational workflow)
+const parents = process.argv.includes('--frameworks') ? [path.join(__dirname, 'frameworks')] : [__dirname, path.join(__dirname, 'frameworks')]
+const appDirs = parents.flatMap(parent => {
+  if (!fs.existsSync(parent)) return []
+  return fs.readdirSync(parent, { withFileTypes: true })
+    .filter(dir => dir.isDirectory())
+    .map(dir => path.join(parent, dir.name))
+})
+
+const packages = appDirs
   .filter(dir => {
     try {
-      fs.accessSync(path.join(__dirname, dir.name, 'package.json'), fs.constants.R_OK | fs.constants.W_OK)
+      fs.accessSync(path.join(dir, 'package.json'), fs.constants.R_OK | fs.constants.W_OK)
       return true
     } catch (err) {
       return false
     }
   })
-  .map(dir => {
-    const testPackagePath = path.join(__dirname, dir.name)
+  .map(testPackagePath => {
     return clean(testPackagePath)
       .then(() => install(testPackagePath))
       .then(() => build(testPackagePath))

@@ -4,7 +4,11 @@ import url from 'url'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 const resultsDir = path.resolve(__dirname, '../../.framework-results')
-const outFile = path.join(resultsDir, 'report.html')
+
+// Report is suffixed with the agent (root package.json) version so each release keeps its own
+// asset in the bucket instead of overwriting a single shared file.
+const agentPkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../package.json'), 'utf-8'))
+const outFile = path.join(resultsDir, `report-${agentPkg.version}.html`)
 
 // Keep this in sync with the FEATURE_CHECKS names used by tests/framework-specs/**/*.e2e.js
 const FEATURES = [

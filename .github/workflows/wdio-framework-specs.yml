@@ -62,7 +62,7 @@ jobs:
       - name: Bump framework test-build apps to latest stable versions
         run: npm run test-builds:bump-latest
       - name: Build npm package and framework test-build apps
-        run: npm run build:npm && npm run tools:test-builds
+        run: npm run build:frameworks
       - name: Run WDIO framework informational tests
         run: |
           node --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
@@ -85,5 +85,6 @@ jobs:
           bucket_dir: reports/framework-informational
       - name: Summarize report URL
         run: |
+          AGENT_VERSION=$(node -p "require('./package.json').version")
           echo "### Framework informational report" >> "$GITHUB_STEP_SUMMARY"
-          echo "https://js-agent.newrelic.com/reports/framework-informational/report.html" >> "$GITHUB_STEP_SUMMARY"
+          echo "https://js-agent.newrelic.com/reports/framework-informational/report-${AGENT_VERSION}.html" >> "$GITHUB_STEP_SUMMARY"

@@ -1,5 +1,6 @@
 import { stringHashCode } from '../../../src/features/jserrors/aggregate/string-hash-code'
 import { Instrument as JsErrors } from '../../../src/features/jserrors/instrument'
+import { SESSION_EVENTS } from '../../../src/common/session/constants'
 import { resetAgent, setupAgent } from '../setup-agent'
 
 let mainAgent
@@ -58,4 +59,28 @@ test('in error params, string hash code of max-sized stack trace equals browser 
   const browser_stack_hash = harvestedData.err[0].params.browser_stack_hash // get the browser stack hash
 
   expect(stringHashCode(stack_trace)).toEqual(browser_stack_hash) // string hashed stack_trace must equal browser_stack_hash
+})
+
+test('a session reset clears the stack hash memory, so the full stack trace is resent once', async () => {
+  await new Promise(process.nextTick)
+  jserrorsAggregate.processError(generateTestError('test message'), 100) // first occurrence: full stack trace
+
+  jserrorsAggregate.events.clear()
+
+  await new Promise(process.nextTick)
+  jserrorsAggregate.processError(generateTestError('test message'), 101) // second occurrence: deduped to a hash
+
+  let harvestedData = jserrorsAggregate.events.get(jserrorsAggregate.harvestOpts)
+  expect(harvestedData.err[0].params.stack_trace).toBeUndefined()
+  expect(harvestedData.err[0].params.browser_stack_hash).toBeDefined()
+
+  jserrorsAggregate.events.clear()
+  jserrorsAggregate.ee.emit(SESSION_EVENTS.RESET)
+
+  await new Promise(process.nextTick)
+  jserrorsAggregate.processError(generateTestError('test message'), 102) // after reset: full stack trace again
+
+  harvestedData = jserrorsAggregate.events.get(jserrorsAggregate.harvestOpts)
+  expect(harvestedData.err[0].params.stack_trace).toBeDefined()
+  expect(harvestedData.err[0].params.browser_stack_hash).toBeUndefined()
 })

@@ -9,7 +9,7 @@ import { single } from '../util/invoke'
 
 /**
  * @typedef {Object} AssetFile
- * @property {string|RegExp} matcher - the path/path-fragment string, or RegExp, used to match a resolved URL against this asset
+ * @property {string|RegExp} matcher - the path/path-fragment string, or RegExp, used to match a resolved URL against this asset. A matcher may match many resources (e.g. a RegExp for hashed chunks); every matching resource contributes to the MFE's `totalWeight`/`renderBlocking` and, per `timingMethod`, its timing window
  * @property {'script'|'asset'} [type] - optional override for script-capability inference. When omitted, script-capability is inferred from a
  * `.js` suffix on a string `matcher` (a RegExp `matcher` is never inferred as a script). Supply `type: 'script'` to explicitly flag an entry
  * as a script regardless of its matcher shape/suffix (e.g. an extensionless URL, or a RegExp targeting a script path), or `type: 'asset'` to

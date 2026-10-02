@@ -56,8 +56,8 @@ describe('nameCondition', () => {
 describe('queries', () => {
   const condition = "name = 'x'"
 
-  test('the rate is the sum of call_count over time, one line per metric', () => {
-    expect(queries.rateByMetric(condition)).toBe(`FROM Supportability SELECT sum(call_count) WHERE name = 'x' FACET ${LABEL} TIMESERIES 1 hour LIMIT 20`)
+  test('the count is the sum of call_count over time, one line per metric', () => {
+    expect(queries.countByMetric(condition)).toBe(`FROM Supportability SELECT sum(call_count) WHERE name = 'x' FACET ${LABEL} TIMESERIES 1 hour LIMIT 20`)
   })
 
   test('the average is the sum of the values over the sum of the counts, as the dashboard documentation says', () => {
@@ -74,9 +74,15 @@ describe('queries', () => {
     expect(queries.averageValue(condition, 'ms')).toContain('FACET')
   })
 
-  test('breaks the rate down by account and by app', () => {
-    expect(queries.rateByAccount(condition)).toContain('FACET account_id TIMESERIES 1 hour LIMIT 10')
-    expect(queries.rateByApp(condition)).toContain('FACET agent_id TIMESERIES 1 hour LIMIT 10')
+  test('breaks a selection down by metric: accounts, apps and a table', () => {
+    expect(queries.accountsByMetric(condition)).toBe(`FROM Supportability SELECT uniqueCount(account_id) AS 'Accounts' WHERE name = 'x' FACET ${LABEL} LIMIT MAX`)
+    expect(queries.appsByMetric(condition)).toContain('uniqueCount(agent_id)')
+    expect(queries.tableByMetric(condition)).toContain('sum(call_count) AS \'Calls\', uniqueCount(account_id) AS \'Accounts\', uniqueCount(agent_id) AS \'Apps\'')
+  })
+
+  test('breaks the count down by account and by app', () => {
+    expect(queries.countByAccount(condition)).toContain('FACET account_id TIMESERIES 1 hour LIMIT 10')
+    expect(queries.countByApp(condition)).toContain('FACET agent_id TIMESERIES 1 hour LIMIT 10')
   })
 
   test('counts accounts and apps that reported', () => {
@@ -84,7 +90,7 @@ describe('queries', () => {
     expect(queries.appsReporting(condition)).toContain('uniqueCount(agent_id)')
   })
 
-  test('lists metric names from the data for the explorer picker', () => {
-    expect(queries.metricNames()).toBe("FROM Supportability SELECT uniques(name) WHERE name LIKE 'Browser/Supportability/%' SINCE 7 days ago LIMIT MAX")
+  test('lists metric names from the data for the explorer picker, without the Browser/Supportability/ prefix so the list is easy to read', () => {
+    expect(queries.metricNames()).toBe("FROM Supportability SELECT uniques(substring(name, 23)) WHERE name LIKE 'Browser/Supportability/%' SINCE 7 days ago LIMIT MAX")
   })
 })

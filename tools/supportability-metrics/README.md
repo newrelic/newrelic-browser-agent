@@ -54,13 +54,16 @@ experimenting lasts only until the next update.)
 ### What is in it
 - **Metric Explorer** (the first tab, so the dashboard opens on it): the only page that uses the **Supportability Metric** dropdown. The dropdown has no
   default, so until a metric is picked every chart on this page is empty. Pick one and every chart shows just that metric: its calls, accounts and apps
-  reporting, the rate, the rate for the top 10 accounts and the top 10 apps, and the average, maximum and minimum value. The dropdown is filled from the
-  data (every name in the last 7 days), so a metric appears in it as soon as Angler holds it, with no regeneration.
-- **One page per registry section**, in alphabetical order after the explorer. Their queries are fixed and ignore the dropdown: the rate by metric, the total
-  by metric, the rate for the top 10 accounts and the top 10 apps, and, for the section's metrics that report a value, the average, maximum and minimum
-  (labelled with the unit).
+  reporting, the count, the count for the top 10 accounts and the top 10 apps, and the average, maximum and minimum value. The dropdown is filled from the
+  data (every name in the last 7 days), so a metric appears in it as soon as Angler holds it, with no regeneration. It lists names without the
+  `Browser/Supportability/` prefix (`API/log/called`), to be easy to read, and every explorer query writes the prefix back in front of the variable:
+  `WHERE name = 'Browser/Supportability/{{metric}}'`.
+- **One page per registry section**, in alphabetical order after the explorer. Their queries are fixed and ignore the dropdown: the count over time, a pie of each metric's share, and the total and accounts per metric
+  (bars, and a table with apps too) when the section has more than one metric, then the count for the top 10 accounts and the top 10 apps, and, for the section's metrics that report a value, the average, maximum and minimum
+  (labelled with the unit). Every chart is titled with what it shows: the metric itself when a page is one metric, the metrics that report a value in the
+  value charts (`Ajax/Events/Payload/Bytes-Added: average value (bytes)`), and the section's name otherwise.
 
-It is built from the `Supportability` event Angler writes once an hour per account, app and metric name: the rate is `sum(call_count)`, the
+It is built from the `Supportability` event Angler writes once an hour per account, app and metric name: the count is `sum(call_count)`, the
 average is `sum(total_call_time) / sum(call_count)`, and the extremes are `max(max_call_time)` and `min(min_call_time)`. A metric only has
 average, minimum and maximum charts if its registry entry declares a `value` (its unit is `ms`, `bytes` or `count`); the check fails if a call
 passes a value and the entry does not say so, and `--fix` writes `unit: 'TODO'` for a new one.

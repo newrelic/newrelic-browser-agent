@@ -136,11 +136,25 @@ describe('validateQueries', () => {
     expect(Number(VALIDATION_WINDOW.match(/SINCE (\d+) hours ago/)[1])).toBeGreaterThan(1)
   })
 
-  test('replaces dashboard variables with a sample value so the query can run', async () => {
+  test('replaces a dashboard variable that is not in quotes with a quoted sample value, so the query can run', async () => {
     const { client, calls } = clientWith({ data: {} })
     await validateQueries(client, dashboard(['FROM Supportability SELECT count(*) WHERE name LIKE {{metric}}']))
 
-    expect(calls[0].variables.q0).toContain("WHERE name LIKE 'Browser/Supportability/Session/RaceCondition/Seen' " + VALIDATION_WINDOW)
+    expect(calls[0].variables.q0).toContain("WHERE name LIKE 'Session/RaceCondition/Seen' " + VALIDATION_WINDOW)
+  })
+
+  test('replaces a dashboard variable inside quotes with plain text, as New Relic does, so the name ends up in one string', async () => {
+    const { client, calls } = clientWith({ data: {} })
+    await validateQueries(client, dashboard(["FROM Supportability SELECT count(*) WHERE name = 'Browser/Supportability/{{metric}}'"]))
+
+    expect(calls[0].variables.q0).toContain("WHERE name = 'Browser/Supportability/Session/RaceCondition/Seen' " + VALIDATION_WINDOW)
+  })
+
+  test('tells quoted from unquoted even after an escaped quote earlier in the query', async () => {
+    const { client, calls } = clientWith({ data: {} })
+    await validateQueries(client, dashboard(["FROM Supportability SELECT count(*) WHERE a = 'it\\'s' AND name = '{{metric}}'"]))
+
+    expect(calls[0].variables.q0).toContain("name = 'Session/RaceCondition/Seen'")
   })
 
   test('sends queries in batches', async () => {

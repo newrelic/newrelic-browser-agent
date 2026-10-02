@@ -12,6 +12,19 @@ const { quote } = require('./nrql')
 
 const VALIDATION_BATCH_SIZE = 15
 
+/** A value to run the dashboard's variable queries with: a metric name without the `Browser/Supportability/` prefix, as the picker lists them. */
+const SAMPLE_VALUE = 'Session/RaceCondition/Seen'
+
+/**
+ * @param {string} query
+ * @param {number} offset A position in the query.
+ * @returns {boolean} Whether the position is inside a single quoted string, where a dashboard variable is inserted as plain text.
+ */
+function isInsideQuotes (query, offset) {
+  const before = query.slice(0, offset).replace(/\\./g, '')
+  return (before.match(/'/g) || []).length % 2 === 1
+}
+
 /**
  * The time range added to a query that has none when it is validated. Most charts step by 1 hour (Angler writes one event per hour), and New
  * Relic rejects a step that is larger than the time range, so the range must be comfortably longer than an hour.
@@ -127,13 +140,14 @@ function listQueries (dashboard) {
 
 /**
  * Runs every query the dashboard contains against New Relic, so a mistake in the generated NRQL is caught before the dashboard is applied.
- * Dashboard variables are replaced with a sample value, and a short time range is added to queries that have none (see VALIDATION_WINDOW).
+ * Dashboard variables are replaced with a sample value (as plain text when the variable is inside quotes, as New Relic does, and as a quoted string
+ * otherwise), and a short time range is added to queries that have none (see VALIDATION_WINDOW).
  * @param {NerdGraphClient} client
  * @param {Object} dashboard
  * @returns {Promise<Array<{query: string, error: string}>>} The queries that failed. Empty when all of them are valid.
  */
 async function validateQueries (client, dashboard) {
-  const sample = (query) => query.replace(/\{\{[a-z_]+\}\}/g, quote('Browser/Supportability/Session/RaceCondition/Seen')).replace(/\s+$/, '')
+  const sample = (query) => query.replace(/\{\{[a-z_]+\}\}/g, (placeholder, offset) => isInsideQuotes(query, offset) ? SAMPLE_VALUE : quote(SAMPLE_VALUE)).replace(/\s+$/, '')
   const runnable = listQueries(dashboard).map(({ account, query }) => ({ account, query, run: /\bSINCE\b/i.test(query) ? sample(query) : `${sample(query)} ${VALIDATION_WINDOW}` }))
   const failures = []
   const byAccount = runnable.reduce((groups, item) => ({ ...groups, [item.account]: [...(groups[item.account] || []), item] }), {})

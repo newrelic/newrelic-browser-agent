@@ -11,16 +11,20 @@
  * - a Metric Explorer page, which comes first (the dashboard opens on it). It is the only page that uses the dashboard's one variable, `metric`,
  *   a picker filled from the data itself, so a metric Angler starts to track appears in it without the dashboard being regenerated. With no
  *   metric picked the picker is null and every chart on the page is empty; with one picked, every chart shows just that metric, and
- * - one page per registry section, in alphabetical order, with the rate by metric, the accounts and apps reporting, the top accounts and
+ * - one page per registry section, in alphabetical order, with the count by metric, the accounts and apps reporting, the top accounts and
  *   apps, and the average, minimum and maximum of the metrics in that section that report a value. Their queries are fixed: they always
  *   show the whole section, whatever the picker is set to.
  */
 
+const { PREFIX } = require('../angler')
 const { queries, nameCondition, hasPlaceholder } = require('./nrql')
 
 const METRIC_VARIABLE = 'metric'
-/** Narrows a chart to the one metric picked in the variable. With nothing picked no metric matches, so the chart is empty. */
-const METRIC_FILTER = `name = {{${METRIC_VARIABLE}}}`
+/**
+ * Narrows a chart to the one metric picked in the variable. The picker lists names without the `Browser/Supportability/` prefix, so the prefix is written
+ * into the query ahead of the variable, inside the same quotes. With nothing picked the name is just the prefix, which no metric has, so the chart is empty.
+ */
+const METRIC_FILTER = `name = '${PREFIX}{{${METRIC_VARIABLE}}}'`
 const GRID_COLUMNS = 12
 
 /** Lays widgets out left to right on a 12 column grid, starting a new row when one does not fit. */
@@ -85,26 +89,53 @@ function chart (context, grid, visualization, title, query, [width, height]) {
   }
 }
 
-/** @returns {Object} A markdown widget. */
-const markdown = (grid, text, [width, height]) => ({ title: '', layout: grid.place(width, height), visualization: { id: 'viz.markdown' }, rawConfiguration: { text } })
-
 const BILLBOARD = [4, 3]
 const WIDE = [8, 4]
 const HALF = [6, 4]
 const THIRD = [4, 4]
 
+/** A list of metric names in a chart title is shortened past this many characters. */
+const MAX_TITLE_NAMES = 100
+
+/**
+ * The names a group of registry entries report, as they would be written in a title: a metric's registry tag (a family keeps its
+ * placeholder, e.g. `API/<name>/called`), or, for a family where only some values report a value, the names of those values.
+ * @param {import('../registry-types').RegistryEntry[]} entries
+ * @param {boolean} [onlyValues] Use only the values that report a value.
+ * @returns {string[]}
+ */
+function namesFor (entries, onlyValues = false) {
+  return entries.flatMap(entry => onlyValues && entry.value?.for ? entry.value.for.map(value => entry.tag.replace(/<[^>]*>/, value)) : [entry.tag])
+}
+
+/**
+ * Joins metric names for a chart title, and shortens a long list to the names that fit, followed by how many were left out.
+ * @param {string[]} names
+ * @returns {string}
+ */
+function titleList (names) {
+  const joined = names.join(', ')
+  if (joined.length <= MAX_TITLE_NAMES) return joined
+  const shown = []
+  for (const name of names) {
+    if ([...shown, name].join(', ').length > MAX_TITLE_NAMES && shown.length) break
+    shown.push(name)
+  }
+  return `${shown.join(', ')} +${names.length - shown.length} more`
+}
+
 /**
  * @param {Object} context
  * @param {Grid} grid
  * @param {string} condition
- * @param {string} scope What the charts are about, used in titles, e.g. `this section`.
+ * @param {string} subject What the charts are about, used in their titles: a metric name, or the name of a group of them.
  * @returns {Object[]} The billboards that open a page: calls, metrics, accounts and apps.
  */
-function summaryBillboards (context, grid, condition, scope) {
+function summaryBillboards (context, grid, condition, subject) {
   return [
-    chart(context, grid, 'viz.billboard', `Calls (${scope})`, queries.totalCalls(condition), BILLBOARD),
-    chart(context, grid, 'viz.billboard', 'Accounts reporting', queries.accountsReporting(condition), BILLBOARD),
-    chart(context, grid, 'viz.billboard', 'Apps reporting', queries.appsReporting(condition), BILLBOARD)
+    chart(context, grid, 'viz.billboard', `Calls: ${subject}`, queries.totalCalls(condition), BILLBOARD),
+    chart(context, grid, 'viz.billboard', `Accounts reporting: ${subject}`, queries.accountsReporting(condition), BILLBOARD),
+    chart(context, grid, 'viz.billboard', `Apps reporting: ${subject}`, queries.appsReporting(condition), BILLBOARD)
   ]
 }
 
@@ -136,27 +167,38 @@ function valueCharts (context, grid, condition, unit, subject, facet) {
 function sectionPage (section, entries, context) {
   const grid = new Grid()
   const condition = nameCondition(entries)
+  // Charts are titled with what they show: the metric itself when the section is one metric, otherwise the section
+  const subject = entries.length === 1 ? entries[0].tag : section.title
   const widgets = []
-  if (section.intro) {
-    widgets.push(markdown(grid, section.intro, [12, 2]))
-    grid.nextRow()
-  }
-  widgets.push(...summaryBillboards(context, grid, condition, 'this section'))
+  widgets.push(...summaryBillboards(context, grid, condition, subject))
   grid.nextRow()
-  // A section with a single metric has nothing to compare, so it does not need a per-metric bar next to the rate
+  // A section with a single metric has nothing to compare, so it has no breakdown by metric
   const singleMetric = entries.length === 1 && !entries[0].values && !hasPlaceholder(entries[0])
-  widgets.push(chart(context, grid, 'viz.line', 'Rate by metric', queries.rateByMetric(condition), singleMetric ? [12, 4] : WIDE))
-  if (!singleMetric) widgets.push(chart(context, grid, 'viz.bar', 'Total by metric', queries.totalByMetric(condition), [4, 4]))
+  if (singleMetric) {
+    widgets.push(chart(context, grid, 'viz.line', `${subject}: count`, queries.countByMetric(condition), [12, 4]))
+  } else {
+    /*
+     * Several metrics share this page, so break them down by name: the count over time as stacked areas next to a pie of each metric's
+     * share, then bars for the total and the accounts per metric, and a table with the total, accounts and apps side by side.
+     */
+    widgets.push(chart(context, grid, 'viz.area', `${subject}: count over time by metric`, queries.countByMetric(condition), WIDE))
+    widgets.push(chart(context, grid, 'viz.pie', `${subject}: share of calls by metric`, queries.totalByMetric(condition), [4, 4]))
+    grid.nextRow()
+    widgets.push(chart(context, grid, 'viz.bar', `${subject}: total calls by metric`, queries.totalByMetric(condition), HALF))
+    widgets.push(chart(context, grid, 'viz.bar', `${subject}: accounts reporting by metric`, queries.accountsByMetric(condition), HALF))
+    grid.nextRow()
+    widgets.push(chart(context, grid, 'viz.table', `${subject}: calls, accounts and apps by metric`, queries.tableByMetric(condition), [12, 5]))
+  }
   grid.nextRow()
-  widgets.push(chart(context, grid, 'viz.line', 'Rate by account (top 10)', queries.rateByAccount(condition), HALF))
-  widgets.push(chart(context, grid, 'viz.line', 'Rate by app (top 10)', queries.rateByApp(condition), HALF))
+  widgets.push(chart(context, grid, 'viz.line', `${subject}: count by account (top 10)`, queries.countByAccount(condition), HALF))
+  widgets.push(chart(context, grid, 'viz.line', `${subject}: count by app (top 10)`, queries.countByApp(condition), HALF))
 
   // One row of average, maximum and minimum per unit, for the metrics in this section that report a value
   const byUnit = {}
   entries.filter(entry => entry.value).forEach(entry => { (byUnit[entry.value.unit] = byUnit[entry.value.unit] || []).push(entry) })
   Object.entries(byUnit).forEach(([unit, valueEntries]) => {
     const only = Object.fromEntries(valueEntries.filter(entry => entry.value.for).map(entry => [entry.tag, entry.value.for]))
-    widgets.push(...valueCharts(context, grid, nameCondition(valueEntries, { only }), unit, 'Metrics that report a value', true))
+    widgets.push(...valueCharts(context, grid, nameCondition(valueEntries, { only }), unit, titleList(namesFor(valueEntries, true)), true))
   })
   return { name: section.title, description: `Generated from the "${section.title}" section of the registry.`, widgets }
 }
@@ -175,10 +217,10 @@ function explorerPage (context) {
     chart(context, grid, 'viz.billboard', 'Apps reporting', queries.appsReporting(condition), BILLBOARD)
   ]
   grid.nextRow()
-  widgets.push(chart(context, grid, 'viz.line', 'Rate', queries.rate(condition), [12, 4]))
+  widgets.push(chart(context, grid, 'viz.line', 'Count', queries.count(condition), [12, 4]))
   grid.nextRow()
-  widgets.push(chart(context, grid, 'viz.line', 'Rate by account (top 10)', queries.rateByAccount(condition), HALF))
-  widgets.push(chart(context, grid, 'viz.line', 'Rate by app (top 10)', queries.rateByApp(condition), HALF))
+  widgets.push(chart(context, grid, 'viz.line', 'Count by account (top 10)', queries.countByAccount(condition), HALF))
+  widgets.push(chart(context, grid, 'viz.line', 'Count by app (top 10)', queries.countByApp(condition), HALF))
   widgets.push(...valueCharts(context, grid, condition, 'value', 'Selected metric', false))
   return { name: 'Metric Explorer', description: 'Generated. Pick one metric to see it.', widgets }
 }

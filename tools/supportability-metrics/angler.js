@@ -132,7 +132,7 @@ function getStatus (added, removed, decisions, registryChanged = true) {
  * @param {string} url
  * @returns {string} The line that links the preview dashboard.
  */
-const dashboardLink = (url) => `📊 **[Preview the dashboard for this PR](${url})** (a copy in staging, updated on every push and deleted when the PR closes. Charts for new metrics stay empty until the metric ships and its name is in Angler.)`
+const dashboardLink = (url) => `📊 **[Preview the dashboard for this PR](${url})**`
 
 /**
  * The checklist of things only the author can decide, limited to what this pull request actually touches.

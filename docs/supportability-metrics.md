@@ -131,8 +131,7 @@ Tags below are shown without the `Browser/Supportability/` prefix.
   <!--- Electron was Detected --->
   * Framework/Electron/Detected
 
-### Configuration (generated from init)
-Every setting in `init` is reported automatically by its path, with no per-setting code. Angler's tag list decides which are surfaced, so a new init setting only needs a new Angler tag to show up in dashboards and queries.
+### Configuration
 <!--- A boolean init setting that is true. Path mirrors init, e.g. init.session_replay.collect_fonts -> Config/session_replay/collect_fonts/Enabled. Absence means disabled. Settings a feature flag can also turn on (e.g. api.register.enabled) read as Enabled for either route --->
 * Config/<init path>/Enabled
 <!--- A non-boolean init setting that differs from its default. The value is never sent --->
@@ -271,7 +270,6 @@ Every setting in `init` is reported automatically by its path, with no per-setti
   * API/register/setUserId/called
 
 ### Internal Errors
-Reported as `Internal/Error/<reason>`. The reason is the second argument of the `internal-error` event, and falls back to `Other` when none is given.
 <!--- An internal error was swallowed instead of being reported to the customer --->
 * Internal/Error/<reason>
   <!--- a generalized internal error relating to rrweb processing was observed, typically thrown by rrweb's error handler. Also assigned when an error's leading frame is in the recorder or rrweb --->

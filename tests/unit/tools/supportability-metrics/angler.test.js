@@ -76,12 +76,13 @@ describe('renderComment dashboard link', () => {
   const url = 'https://staging-one.newrelic.com/dashboards/detail/ABC'
   const withBase = without('Session/RaceCondition/Seen')
 
-  test('links the preview dashboard when there is one, and explains it', () => {
+  test('links the preview dashboard when there is one, as a bare link with no explanation beside it', () => {
     const comment = renderComment(withBase, head, none, { dashboardUrl: url })
+    const line = comment.split('\n')[0]
 
-    expect(comment).toContain(`📊 **[Preview the dashboard for this PR](${url})**`)
-    expect(comment).toContain('deleted when the PR closes')
-    expect(comment).toContain('stay empty until the metric ships')
+    expect(line).toBe(`📊 **[Preview the dashboard for this PR](${url})**`)
+    expect(comment).not.toContain('deleted when the PR closes')
+    expect(comment).not.toContain('stay empty until the metric ships')
   })
 
   test('shows the link above the collapsed section, so it is visible without opening the comment', () => {

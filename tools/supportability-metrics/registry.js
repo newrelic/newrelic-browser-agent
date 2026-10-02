@@ -45,16 +45,14 @@ Tags below are shown without the \`Browser/Supportability/\` prefix.`,
     { id: 'frameworks', title: 'Frameworks' },
     {
       id: 'config',
-      title: 'Configuration (generated from init)',
-      intro: 'Every setting in `init` is reported automatically by its path, with no per-setting code. Angler\'s tag list decides which are surfaced, so a new init setting only needs a new Angler tag to show up in dashboards and queries.'
+      title: 'Configuration'
     },
     { id: 'flags', title: 'Feature Flags' },
     { id: 'session_replay', title: 'Session Replay' },
     { id: 'api', title: 'API' },
     {
       id: 'internal_errors',
-      title: 'Internal Errors',
-      intro: 'Reported as `Internal/Error/<reason>`. The reason is the second argument of the `internal-error` event, and falls back to `Other` when none is given.'
+      title: 'Internal Errors'
     },
     { id: 'event_buffer', title: 'Event Buffer' },
     { id: 'harvest', title: 'Harvest' },

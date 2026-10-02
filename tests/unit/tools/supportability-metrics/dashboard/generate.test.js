@@ -8,7 +8,7 @@ const page = (dashboard, name) => dashboard.pages.find(candidate => candidate.na
 
 const small = {
   header: 'h',
-  sections: [{ id: 'plain', title: 'Plain' }, { id: 'valued', title: 'Valued', intro: 'Intro text' }, { id: 'empty', title: 'Empty' }],
+  sections: [{ id: 'plain', title: 'Plain' }, { id: 'valued', title: 'Valued' }, { id: 'empty', title: 'Empty' }],
   entries: [
     { section: 'plain', tag: 'Plain/One/Seen', description: 'd' },
     { section: 'plain', tag: 'Plain/Two/Seen', description: 'd' },
@@ -111,50 +111,124 @@ describe('buildDashboard', () => {
 describe('section pages', () => {
   const plain = page(build(small), 'Plain')
   const valued = page(build(small), 'Valued')
+  const titles = (candidate) => candidate.widgets.map(widget => widget.title)
+  const queryOf = (candidate, title) => candidate.widgets.find(widget => widget.title === title).rawConfiguration.nrqlQueries[0].query
 
-  test('show the calls, accounts and apps reporting, the rate and total by metric, and the top accounts and apps', () => {
-    expect(plain.widgets.map(widget => widget.title)).toEqual(['Calls (this section)', 'Accounts reporting', 'Apps reporting', 'Rate by metric', 'Total by metric', 'Rate by account (top 10)', 'Rate by app (top 10)'])
+  test('show the calls, accounts and apps reporting, several breakdowns by metric, and the top accounts and apps', () => {
+    expect(titles(plain)).toEqual([
+      'Calls: Plain', 'Accounts reporting: Plain', 'Apps reporting: Plain',
+      'Plain: count over time by metric', 'Plain: share of calls by metric',
+      'Plain: total calls by metric', 'Plain: accounts reporting by metric',
+      'Plain: calls, accounts and apps by metric', 'Plain: count by account (top 10)', 'Plain: count by app (top 10)'
+    ])
+  })
+
+  test('break a multi-metric section down by name with a pie, bars and a table', () => {
+    const viz = (title) => plain.widgets.find(widget => widget.title === title).visualization.id
+
+    expect(viz('Plain: share of calls by metric')).toBe('viz.pie')
+    expect(viz('Plain: count over time by metric')).toBe('viz.area')
+    expect(viz('Plain: total calls by metric')).toBe('viz.bar')
+    expect(viz('Plain: calls, accounts and apps by metric')).toBe('viz.table')
+    plain.widgets.filter(widget => /by metric$/.test(widget.title)).forEach(widget => expect(widget.rawConfiguration.nrqlQueries[0].query).toMatch(/FACET substring\(name, \d+\)/))
   })
 
   test('select the section\'s metrics', () => {
-    expect(plain.widgets[3].rawConfiguration.nrqlQueries[0].query).toContain("name IN ('Browser/Supportability/Plain/One/Seen', 'Browser/Supportability/Plain/Two/Seen')")
+    expect(queryOf(plain, 'Plain: share of calls by metric')).toContain("name IN ('Browser/Supportability/Plain/One/Seen', 'Browser/Supportability/Plain/Two/Seen')")
   })
 
   test('have no average, minimum or maximum when no metric in the section reports a value', () => {
     expect(plain.widgets.some(widget => /average value|maximum value|minimum value/.test(widget.title))).toBe(false)
   })
 
-  test('show the average, maximum and minimum for each unit that a metric in the section reports', () => {
-    const titles = valued.widgets.map(widget => widget.title)
+  describe('chart titles say what data they show', () => {
+    test('use the section\'s name when it holds several metrics', () => {
+      titles(plain).forEach(title => expect(title).toContain('Plain'))
+    })
 
-    expect(titles).toEqual(expect.arrayContaining(['Metrics that report a value: average value (bytes)', 'Metrics that report a value: maximum value (bytes)', 'Metrics that report a value: minimum value (bytes)']))
-    expect(titles).toEqual(expect.arrayContaining(['Metrics that report a value: average value (ms)']))
+    test('use the metric itself when the section is a single metric', () => {
+      const one = page(build({ ...small, entries: [small.entries[0]] }), 'Plain')
+
+      expect(titles(one)).toEqual(['Calls: Plain/One/Seen', 'Accounts reporting: Plain/One/Seen', 'Apps reporting: Plain/One/Seen', 'Plain/One/Seen: count', 'Plain/One/Seen: count by account (top 10)', 'Plain/One/Seen: count by app (top 10)'])
+    })
+
+    test('name the metrics that report a value in the average, maximum and minimum charts, with the unit', () => {
+      expect(titles(valued)).toEqual(expect.arrayContaining([
+        'Valued/Size: average value (bytes)', 'Valued/Size: maximum value (bytes)', 'Valued/Size: minimum value (bytes)',
+        'Valued/Time/a: average value (ms)', 'Valued/Time/a: maximum value (ms)', 'Valued/Time/a: minimum value (ms)'
+      ]))
+    })
+
+    test('name only the values of a family that report a value, not the family', () => {
+      const replay = page(build(), 'Session Replay')
+      const bytes = titles(replay).find(title => title.endsWith('average value (bytes)'))
+
+      expect(bytes).toBe('SessionReplay/Abort/Too-Big, rrweb/node/<type>/bytes: average value (bytes)')
+      expect(bytes).not.toContain('Abort/<reason>')
+    })
+
+    test('keep a family\'s placeholder when every value of it reports a value', () => {
+      expect(titles(page(build(), 'Event Buffer'))).toContain('EventBuffer/<feature>/Dropped/Bytes: average value (bytes)')
+    })
+
+    test('name the AJAX payload metric, which was once only "Metrics that report a value"', () => {
+      const ajax = titles(page(build(), 'AJAX'))
+
+      expect(ajax).toContain('Ajax/Events/Payload/Bytes-Added: average value (bytes)')
+      expect(ajax.some(title => title.includes('Metrics that report a value'))).toBe(false)
+    })
+
+    test('never title a chart generically on any page but the explorer', () => {
+      build().pages.filter(candidate => candidate.name !== 'Metric Explorer').forEach(candidate => {
+        candidate.widgets.filter(widget => widget.rawConfiguration.nrqlQueries).forEach(widget => {
+          expect(widget.title).toMatch(/^.+: .+/)
+          expect(widget.title).not.toMatch(/^(Rate|Calls|Total|Average|Maximum|Minimum)\b.*\(this section\)$/)
+        })
+      })
+    })
+
+    test('shorten a list of names that would make a very long title, saying how many were left out', () => {
+      const many = { ...small, entries: Array.from({ length: 8 }, (_, i) => ({ section: 'valued', tag: `Valued/A/Long/Metric/Name/Number${i}`, description: 'd', value: { unit: 'ms' } })) }
+      const title = page(build(many), 'Valued').widgets.map(widget => widget.title).find(candidate => candidate.includes('average value'))
+
+      expect(title).toMatch(/\+\d+ more: average value \(ms\)$/)
+      expect(title.length).toBeLessThan(140)
+    })
+
+    test('keeps every title in the real registry whole, with nothing left out', () => {
+      const all = build().pages.filter(candidate => candidate.name !== 'Metric Explorer').flatMap(candidate => titles(candidate))
+
+      expect(all.filter(title => /\+\d+ more/.test(title))).toEqual([])
+    })
+  })
+
+  test('show the average, maximum and minimum for each unit that a metric in the section reports', () => {
+    expect(titles(valued)).toEqual(expect.arrayContaining(['Valued/Size: average value (bytes)', 'Valued/Time/a: average value (ms)']))
   })
 
   test('chart only the values of a family that report one', () => {
-    const averageMs = valued.widgets.find(widget => widget.title.endsWith('average value (ms)')).rawConfiguration.nrqlQueries[0].query
+    const averageMs = queryOf(valued, 'Valued/Time/a: average value (ms)')
 
     expect(averageMs).toContain("name = 'Browser/Supportability/Valued/Time/a'")
     expect(averageMs).not.toContain('Valued/Time/b')
   })
 
-  test('start with the section\'s intro when it has one, and not otherwise', () => {
-    expect(valued.widgets[0].visualization.id).toBe('viz.markdown')
-    expect(valued.widgets[0].rawConfiguration.text).toBe('Intro text')
+  test('open with the summary billboards and have no text box', () => {
     expect(plain.widgets[0].visualization.id).toBe('viz.billboard')
+    expect(build().pages.flatMap(candidate => candidate.widgets).some(widget => widget.visualization.id === 'viz.markdown')).toBe(false)
   })
 
-  test('omit the per-metric bar for a section with one metric', () => {
+  test('omit the breakdowns by metric for a section with one metric', () => {
     const one = page(build({ ...small, entries: [small.entries[0]] }), 'Plain')
 
-    expect(one.widgets.some(widget => widget.title === 'Total by metric')).toBe(false)
-    expect(one.widgets.find(widget => widget.title === 'Rate by metric').layout.width).toBe(12)
+    expect(titles(one).some(title => title.includes('by metric'))).toBe(false)
+    expect(one.widgets.find(widget => widget.title === 'Plain/One/Seen: count').layout.width).toBe(12)
   })
 
   test('match a family with a pattern rather than a list of names', () => {
     const families = page(build({ ...small, entries: [small.entries[3]] }), 'Valued')
 
-    expect(families.widgets.find(widget => widget.title === 'Rate by metric').rawConfiguration.nrqlQueries[0].query).toContain("name LIKE 'Browser/Supportability/Valued/Time/%'")
+    expect(queryOf(families, 'Valued/Time/<kind>: share of calls by metric')).toContain("name LIKE 'Browser/Supportability/Valued/Time/%'")
   })
 
   test('report the session replay abort size only for the reason that has one', () => {
@@ -176,13 +250,20 @@ describe('metric explorer', () => {
     expect(explorer.widgets[0].layout).toMatchObject({ column: 1, row: 1 })
   })
 
-  test('shows the rate, by account and by app, and the value charts for the selected metric', () => {
-    expect(explorer.widgets.map(widget => widget.title).filter(Boolean)).toEqual(expect.arrayContaining(['Calls', 'Rate', 'Rate by account (top 10)', 'Rate by app (top 10)', 'Selected metric: average value (value)']))
+  test('shows the count, by account and by app, and the value charts for the selected metric', () => {
+    expect(explorer.widgets.map(widget => widget.title).filter(Boolean)).toEqual(expect.arrayContaining(['Calls', 'Count', 'Count by account (top 10)', 'Count by app (top 10)', 'Selected metric: average value (value)']))
   })
 
-  test('shows only the selected metric in every chart, by exact name', () => {
+  test('shows only the selected metric in every chart, by exact name, with the prefix the picker leaves out put back in front of the variable', () => {
     expect(charts).toHaveLength(explorer.widgets.length)
-    charts.forEach(widget => expect(widget.rawConfiguration.nrqlQueries[0].query).toContain('WHERE name = {{metric}}'))
+    charts.forEach(widget => expect(widget.rawConfiguration.nrqlQueries[0].query).toContain("WHERE name = 'Browser/Supportability/{{metric}}'"))
+  })
+
+  test('is empty when nothing is picked, because the name is then only the prefix, which no metric has', () => {
+    const name = "'Browser/Supportability/{{metric}}'"
+
+    expect(charts[0].rawConfiguration.nrqlQueries[0].query).toContain(name)
+    expect(name.replace('{{metric}}', '')).toBe("'Browser/Supportability/'")
   })
 
   test('draws a single line for the selected metric, not one per name', () => {
@@ -196,8 +277,13 @@ describe('the metric picker', () => {
   test('is a dropdown filled from the data, so new metrics appear without regenerating', () => {
     expect(dashboard.variables).toHaveLength(1)
     expect(dashboard.variables[0]).toMatchObject({ name: METRIC_VARIABLE, type: 'NRQL', replacementStrategy: 'STRING', isMultiSelection: false })
-    expect(dashboard.variables[0].nrqlQuery.query).toContain('uniques(name)')
+    expect(dashboard.variables[0].nrqlQuery.query).toContain('uniques(substring(name, 23))')
     expect(dashboard.variables[0].nrqlQuery.accountIds).toEqual([432507])
+  })
+
+  test('lists names without the Browser/Supportability/ prefix, which the explorer queries add back', () => {
+    expect(dashboard.variables[0].nrqlQuery.query).not.toContain('SELECT uniques(name)')
+    expect(dashboard.variables[0].nrqlQuery.query).toContain("WHERE name LIKE 'Browser/Supportability/%'")
   })
 
   test('is called Supportability Metric', () => {
@@ -217,7 +303,7 @@ describe('the metric picker', () => {
   })
 
   test('leaves the section pages showing their whole section, whatever is picked', () => {
-    const query = page(dashboard, 'Session').widgets.find(widget => widget.title === 'Rate by metric').rawConfiguration.nrqlQueries[0].query
+    const query = page(dashboard, 'Session').widgets.find(widget => widget.title === 'Session/RaceCondition/Seen: count').rawConfiguration.nrqlQueries[0].query
 
     expect(query).toBe("FROM Supportability SELECT sum(call_count) WHERE name = 'Browser/Supportability/Session/RaceCondition/Seen' FACET substring(name, 23) TIMESERIES 1 hour LIMIT 20")
   })

@@ -128,6 +128,26 @@ describe('renderComment dashboard link', () => {
   })
 })
 
+describe('renderComment open-ended families', () => {
+  const none = { addedSettings: [], removedSettings: [], addedFlags: [] }
+  const needsAngler = renderComment(without('Session/RaceCondition/Seen'), head, none)
+
+  test('calls out every open-ended family, including Config and Feature_Flag, when the PR needs an Angler change', () => {
+    expect(needsAngler).toContain('> [!IMPORTANT]')
+    expect(needsAngler).toContain('will not show up in the dashboards unless Angler has them')
+    ;['Config/<init path>/Enabled', 'Feature_Flag/<flag>/Seen', 'Harvester/Retry/Failed/<code>', 'Harvester/Retry/Attempted/<feature>']
+      .forEach(tag => expect(needsAngler).toContain(`> - \`${PREFIX}${tag}\``))
+  })
+
+  test('does not list a family whose names are already listed', () => {
+    expect(needsAngler).not.toContain('API/<name>/called')
+  })
+
+  test('is left out when the PR needs nothing from Angler', () => {
+    expect(renderComment(withEntry({ section: 'session', tag: 'Session/New/Seen', description: 'd' }), head, none)).not.toContain('[!IMPORTANT]')
+  })
+})
+
 describe('renderComment status', () => {
   const none = { addedSettings: [], removedSettings: [], addedFlags: [] }
   const onlyDescriptionChanged = { ...head, entries: entries.map(entry => entry.tag === 'Session/RaceCondition/Seen' ? { ...entry, description: 'new wording' } : entry) }

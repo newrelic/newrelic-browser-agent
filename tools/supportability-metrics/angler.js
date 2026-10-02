@@ -162,6 +162,23 @@ function listDecisions (head, changedOpenFamilies, detected) {
 }
 
 /**
+ * A prominent reminder about the open-ended families, whose names cannot be generated. The dashboards select them with a pattern, but only names
+ * Angler holds are ever written to New Relic, so any name missing from Angler never reaches a dashboard.
+ * @param {import('./registry-types').Registry} head
+ * @returns {string | undefined} A GitHub alert, or undefined when the registry has no open-ended family.
+ */
+function openFamilyCallout (head) {
+  const families = head.entries.filter(isOpenFamily)
+  if (!families.length) return undefined
+  return [
+    '> [!IMPORTANT]',
+    '> **These names cannot be generated, so they are not in the list below, and will not show up in the dashboards unless Angler has them.** The dashboards pick up every name Angler tracks in a family on their own, but Angler is curated by hand, and a name it does not list is never written to New Relic. For each family, make sure the names you care about are in `metric_names.txt`:',
+    '>',
+    ...families.map(entry => `> - \`${PREFIX}${entry.tag}\`${entry.tag.startsWith('Config/') ? ' (one per `init` setting)' : ''}: ${manualHint(entry)}`)
+  ].join('\n')
+}
+
+/**
  * Renders the pull request comment, collapsed by default. Lines are left flush left on purpose: the comment action trims every line.
  * @param {import('./registry-types').Registry | undefined} base The registry on the base branch, if it had one.
  * @param {import('./registry-types').Registry} head The registry on the pull request.
@@ -188,6 +205,10 @@ function renderComment (base, head, detected, { dashboardUrl } = {}) {
   if (!base) {
     parts.push('> The registry does not exist on the base branch, so every name is listed as new. Skip the ones Angler already has.')
   }
+
+  // Shown whenever the PR needs an Angler change, since the generated generated list below can never include these
+  const callout = status.icon === '🟠' && relevant ? openFamilyCallout(head) : undefined
+  if (callout) parts.push(callout)
 
   // Nothing to add in the green and yellow states, so the empty section would only add noise
   if (added.length || status.icon === '🟠') {

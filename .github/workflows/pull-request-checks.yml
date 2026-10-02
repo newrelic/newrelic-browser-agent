@@ -125,7 +125,7 @@ jobs:
       - name: Update the comment if the pull request no longer changes supportability metrics
         if: steps.angler.outputs.relevant != 'true'
         run: |
-          echo "## Supportability metrics: nothing to do in Angler" > "$RUNNER_TEMP/angler-comment-cleared.md"
+          echo "## 🟢 Supportability metrics: nothing to do in Angler" > "$RUNNER_TEMP/angler-comment-cleared.md"
           echo "" >> "$RUNNER_TEMP/angler-comment-cleared.md"
           echo "This PR no longer changes the supportability metric registry, so no Angler PR is needed for it." >> "$RUNNER_TEMP/angler-comment-cleared.md"
       - name: Post the cleared comment, only if an earlier one exists

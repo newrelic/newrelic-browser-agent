@@ -71,13 +71,57 @@ describe('diffRegistries', () => {
   })
 })
 
+describe('renderComment status', () => {
+  const none = { addedSettings: [], removedSettings: [], addedFlags: [] }
+  const onlyDescriptionChanged = { ...head, entries: entries.map(entry => entry.tag === 'Session/RaceCondition/Seen' ? { ...entry, description: 'new wording' } : entry) }
+
+  test('is green when the registry changed but nothing needs to change in Angler', () => {
+    const comment = renderComment(head, onlyDescriptionChanged, none)
+
+    expect(comment).toContain('<summary>🟢 <strong>Supportability metrics changed: no Angler changes needed</strong> (0 names to add, 0 removed, no decisions)</summary>')
+    expect(comment).toContain('nothing needs to change in Angler')
+    expect(comment).not.toContain('### What you need to do')
+    expect(comment).not.toContain('needs a matching Angler PR')
+    expect(comment).not.toContain('### Add to Angler')
+    expect(comment).not.toContain('Needs your decision')
+  })
+
+  test('is yellow when the only change is removals, which should wait for older agents', () => {
+    const comment = renderComment(head, without('Session/RaceCondition/Seen'), none)
+
+    expect(comment).toContain('<summary>🟡 <strong>Supportability metrics changed: no Angler PR needed yet</strong> (0 names to add, 1 removed, no decisions)</summary>')
+    expect(comment).toContain('Nothing in Angler yet')
+    expect(comment).toContain('### Removed in this PR (1 name)')
+    expect(comment).not.toContain('Open a pull request against')
+    expect(comment).not.toContain('### Add to Angler')
+  })
+
+  test('is orange when there are names to add', () => {
+    expect(renderComment(without('Session/RaceCondition/Seen'), head, none)).toContain('<summary>🟠 <strong>Supportability metrics changed: this PR needs a matching Angler PR</strong>')
+  })
+
+  test('is orange when there are decisions to make, even with nothing to add', () => {
+    const comment = renderComment(head, onlyDescriptionChanged, { ...none, addedFlags: ['a_flag'] })
+
+    expect(comment).toContain('<summary>🟠 ')
+    expect(comment).toContain('(0 names to add, 0 removed, 1 decision)')
+  })
+
+  test('is orange, not yellow, when names are removed and added together', () => {
+    const base = withEntry({ section: 'session', tag: 'Gone/Metric/Seen', description: 'd' })
+    const headWithNewName = { ...head, entries: [...entries, { section: 'session', tag: 'New/Metric/Seen', description: 'd' }] }
+
+    expect(renderComment(base, headWithNewName, none)).toContain('<summary>🟠 ')
+  })
+})
+
 describe('renderComment', () => {
   test('is collapsed by default, with a summary line that shows the counts', () => {
     const comment = renderComment(without('Session/RaceCondition/Seen'), head)
 
     expect(comment.startsWith('<details>\n<summary>')).toBe(true)
     expect(comment).not.toMatch(/<details[^>]*\bopen\b/)
-    expect(comment).toMatch(/<summary><strong>Supportability metrics changed: this PR needs a matching Angler PR<\/strong> \(1 name to add, 0 removed, 2 decisions\)<\/summary>/)
+    expect(comment).toMatch(/<summary>🟠 <strong>Supportability metrics changed: this PR needs a matching Angler PR<\/strong> \(1 name to add, 0 removed, 2 decisions\)<\/summary>/)
     expect(comment.trimEnd().endsWith('</details>')).toBe(true)
   })
 

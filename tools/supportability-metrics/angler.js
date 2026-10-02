@@ -77,6 +77,50 @@ const count = (n, noun, plural = noun + 's') => `${n} ${n === 1 ? noun : plural}
 const block = (lines) => '```text\n' + lines.join('\n') + '\n```'
 
 /**
+ * GitHub strips all styling from comments, so the status is shown with a colored circle at the start of the summary line.
+ * - green: nothing to do in Angler
+ * - yellow: only removals, which should wait until older agent versions have aged out
+ * - orange: names to add, or decisions for the author
+ * @param {string[]} added Names this PR adds.
+ * @param {string[]} removed Names this PR removes.
+ * @param {string[]} decisions The checklist items.
+ * @returns {{icon: string, title: string, intro: string, steps: function(number, number): string}}
+ */
+function getStatus (added, removed, decisions) {
+  const registryChange = 'This PR changes the supportability metric registry.'
+  if (!added.length && !decisions.length && !removed.length) {
+    return {
+      icon: '🟢',
+      title: 'Supportability metrics changed: no Angler changes needed',
+      intro: `${registryChange} It adds and removes no metric names and adds no \`init\` settings or feature flags, so nothing needs to change in Angler. This comment is regenerated on every push.`,
+      steps: () => undefined
+    }
+  }
+  if (!added.length && !decisions.length) {
+    return {
+      icon: '🟡',
+      title: 'Supportability metrics changed: no Angler PR needed yet',
+      intro: `${registryChange} It only removes metric names. This comment is regenerated on every push.`,
+      steps: () => '### What you need to do\n\nNothing in Angler yet. The names under **Removed** should come out of Angler once older agent versions have aged out, or when you accept losing that data.'
+    }
+  }
+  return {
+    icon: '🟠',
+    title: 'Supportability metrics changed: this PR needs a matching Angler PR',
+    intro: `${registryChange} A metric only appears in dashboards once its exact name is in Angler's shared \`metric_names.txt\`, and Angler is updated by hand. This comment is regenerated on every push, so it always reflects the latest commit.`,
+    steps: (decisionCount, removedCount) => [
+      '### What you need to do',
+      [
+        `1. Open a pull request against **[agents/angler](${ANGLER_REPO_URL})** that edits [\`metric_names.txt\`](${ANGLER_FILE_URL}) (you need to be on the VPN).`,
+        '2. Add the names under **Add to Angler** below' + (removedCount ? ', and handle **Removed** as described there.' : '.'),
+        decisionCount ? '3. Work through **Needs your decision**. These cannot be generated, so you are the gatekeeper for them.' : undefined,
+        `${decisionCount ? 4 : 3}. Link the Angler PR here by adding it to this PR's description.`
+      ].filter(Boolean).join('\n')
+    ].join('\n\n')
+  }
+}
+
+/**
  * The checklist of things only the author can decide, limited to what this pull request actually touches.
  * @param {import('./registry-types').Registry} head
  * @param {string[]} changedOpenFamilies Open-ended families whose registry entry this pull request changed.
@@ -117,24 +161,21 @@ function renderComment (base, head, detected) {
 
   const all = listConcreteTags(head)
   const decisions = listDecisions(head, changedOpenFamilies, detected)
+  const status = getStatus(added, removed, decisions)
   const parts = [
-    'This PR changes the supportability metric registry. A metric only appears in dashboards once its exact name is in Angler\'s shared `metric_names.txt`, and Angler is updated by hand. ' +
-      'This comment is regenerated on every push, so it always reflects the latest commit.',
-    '### What you need to do',
-    [
-      `1. Open a pull request against **[agents/angler](${ANGLER_REPO_URL})** that edits [\`metric_names.txt\`](${ANGLER_FILE_URL}) (you need to be on the VPN).`,
-      '2. Add the names under **Add to Angler** below' + (removed.length ? ', and handle **Removed** as described there.' : '.'),
-      decisions.length ? '3. Work through **Needs your decision**. These cannot be generated, so you are the gatekeeper for them.' : undefined,
-      `${decisions.length ? 4 : 3}. Link the Angler PR here by adding it to this PR's description.`
-    ].filter(Boolean).join('\n')
-  ]
+    status.intro,
+    status.steps(decisions.length, removed.length)
+  ].filter(Boolean)
 
   if (!base) {
     parts.push('> The registry does not exist on the base branch, so every name is listed as new. Skip the ones Angler already has.')
   }
 
-  parts.push(`### Add to Angler (${count(added.length, 'name')})`)
-  parts.push(added.length ? block(added) : '_No new names in this PR._')
+  // Nothing to add in the green and yellow states, so the empty section would only add noise
+  if (added.length || status.icon === '🟠') {
+    parts.push(`### Add to Angler (${count(added.length, 'name')})`)
+    parts.push(added.length ? block(added) : '_No new names in this PR._')
+  }
 
   if (removed.length) {
     parts.push(
@@ -151,7 +192,7 @@ function renderComment (base, head, detected) {
         (detected ? 'Only what this PR touches is listed.' : 'This PR could not be analyzed automatically, so check each one against your changes.'),
       decisions.join('\n')
     )
-  } else {
+  } else if (status.icon === '🟠') { // the green and yellow intros already say so
     parts.push('### Needs your decision', 'Nothing in this PR needs a manual decision in Angler: it adds no `init` settings or feature flags and changes none of the open-ended families (status codes, audit combinations).')
   }
 
@@ -160,9 +201,9 @@ function renderComment (base, head, detected) {
       '\n\nThis is every name the registry can list. It does not include the open-ended families (`Config/*`, `Feature_Flag/*`, retry and connect response status codes), and Angler may legitimately hold more than this (names for older agent versions, and the curated ones).\n\n</details>'
   )
 
-  // The whole comment is collapsed by default so it does not crowd the conversation. The summary line stays visible and carries the counts.
+  // The whole comment is collapsed by default so it does not crowd the conversation. The summary line stays visible, so it carries the status and the counts.
   const decisionsSummary = decisions.length ? count(decisions.length, 'decision') : 'no decisions'
-  const summary = `<strong>Supportability metrics changed: this PR needs a matching Angler PR</strong> (${count(added.length, 'name')} to add, ${removed.length} removed, ${decisionsSummary})`
+  const summary = `${status.icon} <strong>${status.title}</strong> (${count(added.length, 'name')} to add, ${removed.length} removed, ${decisionsSummary})`
   return `<details>\n<summary>${summary}</summary>\n\n${parts.join('\n\n')}\n\n</details>\n`
 }
 

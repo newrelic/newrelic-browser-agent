@@ -1,4 +1,4 @@
-const { run, parseArguments, DEFAULT_NAME, previewName } = require('../../../../../tools/supportability-metrics/dashboard/apply')
+const { run, parseArguments, describeFailures, DEFAULT_NAME, previewName } = require('../../../../../tools/supportability-metrics/dashboard/apply')
 
 const registry = {
   header: 'h',
@@ -40,6 +40,26 @@ describe('parseArguments', () => {
   test('reads the flags, and defaults the name', () => {
     expect(parseArguments(['--env', 'staging', '--validate', '--write-json', 'out.json'])).toEqual({ env: 'staging', name: DEFAULT_NAME, validate: true, dryRun: false, remove: false, writeJson: 'out.json' })
     expect(parseArguments(['--env', 'us-prod', '--name', 'Mine', '--dry-run', '--delete'])).toMatchObject({ name: 'Mine', dryRun: true, remove: true })
+  })
+})
+
+describe('describeFailures', () => {
+  test('reports a cause shared by many queries once, with a count and a few examples', () => {
+    const failures = Array.from({ length: 5 }, (_, i) => ({ query: `FROM Supportability ${i}`, error: 'step size is larger than the window' }))
+    const text = describeFailures(failures)
+
+    expect(text).toContain('5 queries failed with: step size is larger than the window')
+    expect(text).toContain('FROM Supportability 0')
+    expect(text).toContain('FROM Supportability 2')
+    expect(text).not.toContain('FROM Supportability 3')
+    expect(text).toContain('... and 2 more')
+  })
+
+  test('reports different causes separately, and says "query" for one', () => {
+    const text = describeFailures([{ query: 'A', error: 'first' }, { query: 'B', error: 'second' }])
+
+    expect(text).toContain('1 query failed with: first')
+    expect(text).toContain('1 query failed with: second')
   })
 })
 
@@ -128,7 +148,7 @@ describe('run', () => {
 
     await expect(run(parseArguments(['--env', 'staging', '--validate']), dependencies({ fetchImplementation: fake.implementation, log }))).rejects.toThrow('not valid NRQL, so the dashboard was not applied')
     expect(fake.requests.some(request => request.query.includes('dashboardCreate'))).toBe(false)
-    expect(log).toHaveBeenCalledWith(expect.stringContaining('INVALID: NerdGraph error: NRQL Syntax Error'))
+    expect(log).toHaveBeenCalledWith(expect.stringMatching(/\d+ quer(y|ies) failed with: NerdGraph error: NRQL Syntax Error/))
   })
 
   test('searches for the dashboard to update or delete in the account it lives in, not the data account', async () => {

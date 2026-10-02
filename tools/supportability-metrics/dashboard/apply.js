@@ -42,6 +42,23 @@ function parseArguments (argv) {
   }
 }
 
+/** How many example queries to show for each distinct error. */
+const EXAMPLES_PER_ERROR = 3
+
+/**
+ * Groups failed queries by their error, so one cause that affects many queries is reported once with a few examples.
+ * @param {Array<{query: string, error: string}>} failures
+ * @returns {string}
+ */
+function describeFailures (failures) {
+  const byError = failures.reduce((groups, { query, error }) => groups.set(error, [...(groups.get(error) || []), query]), new Map())
+  return [...byError].map(([error, queries]) => {
+    const examples = queries.slice(0, EXAMPLES_PER_ERROR).map(query => `    ${query}`).join('\n')
+    const more = queries.length > EXAMPLES_PER_ERROR ? `\n    ... and ${queries.length - EXAMPLES_PER_ERROR} more` : ''
+    return `${queries.length} ${queries.length === 1 ? 'query' : 'queries'} failed with: ${error}\n${examples}${more}`
+  }).join('\n\n')
+}
+
 /**
  * Does what the arguments ask. Everything it touches outside of the arguments is passed in, so it can be tested.
  * @param {ReturnType<typeof parseArguments>} args
@@ -75,7 +92,7 @@ async function run (args, { env, registry, log, fetchImplementation, writeFile =
   if (args.validate) {
     const failures = await validateQueries(client, dashboard)
     if (failures.length) {
-      failures.forEach(({ query, error }) => log(`INVALID: ${error}\n  ${query}`))
+      log(describeFailures(failures))
       throw new Error(`${failures.length} generated ${failures.length === 1 ? 'query is' : 'queries are'} not valid NRQL, so the dashboard was not applied.`)
     }
     log('Every generated query ran successfully.')
@@ -87,7 +104,7 @@ async function run (args, { env, registry, log, fetchImplementation, writeFile =
   return { url: result.url, action: result.created ? 'created' : 'updated' }
 }
 
-module.exports = { run, parseArguments, DEFAULT_NAME, previewName }
+module.exports = { run, parseArguments, describeFailures, DEFAULT_NAME, previewName }
 
 if (require.main === module) {
   run(parseArguments(process.argv.slice(2)), { env: process.env, registry: require('../registry'), log: console.log })

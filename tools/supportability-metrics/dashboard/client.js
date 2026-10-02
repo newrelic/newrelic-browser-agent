@@ -13,6 +13,12 @@ const { quote } = require('./nrql')
 const VALIDATION_BATCH_SIZE = 15
 
 /**
+ * The time range added to a query that has none when it is validated. Most charts step by 1 hour (Angler writes one event per hour), and New
+ * Relic rejects a step that is larger than the time range, so the range must be comfortably longer than an hour.
+ */
+const VALIDATION_WINDOW = 'SINCE 3 hours ago'
+
+/**
  * @typedef {Object} NerdGraphClient
  * @property {function(string, Object=): Promise<Object>} request Runs a GraphQL document and returns its `data`, or throws with the errors.
  * @property {function(string): string} dashboardUrl A link to a dashboard from its guid.
@@ -121,14 +127,14 @@ function listQueries (dashboard) {
 
 /**
  * Runs every query the dashboard contains against New Relic, so a mistake in the generated NRQL is caught before the dashboard is applied.
- * Dashboard variables are replaced with a sample value, and a short time range is added to queries that have none.
+ * Dashboard variables are replaced with a sample value, and a short time range is added to queries that have none (see VALIDATION_WINDOW).
  * @param {NerdGraphClient} client
  * @param {Object} dashboard
  * @returns {Promise<Array<{query: string, error: string}>>} The queries that failed. Empty when all of them are valid.
  */
 async function validateQueries (client, dashboard) {
   const sample = (query) => query.replace(/\{\{[a-z_]+\}\}/g, quote('Browser/Supportability/Session/RaceCondition/Seen')).replace(/\s+$/, '')
-  const runnable = listQueries(dashboard).map(({ account, query }) => ({ account, query, run: /\bSINCE\b/i.test(query) ? sample(query) : `${sample(query)} SINCE 10 minutes ago` }))
+  const runnable = listQueries(dashboard).map(({ account, query }) => ({ account, query, run: /\bSINCE\b/i.test(query) ? sample(query) : `${sample(query)} ${VALIDATION_WINDOW}` }))
   const failures = []
   const byAccount = runnable.reduce((groups, item) => ({ ...groups, [item.account]: [...(groups[item.account] || []), item] }), {})
 
@@ -157,4 +163,4 @@ async function validateQueries (client, dashboard) {
   return failures
 }
 
-module.exports = { createClient, findDashboard, upsertDashboard, deleteDashboard, listQueries, validateQueries, VALIDATION_BATCH_SIZE }
+module.exports = { createClient, findDashboard, upsertDashboard, deleteDashboard, listQueries, validateQueries, VALIDATION_BATCH_SIZE, VALIDATION_WINDOW }

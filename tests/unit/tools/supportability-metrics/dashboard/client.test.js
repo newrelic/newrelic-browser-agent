@@ -1,4 +1,4 @@
-const { createClient, findDashboard, upsertDashboard, deleteDashboard, listQueries, validateQueries, VALIDATION_BATCH_SIZE } = require('../../../../../tools/supportability-metrics/dashboard/client')
+const { createClient, findDashboard, upsertDashboard, deleteDashboard, listQueries, validateQueries, VALIDATION_BATCH_SIZE, VALIDATION_WINDOW } = require('../../../../../tools/supportability-metrics/dashboard/client')
 
 const environment = { graphqlUrl: 'https://example.test/graphql', oneUrl: 'https://one.example.test' }
 
@@ -123,16 +123,24 @@ describe('validateQueries', () => {
 
     expect(failures).toEqual([])
     expect(Object.values(calls[0].variables).filter(value => typeof value === 'string')).toEqual([
-      'FROM Supportability SELECT count(*) SINCE 10 minutes ago',
+      'FROM Supportability SELECT count(*) SINCE 3 hours ago',
       'FROM Supportability SELECT count(*) SINCE 7 days ago'
     ])
+  })
+
+  test('uses a time range longer than the 1 hour step of the charts, which New Relic rejects otherwise', async () => {
+    const { client, calls } = clientWith({ data: {} })
+    await validateQueries(client, dashboard(['FROM Supportability SELECT sum(call_count) TIMESERIES 1 hour']))
+
+    expect(calls[0].variables.q0).toBe('FROM Supportability SELECT sum(call_count) TIMESERIES 1 hour ' + VALIDATION_WINDOW)
+    expect(Number(VALIDATION_WINDOW.match(/SINCE (\d+) hours ago/)[1])).toBeGreaterThan(1)
   })
 
   test('replaces dashboard variables with a sample value so the query can run', async () => {
     const { client, calls } = clientWith({ data: {} })
     await validateQueries(client, dashboard(['FROM Supportability SELECT count(*) WHERE name = {{metric_name}}']))
 
-    expect(calls[0].variables.q0).toContain("WHERE name = 'Browser/Supportability/Session/RaceCondition/Seen' SINCE 10 minutes ago")
+    expect(calls[0].variables.q0).toContain("WHERE name = 'Browser/Supportability/Session/RaceCondition/Seen' " + VALIDATION_WINDOW)
   })
 
   test('sends queries in batches', async () => {

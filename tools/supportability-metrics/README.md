@@ -52,15 +52,13 @@ the registry or the generator, never the dashboard. (It is editable by anyone wi
 experimenting lasts only until the next update.)
 
 ### What is in it
-- **Overview**: calls, accounts and apps reporting across all metrics, the top metrics, and the top accounts and apps. It is the first tab, so the dashboard
-  opens on it; every other tab follows in alphabetical order.
-- **One page per registry section**: the rate by metric, the total by metric, the rate for the top 10 accounts and the top 10 apps, and, for
-  the section's metrics that report a value, the average, maximum and minimum (labelled with the unit).
-- **Metric Explorer**: the rate, the rate by account and by app, and the average, minimum and maximum of whichever metric is picked.
-- **The `Metric` filter**: New Relic dashboard variables apply to the whole dashboard, so the picker filters **every chart on every page**. It is filled from
-  the data (every name in the last 7 days), so a metric appears in it as soon as Angler holds it, with no regeneration. It defaults to the pattern
-  `Browser/Supportability/%` (all metrics); every chart is written `... AND name LIKE {{metric}}`. Pick one metric to narrow every page to it, or type a
-  pattern such as `Browser/Supportability/API/%`.
+- **Metric Explorer** (the first tab, so the dashboard opens on it): the only page that uses the **Supportability Metric** dropdown. The dropdown has no
+  default, so until a metric is picked every chart on this page is empty. Pick one and every chart shows just that metric: its calls, accounts and apps
+  reporting, the rate, the rate for the top 10 accounts and the top 10 apps, and the average, maximum and minimum value. The dropdown is filled from the
+  data (every name in the last 7 days), so a metric appears in it as soon as Angler holds it, with no regeneration.
+- **One page per registry section**, in alphabetical order after the explorer. Their queries are fixed and ignore the dropdown: the rate by metric, the total
+  by metric, the rate for the top 10 accounts and the top 10 apps, and, for the section's metrics that report a value, the average, maximum and minimum
+  (labelled with the unit).
 
 It is built from the `Supportability` event Angler writes once an hour per account, app and metric name: the rate is `sum(call_count)`, the
 average is `sum(total_call_time) / sum(call_count)`, and the extremes are `max(max_call_time)` and `min(min_call_time)`. A metric only has

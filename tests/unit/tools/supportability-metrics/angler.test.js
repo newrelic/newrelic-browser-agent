@@ -74,23 +74,56 @@ describe('diffRegistries', () => {
 describe('renderComment dashboard link', () => {
   const none = { addedSettings: [], removedSettings: [], addedFlags: [] }
   const url = 'https://staging-one.newrelic.com/dashboards/detail/ABC'
+  const withBase = without('Session/RaceCondition/Seen')
 
   test('links the preview dashboard when there is one, and explains it', () => {
-    const comment = renderComment(without('Session/RaceCondition/Seen'), head, none, { dashboardUrl: url })
+    const comment = renderComment(withBase, head, none, { dashboardUrl: url })
 
     expect(comment).toContain(`📊 **[Preview the dashboard for this PR](${url})**`)
     expect(comment).toContain('deleted when the PR closes')
     expect(comment).toContain('stay empty until the metric ships')
   })
 
+  test('shows the link above the collapsed section, so it is visible without opening the comment', () => {
+    const comment = renderComment(withBase, head, none, { dashboardUrl: url })
+
+    expect(comment.indexOf('Preview the dashboard')).toBeGreaterThanOrEqual(0)
+    expect(comment.indexOf('Preview the dashboard')).toBeLessThan(comment.indexOf('<details>'))
+    expect(comment.startsWith('📊')).toBe(true)
+  })
+
+  test('shows the link once, not again inside the collapsed section', () => {
+    expect(renderComment(withBase, head, none, { dashboardUrl: url }).split(url)).toHaveLength(2)
+  })
+
   test('has no link line when there is no dashboard', () => {
-    expect(renderComment(without('Session/RaceCondition/Seen'), head, none)).not.toContain('Preview the dashboard')
+    expect(renderComment(withBase, head, none)).not.toContain('Preview the dashboard')
+    expect(renderComment(withBase, head, none).startsWith('<details>')).toBe(true)
   })
 
   test('links the dashboard in every state, including when nothing needs to change in Angler', () => {
     const onlyDescription = { ...head, entries: entries.map(entry => entry.tag === 'Session/RaceCondition/Seen' ? { ...entry, description: 'new wording' } : entry) }
 
     expect(renderComment(head, onlyDescription, none, { dashboardUrl: url })).toContain(url)
+  })
+
+  describe('when only the dashboard generator changed and the registry did not', () => {
+    test('still posts a comment with the link, because that is the only way to reach the preview', () => {
+      expect(renderComment(head, head, none, { dashboardUrl: url })).toContain(url)
+    })
+
+    test('says nothing needs to change in Angler, in green, without a checklist', () => {
+      const comment = renderComment(head, head, undefined, { dashboardUrl: url })
+
+      expect(comment).toContain('<summary>🟢 <strong>Supportability dashboard changed: no Angler changes needed</strong> (0 names to add, 0 removed, no decisions)</summary>')
+      expect(comment).toContain('changes the dashboard generator, not the supportability metric registry')
+      expect(comment).not.toContain('- [ ]')
+      expect(comment).not.toContain('Needs your decision')
+    })
+
+    test('posts nothing when there is no dashboard either', () => {
+      expect(renderComment(head, head, none)).toBeUndefined()
+    })
   })
 })
 

@@ -1,4 +1,4 @@
-const { buildDashboard, Grid, METRIC_VARIABLE, ALL_METRICS } = require('../../../../../tools/supportability-metrics/dashboard/generate')
+const { buildDashboard, Grid, METRIC_VARIABLE } = require('../../../../../tools/supportability-metrics/dashboard/generate')
 const registry = require('../../../../../tools/supportability-metrics/registry')
 
 const build = (reg = registry, options = {}) => buildDashboard(reg, { dataAccountId: 432507, name: 'Test dashboard', ...options })
@@ -30,28 +30,32 @@ describe('buildDashboard', () => {
     expect(build(small).permissions).toBe('PUBLIC_READ_WRITE')
   })
 
-  test('has an overview first, then a page for each section that has entries and the explorer, in alphabetical order', () => {
-    expect(build(small).pages.map(candidate => candidate.name)).toEqual(['Overview', 'Metric Explorer', 'Plain', 'Valued'])
+  test('has the metric explorer first, then a page for each section that has entries, in alphabetical order', () => {
+    expect(build(small).pages.map(candidate => candidate.name)).toEqual(['Metric Explorer', 'Plain', 'Valued'])
   })
 
-  test('keeps the overview first even though it would not sort first, because the dashboard opens on its first page', () => {
+  test('keeps the explorer first even though it would not sort first, because the dashboard opens on its first page', () => {
     const names = build({ ...small, sections: [{ id: 'plain', title: 'Alpha' }, { id: 'valued', title: 'Zulu' }] }).pages.map(candidate => candidate.name)
 
-    expect(names).toEqual(['Overview', 'Alpha', 'Metric Explorer', 'Zulu'])
+    expect(names).toEqual(['Metric Explorer', 'Alpha', 'Zulu'])
   })
 
-  test('sorts the other pages without regard to case', () => {
+  test('sorts the section pages without regard to case', () => {
     const names = build({ ...small, sections: [{ id: 'plain', title: 'banana' }, { id: 'valued', title: 'Apple' }] }).pages.map(candidate => candidate.name)
 
-    expect(names).toEqual(['Overview', 'Apple', 'banana', 'Metric Explorer'])
+    expect(names).toEqual(['Metric Explorer', 'Apple', 'banana'])
+  })
+
+  test('has no overview page', () => {
+    expect(build().pages.map(candidate => candidate.name)).not.toContain('Overview')
   })
 
   test('has a page for every section of the real registry that has entries', () => {
     const dashboard = build()
     const titles = registry.sections.filter(section => registry.entries.some(entry => entry.section === section.id)).map(section => section.title)
-    const alphabetical = [...titles, 'Metric Explorer'].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }))
+    const alphabetical = [...titles].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }))
 
-    expect(dashboard.pages.map(candidate => candidate.name)).toEqual(['Overview', ...alphabetical])
+    expect(dashboard.pages.map(candidate => candidate.name)).toEqual(['Metric Explorer', ...alphabetical])
   })
 
   test('has unique page names', () => {
@@ -162,59 +166,23 @@ describe('section pages', () => {
   })
 })
 
-describe('overview', () => {
-  const overview = page(build(), 'Overview')
-
-  test('says it is generated, where to change it, and links the registry, the hand-built dashboard and the guide', () => {
-    const text = overview.widgets[0].rawConfiguration.text
-
-    expect(text).toMatch(/\*\*Generated\*\*.*overwritten/)
-    expect(text).toContain('tools/supportability-metrics/registry.js')
-    expect(text).toContain('https://onenr.io/07jbyP2q3Ry')
-    expect(text).toContain('tools/supportability-metrics/README.md')
-  })
-
-  test('keeps that explanation short, a third of what it was, and in a short widget', () => {
-    const text = overview.widgets[0].rawConfiguration.text
-    const readable = text.replace(/\]\([^)]*\)/g, ']').length // the length of what a viewer reads, without the link addresses
-
-    expect(readable).toBeLessThan(300)
-    expect(overview.widgets[0].layout.height).toBeLessThanOrEqual(2)
-  })
-
-  test('mentions that new metrics appear only after their Angler PR merges', () => {
-    expect(overview.widgets[0].rawConfiguration.text).toContain('once their Angler PR merges')
-  })
-
-  test('covers every supportability metric, not just registered ones', () => {
-    expect(overview.widgets.find(widget => widget.title === 'Calls (all metrics)').rawConfiguration.nrqlQueries[0].query).toContain("name LIKE 'Browser/Supportability/%'")
-  })
-})
-
 describe('metric explorer', () => {
   const dashboard = build()
   const explorer = page(dashboard, 'Metric Explorer')
+  const charts = explorer.widgets.filter(widget => widget.rawConfiguration.nrqlQueries)
 
-  test('has a picker filled from the data, so new metrics appear without regenerating', () => {
-    expect(dashboard.variables).toHaveLength(1)
-    expect(dashboard.variables[0]).toMatchObject({ name: METRIC_VARIABLE, type: 'NRQL', replacementStrategy: 'STRING', isMultiSelection: false })
-    expect(dashboard.variables[0].nrqlQuery.query).toContain('uniques(name)')
-    expect(dashboard.variables[0].nrqlQuery.accountIds).toEqual([432507])
-  })
-
-  test('defaults to every metric, so a page is unfiltered until someone picks one', () => {
-    expect(dashboard.variables[0].defaultValues).toEqual([{ value: { string: 'Browser/Supportability/%' } }])
-    expect(ALL_METRICS).toBe('Browser/Supportability/%')
+  test('opens straight on the charts, with no description box', () => {
+    expect(explorer.widgets.some(widget => widget.visualization.id === 'viz.markdown')).toBe(false)
+    expect(explorer.widgets[0].layout).toMatchObject({ column: 1, row: 1 })
   })
 
   test('shows the rate, by account and by app, and the value charts for the selected metric', () => {
     expect(explorer.widgets.map(widget => widget.title).filter(Boolean)).toEqual(expect.arrayContaining(['Calls', 'Rate', 'Rate by account (top 10)', 'Rate by app (top 10)', 'Selected metric: average value (value)']))
   })
 
-  test('filters by the picker, as a pattern so the default of all metrics matches everything', () => {
-    explorer.widgets.filter(widget => widget.rawConfiguration.nrqlQueries).forEach(widget => {
-      expect(widget.rawConfiguration.nrqlQueries[0].query).toContain('name LIKE {{metric}}')
-    })
+  test('shows only the selected metric in every chart, by exact name', () => {
+    expect(charts).toHaveLength(explorer.widgets.length)
+    charts.forEach(widget => expect(widget.rawConfiguration.nrqlQueries[0].query).toContain('WHERE name = {{metric}}'))
   })
 
   test('draws a single line for the selected metric, not one per name', () => {
@@ -222,36 +190,36 @@ describe('metric explorer', () => {
   })
 })
 
-describe('the metric filter', () => {
+describe('the metric picker', () => {
   const dashboard = build()
-  const charts = widgetsOf(dashboard).filter(widget => widget.rawConfiguration.nrqlQueries)
 
-  test('applies to every chart on every page, because dashboard variables are dashboard wide', () => {
-    expect(charts.length).toBeGreaterThan(100)
-    charts.forEach(widget => expect(widget.rawConfiguration.nrqlQueries[0].query).toContain('name LIKE {{metric}}'))
+  test('is a dropdown filled from the data, so new metrics appear without regenerating', () => {
+    expect(dashboard.variables).toHaveLength(1)
+    expect(dashboard.variables[0]).toMatchObject({ name: METRIC_VARIABLE, type: 'NRQL', replacementStrategy: 'STRING', isMultiSelection: false })
+    expect(dashboard.variables[0].nrqlQuery.query).toContain('uniques(name)')
+    expect(dashboard.variables[0].nrqlQuery.accountIds).toEqual([432507])
   })
 
-  test('narrows the overview with the filter added to the name pattern', () => {
-    const query = page(dashboard, 'Overview').widgets.find(widget => widget.title === 'Rate by account (top 10)').rawConfiguration.nrqlQueries[0].query
-
-    expect(query).toBe("FROM Supportability SELECT sum(call_count) WHERE name LIKE 'Browser/Supportability/%' AND name LIKE {{metric}} FACET account_id TIMESERIES 1 hour LIMIT 10")
+  test('is called Supportability Metric', () => {
+    expect(dashboard.variables[0].title).toBe('Supportability Metric')
   })
 
-  test('keeps an OR of several patterns inside parentheses, so the filter narrows all of them', () => {
-    const query = page(build(small), 'Valued').widgets.find(widget => widget.title === 'Rate by metric').rawConfiguration.nrqlQueries[0].query
-
-    expect(query).toContain(') AND name LIKE {{metric}}')
-    expect(query).toMatch(/WHERE \(.* OR .*\) AND name LIKE/)
+  test('has no default, so nothing is selected until a viewer picks a metric', () => {
+    expect(dashboard.variables[0].defaultValues).toBeNull()
   })
 
-  test('applies to the value charts of a section too', () => {
-    const query = page(build(small), 'Valued').widgets.find(widget => widget.title.includes('average value (bytes)')).rawConfiguration.nrqlQueries[0].query
-
-    expect(query).toContain("name = 'Browser/Supportability/Valued/Size' AND name LIKE {{metric}}")
+  test('is used by the metric explorer and by no other page', () => {
+    dashboard.pages.filter(candidate => candidate.name !== 'Metric Explorer').forEach(candidate => {
+      candidate.widgets.filter(widget => widget.rawConfiguration.nrqlQueries).forEach(widget => {
+        expect(widget.rawConfiguration.nrqlQueries[0].query).not.toContain('{{')
+      })
+    })
   })
 
-  test('is explained on the overview', () => {
-    expect(page(dashboard, 'Overview').widgets[0].rawConfiguration.text).toContain('**Metric** filter above applies to every chart on every page')
+  test('leaves the section pages showing their whole section, whatever is picked', () => {
+    const query = page(dashboard, 'Session').widgets.find(widget => widget.title === 'Rate by metric').rawConfiguration.nrqlQueries[0].query
+
+    expect(query).toBe("FROM Supportability SELECT sum(call_count) WHERE name = 'Browser/Supportability/Session/RaceCondition/Seen' FACET substring(name, 23) TIMESERIES 1 hour LIMIT 20")
   })
 })
 

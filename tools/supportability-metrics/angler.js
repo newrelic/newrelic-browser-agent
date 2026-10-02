@@ -86,8 +86,16 @@ const block = (lines) => '```text\n' + lines.join('\n') + '\n```'
  * @param {string[]} decisions The checklist items.
  * @returns {{icon: string, title: string, intro: string, steps: function(number, number): string}}
  */
-function getStatus (added, removed, decisions) {
+function getStatus (added, removed, decisions, registryChanged = true) {
   const registryChange = 'This PR changes the supportability metric registry.'
+  if (!registryChanged) {
+    return {
+      icon: '🟢',
+      title: 'Supportability dashboard changed: no Angler changes needed',
+      intro: 'This PR changes the dashboard generator, not the supportability metric registry, so nothing needs to change in Angler. This comment is regenerated on every push.',
+      steps: () => undefined
+    }
+  }
   if (!added.length && !decisions.length && !removed.length) {
     return {
       icon: '🟢',
@@ -119,6 +127,12 @@ function getStatus (added, removed, decisions) {
     ].join('\n\n')
   }
 }
+
+/**
+ * @param {string} url
+ * @returns {string} The line that links the preview dashboard.
+ */
+const dashboardLink = (url) => `📊 **[Preview the dashboard for this PR](${url})** (a copy in staging, updated on every push and deleted when the PR closes. Charts for new metrics stay empty until the metric ships and its name is in Angler.)`
 
 /**
  * The checklist of things only the author can decide, limited to what this pull request actually touches.
@@ -153,19 +167,21 @@ function listDecisions (head, changedOpenFamilies, detected) {
  * @param {import('./registry-types').Registry} head The registry on the pull request.
  * @param {import('./detect').DetectedChanges} [detected] What the pull request does to `init` settings and feature flags. Without it, the
  *   checklist falls back to telling the author what to check.
- * @param {{dashboardUrl?: string}} [options] `dashboardUrl` is a link to the preview dashboard generated for this pull request.
+ * @param {{dashboardUrl?: string}} [options] `dashboardUrl` is a link to the preview dashboard generated for this pull request. It is shown above the
+ *   collapsed comment, so it can be followed without opening it.
  * @returns {string | undefined} Markdown, or undefined if the pull request does not change any supportability metric.
  */
 function renderComment (base, head, detected, { dashboardUrl } = {}) {
   const { relevant, added, removed, changedOpenFamilies } = diffRegistries(base, head)
-  if (!relevant) return undefined
+  // The link to the preview dashboard is worth a comment even when the registry did not change (the dashboard generator did)
+  if (!relevant && !dashboardUrl) return undefined
 
   const all = listConcreteTags(head)
-  const decisions = listDecisions(head, changedOpenFamilies, detected)
-  const status = getStatus(added, removed, decisions)
+  // Nothing in Angler depends on a change that did not touch the registry
+  const decisions = relevant ? listDecisions(head, changedOpenFamilies, detected) : []
+  const status = getStatus(added, removed, decisions, relevant)
   const parts = [
     status.intro,
-    dashboardUrl ? `📊 **[Preview the dashboard for this PR](${dashboardUrl})**: a copy of the generated supportability dashboard in staging, updated on every push and deleted when the PR closes. Charts for new metrics stay empty until the metric ships and its name is in Angler.` : undefined,
     status.steps(decisions.length, removed.length)
   ].filter(Boolean)
 
@@ -206,7 +222,9 @@ function renderComment (base, head, detected, { dashboardUrl } = {}) {
   // The whole comment is collapsed by default so it does not crowd the conversation. The summary line stays visible, so it carries the status and the counts.
   const decisionsSummary = decisions.length ? count(decisions.length, 'decision') : 'no decisions'
   const summary = `${status.icon} <strong>${status.title}</strong> (${count(added.length, 'name')} to add, ${removed.length} removed, ${decisionsSummary})`
-  return `<details>\n<summary>${summary}</summary>\n\n${parts.join('\n\n')}\n\n</details>\n`
+  const collapsed = `<details>\n<summary>${summary}</summary>\n\n${parts.join('\n\n')}\n\n</details>\n`
+  // The link goes above the collapsed section, so it is visible without opening the comment
+  return dashboardUrl ? `${dashboardLink(dashboardUrl)}\n\n${collapsed}` : collapsed
 }
 
 module.exports = { PREFIX, ANGLER_REPO_URL, ANGLER_FILE_URL, listConcreteTags, diffRegistries, renderComment }

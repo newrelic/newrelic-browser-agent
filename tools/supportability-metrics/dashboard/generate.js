@@ -8,30 +8,19 @@
  * dashboard exported from the New Relic UI).
  *
  * Instead of a set of charts per metric, which would be hundreds of widgets, it has:
- * - an Overview page, which comes first (the dashboard opens on it) with every other page after it in alphabetical order,
- * - one page per registry section, with the rate by metric, the accounts and apps reporting, the top accounts and apps, and the
- *   average, minimum and maximum of the metrics in that section that report a value, and
- * - a Metric Explorer page with the same charts for whichever metric is picked.
- *
- * The dashboard has one variable, `metric`, that filters every chart on every page (dashboard variables apply to the whole dashboard, so a
- * picker that only some pages used would look broken on the rest). It defaults to a wildcard that matches every metric; its options are filled
- * from the data, so a metric Angler starts to track appears in the picker without the dashboard being regenerated.
+ * - a Metric Explorer page, which comes first (the dashboard opens on it). It is the only page that uses the dashboard's one variable, `metric`,
+ *   a picker filled from the data itself, so a metric Angler starts to track appears in it without the dashboard being regenerated. With no
+ *   metric picked the picker is null and every chart on the page is empty; with one picked, every chart shows just that metric, and
+ * - one page per registry section, in alphabetical order, with the rate by metric, the accounts and apps reporting, the top accounts and
+ *   apps, and the average, minimum and maximum of the metrics in that section that report a value. Their queries are fixed: they always
+ *   show the whole section, whatever the picker is set to.
  */
 
-const { PREFIX } = require('../angler')
-const { queries, nameCondition, quote, hasPlaceholder } = require('./nrql')
+const { queries, nameCondition, hasPlaceholder } = require('./nrql')
 
-const REGISTRY_URL = 'https://github.com/newrelic/newrelic-browser-agent/blob/main/tools/supportability-metrics/registry.js'
-const GUIDE_URL = 'https://github.com/newrelic/newrelic-browser-agent/blob/main/tools/supportability-metrics/README.md'
-const HAND_BUILT_URL = 'https://onenr.io/07jbyP2q3Ry'
 const METRIC_VARIABLE = 'metric'
-/** What the variable is set to for "all metrics". It is a LIKE pattern, so any metric name (an exact match) is a valid value too. */
-const ALL_METRICS = PREFIX + '%'
-/** Narrows a chart to the metric picked in the variable. Added to every chart's conditions. */
-const METRIC_FILTER = `name LIKE {{${METRIC_VARIABLE}}}`
-
-/** @param {string} condition @returns {string} The condition, and the metric the viewer picked. A condition is a single predicate or already parenthesized, so AND binds correctly. */
-const filtered = (condition) => `${condition} AND ${METRIC_FILTER}`
+/** Narrows a chart to the one metric picked in the variable. With nothing picked no metric matches, so the chart is empty. */
+const METRIC_FILTER = `name = {{${METRIC_VARIABLE}}}`
 const GRID_COLUMNS = 12
 
 /** Lays widgets out left to right on a 12 column grid, starting a new row when one does not fit. */
@@ -146,7 +135,7 @@ function valueCharts (context, grid, condition, unit, subject, facet) {
  */
 function sectionPage (section, entries, context) {
   const grid = new Grid()
-  const condition = filtered(nameCondition(entries))
+  const condition = nameCondition(entries)
   const widgets = []
   if (section.intro) {
     widgets.push(markdown(grid, section.intro, [12, 2]))
@@ -167,40 +156,13 @@ function sectionPage (section, entries, context) {
   entries.filter(entry => entry.value).forEach(entry => { (byUnit[entry.value.unit] = byUnit[entry.value.unit] || []).push(entry) })
   Object.entries(byUnit).forEach(([unit, valueEntries]) => {
     const only = Object.fromEntries(valueEntries.filter(entry => entry.value.for).map(entry => [entry.tag, entry.value.for]))
-    widgets.push(...valueCharts(context, grid, filtered(nameCondition(valueEntries, { only })), unit, 'Metrics that report a value', true))
+    widgets.push(...valueCharts(context, grid, nameCondition(valueEntries, { only }), unit, 'Metrics that report a value', true))
   })
   return { name: section.title, description: `Generated from the "${section.title}" section of the registry.`, widgets }
 }
 
 /**
- * @param {import('../registry-types').Registry} registry
- * @param {Object} context
- * @returns {Object} The overview page.
- */
-function overviewPage (registry, context) {
-  const grid = new Grid()
-  const everything = filtered('name LIKE ' + quote(ALL_METRICS))
-  const widgets = [
-    markdown(grid,
-      '**Generated** from the [registry](' + REGISTRY_URL + '); edits are overwritten. ' +
-      'The **Metric** filter above applies to every chart on every page (default: all). ' +
-      'New metrics appear once their Angler PR merges. ' +
-      '[Hand-built dashboard](' + HAND_BUILT_URL + ') · [How it works](' + GUIDE_URL + ')',
-      [12, 2])
-  ]
-  grid.nextRow()
-  widgets.push(...summaryBillboards(context, grid, everything, 'all metrics'))
-  grid.nextRow()
-  widgets.push(chart(context, grid, 'viz.line', 'Top metrics by rate', queries.rateByMetric(everything, 15), WIDE))
-  widgets.push(chart(context, grid, 'viz.bar', 'Top metrics by total', queries.totalByMetric(everything).replace('LIMIT MAX', 'LIMIT 25'), [4, 4]))
-  grid.nextRow()
-  widgets.push(chart(context, grid, 'viz.line', 'Rate by account (top 10)', queries.rateByAccount(everything), HALF))
-  widgets.push(chart(context, grid, 'viz.line', 'Rate by app (top 10)', queries.rateByApp(everything), HALF))
-  return { name: 'Overview', description: 'Generated. Everything Angler holds, and where to go next.', widgets }
-}
-
-/**
- * The explorer page: a picker, and the same charts for the one metric it selects.
+ * The explorer page: the charts for the one metric picked in the variable. Nothing is shown until one is picked.
  * @param {Object} context
  * @returns {Object}
  */
@@ -208,21 +170,17 @@ function explorerPage (context) {
   const grid = new Grid()
   const condition = METRIC_FILTER
   const widgets = [
-    markdown(grid, 'Choose a metric with the **Metric** picker above. The list comes from the data in the last 7 days, so it includes every name Angler holds. With no metric chosen these charts cover all metrics. Average, minimum and maximum are 0 for a metric that does not report a value.', [12, 2])
-  ]
-  grid.nextRow()
-  widgets.push(
     chart(context, grid, 'viz.billboard', 'Calls', queries.totalCalls(condition), BILLBOARD),
     chart(context, grid, 'viz.billboard', 'Accounts reporting', queries.accountsReporting(condition), BILLBOARD),
     chart(context, grid, 'viz.billboard', 'Apps reporting', queries.appsReporting(condition), BILLBOARD)
-  )
+  ]
   grid.nextRow()
   widgets.push(chart(context, grid, 'viz.line', 'Rate', queries.rate(condition), [12, 4]))
   grid.nextRow()
   widgets.push(chart(context, grid, 'viz.line', 'Rate by account (top 10)', queries.rateByAccount(condition), HALF))
   widgets.push(chart(context, grid, 'viz.line', 'Rate by app (top 10)', queries.rateByApp(condition), HALF))
   widgets.push(...valueCharts(context, grid, condition, 'value', 'Selected metric', false))
-  return { name: 'Metric Explorer', description: 'Generated. Pick any one metric.', widgets }
+  return { name: 'Metric Explorer', description: 'Generated. Pick one metric to see it.', widgets }
 }
 
 /**
@@ -232,12 +190,12 @@ function explorerPage (context) {
 function variables (context) {
   return [{
     name: METRIC_VARIABLE,
-    title: 'Metric (filters every page; default is all)',
+    title: 'Supportability Metric',
     type: 'NRQL',
     items: null,
     isMultiSelection: false,
     replacementStrategy: 'STRING',
-    defaultValues: [{ value: { string: ALL_METRICS } }],
+    defaultValues: null,
     nrqlQuery: { accountIds: [context.dataAccountId], query: queries.metricNames() },
     options: { ignoreTimeRange: true }
   }]
@@ -251,15 +209,13 @@ function variables (context) {
  */
 function buildDashboard (registry, { dataAccountId, name, description }) {
   const context = { dataAccountId }
-  const otherPages = [
-    ...registry.sections
-      .map(section => ({ section, entries: registry.entries.filter(entry => entry.section === section.id) }))
-      .filter(({ entries }) => entries.length)
-      .map(({ section, entries }) => sectionPage(section, entries, context)),
-    explorerPage(context)
-  ].sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }))
-  // The Overview is always first, because a link to the dashboard opens its first page. Every other page follows in alphabetical order.
-  const pages = [overviewPage(registry, context), ...otherPages]
+  const sectionPages = registry.sections
+    .map(section => ({ section, entries: registry.entries.filter(entry => entry.section === section.id) }))
+    .filter(({ entries }) => entries.length)
+    .map(({ section, entries }) => sectionPage(section, entries, context))
+    .sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }))
+  // The explorer is always first, because a link to the dashboard opens its first page. Every section page follows in alphabetical order.
+  const pages = [explorerPage(context), ...sectionPages]
   return {
     name,
     description: description || 'Generated from tools/supportability-metrics/registry.js in newrelic/newrelic-browser-agent. Do not edit: changes are overwritten.',
@@ -269,4 +225,4 @@ function buildDashboard (registry, { dataAccountId, name, description }) {
   }
 }
 
-module.exports = { buildDashboard, Grid, METRIC_VARIABLE, ALL_METRICS }
+module.exports = { buildDashboard, Grid, METRIC_VARIABLE }

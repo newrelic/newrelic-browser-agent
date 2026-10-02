@@ -100,24 +100,39 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
-      - name: Search for string in changed lines or file changes
-        id: supportability_check
-        uses: ./.github/actions/supportability-check
-      - name: Comment pull request
-        if: steps.supportability_check.outputs.found_string != '' || steps.supportability_check.outputs.found_file == 'true'
+      - name: Get the supportability metric registry from the base branch
+        run: |
+          git show "origin/${{ github.base_ref }}:tools/supportability-metrics/registry.js" > "$RUNNER_TEMP/base-registry.js" || rm -f "$RUNNER_TEMP/base-registry.js"
+      - name: Work out what Angler needs
+        id: angler
+        run: |
+          node tools/supportability-metrics/angler-comment.js \
+            --base-registry "$RUNNER_TEMP/base-registry.js" \
+            --out "$RUNNER_TEMP/angler-comment.md"
+      - name: Tell the author what to do in Angler
+        # Regenerated on every push to the pull request: the comment is found by its tag and updated in place.
+        if: steps.angler.outputs.relevant == 'true'
         uses: ./.github/actions/comment-pull-request
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           pr_number: ${{ github.event.number }}
-          comment: |
-            ## Supportability Metric Usage Changes:
-            ${{ steps.supportability_check.outputs.found_string }}
-
-            ## Supportability Metrics .md File Changes:
-            supportability_metrics.md was changed? `${{ steps.supportability_check.outputs.found_file }}`
-
-            ***New supportability metrics require changes to [supportability_metrics.md](https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/supportability-metrics.md), as well as a new PR to [Angler](https://source.datanerd.us/agents/angler).  Please ensure an Angler PR is created and linked to this PR.***
+          comment_file: ${{ runner.temp }}/angler-comment.md
           comment_tag: <!-- supportability_metric_check -->
+      - name: Update the comment if the pull request no longer changes supportability metrics
+        if: steps.angler.outputs.relevant != 'true'
+        run: |
+          echo "## Supportability metrics: nothing to do in Angler" > "$RUNNER_TEMP/angler-comment-cleared.md"
+          echo "" >> "$RUNNER_TEMP/angler-comment-cleared.md"
+          echo "This PR no longer changes the supportability metric registry, so no Angler PR is needed for it." >> "$RUNNER_TEMP/angler-comment-cleared.md"
+      - name: Post the cleared comment, only if an earlier one exists
+        if: steps.angler.outputs.relevant != 'true'
+        uses: ./.github/actions/comment-pull-request
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pr_number: ${{ github.event.number }}
+          comment_file: ${{ runner.temp }}/angler-comment-cleared.md
+          comment_tag: <!-- supportability_metric_check -->
+          only_update_existing: 'true'
 
   resolve-latest-release:
     runs-on: ubuntu-latest

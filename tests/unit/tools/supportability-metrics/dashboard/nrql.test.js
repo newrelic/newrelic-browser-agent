@@ -74,6 +74,11 @@ describe('queries', () => {
     expect(queries.averageValue(condition, 'ms')).toContain('FACET')
   })
 
+  test('the total value is the sum of total_call_time over time', () => {
+    expect(queries.totalValue(condition, 'ms', false)).toBe("FROM Supportability SELECT sum(total_call_time) AS 'Total (ms)' WHERE name = 'x' TIMESERIES 1 hour")
+    expect(queries.totalValue(condition, 'ms')).toContain(`FACET ${LABEL} TIMESERIES 1 hour LIMIT MAX`)
+  })
+
   test('breaks a selection down by metric: accounts, apps and a table', () => {
     expect(queries.accountsByMetric(condition)).toBe(`FROM Supportability SELECT uniqueCount(account_id) AS 'Accounts' WHERE name = 'x' FACET ${LABEL} LIMIT MAX`)
     expect(queries.appsByMetric(condition)).toContain('uniqueCount(agent_id)')

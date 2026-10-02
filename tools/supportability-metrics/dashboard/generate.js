@@ -56,13 +56,15 @@ class Grid {
 }
 
 /**
- * @param {string} visualization `viz.line`, `viz.area`, `viz.bar`, `viz.pie`, `viz.table` or `viz.billboard`.
- * @returns {Object} The chart options New Relic expects for that visualization.
+ * @param {string} visualization `viz.line`, `viz.bar`, `viz.pie`, `viz.table` or `viz.billboard`.
+ * @returns {Object} The chart options New Relic expects for that visualization. Lines are smooth and show every series in their tooltip, and lines and pies have a gradient.
  */
 function chartOptions (visualization) {
   const facet = { showOtherSeries: visualization === 'viz.line' || visualization === 'viz.pie' }
-  if (visualization === 'viz.line' || visualization === 'viz.area') return { facet, legend: { enabled: true }, yAxisLeft: { zero: true } }
-  if (visualization === 'viz.pie') return { facet, legend: { enabled: true } }
+  if (visualization === 'viz.line') return { facet, legend: { enabled: true }, yAxisLeft: { zero: true }, chartStyles: { gradient: { enabled: true }, lineInterpolation: 'smooth' }, tooltip: { mode: 'all' } }
+  if (visualization === 'viz.pie') return { facet, legend: { enabled: true }, chartStyles: { gradient: { enabled: true } } }
+  // A billboard draws a line only when its query is a time series, and the other visualizations have no line or gradient to style
+  if (visualization === 'viz.billboard') return { facet, chartStyles: { lineInterpolation: 'smooth' } }
   return { facet }
 }
 
@@ -91,7 +93,7 @@ function chart (context, grid, visualization, title, query, [width, height]) {
 const BILLBOARD = [4, 3]
 const WIDE = [8, 4]
 const HALF = [6, 4]
-const THIRD = [4, 4]
+const QUARTER = [3, 4]
 
 /** A list of metric names in a chart title is shortened past this many characters. */
 const MAX_TITLE_NAMES = 100
@@ -139,7 +141,7 @@ function summaryBillboards (context, grid, condition, subject) {
 }
 
 /**
- * The average, maximum and minimum of a value, one row of three charts.
+ * The total, average, maximum and minimum of a value, one row of four charts.
  * @param {Object} context
  * @param {Grid} grid
  * @param {string} condition
@@ -151,9 +153,10 @@ function summaryBillboards (context, grid, condition, subject) {
 function valueCharts (context, grid, condition, unit, subject, facet) {
   grid.nextRow()
   return [
-    chart(context, grid, 'viz.line', `${subject}: average value (${unit})`, queries.averageValue(condition, unit, facet), THIRD),
-    chart(context, grid, 'viz.line', `${subject}: maximum value (${unit})`, queries.maximumValue(condition, unit, facet), THIRD),
-    chart(context, grid, 'viz.line', `${subject}: minimum value (${unit})`, queries.minimumValue(condition, unit, facet), THIRD)
+    chart(context, grid, 'viz.line', `${subject}: total value (${unit})`, queries.totalValue(condition, unit, facet), QUARTER),
+    chart(context, grid, 'viz.line', `${subject}: average value (${unit})`, queries.averageValue(condition, unit, facet), QUARTER),
+    chart(context, grid, 'viz.line', `${subject}: maximum value (${unit})`, queries.maximumValue(condition, unit, facet), QUARTER),
+    chart(context, grid, 'viz.line', `${subject}: minimum value (${unit})`, queries.minimumValue(condition, unit, facet), QUARTER)
   ]
 }
 
@@ -177,10 +180,10 @@ function sectionPage (section, entries, context) {
     widgets.push(chart(context, grid, 'viz.line', `${subject}: count`, queries.countByMetric(condition), [12, 4]))
   } else {
     /*
-     * Several metrics share this page, so break them down by name: the count over time as stacked areas next to a pie of each metric's
+     * Several metrics share this page, so break them down by name: the count over time as lines next to a pie of each metric's
      * share, then bars for the total and the accounts per metric, and a table with the total, accounts and apps side by side.
      */
-    widgets.push(chart(context, grid, 'viz.area', `${subject}: count over time by metric`, queries.countByMetric(condition), WIDE))
+    widgets.push(chart(context, grid, 'viz.line', `${subject}: count over time by metric`, queries.countByMetric(condition), WIDE))
     widgets.push(chart(context, grid, 'viz.pie', `${subject}: share of calls by metric`, queries.totalByMetric(condition), [4, 4]))
     grid.nextRow()
     widgets.push(chart(context, grid, 'viz.bar', `${subject}: total calls by metric`, queries.totalByMetric(condition), HALF))
@@ -192,7 +195,7 @@ function sectionPage (section, entries, context) {
   widgets.push(chart(context, grid, 'viz.line', `${subject}: count by account`, queries.countByAccount(condition), HALF))
   widgets.push(chart(context, grid, 'viz.line', `${subject}: count by app`, queries.countByApp(condition), HALF))
 
-  // One row of average, maximum and minimum per unit, for the metrics in this section that report a value
+  // One row of total, average, maximum and minimum per unit, for the metrics in this section that report a value
   const byUnit = {}
   entries.filter(entry => entry.value).forEach(entry => { (byUnit[entry.value.unit] = byUnit[entry.value.unit] || []).push(entry) })
   Object.entries(byUnit).forEach(([unit, valueEntries]) => {

@@ -91,6 +91,8 @@ const queries = {
   countByAccount: (condition) => `${from} SELECT sum(call_count) WHERE ${condition} FACET account_id TIMESERIES 1 hour LIMIT MAX`,
   /** The count over time, one line per app. */
   countByApp: (condition) => `${from} SELECT sum(call_count) WHERE ${condition} FACET agent_id TIMESERIES 1 hour LIMIT MAX`,
+  /** The sum of the reported values over time. */
+  totalValue: (condition, unit, facet = true) => `${from} SELECT sum(total_call_time) AS 'Total (${unit})' WHERE ${condition}${facetByMetric(facet)}${timeseries(facet)}`,
   /** The average of the reported value, which is the sum of the values over the sum of the counts. */
   averageValue: (condition, unit, facet = true) => `${from} SELECT sum(total_call_time) / sum(call_count) AS 'Average (${unit})' WHERE ${condition}${facetByMetric(facet)}${timeseries(facet)}`,
   maximumValue: (condition, unit, facet = true) => `${from} SELECT max(max_call_time) AS 'Maximum (${unit})' WHERE ${condition}${facetByMetric(facet)}${timeseries(facet)}`,

@@ -64,11 +64,11 @@ describe('buildDashboard', () => {
     expect(new Set(names).size).toBe(names.length)
   })
 
-  test('stays within the size of the hand-built dashboard, which has 18 pages and about 200 widgets', () => {
+  test('stays about the size of the hand-built dashboard, which has 18 pages and about 200 widgets', () => {
     const dashboard = build()
 
     expect(dashboard.pages.length).toBeLessThanOrEqual(20)
-    expect(widgetsOf(dashboard).length).toBeLessThanOrEqual(200)
+    expect(widgetsOf(dashboard).length).toBeLessThanOrEqual(250)
   })
 
   test('runs every query against the data account, and only against the Supportability event', () => {
@@ -103,8 +103,31 @@ describe('buildDashboard', () => {
   test('gives every chart a title and a known visualization', () => {
     widgetsOf(build()).filter(widget => widget.rawConfiguration.nrqlQueries).forEach(widget => {
       expect(widget.title).toBeTruthy()
-      expect(['viz.line', 'viz.area', 'viz.bar', 'viz.pie', 'viz.table', 'viz.billboard']).toContain(widget.visualization.id)
+      expect(['viz.line', 'viz.bar', 'viz.pie', 'viz.table', 'viz.billboard']).toContain(widget.visualization.id)
     })
+  })
+})
+
+describe('chart styles', () => {
+  const widgets = widgetsOf(build()).filter(widget => widget.rawConfiguration.nrqlQueries)
+  const of = (id) => widgets.filter(widget => widget.visualization.id === id)
+
+  test('draw every line smooth, with a gradient', () => {
+    expect(of('viz.line').length).toBeGreaterThan(0)
+    of('viz.line').forEach(widget => expect(widget.rawConfiguration.chartStyles).toEqual({ gradient: { enabled: true }, lineInterpolation: 'smooth' }))
+  })
+
+  test('show every series in the tooltip of every line', () => {
+    of('viz.line').forEach(widget => expect(widget.rawConfiguration.tooltip).toEqual({ mode: 'all' }))
+  })
+
+  test('give every pie a gradient', () => {
+    expect(of('viz.pie').length).toBeGreaterThan(0)
+    of('viz.pie').forEach(widget => expect(widget.rawConfiguration.chartStyles).toEqual({ gradient: { enabled: true } }))
+  })
+
+  test('draw the line of a billboard smooth', () => {
+    of('viz.billboard').forEach(widget => expect(widget.rawConfiguration.chartStyles).toEqual({ lineInterpolation: 'smooth' }))
   })
 })
 
@@ -123,11 +146,15 @@ describe('section pages', () => {
     ])
   })
 
+  test('draw no area charts', () => {
+    expect(build().pages.flatMap(candidate => candidate.widgets).some(widget => widget.visualization.id === 'viz.area')).toBe(false)
+  })
+
   test('break a multi-metric section down by name with a pie, bars and a table', () => {
     const viz = (title) => plain.widgets.find(widget => widget.title === title).visualization.id
 
     expect(viz('Plain: share of calls by metric')).toBe('viz.pie')
-    expect(viz('Plain: count over time by metric')).toBe('viz.area')
+    expect(viz('Plain: count over time by metric')).toBe('viz.line')
     expect(viz('Plain: total calls by metric')).toBe('viz.bar')
     expect(viz('Plain: calls, accounts and apps by metric')).toBe('viz.table')
     plain.widgets.filter(widget => /by metric$/.test(widget.title)).forEach(widget => expect(widget.rawConfiguration.nrqlQueries[0].query).toMatch(/FACET substring\(name, \d+\)/))
@@ -138,7 +165,7 @@ describe('section pages', () => {
   })
 
   test('have no average, minimum or maximum when no metric in the section reports a value', () => {
-    expect(plain.widgets.some(widget => /average value|maximum value|minimum value/.test(widget.title))).toBe(false)
+    expect(plain.widgets.some(widget => /total value|average value|maximum value|minimum value/.test(widget.title))).toBe(false)
   })
 
   describe('chart titles say what data they show', () => {
@@ -152,10 +179,10 @@ describe('section pages', () => {
       expect(titles(one)).toEqual(['Metric Count: Plain/One/Seen', 'Accounts reporting: Plain/One/Seen', 'Apps reporting: Plain/One/Seen', 'Plain/One/Seen: count', 'Plain/One/Seen: count by account', 'Plain/One/Seen: count by app'])
     })
 
-    test('name the metrics that report a value in the average, maximum and minimum charts, with the unit', () => {
+    test('name the metrics that report a value in the total, average, maximum and minimum charts, with the unit', () => {
       expect(titles(valued)).toEqual(expect.arrayContaining([
-        'Valued/Size: average value (bytes)', 'Valued/Size: maximum value (bytes)', 'Valued/Size: minimum value (bytes)',
-        'Valued/Time/a: average value (ms)', 'Valued/Time/a: maximum value (ms)', 'Valued/Time/a: minimum value (ms)'
+        'Valued/Size: total value (bytes)', 'Valued/Size: average value (bytes)', 'Valued/Size: maximum value (bytes)', 'Valued/Size: minimum value (bytes)',
+        'Valued/Time/a: total value (ms)', 'Valued/Time/a: average value (ms)', 'Valued/Time/a: maximum value (ms)', 'Valued/Time/a: minimum value (ms)'
       ]))
     })
 
@@ -202,7 +229,14 @@ describe('section pages', () => {
     })
   })
 
-  test('show the average, maximum and minimum for each unit that a metric in the section reports', () => {
+  test('plot the sum of the reported values over time next to the average', () => {
+    const total = queryOf(valued, 'Valued/Size: total value (bytes)')
+
+    expect(total).toContain("sum(total_call_time) AS 'Total (bytes)'")
+    expect(total).toContain('TIMESERIES 1 hour')
+  })
+
+  test('show the total, average, maximum and minimum for each unit that a metric in the section reports', () => {
     expect(titles(valued)).toEqual(expect.arrayContaining(['Valued/Size: average value (bytes)', 'Valued/Time/a: average value (ms)']))
   })
 
@@ -251,7 +285,7 @@ describe('metric explorer', () => {
   })
 
   test('shows the count, by account and by app, and the value charts for the selected metric', () => {
-    expect(explorer.widgets.map(widget => widget.title).filter(Boolean)).toEqual(expect.arrayContaining(['Metric Count', 'Count', 'Count by account', 'Count by app', 'Selected metric: average value (value)']))
+    expect(explorer.widgets.map(widget => widget.title).filter(Boolean)).toEqual(expect.arrayContaining(['Metric Count', 'Count', 'Count by account', 'Count by app', 'Selected metric: total value (value)', 'Selected metric: average value (value)']))
   })
 
   test('shows only the selected metric in every chart, by exact name, with the variable as the whole name', () => {

@@ -1,3 +1,4 @@
+/* globals noticeErrorFn */
 import { testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('error bucketing', () => {
@@ -73,5 +74,38 @@ describe('error bucketing', () => {
     expect(secondErrorResult[1].request.body.err).toBeDefined() // has errors
     expect(secondErrorResult[1].request.body.err).toEqual(firstErrorResult[0].request.body.err) // same because it's a retry
     expect(secondErrorResult[1].request.body.err.length).toBe(2) // both errors reported, not bucketed
+  })
+
+  describe('across a session reset', () => {
+    afterEach(async () => {
+      await browser.destroyAgentSession()
+    })
+
+    it('resends the full stack trace once after the session resets', async () => {
+      const [firstResult] = await Promise.all([
+        errorsCapture.waitForResult({ totalCount: 1 }),
+        browser.url(await browser.testHandle.assetURL('duplicate-errors.html'))
+          .then(() => browser.waitForFeatureAggregate('jserrors'))
+          .then(() => browser.execute(function () { noticeErrorFn() }))
+      ])
+      expect(firstResult[0].request.body.err[0].params.stack_trace).toEqual(expect.any(String)) // first occurrence: full stack trace
+      expect(firstResult[0].request.body.err[0].params.browser_stack_hash).toBeUndefined()
+
+      const [secondResult] = await Promise.all([
+        errorsCapture.waitForResult({ totalCount: 2 }),
+        browser.execute(function () { noticeErrorFn() })
+      ])
+      expect(secondResult[1].request.body.err[0].params.stack_trace).toBeUndefined() // second occurrence: deduped to a hash
+      expect(secondResult[1].request.body.err[0].params.browser_stack_hash).toEqual(expect.any(Number))
+
+      await browser.resetAgentSession() // simulates the agent's session expiring from max duration or inactivity
+
+      const [thirdResult] = await Promise.all([
+        errorsCapture.waitForResult({ totalCount: 3 }),
+        browser.execute(function () { noticeErrorFn() })
+      ])
+      expect(thirdResult[2].request.body.err[0].params.stack_trace).toEqual(expect.any(String)) // after reset: full stack trace resent
+      expect(thirdResult[2].request.body.err[0].params.browser_stack_hash).toBeUndefined()
+    })
   })
 })

@@ -133,10 +133,10 @@ describe('renderComment open-ended families', () => {
   const needsAngler = renderComment(without('Session/RaceCondition/Seen'), head, none)
 
   test('calls out every open-ended family, including Config and Feature_Flag, when the PR needs an Angler change', () => {
-    expect(needsAngler).toContain('> [!IMPORTANT]')
-    expect(needsAngler).toContain('will not show up in the dashboards unless Angler has them')
+    expect(needsAngler).toContain('> ### ⚠️ Make sure Angler has these names')
+    expect(needsAngler).not.toContain('[!IMPORTANT]')
     ;['Config/<init path>/Enabled', 'Feature_Flag/<flag>/Seen', 'Harvester/Retry/Failed/<code>', 'Harvester/Retry/Attempted/<feature>']
-      .forEach(tag => expect(needsAngler).toContain(`> - \`${PREFIX}${tag}\``))
+      .forEach(tag => expect(needsAngler).toContain(`\`${PREFIX}${tag}\``))
   })
 
   test('does not list a family whose names are already listed', () => {
@@ -144,7 +144,13 @@ describe('renderComment open-ended families', () => {
   })
 
   test('is left out when the PR needs nothing from Angler', () => {
-    expect(renderComment(withEntry({ section: 'session', tag: 'Session/New/Seen', description: 'd' }), head, none)).not.toContain('[!IMPORTANT]')
+    expect(renderComment(withEntry({ section: 'session', tag: 'Session/New/Seen', description: 'd' }), head, none)).not.toContain('Make sure Angler has these names')
+  })
+
+  test('writes an instruction once for families that share it', () => {
+    const twice = renderComment(without('Session/RaceCondition/Seen'), { ...head, entries: [...entries, { section: 'config', tag: 'Config/<init path>/Changed', description: 'd' }] }, none)
+
+    expect(twice).toContain(`\`${PREFIX}Config/<init path>/Enabled\` and \`${PREFIX}Config/<init path>/Changed\`: `)
   })
 })
 

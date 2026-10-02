@@ -165,16 +165,23 @@ function listDecisions (head, changedOpenFamilies, detected) {
  * A prominent reminder about the open-ended families, whose names cannot be generated. The dashboards select them with a pattern, but only names
  * Angler holds are ever written to New Relic, so any name missing from Angler never reaches a dashboard.
  * @param {import('./registry-types').Registry} head
- * @returns {string | undefined} A GitHub alert, or undefined when the registry has no open-ended family.
+ * @returns {string | undefined} A blockquote (GitHub alerts do not render inside the collapsed comment), or undefined when the registry has no open-ended family.
  */
 function openFamilyCallout (head) {
   const families = head.entries.filter(isOpenFamily)
   if (!families.length) return undefined
+  // Families with the same instruction are listed together, so it is only written once
+  const byHint = new Map()
+  families.forEach(entry => {
+    const hint = manualHint(entry)
+    byHint.set(hint, [...(byHint.get(hint) || []), `\`${PREFIX}${entry.tag}\``])
+  })
   return [
-    '> [!IMPORTANT]',
-    '> **These names cannot be generated, so they are not in the list below, and will not show up in the dashboards unless Angler has them.** The dashboards pick up every name Angler tracks in a family on their own, but Angler is curated by hand, and a name it does not list is never written to New Relic. For each family, make sure the names you care about are in `metric_names.txt`:',
+    '> ### ⚠️ Make sure Angler has these names, or they will not show up in the dashboards',
     '>',
-    ...families.map(entry => `> - \`${PREFIX}${entry.tag}\`${entry.tag.startsWith('Config/') ? ' (one per `init` setting)' : ''}: ${manualHint(entry)}`)
+    '> These names cannot be generated, so they are not in the list below. The dashboards pick up every name Angler tracks in a family on their own, but Angler is curated by hand, and a name it does not list is never written to New Relic.',
+    '>',
+    ...[...byHint].map(([hint, tags]) => `> - ${tags.join(' and ')}: ${hint}`)
   ].join('\n')
 }
 

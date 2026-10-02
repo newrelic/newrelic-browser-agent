@@ -4,6 +4,48 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "5e865062e5162acc7c4ee2924cf7b1db9d8f5685",
+          "message": "correct DT header timestamp to server time",
+          "issues": [
+            "1867"
+          ],
+          "scope": "ajax"
+        },
+        {
+          "type": "fix",
+          "sha": "45de2d85c730a0dd189ed6f14c7166e89ef3e1a0",
+          "message": "Ensure timeKeeper readiness on Connector race condition",
+          "issues": [
+            "1875"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "b95f9cd065225ae4386a75bfa5e7acc4adb528d9",
+          "message": "Harvest SR on switch from ERROR to FULL mode",
+          "issues": [
+            "1864"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "055b9171ef6393da18ee64cc156c51af4ac1498e",
+          "message": "Add internal adoption metrics for AJAX Payloads",
+          "issues": [
+            "1842"
+          ]
+        }
+      ],
+      "version": "1.323.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "8ebc353f-7490-49b2-b761-ae5202c2f7ae",
+      "createTime": "2026-09-30T15:45:02.842Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "5f66da2e0836917a625fc5eca5cc9916936f35dc",
           "message": "Include observer API for SPV events",
@@ -4283,5 +4325,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-09-11T02:57:52.395Z"
+  "updateTime": "2026-09-30T15:45:02.842Z"
 }

@@ -48,7 +48,7 @@
   // config
   window.NREUM={
     init: {
-      feature_flags: ['register'],
+      feature_flags: ['register', 'rum_v2'],
       distributed_tracing: {
         enabled: true
       },

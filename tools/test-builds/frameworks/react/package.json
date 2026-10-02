@@ -1,17 +1,15 @@
 {
-  "name": "vite-react-mfe",
+  "name": "framework-react",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "@newrelic/browser-agent": "file:../../../temp/newrelic-browser-agent-1.323.0.tgz",
-    "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "@newrelic/browser-agent": "file:../../../../temp/newrelic-browser-agent-1.323.0.tgz",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "scripts": {
     "start": "vite",
-    "test:types-resolver": "tsc --project tsconfig.types-resolver.json",
-    "prebuild": "npm run test:types-resolver",
     "build": "tsc && vite build"
   },
   "devDependencies": {

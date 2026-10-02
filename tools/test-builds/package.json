@@ -4,7 +4,8 @@
   "description": "",
   "main": "builder.js",
   "scripts": {
-    "build-all": "node ./builder"
+    "build-all": "node ./builder",
+    "build-frameworks": "node ./builder --frameworks"
   },
   "keywords": [],
   "author": "",

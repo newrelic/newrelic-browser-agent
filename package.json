@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "1.322.0",
+  "version": "1.323.0",
   "private": false,
   "author": "New Relic Browser Agent Team <browser-agent@newrelic.com>",
   "description": "New Relic Browser Agent",
@@ -206,7 +206,10 @@
     "test-server": "node ./tools/wdio/bin/server",
     "lt:update-browsers": "node ./tools/browsers-lists/lt-update-supported.mjs",
     "lt:upload-webview-assets": "node ./tools/lambda-test/upload-webview-assets.mjs",
+    "build:frameworks": "npm run build:npm && npm --prefix ./tools/test-builds run build-frameworks",
     "tools:test-builds": "npm --prefix ./tools/test-builds run build-all",
+    "test-builds:bump-latest": "node ./tools/test-builds/bump-latest.mjs",
+    "test-builds:framework-report": "node ./tools/test-builds/generate-framework-report.mjs",
     "third-party-updates": "oss third-party manifest --includeOptDeps && oss third-party notices --includeOptDeps",
     "prepare": "husky install",
     "npm:build:esm": "npx babel --env-name npm-esm --out-dir dist/esm --out-file-extension .js ./src",

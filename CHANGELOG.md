@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.323.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.322.0...v1.323.0) (2026-09-30)
+
+
+### Features
+
+* Add internal adoption metrics for AJAX Payloads ([#1842](https://github.com/newrelic/newrelic-browser-agent/issues/1842)) ([055b917](https://github.com/newrelic/newrelic-browser-agent/commit/055b9171ef6393da18ee64cc156c51af4ac1498e))
+* Harvest SR on switch from ERROR to FULL mode ([#1864](https://github.com/newrelic/newrelic-browser-agent/issues/1864)) ([b95f9cd](https://github.com/newrelic/newrelic-browser-agent/commit/b95f9cd065225ae4386a75bfa5e7acc4adb528d9))
+
+
+### Bug Fixes
+
+* **ajax:** correct DT header timestamp to server time ([#1867](https://github.com/newrelic/newrelic-browser-agent/issues/1867)) ([5e86506](https://github.com/newrelic/newrelic-browser-agent/commit/5e865062e5162acc7c4ee2924cf7b1db9d8f5685))
+* Ensure timeKeeper readiness on Connector race condition ([#1875](https://github.com/newrelic/newrelic-browser-agent/issues/1875)) ([45de2d8](https://github.com/newrelic/newrelic-browser-agent/commit/45de2d85c730a0dd189ed6f14c7166e89ef3e1a0))
+
 ## [1.322.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.321.0...v1.322.0) (2026-09-11)
 
 

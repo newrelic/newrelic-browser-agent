@@ -151,7 +151,7 @@ function toRegExp (text) {
 }
 
 /**
- * @param {Object} entry A registry entry.
+ * @param {E} entry A registry entry.
  * @returns {Array<{tag: string, description: string}>} The entry, with its placeholder expanded for each known value.
  */
 function expandEntry (entry) {
@@ -167,7 +167,7 @@ function expandEntry (entry) {
 
 /**
  * @param {string} pattern An emitted pattern.
- * @param {Object} entry A registry entry.
+ * @param {E} entry A registry entry.
  * @returns {boolean} Whether the emitted pattern is covered by (i.e. produces or is an instance of) the entry.
  */
 function emissionMatchesEntry (pattern, entry) {
@@ -179,8 +179,8 @@ function emissionMatchesEntry (pattern, entry) {
 /**
  * Compares the SMs emitted by `src/` with the registry.
  * @param {Array<{pattern: string, file: string, line: number}>} emissions
- * @param {{entries: Object[]}} registry
- * @returns {{unregistered: Array, dead: Object[]}} Emitted metrics no entry covers, and non-indirect entries that nothing emits.
+ * @param {{entries: import('./registry-types').RegistryEntry[]}} registry
+ * @returns {{unregistered: Array<{pattern: string, file: string, line: number}>, dead: import('./registry-types').RegistryEntry[]}} Emitted metrics no entry covers, and non-indirect entries that nothing emits.
  */
 function compare (allEmissions, registry) {
   const emissions = allEmissions.filter(emission => !emission.unresolved)
@@ -191,7 +191,7 @@ function compare (allEmissions, registry) {
 
 /**
  * Renders the docs page from the registry.
- * @param {{header: string, sections: Object[], entries: Object[]}} registry
+ * @param {import('./registry-types').Registry} registry
  * @returns {string}
  */
 function renderDocs (registry) {
@@ -249,7 +249,20 @@ function appendToRegistry (stubs, registryPath = path.join(__dirname, 'registry.
   fs.writeFileSync(registryPath, source.slice(0, end) + ',\n\n' + stubs + source.slice(end))
 }
 
+const REGISTRY_PATH = path.join(__dirname, 'registry.js')
 const PENDING_PATH = path.join(ROOT, 'tests', 'components', 'supportability-metrics', 'pending.js')
+
+/**
+ * @param {string} tag A registry entry's tag.
+ * @param {string} [registryPath]
+ * @returns {string} `path/to/registry.js:LINE` for the entry, relative to the repo root, or just the path if the entry is not found.
+ */
+function registryLocation (tag, registryPath = REGISTRY_PATH) {
+  const relative = path.relative(ROOT, registryPath)
+  const lines = fs.readFileSync(registryPath, 'utf8').split('\n')
+  const index = lines.findIndex(line => line.includes(`tag: '${tag}'`))
+  return index < 0 ? relative : `${relative}:${index + 1}`
+}
 
 /**
  * Adds metrics to the list of those without a generated test yet, so a new metric lands as a visible warning rather than a failing build.
@@ -267,7 +280,7 @@ function appendToPending (tags, pendingPath = PENDING_PATH) {
 
 /**
  * Runs every check against the real repository.
- * @param {{registry?: Object, docs?: string}} [overrides] Lets tests supply their own registry and current docs text.
+ * @param {{registry?: import('./registry-types').Registry, docs?: string}} [overrides] Lets tests supply their own registry and current docs text.
  * @returns {string[]} Human readable problems. Empty when everything is in sync.
  */
 function checkRepo ({ registry = require('./registry'), docs } = {}) {
@@ -286,11 +299,11 @@ function checkRepo ({ registry = require('./registry'), docs } = {}) {
   })
   dead.forEach(entry => errors.push(`In the registry but never emitted by src/: "${entry.tag}". Delete the entry, or set \`indirect\` if the scan cannot see the emitter.`))
 
-  registry.entries.filter(entry => entry.description === TODO_DESCRIPTION).forEach(entry => errors.push(`Registry entry "${entry.tag}" still has a placeholder description. Write what the metric means.`))
+  registry.entries.filter(entry => entry.description === TODO_DESCRIPTION).forEach(entry => errors.push(`Registry entry "${entry.tag}" still has a placeholder description. Fill in the stub at ${registryLocation(entry.tag)}: write what the metric means, then commit it.`))
 
   const current = docs ?? (fs.existsSync(DOCS_PATH) ? fs.readFileSync(DOCS_PATH, 'utf8') : '')
   if (current !== renderDocs(registry)) errors.push('docs/supportability-metrics.md is out of date. Run `npm run supportability-metrics:generate-docs`.')
   return errors
 }
 
-module.exports = { DOCS_PATH, TODO_DESCRIPTION, collectEmissions, compare, expandEntry, renderDocs, renderStubs, appendToRegistry, appendToPending, checkRepo, scanRepo, listSourceFiles, shapeOf, toRegExp, emissionMatchesEntry }
+module.exports = { DOCS_PATH, TODO_DESCRIPTION, collectEmissions, compare, expandEntry, renderDocs, renderStubs, appendToRegistry, appendToPending, registryLocation, checkRepo, scanRepo, listSourceFiles, shapeOf, toRegExp, emissionMatchesEntry }

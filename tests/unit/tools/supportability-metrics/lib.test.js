@@ -1,6 +1,6 @@
 const fs = require('fs')
 const path = require('path')
-const { collectEmissions, compare, expandEntry, renderDocs, renderStubs, appendToPending, checkRepo, TODO_DESCRIPTION } = require('../../../../tools/supportability-metrics/lib')
+const { collectEmissions, compare, expandEntry, renderDocs, renderStubs, appendToPending, registryLocation, checkRepo, TODO_DESCRIPTION } = require('../../../../tools/supportability-metrics/lib')
 const registry = require('../../../../tools/supportability-metrics/registry')
 
 const patterns = (code) => collectEmissions(code).filter(emission => !emission.unresolved).map(emission => emission.pattern)
@@ -188,6 +188,35 @@ describe('renderStubs', () => {
 
     expect(checkRepo({ registry, docs: renderDocs(registry) }).some(error => error.includes('placeholder description'))).toBe(true)
   })
+
+  test('a stub failure says which file and line to fill in', () => {
+    const registry = { header: '', sections: [], entries: [{ section: 'generic', tag: 'Session/RaceCondition/Seen', description: TODO_DESCRIPTION, indirect: 'test' }] }
+    const message = checkRepo({ registry, docs: renderDocs(registry) }).find(error => error.includes('placeholder description'))
+
+    expect(message).toMatch(/tools\/supportability-metrics\/registry\.js:\d+/)
+  })
+})
+
+describe('registryLocation', () => {
+  const write = (content) => {
+    const file = path.join(fs.mkdtempSync(path.join(require('os').tmpdir(), 'registry-')), 'registry.js')
+    fs.writeFileSync(file, content)
+    return file
+  }
+
+  test('returns the path and line of the entry with that tag', () => {
+    const file = write("module.exports = {\n  entries: [\n    { tag: 'One/A' },\n    { tag: 'Two/B' }\n  ]\n}\n")
+
+    expect(registryLocation('Two/B', file)).toMatch(/registry\.js:4$/)
+  })
+
+  test('returns just the path when the tag is not found', () => {
+    expect(registryLocation('Missing/Tag', write('module.exports = {}\n'))).toMatch(/registry\.js$/)
+  })
+
+  test('points at the real registry when no path is given', () => {
+    expect(registryLocation('Session/RaceCondition/Seen')).toMatch(/tools\/supportability-metrics\/registry\.js:\d+$/)
+  })
 })
 
 describe('appendToPending', () => {
@@ -216,6 +245,22 @@ describe('appendToPending', () => {
     appendToPending(['Two/New'], file)
 
     expect(fs.readFileSync(file, 'utf8')).toContain('// why these are pending')
+  })
+})
+
+describe('registry types', () => {
+  test('the RegistrySectionId type lists exactly the sections in the registry, so editor hints stay accurate', () => {
+    const types = fs.readFileSync(path.join(__dirname, '../../../../tools/supportability-metrics/registry-types.js'), 'utf8')
+    const union = types.match(/@typedef \{([^}]*)\} RegistrySectionId/)[1]
+    const typed = [...union.matchAll(/'([^']+)'/g)].map(match => match[1]).sort()
+
+    expect(typed).toEqual(registry.sections.map(section => section.id).sort())
+  })
+
+  test('every entry refers to a section that exists', () => {
+    const ids = registry.sections.map(section => section.id)
+
+    expect(registry.entries.filter(entry => !ids.includes(entry.section)).map(entry => entry.tag)).toEqual([])
   })
 })
 

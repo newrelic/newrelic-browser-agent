@@ -13,22 +13,16 @@
  *
  * To add a metric, add an entry below, then run `npm run supportability-metrics:generate-docs`.
  *
- * Entry fields:
- * - `tag`: the metric name without the `Browser/Supportability/` prefix. A `<placeholder>` marks a dynamic segment.
- * - `description`: what it means. Required.
- * - `section`: a `sections[].id`. Required.
- * - `values` (optional): the known values of a single placeholder. These are expanded in the docs so each full tag is visible, since Angler
- *   accepts only fully formed strings. A value is a string, or a `[value, description]` pair.
- * - `valueDescription` (optional): a description template for values that have none, where `<v>` is replaced by the value.
- * - `indirect` (optional): a string explaining why the static scan cannot see the emitter (e.g. the name is built in a helper). Entries
- *   marked this way are exempt from the "never emitted" check, so use it sparingly.
+ * The shape of an entry, with a description of every property, is in registry-types.js. Your editor shows those descriptions as you type.
+ * The one rule worth remembering: `values` lists the known values of an entry's placeholder, and `indirect` explains why the scan cannot
+ * see an emitter.
  *
  * If a call to an SM reporting function passes a name the scan cannot work out (a variable or an imported constant), the check fails
  * unless the call is a forwarder marked with an `sm-registry: forwards <where>` block comment on the line above it (see aggregate-base.js).
  */
 
-/** @type {{header: string, sections: Array<{id: string, title: string, intro?: string}>, entries: Array<Object>}} */
-module.exports = {
+/** @type {import('./registry-types').Registry} */
+const registry = {
   header: `# Supportability Metrics
 ---
 ## What/Why
@@ -299,5 +293,8 @@ Tags below are shown without the \`Browser/Supportability/\` prefix.`,
       description: 'Response time of failed browser connect response',
       indirect: 'sent as a raw { params, stats } object in connector.js and page_view_event/aggregate'
     }
+
   ]
 }
+
+module.exports = registry

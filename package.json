@@ -187,7 +187,7 @@
     "generate:warning-codes": "node tools/warning-codes/generate-jsdoc.js",
     "check:warning-codes": "node tools/warning-codes/check-usage.js",
     "supportability-metrics:check": "node tools/supportability-metrics/check-usage.js",
-    "supportability-metrics:test": "jest --selectProjects component -- tests/components/supportability-metrics",
+    "supportability-metrics:test": "jest --selectProjects component --testPathPattern tests/components/supportability-metrics",
     "supportability-metrics:generate-docs": "node tools/supportability-metrics/generate-docs.js",
     "test": " NODE_OPTIONS=--max-old-space-size=8192 jest",
     "test:unit": "jest --selectProjects unit",

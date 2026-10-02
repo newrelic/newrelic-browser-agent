@@ -74,11 +74,11 @@ CDN bundle. See [testing.md](.claude/rules/testing.md) for the full breakdown.
   and the "Supportability Metrics Check" CI job) statically scans `src/` and fails if a metric is emitted that the registry doesn't
   cover, if the registry lists a metric nothing emits, or if the docs are stale. A new literal name or `internal-error` reason must be added to the matching entry's
   `values`. Names only known at runtime (API names, loader types) are matched by shape and not verified, so keep those `values`
-  lists in sync by hand (frameworks have a unit test). A reporting call whose name the scan can't work out (a variable or an imported constant) also fails the check, unless it is a genuine forwarder marked with an `sm-registry: forwards <where>` block comment on the line above. `npm run supportability-metrics:check -- --fix` appends a stub entry for each new metric and regenerates the docs, so you only write the description.
+  lists in sync by hand (frameworks have a unit test). A reporting call whose name the scan can't work out (a variable or an imported constant) also fails the check, unless it is a genuine forwarder marked with an `sm-registry: forwards <where>` block comment on the line above. `npm run supportability-metrics:check -- --fix` appends a stub entry for each new metric and regenerates the docs, so you only write the description. The pre-commit hook runs it for you: it stubs the entry, stages the registry, `pending.js` and docs, and stops the commit until you have filled in the stub's description and committed again. CI runs the check read-only and fails with the file and line to fill in; it never edits anything.
   Every registered metric also gets a generated jest test (`tests/components/supportability-metrics/coverage.test.js`, run with
   `npm run supportability-metrics:test` and by the pre-commit hook) that proves the metric is actually reported. Make it pass by adding a
   *trigger* for the registry entry in `tests/components/supportability-metrics/triggers/`; a metric with no trigger fails unless it is
-  listed in `pending.js`, which only warns (`--fix` adds new metrics there for you). Delete the `pending.js` line once the trigger passes. Angler's tag list is a separate manual step in another repo.
+  listed in `pending.js`, which only warns (`--fix` adds new metrics there for you). Delete the `pending.js` line once the trigger passes. Step by step, with instructions for Claude: [tests/components/supportability-metrics/README.md](tests/components/supportability-metrics/README.md). Angler's tag list is a separate manual step in another repo.
 - Match existing patterns in the file/directory you're editing over
   introducing a new abstraction, especially in `src/common` and `src/features/*`.
 

@@ -8,11 +8,14 @@
  * dashboard exported from the New Relic UI).
  *
  * Instead of a set of charts per metric, which would be hundreds of widgets, it has:
- * - an Overview page,
+ * - an Overview page, which comes first (the dashboard opens on it) with every other page after it in alphabetical order,
  * - one page per registry section, with the rate by metric, the accounts and apps reporting, the top accounts and apps, and the
  *   average, minimum and maximum of the metrics in that section that report a value, and
- * - a Metric Explorer page, where a picker (filled from the data itself) selects any metric and the same charts show it. A metric
- *   Angler starts to track appears in the picker without the dashboard being regenerated.
+ * - a Metric Explorer page with the same charts for whichever metric is picked.
+ *
+ * The dashboard has one variable, `metric`, that filters every chart on every page (dashboard variables apply to the whole dashboard, so a
+ * picker that only some pages used would look broken on the rest). It defaults to a wildcard that matches every metric; its options are filled
+ * from the data, so a metric Angler starts to track appears in the picker without the dashboard being regenerated.
  */
 
 const { PREFIX } = require('../angler')
@@ -21,7 +24,14 @@ const { queries, nameCondition, quote, hasPlaceholder } = require('./nrql')
 const REGISTRY_URL = 'https://github.com/newrelic/newrelic-browser-agent/blob/main/tools/supportability-metrics/registry.js'
 const GUIDE_URL = 'https://github.com/newrelic/newrelic-browser-agent/blob/main/tools/supportability-metrics/README.md'
 const HAND_BUILT_URL = 'https://onenr.io/07jbyP2q3Ry'
-const EXPLORER_VARIABLE = 'metric_name'
+const METRIC_VARIABLE = 'metric'
+/** What the variable is set to for "all metrics". It is a LIKE pattern, so any metric name (an exact match) is a valid value too. */
+const ALL_METRICS = PREFIX + '%'
+/** Narrows a chart to the metric picked in the variable. Added to every chart's conditions. */
+const METRIC_FILTER = `name LIKE {{${METRIC_VARIABLE}}}`
+
+/** @param {string} condition @returns {string} The condition, and the metric the viewer picked. A condition is a single predicate or already parenthesized, so AND binds correctly. */
+const filtered = (condition) => `${condition} AND ${METRIC_FILTER}`
 const GRID_COLUMNS = 12
 
 /** Lays widgets out left to right on a 12 column grid, starting a new row when one does not fit. */
@@ -136,7 +146,7 @@ function valueCharts (context, grid, condition, unit, subject, facet) {
  */
 function sectionPage (section, entries, context) {
   const grid = new Grid()
-  const condition = nameCondition(entries)
+  const condition = filtered(nameCondition(entries))
   const widgets = []
   if (section.intro) {
     widgets.push(markdown(grid, section.intro, [12, 2]))
@@ -157,7 +167,7 @@ function sectionPage (section, entries, context) {
   entries.filter(entry => entry.value).forEach(entry => { (byUnit[entry.value.unit] = byUnit[entry.value.unit] || []).push(entry) })
   Object.entries(byUnit).forEach(([unit, valueEntries]) => {
     const only = Object.fromEntries(valueEntries.filter(entry => entry.value.for).map(entry => [entry.tag, entry.value.for]))
-    widgets.push(...valueCharts(context, grid, nameCondition(valueEntries, { only }), unit, 'Metrics that report a value', true))
+    widgets.push(...valueCharts(context, grid, filtered(nameCondition(valueEntries, { only })), unit, 'Metrics that report a value', true))
   })
   return { name: section.title, description: `Generated from the "${section.title}" section of the registry.`, widgets }
 }
@@ -169,16 +179,14 @@ function sectionPage (section, entries, context) {
  */
 function overviewPage (registry, context) {
   const grid = new Grid()
-  const everything = 'name LIKE ' + quote(PREFIX + '%')
+  const everything = filtered('name LIKE ' + quote(ALL_METRICS))
   const widgets = [
-    markdown(grid, [
-      '# Browser Agent supportability metrics',
-      '**This dashboard is generated** from the [supportability metric registry](' + REGISTRY_URL + ') and is overwritten on every update. Do not edit it; change the registry or the generator instead. ' +
-        'The [hand-built dashboard](' + HAND_BUILT_URL + ') is separate and unaffected.',
-      'Data comes from the `Supportability` event, which Angler writes once an hour per account, app and metric name (`call_count`, `total_call_time`, `min_call_time`, `max_call_time`). ' +
-        'Only names listed in Angler appear, so a new metric shows up here after its Angler PR is merged and the next hourly run. Metrics that report no value have a value of 0.',
-      'Start with a section page, or use the **Metric Explorer** for one metric. How this is built: [README](' + GUIDE_URL + ').'
-    ].join('\n\n'), [12, 4])
+    markdown(grid,
+      '**Generated** from the [registry](' + REGISTRY_URL + '); edits are overwritten. ' +
+      'The **Metric** filter above applies to every chart on every page (default: all). ' +
+      'New metrics appear once their Angler PR merges. ' +
+      '[Hand-built dashboard](' + HAND_BUILT_URL + ') · [How it works](' + GUIDE_URL + ')',
+      [12, 2])
   ]
   grid.nextRow()
   widgets.push(...summaryBillboards(context, grid, everything, 'all metrics'))
@@ -198,9 +206,9 @@ function overviewPage (registry, context) {
  */
 function explorerPage (context) {
   const grid = new Grid()
-  const condition = `name = {{${EXPLORER_VARIABLE}}}`
+  const condition = METRIC_FILTER
   const widgets = [
-    markdown(grid, 'Choose a metric with the **Metric** picker above. The list comes from the data in the last 7 days, so it includes every name Angler holds. Average, minimum and maximum are 0 for a metric that does not report a value.', [12, 2])
+    markdown(grid, 'Choose a metric with the **Metric** picker above. The list comes from the data in the last 7 days, so it includes every name Angler holds. With no metric chosen these charts cover all metrics. Average, minimum and maximum are 0 for a metric that does not report a value.', [12, 2])
   ]
   grid.nextRow()
   widgets.push(
@@ -223,13 +231,13 @@ function explorerPage (context) {
  */
 function variables (context) {
   return [{
-    name: EXPLORER_VARIABLE,
-    title: 'Metric',
+    name: METRIC_VARIABLE,
+    title: 'Metric (filters every page; default is all)',
     type: 'NRQL',
     items: null,
     isMultiSelection: false,
     replacementStrategy: 'STRING',
-    defaultValues: [{ value: { string: 'Browser/Supportability/Session/RaceCondition/Seen' } }],
+    defaultValues: [{ value: { string: ALL_METRICS } }],
     nrqlQuery: { accountIds: [context.dataAccountId], query: queries.metricNames() },
     options: { ignoreTimeRange: true }
   }]
@@ -243,21 +251,22 @@ function variables (context) {
  */
 function buildDashboard (registry, { dataAccountId, name, description }) {
   const context = { dataAccountId }
-  const pages = [
-    overviewPage(registry, context),
+  const otherPages = [
     ...registry.sections
       .map(section => ({ section, entries: registry.entries.filter(entry => entry.section === section.id) }))
       .filter(({ entries }) => entries.length)
       .map(({ section, entries }) => sectionPage(section, entries, context)),
     explorerPage(context)
-  ]
+  ].sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }))
+  // The Overview is always first, because a link to the dashboard opens its first page. Every other page follows in alphabetical order.
+  const pages = [overviewPage(registry, context), ...otherPages]
   return {
     name,
     description: description || 'Generated from tools/supportability-metrics/registry.js in newrelic/newrelic-browser-agent. Do not edit: changes are overwritten.',
-    permissions: 'PUBLIC_READ_ONLY',
+    permissions: 'PUBLIC_READ_WRITE',
     pages,
     variables: variables(context)
   }
 }
 
-module.exports = { buildDashboard, Grid, EXPLORER_VARIABLE }
+module.exports = { buildDashboard, Grid, METRIC_VARIABLE, ALL_METRICS }

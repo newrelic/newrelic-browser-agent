@@ -47,16 +47,20 @@ It prints "unchanged" and writes nothing when the registry matches the base.
 ## The generated dashboard
 
 A dashboard in New Relic is generated from the registry, so charts follow the metrics without anyone building them by hand. It sits beside
-the [hand-built dashboard](https://onenr.io/07jbyP2q3Ry), which is never touched. The generated one is read only and is **replaced whole on
-every update**, so change the registry or the generator, never the dashboard.
+the [hand-built dashboard](https://onenr.io/07jbyP2q3Ry), which is never touched. The generated one is **replaced whole on every update**, so change
+the registry or the generator, never the dashboard. (It is editable by anyone with access, see "Who owns the dashboards" below, so an edit made for
+experimenting lasts only until the next update.)
 
 ### What is in it
-- **Overview**: calls, accounts and apps reporting across all metrics, the top metrics, and the top accounts and apps.
+- **Overview**: calls, accounts and apps reporting across all metrics, the top metrics, and the top accounts and apps. It is the first tab, so the dashboard
+  opens on it; every other tab follows in alphabetical order.
 - **One page per registry section**: the rate by metric, the total by metric, the rate for the top 10 accounts and the top 10 apps, and, for
   the section's metrics that report a value, the average, maximum and minimum (labelled with the unit).
-- **Metric Explorer**: a `Metric` picker filled from the data (every name in the last 7 days), with the rate, the rate by account and by app,
-  and the average, minimum and maximum of whichever metric is picked. A metric appears in the picker as soon as Angler holds it, with no
-  regeneration.
+- **Metric Explorer**: the rate, the rate by account and by app, and the average, minimum and maximum of whichever metric is picked.
+- **The `Metric` filter**: New Relic dashboard variables apply to the whole dashboard, so the picker filters **every chart on every page**. It is filled from
+  the data (every name in the last 7 days), so a metric appears in it as soon as Angler holds it, with no regeneration. It defaults to the pattern
+  `Browser/Supportability/%` (all metrics); every chart is written `... AND name LIKE {{metric}}`. Pick one metric to narrow every page to it, or type a
+  pattern such as `Browser/Supportability/API/%`.
 
 It is built from the `Supportability` event Angler writes once an hour per account, app and metric name: the rate is `sum(call_count)`, the
 average is `sum(total_call_time) / sum(call_count)`, and the extremes are `max(max_call_time)` and `min(min_call_time)`. A metric only has
@@ -95,3 +99,13 @@ npm run supportability-metrics:dashboard -- --env staging --dry-run --write-json
 builds the dashboard and saves it as JSON that can be imported through the New Relic UI (Dashboards, Import dashboard). Add `--validate` (needs the
 key in the environment) to also run every generated query against New Relic, which is also the quickest way to confirm the key works.
 `--delete --name "..."` deletes a dashboard by name.
+
+### Who owns the dashboards
+A dashboard is created with the user API key in the secret, and New Relic records that user as its creator. Two consequences to keep in mind:
+- **Permissions.** The dashboards are created `PUBLIC_READ_WRITE`. With `PUBLIC_READ_ONLY`, only the creating user can edit a dashboard, so when the key is
+  rotated to a different user the automation could no longer update the dashboards it created (and the creator would be the only person able to edit them).
+  Read-write means anyone with access can also edit or delete one, which is harmless: an edit is overwritten by the next update, and a deleted dashboard is
+  created again (it is found by name).
+- **The key's owner.** If the user who owns the key leaves or is deactivated, the key stops working and the updates fail (the staging ones never block a PR,
+  and the production one never fails a promotion, so it would go unnoticed). The lasting fix is a **service user** in each New Relic organization whose key is
+  used for these secrets. Until then, whoever rotates the keys should know that these jobs depend on them.

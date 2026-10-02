@@ -5,7 +5,7 @@
 | `registry.js` (types in `registry-types.js`) | The single source of truth for every supportability metric. `docs/supportability-metrics.md` is generated from it |
 | `check-usage.js` | `npm run supportability-metrics:check`. Scans `src/`, fails if it and the registry disagree. `-- --fix` adds stubs. Run by the pre-commit hook and CI |
 | `generate-docs.js` | `npm run supportability-metrics:generate-docs` |
-| `angler.js`, `angler-comment.js`, `detect.js` | Write the pull request comment that tells the author what to do in Angler (below). `detect.js` finds the `init` settings and feature flags a change adds, and needs the `acorn` parser, which is optional there |
+| `angler.js`, `angler-comment.js`, `detect.js` | Write the pull request comment that tells the author what to do in Angler (below). `detect.js` finds every `init` setting and feature flag, and which a change adds or removes, and needs the `acorn` parser, which is optional there |
 | `dashboard/` | Generates the supportability dashboard from the registry and applies it to New Relic (below) |
 | `lib.js`, `colors.js` | Shared logic and terminal colors |
 
@@ -24,12 +24,16 @@ When a pull request changes the registry, the comment (collapsed by default; its
   and to link that pull request from this one;
 - lists the names to add (new in this pull request), and the names removed. It says not to delete those from Angler yet, because older agent
   versions in the wild keep sending them;
-- lists, as a checklist, only the decisions that apply to this pull request, because names for `init` settings and feature flags cannot be
-  generated from the registry. It compares the changed source files with the base branch and lists the exact name for each `init` setting
-  the PR adds (`Config/<path>/Enabled` for a boolean, `Config/<path>/Changed` for anything else), each setting it removes, and each new
-  feature flag. An open-ended family such as retry or connect response status codes is listed only if the PR changed its registry entry.
-  If nothing applies, it says so and drops that step. If the change could not be analyzed (the parser is not installed, or there is no git
-  history), it falls back to listing the `Config/*` and `Feature_Flag/*` items with "check whether your changes affect this" wording;
+- derives the names for `init` settings and feature flags from the source instead of asking the author. It reads the `init` model
+  (`src/common/config/init.js`) to get every setting's exact name (`Config/<path>/Enabled` for a boolean, `Config/<path>/Changed` for anything
+  else) and scans `src` for the feature flags it recognizes. The ones a pull request adds go under the names to add, the ones it removes (or
+  turns from a boolean into something else) under removed, and all of them are in the full list, so an `init` setting or flag change needs an
+  Angler PR even when the registry is unchanged. The `Internal/Error/<reason>` names are already concrete, because the registry lists every reason;
+- lists, as a checklist, only the decisions that are left: an open-ended family whose names depend on runtime (retry and connect response status
+  codes, audit combinations) is listed only if the PR changed its registry entry, and a highlighted note lists those families so the author knows
+  Angler must hold the names they care about. If nothing applies, it says so and drops that step. If the source could not be analyzed (the parser
+  is not installed, or there is no git history), it falls back to listing the `Config/*` and `Feature_Flag/*` families with "check whether your
+  changes affect this" wording, and the full list says the settings and flags are missing;
 - includes, collapsed, the full list of names Angler should contain for this version of the registry.
 
 It is regenerated on every push, in place (found by its `<!-- supportability_metric_check -->` tag). If a later push removes all the registry

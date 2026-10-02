@@ -117,13 +117,44 @@ describe('detectChanges', () => {
     files.base['src/common/config/init.js'] = initCode('{ ajax: { limit: true } }')
     files.head['src/common/config/init.js'] = initCode('{ ajax: { limit: 5 } }')
 
-    expect(detectChanges({ files: ['src/common/config/init.js'], ...readers }).addedSettings).toEqual([{ path: 'ajax.limit', tag: 'Config/ajax/limit/Changed' }])
+    const result = detectChanges({ files: ['src/common/config/init.js'], ...readers })
+
+    expect(result.addedSettings).toEqual([{ path: 'ajax.limit', tag: 'Config/ajax/limit/Changed' }])
+    expect(result.removedSettings).toEqual([{ path: 'ajax.limit', tag: 'Config/ajax/limit/Enabled' }])
   })
 
   test('reports no settings when init.js was not changed', () => {
     files.head['src/a.js'] = 'const a = 1'
 
-    expect(detectChanges({ files: ['src/a.js'], ...readers })).toEqual({ addedSettings: [], removedSettings: [], addedFlags: [] })
+    expect(detectChanges({ files: ['src/a.js'], ...readers })).toEqual({ settings: [], flags: [], addedSettings: [], removedSettings: [], addedFlags: [] })
+  })
+
+  test('lists every setting on the branch with its tag, not only the ones the change touches', () => {
+    files.base['src/common/config/init.js'] = initCode('{ ajax: { enabled: true, limit: 5 } }')
+    files.head['src/common/config/init.js'] = initCode('{ ajax: { enabled: true, limit: 5 } }')
+    files.head['src/a.js'] = 'const a = 1'
+
+    expect(detectChanges({ files: ['src/a.js'], ...readers }).settings).toEqual([
+      { path: 'ajax.enabled', tag: 'Config/ajax/enabled/Enabled' },
+      { path: 'ajax.limit', tag: 'Config/ajax/limit/Changed' }
+    ])
+  })
+
+  test('lists every feature flag in the files it is told about, not only the ones the change adds', () => {
+    files.head['src/a.js'] = "const on = init.feature_flags.includes('old_flag')"
+    files.head['src/b.js'] = "const on = init.feature_flags.includes('other_flag')"
+
+    const result = detectChanges({ files: [], listFiles: () => ['src/a.js', 'src/b.js'], ...readers })
+
+    expect(result.flags.sort()).toEqual(['old_flag', 'other_flag'])
+    expect(result.addedFlags).toEqual([])
+  })
+
+  test('skips a file that does not parse when looking for every flag, rather than giving up', () => {
+    files.head['src/a.js'] = "const on = init.feature_flags.includes('good_flag')"
+    files.head['src/b.js'] = 'this is ( not valid javascript'
+
+    expect(detectChanges({ files: [], listFiles: () => ['src/a.js', 'src/b.js'], ...readers }).flags).toEqual(['good_flag'])
   })
 
   test('returns undefined, meaning "cannot tell", when a file cannot be parsed', () => {

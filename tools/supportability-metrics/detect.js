@@ -87,18 +87,21 @@ function featureFlags (code, parser) {
 
 /**
  * @typedef {Object} DetectedChanges
+ * @property {Array<{path: string, tag: string}>} settings Every `init` setting the agent has on this branch, with the metric name it reports for it.
+ * @property {string[]} flags Every feature flag the source recognizes on this branch.
  * @property {Array<{path: string, tag: string}>} addedSettings `init` settings this change adds (or changes between boolean and other), with the metric name the agent reports for them.
- * @property {Array<{path: string, tag: string}>} removedSettings `init` settings this change removes.
+ * @property {Array<{path: string, tag: string}>} removedSettings `init` settings this change removes (or changes between boolean and other).
  * @property {string[]} addedFlags Feature flags this change starts to recognize.
  */
 
 /**
  * Compares the files a change touches before and after.
- * @param {{files: string[], readBase: function(string): (string|undefined), readHead: function(string): (string|undefined)}} source
- *   `files` are the changed source files. The readers return a file's text on the base and on the head, or undefined if it does not exist there.
+ * @param {{files: string[], listFiles?: function(): string[], readBase: function(string): (string|undefined), readHead: function(string): (string|undefined)}} source
+ *   `files` are the changed source files. `listFiles` lists every source file on the branch, to find all of its feature flags (without it, only the changed files are
+ *   searched). The readers return a file's text on the base and on the head, or undefined if it does not exist there.
  * @returns {DetectedChanges | undefined} undefined when the parser is not installed or a file could not be read, meaning "cannot tell".
  */
-function detectChanges ({ files, readBase, readHead }) {
+function detectChanges ({ files, listFiles, readBase, readHead }) {
   const parser = loadParser()
   if (!parser) return undefined
   try {
@@ -108,15 +111,21 @@ function detectChanges ({ files, readBase, readHead }) {
       const before = flagsOf(readBase, file)
       flagsOf(readHead, file).forEach(flag => { if (!before.has(flag)) addedFlags.add(flag) })
     })
+    const flags = new Set()
+    ;(listFiles ? listFiles() : files).filter(file => file.endsWith('.js')).forEach(file => {
+      try { flagsOf(readHead, file).forEach(flag => flags.add(flag)) } catch (err) { /* a file that does not parse has no flags to find */ }
+    })
 
     const tagFor = (path, kind) => `Config/${path}/${kind === 'boolean' ? 'Enabled' : 'Changed'}`
-    const before = files.includes(INIT_FILE) && readBase(INIT_FILE) ? initSettings(readBase(INIT_FILE), parser) : new Map()
-    const after = files.includes(INIT_FILE) && readHead(INIT_FILE) ? initSettings(readHead(INIT_FILE), parser) : new Map()
-    const inInitFile = files.includes(INIT_FILE)
-    const describe = (path, kind) => ({ path: path.replace(/\//g, '.'), tag: tagFor(path, kind) })
+    const settingsAt = (read) => read(INIT_FILE) ? initSettings(read(INIT_FILE), parser) : new Map()
+    const before = settingsAt(readBase)
+    const after = settingsAt(readHead)
+    const describe = ([path, kind]) => ({ path: path.replace(/\//g, '.'), tag: tagFor(path, kind) })
     return {
-      addedSettings: inInitFile ? [...after].filter(([path, kind]) => before.get(path) !== kind).map(([path, kind]) => describe(path, kind)) : [],
-      removedSettings: inInitFile ? [...before].filter(([path]) => !after.has(path)).map(([path, kind]) => describe(path, kind)) : [],
+      settings: [...after].map(describe),
+      flags: [...flags],
+      addedSettings: [...after].filter(([path, kind]) => before.get(path) !== kind).map(describe),
+      removedSettings: [...before].filter(([path, kind]) => after.get(path) !== kind).map(describe),
       addedFlags: [...addedFlags]
     }
   } catch (err) {

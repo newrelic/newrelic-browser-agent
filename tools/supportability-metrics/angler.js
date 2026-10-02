@@ -87,7 +87,7 @@ const block = (lines) => '```text\n' + lines.join('\n') + '\n```'
  * @returns {{icon: string, title: string, intro: string, steps: function(number, number): string}}
  */
 function getStatus (added, removed, decisions, registryChanged = true) {
-  const registryChange = 'This PR changes the supportability metric registry.'
+  const registryChange = 'This PR changes the supportability metrics the agent reports.'
   if (!registryChanged) {
     return {
       icon: '🟢',
@@ -138,7 +138,7 @@ const dashboardLink = (url) => `📊 **[Preview the dashboard for this PR](${url
  * The checklist of things only the author can decide, limited to what this pull request actually touches.
  * @param {import('./registry-types').Registry} head
  * @param {string[]} changedOpenFamilies Open-ended families whose registry entry this pull request changed.
- * @param {import('./detect').DetectedChanges | undefined} detected What the change does to `init` settings and feature flags, or undefined when that could not be worked out.
+ * @param {import('./detect').DetectedChanges | undefined} detected The `init` settings and feature flags found in the source, or undefined when that could not be worked out.
  * @returns {string[]} Markdown checklist items. Empty when nothing needs a decision.
  */
 function listDecisions (head, changedOpenFamilies, detected) {
@@ -146,15 +146,8 @@ function listDecisions (head, changedOpenFamilies, detected) {
   const isGeneratedFromCode = (entry) => entry.tag.startsWith('Config/') || entry.tag.startsWith('Feature_Flag/')
   const items = []
 
-  if (detected) {
-    detected.addedSettings.forEach(({ path, tag }) => items.push(item(tag, `new \`init\` setting \`${path}\`. ` +
-      (tag.endsWith('/Enabled') ? 'It is reported only when a customer sets it to true.' : 'It is reported only when a customer sets a non-default value.') + ' Add it if you want to track it.')))
-    detected.removedSettings.forEach(({ path, tag }) => items.push(item(tag, `\`init\` setting \`${path}\` was removed. If Angler tracks this name, remove it once older agent versions have aged out.`)))
-    detected.addedFlags.forEach(flag => items.push(item(`Feature_Flag/${flag}/Seen`, `new feature flag \`${flag}\`. Add it if you want to track it.`)))
-  } else {
-    // The change could not be analyzed, so say what to check instead of guessing
-    head.entries.filter(isGeneratedFromCode).filter(isOpenFamily).forEach(entry => items.push(item(entry.tag, manualHint(entry))))
-  }
+  // With the source analyzed, the exact names for settings and flags are listed under Add to Angler, so there is nothing left to decide about them
+  if (!detected) head.entries.filter(isGeneratedFromCode).filter(isOpenFamily).forEach(entry => items.push(item(entry.tag, manualHint(entry))))
 
   head.entries.filter(entry => changedOpenFamilies.includes(entry.tag) && !(detected && isGeneratedFromCode(entry)))
     .forEach(entry => items.push(item(entry.tag, `${manualHint(entry)} _(this PR changed this family)_`)))
@@ -162,13 +155,31 @@ function listDecisions (head, changedOpenFamilies, detected) {
 }
 
 /**
+ * @param {import('./detect').DetectedChanges | undefined} detected
+ * @returns {{all: string[], added: string[], removed: string[]}} The full metric names for the `init` settings and feature flags found in the source: all of them, and the ones
+ *   this change adds and removes. Empty when the source could not be analyzed.
+ */
+function namesFromSource (detected) {
+  if (!detected) return { all: [], added: [], removed: [] }
+  const flag = (name) => PREFIX + `Feature_Flag/${name}/Seen`
+  const setting = ({ tag }) => PREFIX + tag
+  return {
+    all: [...(detected.settings || []).map(setting), ...(detected.flags || []).map(flag)],
+    added: [...detected.addedSettings.map(setting), ...detected.addedFlags.map(flag)],
+    removed: detected.removedSettings.map(setting)
+  }
+}
+
+/**
  * A prominent reminder about the open-ended families, whose names cannot be generated. The dashboards select them with a pattern, but only names
  * Angler holds are ever written to New Relic, so any name missing from Angler never reaches a dashboard.
  * @param {import('./registry-types').Registry} head
+ * @param {import('./detect').DetectedChanges} [detected] When given, the families whose names were listed from the source are left out.
  * @returns {string | undefined} A blockquote (GitHub alerts do not render inside the collapsed comment), or undefined when the registry has no open-ended family.
  */
-function openFamilyCallout (head) {
-  const families = head.entries.filter(isOpenFamily)
+function openFamilyCallout (head, detected) {
+  // The names of settings and flags are listed in full when the source was analyzed, so they are no longer open
+  const families = head.entries.filter(isOpenFamily).filter(entry => !(detected && (entry.tag.startsWith('Config/') || entry.tag.startsWith('Feature_Flag/'))))
   if (!families.length) return undefined
   // Families with the same instruction are listed together, so it is only written once
   const byHint = new Map()
@@ -196,14 +207,20 @@ function openFamilyCallout (head) {
  * @returns {string | undefined} Markdown, or undefined if the pull request does not change any supportability metric.
  */
 function renderComment (base, head, detected, { dashboardUrl } = {}) {
-  const { relevant, added, removed, changedOpenFamilies } = diffRegistries(base, head)
+  const diff = diffRegistries(base, head)
+  const { relevant, changedOpenFamilies } = diff
+  const fromSource = namesFromSource(detected)
+  const unique = (names) => [...new Set(names)]
+  // Changes to settings and flags matter even when the registry is unchanged, because the registry only has the family
+  const added = unique([...diff.added, ...fromSource.added])
+  const removed = unique([...diff.removed, ...fromSource.removed]).filter(name => !added.includes(name))
   // The link to the preview dashboard is worth a comment even when the registry did not change (the dashboard generator did)
-  if (!relevant && !dashboardUrl) return undefined
+  if (!relevant && !added.length && !removed.length && !dashboardUrl) return undefined
 
-  const all = listConcreteTags(head)
+  const all = unique([...listConcreteTags(head), ...fromSource.all])
   // Nothing in Angler depends on a change that did not touch the registry
   const decisions = relevant ? listDecisions(head, changedOpenFamilies, detected) : []
-  const status = getStatus(added, removed, decisions, relevant)
+  const status = getStatus(added, removed, decisions, relevant || Boolean(added.length || removed.length))
   const parts = [
     status.intro,
     status.steps(decisions.length, removed.length)
@@ -214,7 +231,7 @@ function renderComment (base, head, detected, { dashboardUrl } = {}) {
   }
 
   // Shown whenever the PR needs an Angler change, since the generated generated list below can never include these
-  const callout = status.icon === '🟠' && relevant ? openFamilyCallout(head) : undefined
+  const callout = status.icon === '🟠' ? openFamilyCallout(head, detected) : undefined
   if (callout) parts.push(callout)
 
   // Nothing to add in the green and yellow states, so the empty section would only add noise
@@ -244,7 +261,7 @@ function renderComment (base, head, detected, { dashboardUrl } = {}) {
 
   parts.push(
     `<details><summary>Full list of names Angler should contain for this version of the registry (${count(all.length, 'name')})</summary>\n\n` + block(all) +
-      '\n\nThis is every name the registry can list. It does not include the open-ended families (`Config/*`, `Feature_Flag/*`, retry and connect response status codes), and Angler may legitimately hold more than this (names for older agent versions, and the curated ones).\n\n</details>'
+      '\n\nThis is every name the registry can list, plus the names for every `init` setting and feature flag found in the source' + (detected ? '' : ' (not available for this run, so they are missing)') + '. It does not include the open-ended families whose names depend on what happens at runtime (retry and connect response status codes, audit combinations), and Angler may legitimately hold more than this (names for older agent versions, and the curated ones).\n\n</details>'
   )
 
   // The whole comment is collapsed by default so it does not crowd the conversation. The summary line stays visible, so it carries the status and the counts.

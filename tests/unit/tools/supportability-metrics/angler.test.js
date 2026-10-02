@@ -72,7 +72,7 @@ describe('diffRegistries', () => {
 })
 
 describe('renderComment dashboard link', () => {
-  const none = { addedSettings: [], removedSettings: [], addedFlags: [] }
+  const none = { settings: [], flags: [], addedSettings: [], removedSettings: [], addedFlags: [] }
   const url = 'https://staging-one.newrelic.com/dashboards/detail/ABC'
   const withBase = without('Session/RaceCondition/Seen')
 
@@ -129,14 +129,22 @@ describe('renderComment dashboard link', () => {
 })
 
 describe('renderComment open-ended families', () => {
-  const none = { addedSettings: [], removedSettings: [], addedFlags: [] }
-  const needsAngler = renderComment(without('Session/RaceCondition/Seen'), head, none)
+  const none = { settings: [], flags: [], addedSettings: [], removedSettings: [], addedFlags: [] }
+  const needsAngler = renderComment(without('Session/RaceCondition/Seen'), head)
 
-  test('calls out every open-ended family, including Config and Feature_Flag, when the PR needs an Angler change', () => {
+  test('calls out every open-ended family, including Config and Feature_Flag, when the source could not be analyzed', () => {
     expect(needsAngler).toContain('> ### ⚠️ Make sure Angler has these names')
     expect(needsAngler).not.toContain('[!IMPORTANT]')
     ;['Config/<init path>/Enabled', 'Feature_Flag/<flag>/Seen', 'Harvester/Retry/Failed/<code>', 'Harvester/Retry/Attempted/<feature>']
       .forEach(tag => expect(needsAngler).toContain(`\`${PREFIX}${tag}\``))
+  })
+
+  test('leaves Config and Feature_Flag out when their names were listed from the source', () => {
+    const comment = renderComment(without('Session/RaceCondition/Seen'), head, none)
+
+    expect(comment).toContain('Harvester/Retry/Failed/<code>')
+    expect(comment).not.toContain('Config/<init path>/Enabled')
+    expect(comment).not.toContain('Feature_Flag/<flag>/Seen')
   })
 
   test('does not list a family whose names are already listed', () => {
@@ -148,14 +156,14 @@ describe('renderComment open-ended families', () => {
   })
 
   test('writes an instruction once for families that share it', () => {
-    const twice = renderComment(without('Session/RaceCondition/Seen'), { ...head, entries: [...entries, { section: 'config', tag: 'Config/<init path>/Changed', description: 'd' }] }, none)
+    const twice = renderComment(without('Session/RaceCondition/Seen'), { ...head, entries: [...entries, { section: 'harvester', tag: 'Harvester/Retry/Succeeded/<code>', description: 'd' }] })
 
-    expect(twice).toContain(`\`${PREFIX}Config/<init path>/Enabled\` and \`${PREFIX}Config/<init path>/Changed\`: `)
+    expect(twice).toContain(`\`${PREFIX}Harvester/Retry/Failed/<code>\` and \`${PREFIX}Harvester/Retry/Succeeded/<code>\`: `)
   })
 })
 
 describe('renderComment status', () => {
-  const none = { addedSettings: [], removedSettings: [], addedFlags: [] }
+  const none = { settings: [], flags: [], addedSettings: [], removedSettings: [], addedFlags: [] }
   const onlyDescriptionChanged = { ...head, entries: entries.map(entry => entry.tag === 'Session/RaceCondition/Seen' ? { ...entry, description: 'new wording' } : entry) }
 
   test('is green when the registry changed but nothing needs to change in Angler', () => {
@@ -183,11 +191,16 @@ describe('renderComment status', () => {
     expect(renderComment(without('Session/RaceCondition/Seen'), head, none)).toContain('<summary>🟠 <strong>Supportability metrics changed: this PR needs a matching Angler PR</strong>')
   })
 
-  test('is orange when there are decisions to make, even with nothing to add', () => {
-    const comment = renderComment(head, onlyDescriptionChanged, { ...none, addedFlags: ['a_flag'] })
+  test('is orange when a decision is left to make, even with nothing to add', () => {
+    const changed = { ...head, entries: entries.map(entry => entry.tag === 'Harvester/Retry/Failed/<code>' ? { ...entry, description: 'new wording' } : entry) }
+    const comment = renderComment(head, changed, none)
 
     expect(comment).toContain('<summary>🟠 ')
     expect(comment).toContain('(0 names to add, 0 removed, 1 decision)')
+  })
+
+  test('is orange when the source adds a feature flag, even though the registry did not change', () => {
+    expect(renderComment(head, head, { ...none, addedFlags: ['a_flag'] })).toContain('(1 name to add, 0 removed, no decisions)')
   })
 
   test('is orange, not yellow, when names are removed and added together', () => {
@@ -209,10 +222,11 @@ describe('renderComment', () => {
   })
 
   test('uses the singular for one decision', () => {
-    const detected = { addedSettings: [], removedSettings: [], addedFlags: ['one_flag'] }
+    const detected = { settings: [], flags: ['one_flag'], addedSettings: [], removedSettings: [], addedFlags: ['one_flag'] }
 
-    expect(renderComment(head, without('Session/RaceCondition/Seen'), detected)).toContain('0 names to add, 1 removed')
-    expect(renderComment(without('Session/RaceCondition/Seen'), head, detected)).toContain('1 name to add, 0 removed, 1 decision)')
+    const changed = { ...head, entries: entries.map(entry => entry.tag === 'Harvester/Retry/Failed/<code>' ? { ...entry, description: 'new wording' } : entry) }
+
+    expect(renderComment(head, changed, detected)).toContain('1 name to add, 0 removed, 1 decision)')
   })
 
   test('counts removals in the summary', () => {
@@ -257,7 +271,7 @@ describe('renderComment', () => {
   })
 
   describe('the checklist of decisions', () => {
-    const none = { addedSettings: [], removedSettings: [], addedFlags: [] }
+    const none = { settings: [], flags: [], addedSettings: [], removedSettings: [], addedFlags: [] }
     const withBase = without('Session/RaceCondition/Seen')
 
     test('falls back to telling the author what to check when the change could not be analyzed', () => {
@@ -278,6 +292,11 @@ describe('renderComment', () => {
       expect(comment).not.toContain('Config/<init path>/Enabled`**')
     })
 
+    test('says the full list leaves out the settings and flags when the source could not be analyzed', () => {
+      expect(renderComment(withBase, head)).toContain('not available for this run')
+      expect(renderComment(withBase, head, none)).not.toContain('not available for this run')
+    })
+
     test('says nothing needs a decision, and drops that step, when the PR touches nothing manual', () => {
       const comment = renderComment(withBase, head, none)
 
@@ -288,25 +307,41 @@ describe('renderComment', () => {
       expect(comment).toContain('(1 name to add, 0 removed, no decisions)')
     })
 
-    test('lists the exact names for new init settings, by kind', () => {
+    test('adds the exact names for new init settings, by kind, to the names to add', () => {
       const comment = renderComment(withBase, head, { ...none, addedSettings: [{ path: 'session_replay.new_thing', tag: 'Config/session_replay/new_thing/Enabled' }, { path: 'harvest.limit', tag: 'Config/harvest/limit/Changed' }] })
 
-      expect(comment).toContain('- [ ] **`' + PREFIX + 'Config/session_replay/new_thing/Enabled`**: new `init` setting `session_replay.new_thing`. It is reported only when a customer sets it to true.')
-      expect(comment).toContain('- [ ] **`' + PREFIX + 'Config/harvest/limit/Changed`**: new `init` setting `harvest.limit`. It is reported only when a customer sets a non-default value.')
-      expect(comment).toContain('4. Link the Angler PR here')
+      expect(comment).toContain('### Add to Angler (3 names)')
+      expect(comment).toContain(PREFIX + 'Config/session_replay/new_thing/Enabled\n')
+      expect(comment).toContain(PREFIX + 'Config/harvest/limit/Changed\n')
+      expect(comment).not.toContain('- [ ]')
     })
 
-    test('lists removed init settings, with the warning to wait for older agents', () => {
+    test('lists removed init settings under Removed, with the warning to wait for older agents', () => {
       const comment = renderComment(withBase, head, { ...none, removedSettings: [{ path: 'old.setting', tag: 'Config/old/setting/Enabled' }] })
 
-      expect(comment).toContain('- [ ] **`' + PREFIX + 'Config/old/setting/Enabled`**: `init` setting `old.setting` was removed.')
-      expect(comment).toContain('aged out')
+      expect(comment).toContain('### Removed in this PR (1 name)')
+      expect(comment).toContain(PREFIX + 'Config/old/setting/Enabled')
+      expect(comment).toContain('Do not delete these from Angler yet')
     })
 
-    test('lists the exact name for each new feature flag', () => {
+    test('adds the exact name for each new feature flag to the names to add', () => {
       const comment = renderComment(withBase, head, { ...none, addedFlags: ['brand_new_flag'] })
 
-      expect(comment).toContain('- [ ] **`' + PREFIX + 'Feature_Flag/brand_new_flag/Seen`**: new feature flag `brand_new_flag`.')
+      expect(comment).toContain(PREFIX + 'Feature_Flag/brand_new_flag/Seen\n')
+    })
+
+    test('lists every setting and flag in the full list, not only the new ones', () => {
+      const comment = renderComment(withBase, head, { ...none, settings: [{ path: 'ajax.limit', tag: 'Config/ajax/limit/Changed' }], flags: ['rum_v2'] })
+      const full = comment.slice(comment.indexOf('<details><summary>Full list'))
+
+      expect(full).toContain(PREFIX + 'Config/ajax/limit/Changed')
+      expect(full).toContain(PREFIX + 'Feature_Flag/rum_v2/Seen')
+    })
+
+    test('does not add a name twice when it is both new and in the full list', () => {
+      const comment = renderComment(withBase, head, { ...none, settings: [{ path: 'a.b', tag: 'Config/a/b/Enabled' }], addedSettings: [{ path: 'a.b', tag: 'Config/a/b/Enabled' }] })
+
+      expect(comment.split('### Add to Angler (')[1].startsWith('2 names)')).toBe(true)
     })
 
     test('lists an open-ended family only when this PR changed its registry entry, and marks it', () => {

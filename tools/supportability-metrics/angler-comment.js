@@ -48,7 +48,8 @@ function detect () {
   try {
     const mergeBase = execFileSync('git', ['merge-base', baseRef, 'HEAD'], { encoding: 'utf8' }).trim()
     const files = execFileSync('git', ['diff', '--name-only', mergeBase, 'HEAD', '--', 'src'], { encoding: 'utf8' }).split('\n').filter(Boolean)
-    return detectChanges({ files, readBase: readAt(mergeBase), readHead: readAt('HEAD') })
+    const listFiles = () => execFileSync('git', ['ls-tree', '-r', '--name-only', 'HEAD', '--', 'src'], { encoding: 'utf8', maxBuffer: 1024 * 1024 * 20 }).split('\n').filter(Boolean)
+    return detectChanges({ files, listFiles, readBase: readAt(mergeBase), readHead: readAt('HEAD') })
   } catch (err) {
     return undefined
   }

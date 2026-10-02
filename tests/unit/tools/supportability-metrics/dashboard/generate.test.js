@@ -119,7 +119,7 @@ describe('section pages', () => {
       'Metric Count: Plain', 'Accounts reporting: Plain', 'Apps reporting: Plain',
       'Plain: count over time by metric', 'Plain: share of calls by metric',
       'Plain: total calls by metric', 'Plain: accounts reporting by metric',
-      'Plain: calls, accounts and apps by metric', 'Plain: count by account (top 10)', 'Plain: count by app (top 10)'
+      'Plain: calls, accounts and apps by metric', 'Plain: count by account', 'Plain: count by app'
     ])
   })
 
@@ -149,7 +149,7 @@ describe('section pages', () => {
     test('use the metric itself when the section is a single metric', () => {
       const one = page(build({ ...small, entries: [small.entries[0]] }), 'Plain')
 
-      expect(titles(one)).toEqual(['Metric Count: Plain/One/Seen', 'Accounts reporting: Plain/One/Seen', 'Apps reporting: Plain/One/Seen', 'Plain/One/Seen: count', 'Plain/One/Seen: count by account (top 10)', 'Plain/One/Seen: count by app (top 10)'])
+      expect(titles(one)).toEqual(['Metric Count: Plain/One/Seen', 'Accounts reporting: Plain/One/Seen', 'Apps reporting: Plain/One/Seen', 'Plain/One/Seen: count', 'Plain/One/Seen: count by account', 'Plain/One/Seen: count by app'])
     })
 
     test('name the metrics that report a value in the average, maximum and minimum charts, with the unit', () => {
@@ -251,7 +251,7 @@ describe('metric explorer', () => {
   })
 
   test('shows the count, by account and by app, and the value charts for the selected metric', () => {
-    expect(explorer.widgets.map(widget => widget.title).filter(Boolean)).toEqual(expect.arrayContaining(['Metric Count', 'Count', 'Count by account (top 10)', 'Count by app (top 10)', 'Selected metric: average value (value)']))
+    expect(explorer.widgets.map(widget => widget.title).filter(Boolean)).toEqual(expect.arrayContaining(['Metric Count', 'Count', 'Count by account', 'Count by app', 'Selected metric: average value (value)']))
   })
 
   test('shows only the selected metric in every chart, by exact name, with the variable as the whole name', () => {
@@ -265,6 +265,15 @@ describe('metric explorer', () => {
 
   test('draws a single line for the selected metric, not one per name', () => {
     expect(explorer.widgets.find(widget => widget.title.includes('average value')).rawConfiguration.nrqlQueries[0].query).not.toContain('FACET')
+  })
+})
+
+describe('faceted queries', () => {
+  test('all ask for every facet, because a faceted query keeps only 10 by default', () => {
+    const faceted = queriesOf(build()).filter(query => query.includes(' FACET '))
+
+    expect(faceted.length).toBeGreaterThan(0)
+    faceted.forEach(query => expect(query).toMatch(/LIMIT MAX$/))
   })
 })
 
@@ -302,7 +311,7 @@ describe('the metric picker', () => {
   test('leaves the section pages showing their whole section, whatever is picked', () => {
     const query = page(dashboard, 'Session').widgets.find(widget => widget.title === 'Session/RaceCondition/Seen: count').rawConfiguration.nrqlQueries[0].query
 
-    expect(query).toBe("FROM Supportability SELECT sum(call_count) WHERE name = 'Browser/Supportability/Session/RaceCondition/Seen' FACET substring(name, 23) TIMESERIES 1 hour LIMIT 20")
+    expect(query).toBe("FROM Supportability SELECT sum(call_count) WHERE name = 'Browser/Supportability/Session/RaceCondition/Seen' FACET substring(name, 23) TIMESERIES 1 hour LIMIT MAX")
   })
 })
 

@@ -189,8 +189,8 @@ function sectionPage (section, entries, context) {
     widgets.push(chart(context, grid, 'viz.table', `${subject}: calls, accounts and apps by metric`, queries.tableByMetric(condition), [12, 5]))
   }
   grid.nextRow()
-  widgets.push(chart(context, grid, 'viz.line', `${subject}: count by account (top 10)`, queries.countByAccount(condition), HALF))
-  widgets.push(chart(context, grid, 'viz.line', `${subject}: count by app (top 10)`, queries.countByApp(condition), HALF))
+  widgets.push(chart(context, grid, 'viz.line', `${subject}: count by account`, queries.countByAccount(condition), HALF))
+  widgets.push(chart(context, grid, 'viz.line', `${subject}: count by app`, queries.countByApp(condition), HALF))
 
   // One row of average, maximum and minimum per unit, for the metrics in this section that report a value
   const byUnit = {}
@@ -218,8 +218,8 @@ function explorerPage (context) {
   grid.nextRow()
   widgets.push(chart(context, grid, 'viz.line', 'Count', queries.count(condition), [12, 4]))
   grid.nextRow()
-  widgets.push(chart(context, grid, 'viz.line', 'Count by account (top 10)', queries.countByAccount(condition), HALF))
-  widgets.push(chart(context, grid, 'viz.line', 'Count by app (top 10)', queries.countByApp(condition), HALF))
+  widgets.push(chart(context, grid, 'viz.line', 'Count by account', queries.countByAccount(condition), HALF))
+  widgets.push(chart(context, grid, 'viz.line', 'Count by app', queries.countByApp(condition), HALF))
   widgets.push(...valueCharts(context, grid, condition, 'value', 'Selected metric', false))
   return { name: 'Metric Explorer', description: 'Generated. Pick one metric to see it.', widgets }
 }

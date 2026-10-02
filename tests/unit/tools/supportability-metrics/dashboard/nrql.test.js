@@ -57,7 +57,7 @@ describe('queries', () => {
   const condition = "name = 'x'"
 
   test('the count is the sum of call_count over time, one line per metric', () => {
-    expect(queries.countByMetric(condition)).toBe(`FROM Supportability SELECT sum(call_count) WHERE name = 'x' FACET ${LABEL} TIMESERIES 1 hour LIMIT 20`)
+    expect(queries.countByMetric(condition)).toBe(`FROM Supportability SELECT sum(call_count) WHERE name = 'x' FACET ${LABEL} TIMESERIES 1 hour LIMIT MAX`)
   })
 
   test('the average is the sum of the values over the sum of the counts, as the dashboard documentation says', () => {
@@ -81,8 +81,8 @@ describe('queries', () => {
   })
 
   test('breaks the count down by account and by app', () => {
-    expect(queries.countByAccount(condition)).toContain('FACET account_id TIMESERIES 1 hour LIMIT 10')
-    expect(queries.countByApp(condition)).toContain('FACET agent_id TIMESERIES 1 hour LIMIT 10')
+    expect(queries.countByAccount(condition)).toContain('FACET account_id TIMESERIES 1 hour LIMIT MAX')
+    expect(queries.countByApp(condition)).toContain('FACET agent_id TIMESERIES 1 hour LIMIT MAX')
   })
 
   test('counts accounts and apps that reported', () => {

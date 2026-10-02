@@ -63,7 +63,9 @@ function nameCondition (entries, { only = {} } = {}) {
 }
 
 const from = `FROM ${EVENT}`
+/** A faceted query keeps 10 facets unless it says otherwise, so every one asks for all of them. */
 const facetByMetric = (facet) => facet ? ` FACET ${LABEL}` : ''
+const timeseries = (facet) => ` TIMESERIES 1 hour${facet ? ' LIMIT MAX' : ''}`
 
 /** Query builders. Each takes the condition that selects the metrics. */
 const queries = {
@@ -74,7 +76,7 @@ const queries = {
   accountsReporting: (condition) => `${from} SELECT uniqueCount(account_id) AS 'Accounts' WHERE ${condition}`,
   appsReporting: (condition) => `${from} SELECT uniqueCount(agent_id) AS 'Apps' WHERE ${condition}`,
   /** The count over time, one line per metric. */
-  countByMetric: (condition, limit = 20) => `${from} SELECT sum(call_count) WHERE ${condition} FACET ${LABEL} TIMESERIES 1 hour LIMIT ${limit}`,
+  countByMetric: (condition) => `${from} SELECT sum(call_count) WHERE ${condition} FACET ${LABEL} TIMESERIES 1 hour LIMIT MAX`,
   /** The total in the time range, one bar or slice per metric. */
   totalByMetric: (condition) => `${from} SELECT sum(call_count) WHERE ${condition} FACET ${LABEL} LIMIT MAX`,
   /** How many distinct accounts reported each metric. */
@@ -86,13 +88,13 @@ const queries = {
   /** The count over time for one metric, as a single line. */
   count: (condition) => `${from} SELECT sum(call_count) AS 'Calls' WHERE ${condition} TIMESERIES 1 hour`,
   /** The count over time, one line per account. */
-  countByAccount: (condition) => `${from} SELECT sum(call_count) WHERE ${condition} FACET account_id TIMESERIES 1 hour LIMIT 10`,
+  countByAccount: (condition) => `${from} SELECT sum(call_count) WHERE ${condition} FACET account_id TIMESERIES 1 hour LIMIT MAX`,
   /** The count over time, one line per app. */
-  countByApp: (condition) => `${from} SELECT sum(call_count) WHERE ${condition} FACET agent_id TIMESERIES 1 hour LIMIT 10`,
+  countByApp: (condition) => `${from} SELECT sum(call_count) WHERE ${condition} FACET agent_id TIMESERIES 1 hour LIMIT MAX`,
   /** The average of the reported value, which is the sum of the values over the sum of the counts. */
-  averageValue: (condition, unit, facet = true) => `${from} SELECT sum(total_call_time) / sum(call_count) AS 'Average (${unit})' WHERE ${condition}${facetByMetric(facet)} TIMESERIES 1 hour`,
-  maximumValue: (condition, unit, facet = true) => `${from} SELECT max(max_call_time) AS 'Maximum (${unit})' WHERE ${condition}${facetByMetric(facet)} TIMESERIES 1 hour`,
-  minimumValue: (condition, unit, facet = true) => `${from} SELECT min(min_call_time) AS 'Minimum (${unit})' WHERE ${condition}${facetByMetric(facet)} TIMESERIES 1 hour`,
+  averageValue: (condition, unit, facet = true) => `${from} SELECT sum(total_call_time) / sum(call_count) AS 'Average (${unit})' WHERE ${condition}${facetByMetric(facet)}${timeseries(facet)}`,
+  maximumValue: (condition, unit, facet = true) => `${from} SELECT max(max_call_time) AS 'Maximum (${unit})' WHERE ${condition}${facetByMetric(facet)}${timeseries(facet)}`,
+  minimumValue: (condition, unit, facet = true) => `${from} SELECT min(min_call_time) AS 'Minimum (${unit})' WHERE ${condition}${facetByMetric(facet)}${timeseries(facet)}`,
   /** Every metric name Angler holds, in full, for the explorer's picker. */
   metricNames: () => `${from} SELECT uniques(name) WHERE name LIKE ${quote(PREFIX + '%')} SINCE 7 days ago LIMIT MAX`
 }

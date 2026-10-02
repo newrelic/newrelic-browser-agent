@@ -1,4 +1,4 @@
-const { buildDashboard, Grid, METRIC_VARIABLE, ACCOUNT_VARIABLE, APP_VARIABLE } = require('../../../../../tools/supportability-metrics/dashboard/generate')
+const { buildDashboard, Grid, METRIC_VARIABLE } = require('../../../../../tools/supportability-metrics/dashboard/generate')
 const registry = require('../../../../../tools/supportability-metrics/registry')
 
 const build = (reg = registry, options = {}) => buildDashboard(reg, { dataAccountId: 432507, name: 'Test dashboard', ...options })
@@ -268,38 +268,11 @@ describe('metric explorer', () => {
   })
 })
 
-describe('the account and app pickers', () => {
-  const dashboard = build()
-  const chartQueries = queriesOf(dashboard)
-
-  test('are dropdowns filled from the data, with every account and app as the default', () => {
-    const [, account, app] = dashboard.variables
-
-    expect([account.name, app.name]).toEqual([ACCOUNT_VARIABLE, APP_VARIABLE])
-    expect(account.nrqlQuery.query).toContain('uniques(account_id, 5000)')
-    expect(app.nrqlQuery.query).toContain('uniques(agent_id, 5000)')
-    ;[account, app].forEach(variable => expect(variable).toMatchObject({ type: 'NRQL', replacementStrategy: 'STRING', defaultValues: [{ value: { string: '%' } }] }))
-  })
-
-  test('are honored by every chart on every page', () => {
-    expect(chartQueries.length).toBeGreaterThan(0)
-    chartQueries.forEach(query => expect(query).toContain('account_id LIKE {{account}} AND agent_id LIKE {{app}}'))
-  })
-
-  test('narrow a section with several metrics without changing which metrics it selects', () => {
-    chartQueries.filter(query => query.includes(' OR ')).forEach(query => expect(query).toMatch(/WHERE \(.* OR .*\) AND account_id LIKE/))
-  })
-
-  test('match everything when left on the default, because LIKE % matches any value', () => {
-    expect('%').toBe(dashboard.variables[1].defaultValues[0].value.string)
-  })
-})
-
 describe('the metric picker', () => {
   const dashboard = build()
 
   test('is a dropdown filled from the data, so new metrics appear without regenerating', () => {
-    expect(dashboard.variables).toHaveLength(3)
+    expect(dashboard.variables).toHaveLength(1)
     expect(dashboard.variables[0]).toMatchObject({ name: METRIC_VARIABLE, type: 'NRQL', replacementStrategy: 'STRING', isMultiSelection: false })
     expect(dashboard.variables[0].nrqlQuery.query).toContain('uniques(name)')
     expect(dashboard.variables[0].nrqlQuery.accountIds).toEqual([432507])
@@ -318,10 +291,10 @@ describe('the metric picker', () => {
     expect(dashboard.variables[0].defaultValues).toBeNull()
   })
 
-  test('is used by the metric explorer and by no other page (the account and app pickers are used by all)', () => {
+  test('is used by the metric explorer and by no other page', () => {
     dashboard.pages.filter(candidate => candidate.name !== 'Metric Explorer').forEach(candidate => {
       candidate.widgets.filter(widget => widget.rawConfiguration.nrqlQueries).forEach(widget => {
-        expect(widget.rawConfiguration.nrqlQueries[0].query).not.toContain('{{metric}}')
+        expect(widget.rawConfiguration.nrqlQueries[0].query).not.toContain('{{')
       })
     })
   })
@@ -329,7 +302,7 @@ describe('the metric picker', () => {
   test('leaves the section pages showing their whole section, whatever is picked', () => {
     const query = page(dashboard, 'Session').widgets.find(widget => widget.title === 'Session/RaceCondition/Seen: count').rawConfiguration.nrqlQueries[0].query
 
-    expect(query).toBe("FROM Supportability SELECT sum(call_count) WHERE name = 'Browser/Supportability/Session/RaceCondition/Seen' AND account_id LIKE {{account}} AND agent_id LIKE {{app}} FACET substring(name, 23) TIMESERIES 1 hour LIMIT 20")
+    expect(query).toBe("FROM Supportability SELECT sum(call_count) WHERE name = 'Browser/Supportability/Session/RaceCondition/Seen' FACET substring(name, 23) TIMESERIES 1 hour LIMIT 20")
   })
 })
 

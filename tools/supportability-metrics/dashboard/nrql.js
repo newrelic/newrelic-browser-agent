@@ -62,9 +62,6 @@ function nameCondition (entries, { only = {} } = {}) {
   return parts.length > 1 ? `(${parts.join(' OR ')})` : parts[0]
 }
 
-/** The most values a picker lists. */
-const UNIQUES_LIMIT = 5000
-
 const from = `FROM ${EVENT}`
 const facetByMetric = (facet) => facet ? ` FACET ${LABEL}` : ''
 
@@ -97,11 +94,7 @@ const queries = {
   maximumValue: (condition, unit, facet = true) => `${from} SELECT max(max_call_time) AS 'Maximum (${unit})' WHERE ${condition}${facetByMetric(facet)} TIMESERIES 1 hour`,
   minimumValue: (condition, unit, facet = true) => `${from} SELECT min(min_call_time) AS 'Minimum (${unit})' WHERE ${condition}${facetByMetric(facet)} TIMESERIES 1 hour`,
   /** Every metric name Angler holds, in full, for the explorer's picker. */
-  metricNames: () => `${from} SELECT uniques(name) WHERE name LIKE ${quote(PREFIX + '%')} SINCE 7 days ago LIMIT MAX`,
-  /** Every account that reported in the last 7 days, for the account picker. `uniques()` keeps 1,000 values unless it is given a larger limit. */
-  accountIds: () => `${from} SELECT uniques(account_id, ${UNIQUES_LIMIT}) WHERE name LIKE ${quote(PREFIX + '%')} SINCE 7 days ago`,
-  /** Every app that reported in the last 7 days, for the app picker. */
-  appIds: () => `${from} SELECT uniques(agent_id, ${UNIQUES_LIMIT}) WHERE name LIKE ${quote(PREFIX + '%')} SINCE 7 days ago`
+  metricNames: () => `${from} SELECT uniques(name) WHERE name LIKE ${quote(PREFIX + '%')} SINCE 7 days ago LIMIT MAX`
 }
 
 module.exports = { EVENT, LABEL, quote, hasPlaceholder, namesOf, nameCondition, queries }

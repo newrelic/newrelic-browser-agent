@@ -132,7 +132,7 @@ function titleList (names) {
  */
 function summaryBillboards (context, grid, condition, subject) {
   return [
-    chart(context, grid, 'viz.billboard', `Calls: ${subject}`, queries.totalCalls(condition), BILLBOARD),
+    chart(context, grid, 'viz.billboard', `Metric Count: ${subject}`, queries.totalCalls(condition), BILLBOARD),
     chart(context, grid, 'viz.billboard', `Accounts reporting: ${subject}`, queries.accountsReporting(condition), BILLBOARD),
     chart(context, grid, 'viz.billboard', `Apps reporting: ${subject}`, queries.appsReporting(condition), BILLBOARD)
   ]
@@ -211,7 +211,7 @@ function explorerPage (context) {
   const grid = new Grid()
   const condition = METRIC_FILTER
   const widgets = [
-    chart(context, grid, 'viz.billboard', 'Calls', queries.totalCalls(condition), BILLBOARD),
+    chart(context, grid, 'viz.billboard', 'Metric Count', queries.totalCalls(condition), BILLBOARD),
     chart(context, grid, 'viz.billboard', 'Accounts reporting', queries.accountsReporting(condition), BILLBOARD),
     chart(context, grid, 'viz.billboard', 'Apps reporting', queries.appsReporting(condition), BILLBOARD)
   ]

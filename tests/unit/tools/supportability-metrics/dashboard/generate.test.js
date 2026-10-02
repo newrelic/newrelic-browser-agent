@@ -116,7 +116,7 @@ describe('section pages', () => {
 
   test('show the calls, accounts and apps reporting, several breakdowns by metric, and the top accounts and apps', () => {
     expect(titles(plain)).toEqual([
-      'Calls: Plain', 'Accounts reporting: Plain', 'Apps reporting: Plain',
+      'Metric Count: Plain', 'Accounts reporting: Plain', 'Apps reporting: Plain',
       'Plain: count over time by metric', 'Plain: share of calls by metric',
       'Plain: total calls by metric', 'Plain: accounts reporting by metric',
       'Plain: calls, accounts and apps by metric', 'Plain: count by account (top 10)', 'Plain: count by app (top 10)'
@@ -149,7 +149,7 @@ describe('section pages', () => {
     test('use the metric itself when the section is a single metric', () => {
       const one = page(build({ ...small, entries: [small.entries[0]] }), 'Plain')
 
-      expect(titles(one)).toEqual(['Calls: Plain/One/Seen', 'Accounts reporting: Plain/One/Seen', 'Apps reporting: Plain/One/Seen', 'Plain/One/Seen: count', 'Plain/One/Seen: count by account (top 10)', 'Plain/One/Seen: count by app (top 10)'])
+      expect(titles(one)).toEqual(['Metric Count: Plain/One/Seen', 'Accounts reporting: Plain/One/Seen', 'Apps reporting: Plain/One/Seen', 'Plain/One/Seen: count', 'Plain/One/Seen: count by account (top 10)', 'Plain/One/Seen: count by app (top 10)'])
     })
 
     test('name the metrics that report a value in the average, maximum and minimum charts, with the unit', () => {
@@ -251,7 +251,7 @@ describe('metric explorer', () => {
   })
 
   test('shows the count, by account and by app, and the value charts for the selected metric', () => {
-    expect(explorer.widgets.map(widget => widget.title).filter(Boolean)).toEqual(expect.arrayContaining(['Calls', 'Count', 'Count by account (top 10)', 'Count by app (top 10)', 'Selected metric: average value (value)']))
+    expect(explorer.widgets.map(widget => widget.title).filter(Boolean)).toEqual(expect.arrayContaining(['Metric Count', 'Count', 'Count by account (top 10)', 'Count by app (top 10)', 'Selected metric: average value (value)']))
   })
 
   test('shows only the selected metric in every chart, by exact name, with the variable as the whole name', () => {

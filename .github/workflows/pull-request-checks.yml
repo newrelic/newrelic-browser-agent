@@ -83,9 +83,60 @@ jobs:
     with:
       ref: ${{ github.ref }}
 
+  # Decides whether this pull request changes the supportability metric registry or the dashboard generator. It is a separate, cheap job so
+  # the preview below, which needs the assigned IP runner, only starts when there is something to preview.
+  sm-changes:
+    name: Supportability changes
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    timeout-minutes: 5
+    outputs:
+      changed: ${{ steps.changes.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check whether the registry or the dashboard generator changed
+        id: changes
+        run: |
+          if git diff --quiet "origin/${{ github.base_ref }}...HEAD" -- tools/supportability-metrics/registry.js tools/supportability-metrics/dashboard; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  # Creates or updates a copy of the generated supportability dashboard in staging for this pull request, so the registry change can be
+  # previewed. It runs on the assigned IP runner because staging is reached from there, like the other jobs that call it. It only runs
+  # for pull requests from this repository (forks do not get secrets), and a failure never blocks the pull request: the comment just
+  # has no link.
+  sm-dashboard-preview:
+    name: Supportability dashboard preview
+    needs: [sm-changes]
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    if: needs.sm-changes.outputs.changed == 'true'
+    continue-on-error: true
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      url: ${{ steps.preview.outputs.dashboard_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Create or update the preview dashboard in staging
+        id: preview
+        env:
+          NR_API_KEY_STAGING: ${{ secrets.NR_API_KEY_STAGING }}
+        run: node tools/supportability-metrics/dashboard/apply.js --env staging --validate --pr "${{ github.event.number }}"
+
   sm-check:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    needs: [sm-dashboard-preview]
+    # Runs even when the preview was skipped (a fork) or failed; it just has no link to show
+    if: ${{ !cancelled() && github.event_name == 'pull_request' }}
     timeout-minutes: 30
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -112,6 +163,7 @@ jobs:
           node tools/supportability-metrics/angler-comment.js \
             --base-registry "$RUNNER_TEMP/base-registry.js" \
             --base-ref "origin/${{ github.base_ref }}" \
+            --dashboard-url "${{ needs.sm-dashboard-preview.outputs.url }}" \
             --out "$RUNNER_TEMP/angler-comment.md"
       - name: Tell the author what to do in Angler
         # Regenerated on every push to the pull request: the comment is found by its tag and updated in place.

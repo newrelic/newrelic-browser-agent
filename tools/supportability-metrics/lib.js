@@ -27,6 +27,9 @@ const FORWARDS_MARKER = /sm-registry:\s*forwards/
  * one way to report from anywhere in the agent; `storeSupportabilityMetrics(name, value)` is the metrics feature storing its own metrics directly. */
 const REPORTERS = { reportSupportabilityMetric: 1, storeSupportabilityMetrics: 0 }
 
+/** The units a metric's value may have. */
+const VALUE_UNITS = ['ms', 'bytes', 'count']
+
 /**
  * @param {string} dir
  * @returns {string[]} Every non-test `.js` file under the directory.
@@ -86,8 +89,8 @@ function calleeName (callee) {
  * Finds every SM emitted by a source file.
  * @param {string} code
  * @param {string} [file] Used only to label the results.
- * @returns {Array<{pattern: string, file: string, line: number, unresolved?: boolean, forwarded?: boolean}>} Metric name patterns, which may contain `<*>`
- *   wildcards. A call whose name cannot be determined at all is returned as `unresolved`, and `forwarded` when it carries an `sm-registry: forwards` comment.
+ * @returns {Array<{pattern: string, file: string, line: number, hasValue?: boolean, unresolved?: boolean, forwarded?: boolean}>} Metric name patterns, which may contain `<*>`
+ *   wildcards. `hasValue` is set when the call passes a value to aggregate with the metric. A call whose name cannot be determined at all is returned as `unresolved`, and `forwarded` when it carries an `sm-registry: forwards` comment.
  */
 function collectEmissions (code, file = '') {
   const comments = []
@@ -105,9 +108,11 @@ function collectEmissions (code, file = '') {
   const forwarderLines = new Set(comments.filter(comment => FORWARDS_MARKER.test(comment.value)).flatMap(comment => [comment.loc.end.line, comment.loc.end.line + 1]))
 
   const emissions = []
-  const add = (pattern, node) => {
+  /** @param {Object | undefined} valueNode The argument holding the value, if the call has one. `undefined` passed explicitly is not a value. */
+  const passesValue = (valueNode) => Boolean(valueNode) && !(valueNode.type === 'Identifier' && valueNode.name === 'undefined')
+  const add = (pattern, node, valueNode) => {
     const line = node.loc.start.line
-    emissions.push(pattern === WILDCARD ? { pattern, file, line, unresolved: true, forwarded: forwarderLines.has(line) } : { pattern, file, line })
+    emissions.push(pattern === WILDCARD ? { pattern, file, line, unresolved: true, forwarded: forwarderLines.has(line) } : { pattern, file, line, hasValue: passesValue(valueNode) })
   }
   walk.simple(ast, {
     CallExpression (node) {
@@ -117,7 +122,7 @@ function collectEmissions (code, file = '') {
         const args = node.arguments[1]
         if (args?.type !== 'ArrayExpression') return
         const reason = args.elements[1] ? resolve(args.elements[1], context) : 'Other'
-        if (reason !== WILDCARD) add('Internal/Error/' + reason, node)
+        if (reason !== WILDCARD) add('Internal/Error/' + reason, node, undefined)
         return
       }
       if (name === 'handle') {
@@ -125,11 +130,11 @@ function collectEmissions (code, file = '') {
         const channel = node.arguments[0]
         const isMetricChannel = (channel?.type === 'Identifier' && channel.name === 'SUPPORTABILITY_METRIC_CHANNEL') || (channel?.type === 'Literal' && channel.value === 'storeSupportabilityMetrics')
         const rawArgs = node.arguments[1]
-        if (isMetricChannel && rawArgs?.type === 'ArrayExpression') add(resolve(rawArgs.elements[0], context), node)
+        if (isMetricChannel && rawArgs?.type === 'ArrayExpression') add(resolve(rawArgs.elements[0], context), node, rawArgs.elements[1])
         return
       }
       if (!name || !Object.prototype.hasOwnProperty.call(REPORTERS, name)) return
-      add(resolve(node.arguments[REPORTERS[name]], context), node)
+      add(resolve(node.arguments[REPORTERS[name]], context), node, node.arguments[REPORTERS[name] + 1])
     }
   })
   return emissions
@@ -160,6 +165,36 @@ function compare (allEmissions, registry) {
 }
 
 /**
+ * Checks that the registry's `value` declarations match the code: a call that passes a value needs its entry to declare the unit, a
+ * declared value needs a call that passes one, and the unit must be a known one.
+ * @param {Array<{pattern: string, file: string, line: number, hasValue?: boolean, unresolved?: boolean}>} emissions
+ * @param {{entries: import('./registry-types').RegistryEntry[]}} registry
+ * @returns {string[]} Problems, empty when they agree.
+ */
+function checkValues (emissions, registry) {
+  const errors = []
+  const known = emissions.filter(emission => !emission.unresolved)
+  const matching = (entry) => known.filter(emission => emissionMatchesEntry(emission.pattern, entry))
+
+  registry.entries.forEach(entry => {
+    const reporting = matching(entry).filter(emission => emission.hasValue)
+    if (!entry.value && reporting.length) {
+      const { file, line } = reporting[0]
+      errors.push(`"${entry.tag}" is reported with a value (${file}:${line}) but its registry entry has no \`value\`. Add \`value: { unit: '${VALUE_UNITS.join("' | '")}' }\`.`)
+    }
+    if (entry.value && !entry.indirect && matching(entry).length && !reporting.length) {
+      errors.push(`"${entry.tag}" declares a \`value\` but nothing in src/ passes one. Remove \`value\`, or mark the entry \`indirect\` if it is reported some other way.`)
+    }
+    if (entry.value && !VALUE_UNITS.includes(entry.value.unit)) {
+      errors.push(`"${entry.tag}" has the value unit "${entry.value.unit}". Replace it with one of: ${VALUE_UNITS.join(', ')}.`)
+    }
+    const unknownValues = (entry.value?.for || []).filter(name => !(entry.values || []).some(value => (Array.isArray(value) ? value[0] : value) === name))
+    if (unknownValues.length) errors.push(`"${entry.tag}" lists value names that are not among its values: ${unknownValues.join(', ')}.`)
+  })
+  return errors
+}
+
+/**
  * Renders the docs page from the registry.
  * @param {import('./registry-types').Registry} registry
  * @returns {string}
@@ -172,7 +207,9 @@ function renderDocs (registry) {
     out.push(`### ${section.title}`)
     if (section.intro) out.push(section.intro)
     entries.forEach(entry => {
-      out.push(`<!--- ${entry.description} --->`, `* ${entry.tag}`)
+      const only = entry.value?.for ? ', only for ' + entry.value.for.join(', ') : ''
+      const unit = entry.value ? ` Reports a value (${entry.value.unit}${only}).` : ''
+      out.push(`<!--- ${entry.description}${unit} --->`, `* ${entry.tag}`)
       if (entry.values) expandEntry(entry).forEach(({ tag, description }) => out.push(`  <!--- ${description} --->`, `  * ${tag}`))
     })
     out.push('')
@@ -199,11 +236,12 @@ const TODO_DESCRIPTION = 'TODO: describe this metric'
 function renderStubs (unregistered, registry) {
   const sectionIds = registry.sections.map(section => section.id)
   const seen = new Set()
-  return unregistered.filter(({ pattern }) => !seen.has(pattern) && seen.add(pattern)).map(({ pattern, file, line }) => {
+  return unregistered.filter(({ pattern }) => !seen.has(pattern) && seen.add(pattern)).map(({ pattern, file, line, hasValue }) => {
     const tag = pattern.split(WILDCARD).join('<name>')
     const guess = tag.split('/')[0].toLowerCase().replace(/[^a-z]+/g, '_')
     const section = sectionIds.find(id => id === guess || id === guess + 's') || 'generic'
-    return `    // ${file}:${line}\n    { section: '${section}', tag: '${tag}', description: '${TODO_DESCRIPTION}' }`
+    const value = hasValue ? ", value: { unit: 'TODO' }" : ''
+    return `    // ${file}:${line}\n    { section: '${section}', tag: '${tag}', description: '${TODO_DESCRIPTION}'${value} }`
   }).join(',\n')
 }
 
@@ -267,6 +305,7 @@ function checkRepo ({ registry = require('./registry'), docs } = {}) {
     seen.add(pattern)
     errors.push(`Emitted but not in the registry: "${pattern}" (${file}:${line}). Add it to tools/supportability-metrics/registry.js.`)
   })
+  errors.push(...checkValues(scanned, registry))
   dead.forEach(entry => errors.push(`In the registry but never emitted by src/: "${entry.tag}". Delete the entry, or set \`indirect\` if the scan cannot see the emitter.`))
 
   registry.entries.filter(entry => entry.description === TODO_DESCRIPTION).forEach(entry => errors.push(`Registry entry "${entry.tag}" still has a placeholder description. Fill in the stub at ${registryLocation(entry.tag)}: write what the metric means, then commit it.`))
@@ -276,4 +315,4 @@ function checkRepo ({ registry = require('./registry'), docs } = {}) {
   return errors
 }
 
-module.exports = { DOCS_PATH, TODO_DESCRIPTION, collectEmissions, compare, expandEntry, renderDocs, renderStubs, appendToRegistry, appendToPending, registryLocation, checkRepo, scanRepo, listSourceFiles, shapeOf, toRegExp, emissionMatchesEntry }
+module.exports = { DOCS_PATH, TODO_DESCRIPTION, VALUE_UNITS, checkValues, collectEmissions, compare, expandEntry, renderDocs, renderStubs, appendToRegistry, appendToPending, registryLocation, checkRepo, scanRepo, listSourceFiles, shapeOf, toRegExp, emissionMatchesEntry }

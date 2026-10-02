@@ -189,6 +189,7 @@
     "supportability-metrics:check": "node tools/supportability-metrics/check-usage.js",
     "supportability-metrics:test": "jest --selectProjects component --testPathPattern tests/components/supportability-metrics",
     "supportability-metrics:generate-docs": "node tools/supportability-metrics/generate-docs.js",
+    "supportability-metrics:dashboard": "node tools/supportability-metrics/dashboard/apply.js",
     "test": " NODE_OPTIONS=--max-old-space-size=8192 jest",
     "test:unit": "jest --selectProjects unit",
     "test:component": "jest --selectProjects component",

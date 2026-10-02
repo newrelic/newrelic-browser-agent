@@ -1,0 +1,34 @@
+# This workflow deletes the preview supportability dashboard that the pull request checks create in staging, once its
+# pull request is closed (merged or not). The permanent dashboards are not touched.
+
+name: Supportability Dashboard Cleanup
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+
+jobs:
+  delete-preview:
+    name: Delete the preview dashboard
+    # Pull requests from forks never had a preview, and have no access to the key
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The pull request's own commit, so this works even if its branch was deleted and the script is not on main yet
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Delete the dashboard for this pull request, if there is one
+        env:
+          NR_API_KEY_STAGING: ${{ secrets.NR_API_KEY_STAGING }}
+        run: node tools/supportability-metrics/dashboard/apply.js --env staging --delete --pr "${{ github.event.number }}"

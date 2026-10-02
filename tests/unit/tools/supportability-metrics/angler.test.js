@@ -71,6 +71,29 @@ describe('diffRegistries', () => {
   })
 })
 
+describe('renderComment dashboard link', () => {
+  const none = { addedSettings: [], removedSettings: [], addedFlags: [] }
+  const url = 'https://staging-one.newrelic.com/dashboards/detail/ABC'
+
+  test('links the preview dashboard when there is one, and explains it', () => {
+    const comment = renderComment(without('Session/RaceCondition/Seen'), head, none, { dashboardUrl: url })
+
+    expect(comment).toContain(`📊 **[Preview the dashboard for this PR](${url})**`)
+    expect(comment).toContain('deleted when the PR closes')
+    expect(comment).toContain('stay empty until the metric ships')
+  })
+
+  test('has no link line when there is no dashboard', () => {
+    expect(renderComment(without('Session/RaceCondition/Seen'), head, none)).not.toContain('Preview the dashboard')
+  })
+
+  test('links the dashboard in every state, including when nothing needs to change in Angler', () => {
+    const onlyDescription = { ...head, entries: entries.map(entry => entry.tag === 'Session/RaceCondition/Seen' ? { ...entry, description: 'new wording' } : entry) }
+
+    expect(renderComment(head, onlyDescription, none, { dashboardUrl: url })).toContain(url)
+  })
+})
+
 describe('renderComment status', () => {
   const none = { addedSettings: [], removedSettings: [], addedFlags: [] }
   const onlyDescriptionChanged = { ...head, entries: entries.map(entry => entry.tag === 'Session/RaceCondition/Seen' ? { ...entry, description: 'new wording' } : entry) }

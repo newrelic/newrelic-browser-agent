@@ -1,6 +1,6 @@
 const fs = require('fs')
 const path = require('path')
-const { collectEmissions, compare, expandEntry, renderDocs, renderStubs, appendToPending, registryLocation, checkRepo, TODO_DESCRIPTION } = require('../../../../tools/supportability-metrics/lib')
+const { collectEmissions, compare, checkValues, expandEntry, renderDocs, renderStubs, appendToPending, registryLocation, checkRepo, TODO_DESCRIPTION } = require('../../../../tools/supportability-metrics/lib')
 const registry = require('../../../../tools/supportability-metrics/registry')
 
 const patterns = (code) => collectEmissions(code).filter(emission => !emission.unresolved).map(emission => emission.pattern)
@@ -245,6 +245,81 @@ describe('appendToPending', () => {
     appendToPending(['Two/New'], file)
 
     expect(fs.readFileSync(file, 'utf8')).toContain('// why these are pending')
+  })
+})
+
+describe('values that metrics report', () => {
+  const emissionsOf = (code) => collectEmissions(code)
+
+  test('the scanner notes whether a call passes a value', () => {
+    expect(emissionsOf("reportSupportabilityMetric(ee, 'A/B', 5)")[0].hasValue).toBe(true)
+    expect(emissionsOf("reportSupportabilityMetric(ee, 'A/B')")[0].hasValue).toBe(false)
+    expect(emissionsOf("this.storeSupportabilityMetrics('A/B', count)")[0].hasValue).toBe(true)
+    expect(emissionsOf("this.storeSupportabilityMetrics('A/B')")[0].hasValue).toBe(false)
+  })
+
+  test('a value of undefined is not a value', () => {
+    expect(emissionsOf("reportSupportabilityMetric(ee, 'A/B', undefined)")[0].hasValue).toBe(false)
+  })
+
+  test('the raw handle form passes a value as the second item of the array', () => {
+    expect(emissionsOf("handle(SUPPORTABILITY_METRIC_CHANNEL, ['A/B', 7], undefined, 'metrics', ee)")[0].hasValue).toBe(true)
+    expect(emissionsOf("handle(SUPPORTABILITY_METRIC_CHANNEL, ['A/B'], undefined, 'metrics', ee)")[0].hasValue).toBe(false)
+  })
+
+  describe('checkValues', () => {
+    const emit = (pattern, hasValue) => ({ pattern, file: 'f.js', line: 3, hasValue })
+
+    test('passes when the declarations match the code', () => {
+      const registry = { entries: [{ tag: 'A/Size', value: { unit: 'bytes' } }, { tag: 'A/Plain' }] }
+
+      expect(checkValues([emit('A/Size', true), emit('A/Plain', false)], registry)).toEqual([])
+    })
+
+    test('fails when a call passes a value but the entry does not declare one', () => {
+      const errors = checkValues([emit('A/Size', true)], { entries: [{ tag: 'A/Size' }] })
+
+      expect(errors).toHaveLength(1)
+      expect(errors[0]).toContain('"A/Size" is reported with a value (f.js:3)')
+      expect(errors[0]).toContain("unit: 'ms' | 'bytes' | 'count'")
+    })
+
+    test('fails when an entry declares a value and nothing passes one', () => {
+      expect(checkValues([emit('A/Size', false)], { entries: [{ tag: 'A/Size', value: { unit: 'bytes' } }] })[0]).toContain('declares a `value` but nothing in src/ passes one')
+    })
+
+    test('does not fail an entry that is reported some other way, or one nothing reports at all', () => {
+      expect(checkValues([], { entries: [{ tag: 'A/Size', value: { unit: 'ms' }, indirect: 'raw stats' }, { tag: 'A/Other', value: { unit: 'ms' } }] })).toEqual([])
+    })
+
+    test('fails on a unit that does not exist, including the TODO placeholder a new stub starts with', () => {
+      expect(checkValues([emit('A/Size', true)], { entries: [{ tag: 'A/Size', value: { unit: 'TODO' } }] })[0]).toContain('has the value unit "TODO"')
+      expect(checkValues([emit('A/Size', true)], { entries: [{ tag: 'A/Size', value: { unit: 'minutes' } }] })[0]).toContain('one of: ms, bytes, count')
+    })
+
+    test('fails when a family restricts the value to names it does not have', () => {
+      const registry = { entries: [{ tag: 'A/<x>', values: ['one', 'two'], value: { unit: 'ms', for: ['one', 'three'] } }] }
+
+      expect(checkValues([emit('A/<*>', true)], registry)[0]).toContain('not among its values: three')
+    })
+
+    test('matches a family\'s call by shape', () => {
+      expect(checkValues([emit('A/<*>', true)], { entries: [{ tag: 'A/<x>', values: ['one'], value: { unit: 'ms' } }] })).toEqual([])
+    })
+  })
+
+  test('a stub for a new metric that passes a value starts with a TODO unit, so the check fails until it is set', () => {
+    const stubs = renderStubs([{ pattern: 'A/New', file: 'a.js', line: 1, hasValue: true }], { sections: [{ id: 'a' }] })
+
+    expect(stubs).toContain("value: { unit: 'TODO' }")
+    expect(renderStubs([{ pattern: 'A/New', file: 'a.js', line: 1, hasValue: false }], { sections: [{ id: 'a' }] })).not.toContain('value:')
+  })
+
+  test('the docs say which metrics report a value, and in what unit', () => {
+    const docs = renderDocs({ header: 'h', sections: [{ id: 's', title: 'S' }], entries: [{ section: 's', tag: 'A/Size', description: 'How big', value: { unit: 'bytes' } }, { section: 's', tag: 'A/Plain', description: 'Happened' }] })
+
+    expect(docs).toContain('<!--- How big Reports a value (bytes). --->')
+    expect(docs).toContain('<!--- Happened --->')
   })
 })
 

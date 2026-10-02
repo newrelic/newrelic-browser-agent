@@ -20,6 +20,21 @@
  */
 
 /**
+ * The unit of the value a metric reports alongside its count. Angler stores a value as `total_call_time` (and `min_call_time` and
+ * `max_call_time`), so the dashboard uses the unit to label the average, minimum and maximum charts.
+ * @typedef {'ms' | 'bytes' | 'count'} RegistryValueUnit
+ */
+
+/**
+ * Says that a metric reports a value with each call, not just that it happened, and what the value measures.
+ * @typedef {Object} RegistryValueInfo
+ * @property {RegistryValueUnit | 'TODO'} unit What the value measures. `TODO` is the placeholder that `--fix` writes for a new metric that passes a
+ *   value, and makes the check fail until it is replaced.
+ * @property {string[]} [for] For a family, the subset of its `values` that report a value. Without it, every value of the family does. For example
+ *   only one abort reason reports a size.
+ */
+
+/**
  * One supportability metric, or one family of metrics that differ by a dynamic part of the name.
  *
  * Add one for every metric the agent reports. `npm run supportability-metrics:check -- --fix` creates a stub for you; you fill in the
@@ -37,6 +52,8 @@
  *   those lists in sync by hand. Leave `values` out for an open-ended family such as `Feature_Flag/<flag>/Seen`.
  * @property {string} [valueDescription] A description template for values that have no description of their own, where `<v>` is replaced
  *   by the value, e.g. `newrelic.<v>() was called`. Without it, such values use the entry's `description`.
+ * @property {RegistryValueInfo} [value] Present when the metric reports a value with each call (a duration, a size, a count). The check fails if a
+ *   call passes a value and this is missing, or if this is set and no call passes one. Metrics without it only report that they happened.
  * @property {string} [indirect] Set only when the static scan cannot see where the metric is reported, for example because the name is
  *   built in a helper and reported in a loop. The text should say where. An entry marked this way is exempt from the "registered but never
  *   emitted" check, so use it sparingly.

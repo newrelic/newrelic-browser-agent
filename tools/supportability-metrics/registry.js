@@ -66,7 +66,7 @@ Tags below are shown without the \`Browser/Supportability/\` prefix.`,
   entries: [
     // WebSockets
     { section: 'websockets', tag: 'WebSocket/Completed/Seen', description: 'WebSocket completed event was received (count)' },
-    { section: 'websockets', tag: 'WebSocket/Completed/Bytes', description: 'WebSocket completed event payload size in bytes' },
+    { section: 'websockets', tag: 'WebSocket/Completed/Bytes', description: 'WebSocket completed event payload size in bytes', value: { unit: 'bytes' } },
 
     // User actions
     { section: 'user_actions', tag: 'UserAction/RageClick/Seen', description: 'A user action has been detected as a rage click' },
@@ -81,7 +81,7 @@ Tags below are shown without the \`Browser/Supportability/\` prefix.`,
     { section: 'ajax', tag: 'Ajax/Metrics/Excluded/Agent', description: 'Ajax metrics were Excluded because they matched the Agent beacon' },
     { section: 'ajax', tag: 'Ajax/Events/Excluded/App', description: 'Ajax Events were Excluded because they matched the Customer deny list' },
     { section: 'ajax', tag: 'Ajax/Metrics/Excluded/App', description: 'Ajax metrics were Excluded because they matched the Customer deny list' },
-    { section: 'ajax', tag: 'Ajax/Events/Payload/Bytes-Added', description: 'Number of bytes added to reported Ajax events by including request/response body, header, and query payload attributes' },
+    { section: 'ajax', tag: 'Ajax/Events/Payload/Bytes-Added', description: 'Number of bytes added to reported Ajax events by including request/response body, header, and query payload attributes', value: { unit: 'bytes' } },
 
     // Generic
     {
@@ -113,8 +113,8 @@ Tags below are shown without the \`Browser/Supportability/\` prefix.`,
     { section: 'generic', tag: 'Generic/Performance/FirstPartyResource/Seen', description: 'A first party Performance.resource event was observed' },
     { section: 'generic', tag: 'Generic/Performance/NrResource/Seen', description: 'A New Relic Performance.resource event was observed' },
     { section: 'generic', tag: 'Generic/WebDriver/Detected', description: 'The browser being controlled by webDriver was detected' },
-    { section: 'generic', tag: 'Generic/TimeKeeper/InvalidTimestamp/Seen', description: 'Invalid timestamp seen in processing RUM response' },
-    { section: 'generic', tag: 'Generic/TimeKeeper/ClockDrift/Detected', description: 'Performance.now and Date APIs have drifted (forward only by >1000ms). Drift value is reported alongside count. Only reported once per page load' },
+    { section: 'generic', tag: 'Generic/TimeKeeper/InvalidTimestamp/Seen', description: 'Invalid timestamp seen in processing RUM response', value: { unit: 'ms' } },
+    { section: 'generic', tag: 'Generic/TimeKeeper/ClockDrift/Detected', description: 'Performance.now and Date APIs have drifted (forward only by >1000ms). Drift value is reported alongside count. Only reported once per page load', value: { unit: 'ms' } },
 
     // Frameworks (names come from the FRAMEWORKS table in src/features/metrics/aggregate/framework-detection.js)
     {
@@ -151,6 +151,7 @@ Tags below are shown without the \`Browser/Supportability/\` prefix.`,
       section: 'session_replay',
       tag: 'SessionReplay/Abort/<reason>',
       description: 'SessionReplay aborted. An abort reason with no tag is reported as `undefined`, which indicates a bug at the call site',
+      value: { unit: 'bytes', for: ['Too-Big'] },
       values: [
         ['Reset', 'SessionReplay Aborted after a natural Session reset'],
         ['Import', 'SessionReplay Aborted because the recording modules could not be imported'],
@@ -164,6 +165,7 @@ Tags below are shown without the \`Browser/Supportability/\` prefix.`,
       section: 'session_replay',
       tag: 'SessionReplay/Payload/Missing-Inline-Css/<outcome>',
       description: 'SessionReplay detected missing inline CSS contents',
+      value: { unit: 'count' },
       values: [
         ['Failed', 'SessionReplay Detected missing inline CSS contents and could not fix them'],
         ['Fixed', 'SessionReplay Detected missing inline CSS contents but was able to fix them'],
@@ -174,6 +176,7 @@ Tags below are shown without the \`Browser/Supportability/\` prefix.`,
       section: 'session_replay',
       tag: 'rrweb/node/<type>/bytes',
       description: 'Bytes of an rrweb event, by rrweb event type',
+      value: { unit: 'bytes' },
       values: [['1', 'node type 1 = Preload'], ['2', 'node type 2 = Full snapshot'], ['3', 'node type 3 = Incremental snapshot'], ['4', 'node type 4 = Meta']]
     },
 
@@ -233,6 +236,7 @@ Tags below are shown without the \`Browser/Supportability/\` prefix.`,
       section: 'event_buffer',
       tag: 'EventBuffer/<feature>/Dropped/Bytes',
       description: 'The number of bytes dropped because an event buffer reached its cap',
+      value: { unit: 'bytes' },
       valueDescription: 'The number of bytes dropped for <v> because an event buffer reached its cap',
       values: [['Combined', 'The number of bytes dropped across all features because an event buffer reached its cap'], 'ajax', 'generic_events', 'logging', 'page_view_event', 'page_view_timing', 'spa', 'soft_navigations']
     },
@@ -242,6 +246,7 @@ Tags below are shown without the \`Browser/Supportability/\` prefix.`,
       section: 'harvest',
       tag: '<feature>/Harvest/Early/Seen',
       description: 'A feature harvest was sent before the interval elapsed (bytes captured)',
+      value: { unit: 'bytes' },
       valueDescription: '<v> harvest was sent before the interval elapsed (bytes captured)',
       values: ['ajax', 'generic_events', 'logging', 'page_view_timing', 'soft_navigations', 'spa']
     },
@@ -285,12 +290,14 @@ Tags below are shown without the \`Browser/Supportability/\` prefix.`,
       section: 'bcs',
       tag: 'BCS/Error/Dropped/Bytes',
       description: 'Total dropped payload size of failed browser connect response',
+      value: { unit: 'bytes' },
       indirect: 'sent as a raw { params, stats } object in connector.js and page_view_event/aggregate'
     },
     {
       section: 'bcs',
       tag: 'BCS/Error/Duration/Ms',
       description: 'Response time of failed browser connect response',
+      value: { unit: 'ms' },
       indirect: 'sent as a raw { params, stats } object in connector.js and page_view_event/aggregate'
     }
 

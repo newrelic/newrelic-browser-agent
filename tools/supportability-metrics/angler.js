@@ -153,9 +153,10 @@ function listDecisions (head, changedOpenFamilies, detected) {
  * @param {import('./registry-types').Registry} head The registry on the pull request.
  * @param {import('./detect').DetectedChanges} [detected] What the pull request does to `init` settings and feature flags. Without it, the
  *   checklist falls back to telling the author what to check.
+ * @param {{dashboardUrl?: string}} [options] `dashboardUrl` is a link to the preview dashboard generated for this pull request.
  * @returns {string | undefined} Markdown, or undefined if the pull request does not change any supportability metric.
  */
-function renderComment (base, head, detected) {
+function renderComment (base, head, detected, { dashboardUrl } = {}) {
   const { relevant, added, removed, changedOpenFamilies } = diffRegistries(base, head)
   if (!relevant) return undefined
 
@@ -164,6 +165,7 @@ function renderComment (base, head, detected) {
   const status = getStatus(added, removed, decisions)
   const parts = [
     status.intro,
+    dashboardUrl ? `📊 **[Preview the dashboard for this PR](${dashboardUrl})**: a copy of the generated supportability dashboard in staging, updated on every push and deleted when the PR closes. Charts for new metrics stay empty until the metric ships and its name is in Angler.` : undefined,
     status.steps(decisions.length, removed.length)
   ].filter(Boolean)
 

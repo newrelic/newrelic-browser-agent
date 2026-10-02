@@ -14,7 +14,7 @@ Tags below are shown without the `Browser/Supportability/` prefix.
 ### WebSockets
 <!--- WebSocket completed event was received (count) --->
 * WebSocket/Completed/Seen
-<!--- WebSocket completed event payload size in bytes --->
+<!--- WebSocket completed event payload size in bytes Reports a value (bytes). --->
 * WebSocket/Completed/Bytes
 
 ### User Actions
@@ -38,7 +38,7 @@ Tags below are shown without the `Browser/Supportability/` prefix.
 * Ajax/Events/Excluded/App
 <!--- Ajax metrics were Excluded because they matched the Customer deny list --->
 * Ajax/Metrics/Excluded/App
-<!--- Number of bytes added to reported Ajax events by including request/response body, header, and query payload attributes --->
+<!--- Number of bytes added to reported Ajax events by including request/response body, header, and query payload attributes Reports a value (bytes). --->
 * Ajax/Events/Payload/Bytes-Added
 
 ### Generic
@@ -82,9 +82,9 @@ Tags below are shown without the `Browser/Supportability/` prefix.
 * Generic/Performance/NrResource/Seen
 <!--- The browser being controlled by webDriver was detected --->
 * Generic/WebDriver/Detected
-<!--- Invalid timestamp seen in processing RUM response --->
+<!--- Invalid timestamp seen in processing RUM response Reports a value (ms). --->
 * Generic/TimeKeeper/InvalidTimestamp/Seen
-<!--- Performance.now and Date APIs have drifted (forward only by >1000ms). Drift value is reported alongside count. Only reported once per page load --->
+<!--- Performance.now and Date APIs have drifted (forward only by >1000ms). Drift value is reported alongside count. Only reported once per page load Reports a value (ms). --->
 * Generic/TimeKeeper/ClockDrift/Detected
 
 ### Frameworks
@@ -147,7 +147,7 @@ Every setting in `init` is reported automatically by its path, with no per-setti
 * SessionReplay/EnabledNotEntitled/Detected
 <!--- SessionReplay attempted to harvest data --->
 * SessionReplay/Harvest/Attempts
-<!--- SessionReplay aborted. An abort reason with no tag is reported as `undefined`, which indicates a bug at the call site --->
+<!--- SessionReplay aborted. An abort reason with no tag is reported as `undefined`, which indicates a bug at the call site Reports a value (bytes, only for Too-Big). --->
 * SessionReplay/Abort/<reason>
   <!--- SessionReplay Aborted after a natural Session reset --->
   * SessionReplay/Abort/Reset
@@ -161,7 +161,7 @@ Every setting in `init` is reported automatically by its path, with no per-setti
   * SessionReplay/Abort/Cross-Tab
   <!--- SessionReplay Aborted because the App was not entitled to record --->
   * SessionReplay/Abort/Entitlement
-<!--- SessionReplay detected missing inline CSS contents --->
+<!--- SessionReplay detected missing inline CSS contents Reports a value (count). --->
 * SessionReplay/Payload/Missing-Inline-Css/<outcome>
   <!--- SessionReplay Detected missing inline CSS contents and could not fix them --->
   * SessionReplay/Payload/Missing-Inline-Css/Failed
@@ -169,7 +169,7 @@ Every setting in `init` is reported automatically by its path, with no per-setti
   * SessionReplay/Payload/Missing-Inline-Css/Fixed
   <!--- SessionReplay Detected missing inline CSS contents but skipped fixing them due to configuration --->
   * SessionReplay/Payload/Missing-Inline-Css/Skipped
-<!--- Bytes of an rrweb event, by rrweb event type --->
+<!--- Bytes of an rrweb event, by rrweb event type Reports a value (bytes). --->
 * rrweb/node/<type>/bytes
   <!--- node type 1 = Preload --->
   * rrweb/node/1/bytes
@@ -300,7 +300,7 @@ Reported as `Internal/Error/<reason>`. The reason is the second argument of the 
   * Internal/Error/Other
 
 ### Event Buffer
-<!--- The number of bytes dropped because an event buffer reached its cap --->
+<!--- The number of bytes dropped because an event buffer reached its cap Reports a value (bytes). --->
 * EventBuffer/<feature>/Dropped/Bytes
   <!--- The number of bytes dropped across all features because an event buffer reached its cap --->
   * EventBuffer/Combined/Dropped/Bytes
@@ -320,7 +320,7 @@ Reported as `Internal/Error/<reason>`. The reason is the second argument of the 
   * EventBuffer/soft_navigations/Dropped/Bytes
 
 ### Harvest
-<!--- A feature harvest was sent before the interval elapsed (bytes captured) --->
+<!--- A feature harvest was sent before the interval elapsed (bytes captured) Reports a value (bytes). --->
 * <feature>/Harvest/Early/Seen
   <!--- ajax harvest was sent before the interval elapsed (bytes captured) --->
   * ajax/Harvest/Early/Seen
@@ -350,7 +350,7 @@ Reported as `Internal/Error/<reason>`. The reason is the second argument of the 
 ### Browser Connect Response Metrics
 <!--- HTTP status code of failed browser connect response --->
 * BCS/Error/<code>
-<!--- Total dropped payload size of failed browser connect response --->
+<!--- Total dropped payload size of failed browser connect response Reports a value (bytes). --->
 * BCS/Error/Dropped/Bytes
-<!--- Response time of failed browser connect response --->
+<!--- Response time of failed browser connect response Reports a value (ms). --->
 * BCS/Error/Duration/Ms

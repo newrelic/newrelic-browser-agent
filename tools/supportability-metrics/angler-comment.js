@@ -6,7 +6,7 @@
 /**
  * Writes the pull request comment that tells the author what to do in Angler, and sets the workflow output `relevant`.
  *
- *   node tools/supportability-metrics/angler-comment.js --out comment.md [--base-registry path/to/registry-on-the-base-branch.js] [--base-ref origin/main]
+ *   node tools/supportability-metrics/angler-comment.js --out comment.md [--base-registry path/to/registry-on-the-base-branch.js] [--base-ref origin/main] [--dashboard-url https://...]
  *
  * With `--base-ref`, it also works out which `init` settings and feature flags the change adds, so the checklist lists only what applies.
  * That needs the parser (`acorn`) and git history; if either is missing it says so in the comment instead of failing.
@@ -26,6 +26,7 @@ const valueOf = (flag) => { const i = argv.indexOf(flag); return i >= 0 ? argv[i
 const out = valueOf('--out')
 const baseRegistryPath = valueOf('--base-registry')
 const baseRef = valueOf('--base-ref')
+const dashboardUrl = valueOf('--dashboard-url')
 
 if (!out) {
   console.error('Missing --out <file to write the comment to>')
@@ -53,7 +54,7 @@ function detect () {
   }
 }
 
-const comment = renderComment(base, require('./registry'), detect())
+const comment = renderComment(base, require('./registry'), detect(), { dashboardUrl })
 
 if (comment) fs.writeFileSync(out, comment)
 console.log(comment ? `Wrote the Angler comment to ${out}` : 'The supportability metric registry is unchanged, so there is nothing to tell the author.')

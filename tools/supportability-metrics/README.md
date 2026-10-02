@@ -6,6 +6,7 @@
 | `check-usage.js` | `npm run supportability-metrics:check`. Scans `src/`, fails if it and the registry disagree. `-- --fix` adds stubs. Run by the pre-commit hook and CI |
 | `generate-docs.js` | `npm run supportability-metrics:generate-docs` |
 | `angler.js`, `angler-comment.js`, `detect.js` | Write the pull request comment that tells the author what to do in Angler (below). `detect.js` finds the `init` settings and feature flags a change adds, and needs the `acorn` parser, which is optional there |
+| `dashboard/` | Generates the supportability dashboard from the registry and applies it to New Relic (below) |
 | `lib.js`, `colors.js` | Shared logic and terminal colors |
 
 How to add a metric and test it: see `CLAUDE.md` and `tests/components/supportability-metrics/README.md`.
@@ -42,3 +43,55 @@ node tools/supportability-metrics/angler-comment.js --base-registry /tmp/base-re
 ```
 
 It prints "unchanged" and writes nothing when the registry matches the base.
+
+## The generated dashboard
+
+A dashboard in New Relic is generated from the registry, so charts follow the metrics without anyone building them by hand. It sits beside
+the [hand-built dashboard](https://onenr.io/07jbyP2q3Ry), which is never touched. The generated one is read only and is **replaced whole on
+every update**, so change the registry or the generator, never the dashboard.
+
+### What is in it
+- **Overview**: calls, accounts and apps reporting across all metrics, the top metrics, and the top accounts and apps.
+- **One page per registry section**: the rate by metric, the total by metric, the rate for the top 10 accounts and the top 10 apps, and, for
+  the section's metrics that report a value, the average, maximum and minimum (labelled with the unit).
+- **Metric Explorer**: a `Metric` picker filled from the data (every name in the last 7 days), with the rate, the rate by account and by app,
+  and the average, minimum and maximum of whichever metric is picked. A metric appears in the picker as soon as Angler holds it, with no
+  regeneration.
+
+It is built from the `Supportability` event Angler writes once an hour per account, app and metric name: the rate is `sum(call_count)`, the
+average is `sum(total_call_time) / sum(call_count)`, and the extremes are `max(max_call_time)` and `min(min_call_time)`. A metric only has
+average, minimum and maximum charts if its registry entry declares a `value` (its unit is `ms`, `bytes` or `count`); the check fails if a call
+passes a value and the entry does not say so, and `--fix` writes `unit: 'TODO'` for a new one.
+
+### Where it is applied
+| When | Where | How |
+| --- | --- | --- |
+| A pull request changes the registry or the generator | A **preview** in staging (lives in account 550352), named `[PR #N] ... (preview)` | `sm-dashboard-preview` in `pull-request-checks.yml`. Updated on every push, linked from the Angler comment, deleted when the PR closes (`supportability-dashboard-cleanup.yml`) |
+| The registry or the generator changes on `main` | The **staging** dashboard | `supportability-dashboard.yml` |
+| A release is approved and promoted to US production | The **US prod** dashboard (lives in account 1672072) | The `update-supportability-dashboard-us-prod` job in `internal-promotion.yml`, after `deploy-us-prod` |
+
+Each dashboard lives in a different account from the data it reads, which is allowed because every widget names the account it queries
+(`dashboard/environments.js`):
+
+| Environment | Dashboard lives in | Queries read |
+| --- | --- | --- |
+| staging | 550352 | 432507 |
+| us-prod | 1672072 | 33 |
+
+The API key therefore needs **write access to the dashboard's account** and **read access to the data account** (validation runs every query there), and anyone
+viewing a dashboard needs read access to the data account or its widgets show "no access". Staging and production are separate New Relic stacks, so a
+dashboard cannot read both.
+
+The jobs use the `NR_API_KEY_STAGING` and `NR_API_KEY_PRODUCTION` secrets, which must be New Relic **user** API keys with dashboard write access in
+those accounts, and run on the `Browser-Agent-Assigned-IP-Linux` runner. The staging jobs never block a pull request if they fail. EU and JP are not supported yet.
+
+A metric's charts stay empty until the metric ships in an agent version and its name is in Angler, and metrics removed from the registry keep
+showing in the pages that match by name pattern and in the explorer for as long as older agent versions keep sending them.
+
+### Trying it without touching New Relic
+```sh
+npm run supportability-metrics:dashboard -- --env staging --dry-run --write-json /tmp/dashboard.json
+```
+builds the dashboard and saves it as JSON that can be imported through the New Relic UI (Dashboards, Import dashboard). Add `--validate` (needs the
+key in the environment) to also run every generated query against New Relic, which is also the quickest way to confirm the key works.
+`--delete --name "..."` deletes a dashboard by name.

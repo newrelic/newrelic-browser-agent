@@ -69,7 +69,7 @@ function diffRegistries (base, head) {
     relevant: key(base) !== key(head),
     added: [...headTags].filter(tag => !baseTags.has(tag)),
     removed: [...baseTags].filter(tag => !headTags.has(tag)),
-    changedOpenFamilies: head.entries.filter(entry => isOpenFamily(entry) && baseEntries.get(entry.tag) !== JSON.stringify(entry)).map(entry => entry.tag)
+    changedOpenFamilies: !base ? [] : head.entries.filter(entry => isOpenFamily(entry) && baseEntries.get(entry.tag) !== JSON.stringify(entry)).map(entry => entry.tag)
   }
 }
 
@@ -77,27 +77,56 @@ const count = (n, noun, plural = noun + 's') => `${n} ${n === 1 ? noun : plural}
 const block = (lines) => '```text\n' + lines.join('\n') + '\n```'
 
 /**
+ * The checklist of things only the author can decide, limited to what this pull request actually touches.
+ * @param {import('./registry-types').Registry} head
+ * @param {string[]} changedOpenFamilies Open-ended families whose registry entry this pull request changed.
+ * @param {import('./detect').DetectedChanges | undefined} detected What the change does to `init` settings and feature flags, or undefined when that could not be worked out.
+ * @returns {string[]} Markdown checklist items. Empty when nothing needs a decision.
+ */
+function listDecisions (head, changedOpenFamilies, detected) {
+  const item = (name, text) => `- [ ] **\`${PREFIX}${name}\`**: ${text}`
+  const isGeneratedFromCode = (entry) => entry.tag.startsWith('Config/') || entry.tag.startsWith('Feature_Flag/')
+  const items = []
+
+  if (detected) {
+    detected.addedSettings.forEach(({ path, tag }) => items.push(item(tag, `new \`init\` setting \`${path}\`. ` +
+      (tag.endsWith('/Enabled') ? 'It is reported only when a customer sets it to true.' : 'It is reported only when a customer sets a non-default value.') + ' Add it if you want to track it.')))
+    detected.removedSettings.forEach(({ path, tag }) => items.push(item(tag, `\`init\` setting \`${path}\` was removed. If Angler tracks this name, remove it once older agent versions have aged out.`)))
+    detected.addedFlags.forEach(flag => items.push(item(`Feature_Flag/${flag}/Seen`, `new feature flag \`${flag}\`. Add it if you want to track it.`)))
+  } else {
+    // The change could not be analyzed, so say what to check instead of guessing
+    head.entries.filter(isGeneratedFromCode).filter(isOpenFamily).forEach(entry => items.push(item(entry.tag, manualHint(entry))))
+  }
+
+  head.entries.filter(entry => changedOpenFamilies.includes(entry.tag) && !(detected && isGeneratedFromCode(entry)))
+    .forEach(entry => items.push(item(entry.tag, `${manualHint(entry)} _(this PR changed this family)_`)))
+  return items
+}
+
+/**
  * Renders the pull request comment, collapsed by default. Lines are left flush left on purpose: the comment action trims every line.
  * @param {import('./registry-types').Registry | undefined} base The registry on the base branch, if it had one.
  * @param {import('./registry-types').Registry} head The registry on the pull request.
+ * @param {import('./detect').DetectedChanges} [detected] What the pull request does to `init` settings and feature flags. Without it, the
+ *   checklist falls back to telling the author what to check.
  * @returns {string | undefined} Markdown, or undefined if the pull request does not change any supportability metric.
  */
-function renderComment (base, head) {
+function renderComment (base, head, detected) {
   const { relevant, added, removed, changedOpenFamilies } = diffRegistries(base, head)
   if (!relevant) return undefined
 
   const all = listConcreteTags(head)
-  const openFamilies = head.entries.filter(isOpenFamily)
+  const decisions = listDecisions(head, changedOpenFamilies, detected)
   const parts = [
     'This PR changes the supportability metric registry. A metric only appears in dashboards once its exact name is in Angler\'s shared `metric_names.txt`, and Angler is updated by hand. ' +
       'This comment is regenerated on every push, so it always reflects the latest commit.',
     '### What you need to do',
     [
       `1. Open a pull request against **[agents/angler](${ANGLER_REPO_URL})** that edits [\`metric_names.txt\`](${ANGLER_FILE_URL}) (you need to be on the VPN).`,
-      '2. Add the names under **Add to Angler** below, and handle **Removed** as described there.',
-      '3. Work through **Needs your decision**. These cannot be generated, so you are the gatekeeper for them.',
-      '4. Link the Angler PR here by adding it to this PR\'s description.'
-    ].join('\n')
+      '2. Add the names under **Add to Angler** below' + (removed.length ? ', and handle **Removed** as described there.' : '.'),
+      decisions.length ? '3. Work through **Needs your decision**. These cannot be generated, so you are the gatekeeper for them.' : undefined,
+      `${decisions.length ? 4 : 3}. Link the Angler PR here by adding it to this PR's description.`
+    ].filter(Boolean).join('\n')
   ]
 
   if (!base) {
@@ -115,20 +144,25 @@ function renderComment (base, head) {
     )
   }
 
-  parts.push(
-    '### Needs your decision (cannot be generated)',
-    'The names in these families are only known when the agent runs (an `init` setting path, a flag name, an HTTP status code), so they cannot be listed here. ' +
-      'Angler is curated by hand for them.',
-    openFamilies.map(entry => `- [ ] **\`${PREFIX}${entry.tag}\`**${changedOpenFamilies.includes(entry.tag) ? ' _(changed in this PR)_' : ''}: ${manualHint(entry)}`).join('\n')
-  )
+  if (decisions.length) {
+    parts.push(
+      '### Needs your decision (cannot be generated)',
+      'These names depend on things only known when the agent runs (an `init` setting, a flag name, an HTTP status code), so Angler is curated by hand for them. ' +
+        (detected ? 'Only what this PR touches is listed.' : 'This PR could not be analyzed automatically, so check each one against your changes.'),
+      decisions.join('\n')
+    )
+  } else {
+    parts.push('### Needs your decision', 'Nothing in this PR needs a manual decision in Angler: it adds no `init` settings or feature flags and changes none of the open-ended families (status codes, audit combinations).')
+  }
 
   parts.push(
     `<details><summary>Full list of names Angler should contain for this version of the registry (${count(all.length, 'name')})</summary>\n\n` + block(all) +
-      '\n\nThis is every name the registry can list. It does not include the families above, and Angler may legitimately hold more than this (names for older agent versions, and the curated ones).\n\n</details>'
+      '\n\nThis is every name the registry can list. It does not include the open-ended families (`Config/*`, `Feature_Flag/*`, retry and connect response status codes), and Angler may legitimately hold more than this (names for older agent versions, and the curated ones).\n\n</details>'
   )
 
   // The whole comment is collapsed by default so it does not crowd the conversation. The summary line stays visible and carries the counts.
-  const summary = `<strong>Supportability metrics changed: this PR needs a matching Angler PR</strong> (${count(added.length, 'name')} to add, ${removed.length} removed, ${count(openFamilies.length, 'family', 'families')} to decide)`
+  const decisionsSummary = decisions.length ? count(decisions.length, 'decision') : 'no decisions'
+  const summary = `<strong>Supportability metrics changed: this PR needs a matching Angler PR</strong> (${count(added.length, 'name')} to add, ${removed.length} removed, ${decisionsSummary})`
   return `<details>\n<summary>${summary}</summary>\n\n${parts.join('\n\n')}\n\n</details>\n`
 }
 

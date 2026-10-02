@@ -77,14 +77,15 @@ describe('renderComment', () => {
 
     expect(comment.startsWith('<details>\n<summary>')).toBe(true)
     expect(comment).not.toMatch(/<details[^>]*\bopen\b/)
-    expect(comment).toMatch(/<summary><strong>Supportability metrics changed: this PR needs a matching Angler PR<\/strong> \(1 name to add, 0 removed, 4 families to decide\)<\/summary>/)
+    expect(comment).toMatch(/<summary><strong>Supportability metrics changed: this PR needs a matching Angler PR<\/strong> \(1 name to add, 0 removed, 2 decisions\)<\/summary>/)
     expect(comment.trimEnd().endsWith('</details>')).toBe(true)
   })
 
-  test('uses the singular for one family to decide', () => {
-    const one = { ...head, entries: [entries[0], entries[2]] }
+  test('uses the singular for one decision', () => {
+    const detected = { addedSettings: [], removedSettings: [], addedFlags: ['one_flag'] }
 
-    expect(renderComment(undefined, one)).toContain('1 family to decide')
+    expect(renderComment(head, without('Session/RaceCondition/Seen'), detected)).toContain('0 names to add, 1 removed')
+    expect(renderComment(without('Session/RaceCondition/Seen'), head, detected)).toContain('1 name to add, 0 removed, 1 decision)')
   })
 
   test('counts removals in the summary', () => {
@@ -128,23 +129,79 @@ describe('renderComment', () => {
     expect(comment).toContain('Older agent versions')
   })
 
-  test('calls out every open-ended family as a decision for the author, with a checkbox and a hint', () => {
-    const comment = renderComment(without('Session/RaceCondition/Seen'), head)
+  describe('the checklist of decisions', () => {
+    const none = { addedSettings: [], removedSettings: [], addedFlags: [] }
+    const withBase = without('Session/RaceCondition/Seen')
 
-    expect(comment).toContain('### Needs your decision (cannot be generated)')
-    expect(comment).toContain('- [ ] **`' + PREFIX + 'Config/<init path>/Enabled`**')
-    expect(comment).toContain('- [ ] **`' + PREFIX + 'Feature_Flag/<flag>/Seen`**')
-    expect(comment).toContain('- [ ] **`' + PREFIX + 'Harvester/Retry/Failed/<code>`**')
-    expect(comment).toContain('new feature flag')
-    expect(comment).toContain('HTTP status codes')
-    expect(comment).toMatch(/Attempted\/<feature>`\*\*: Decide which features/)
-  })
+    test('falls back to telling the author what to check when the change could not be analyzed', () => {
+      const comment = renderComment(withBase, head)
 
-  test('marks the open-ended families this pull request changed', () => {
-    const comment = renderComment(head, { ...head, entries: entries.map(entry => entry.tag === 'Feature_Flag/<flag>/Seen' ? { ...entry, description: 'new wording' } : entry) })
+      expect(comment).toContain('### Needs your decision (cannot be generated)')
+      expect(comment).toContain('could not be analyzed automatically')
+      expect(comment).toContain('- [ ] **`' + PREFIX + 'Config/<init path>/Enabled`**')
+      expect(comment).toContain('- [ ] **`' + PREFIX + 'Feature_Flag/<flag>/Seen`**')
+      expect(comment).toContain('new feature flag')
+    })
 
-    expect(comment).toContain('`' + PREFIX + 'Feature_Flag/<flag>/Seen`** _(changed in this PR)_')
-    expect(comment).not.toContain('`' + PREFIX + 'Config/<init path>/Enabled`** _(changed in this PR)_')
+    test('does not list families that this PR did not touch, such as status codes', () => {
+      const comment = renderComment(withBase, head, none)
+
+      expect(comment).not.toContain('Harvester/Retry/Failed/<code>`**')
+      expect(comment).not.toContain('Harvester/Retry/Attempted/<feature>`**')
+      expect(comment).not.toContain('Config/<init path>/Enabled`**')
+    })
+
+    test('says nothing needs a decision, and drops that step, when the PR touches nothing manual', () => {
+      const comment = renderComment(withBase, head, none)
+
+      expect(comment).toContain('Nothing in this PR needs a manual decision in Angler')
+      expect(comment).not.toContain('- [ ]')
+      expect(comment).not.toContain('Work through **Needs your decision**')
+      expect(comment).toContain('3. Link the Angler PR here')
+      expect(comment).toContain('(1 name to add, 0 removed, no decisions)')
+    })
+
+    test('lists the exact names for new init settings, by kind', () => {
+      const comment = renderComment(withBase, head, { ...none, addedSettings: [{ path: 'session_replay.new_thing', tag: 'Config/session_replay/new_thing/Enabled' }, { path: 'harvest.limit', tag: 'Config/harvest/limit/Changed' }] })
+
+      expect(comment).toContain('- [ ] **`' + PREFIX + 'Config/session_replay/new_thing/Enabled`**: new `init` setting `session_replay.new_thing`. It is reported only when a customer sets it to true.')
+      expect(comment).toContain('- [ ] **`' + PREFIX + 'Config/harvest/limit/Changed`**: new `init` setting `harvest.limit`. It is reported only when a customer sets a non-default value.')
+      expect(comment).toContain('4. Link the Angler PR here')
+    })
+
+    test('lists removed init settings, with the warning to wait for older agents', () => {
+      const comment = renderComment(withBase, head, { ...none, removedSettings: [{ path: 'old.setting', tag: 'Config/old/setting/Enabled' }] })
+
+      expect(comment).toContain('- [ ] **`' + PREFIX + 'Config/old/setting/Enabled`**: `init` setting `old.setting` was removed.')
+      expect(comment).toContain('aged out')
+    })
+
+    test('lists the exact name for each new feature flag', () => {
+      const comment = renderComment(withBase, head, { ...none, addedFlags: ['brand_new_flag'] })
+
+      expect(comment).toContain('- [ ] **`' + PREFIX + 'Feature_Flag/brand_new_flag/Seen`**: new feature flag `brand_new_flag`.')
+    })
+
+    test('lists an open-ended family only when this PR changed its registry entry, and marks it', () => {
+      const changed = { ...head, entries: entries.map(entry => entry.tag === 'Harvester/Retry/Failed/<code>' ? { ...entry, description: 'new wording' } : entry) }
+      const comment = renderComment(head, changed, none)
+
+      expect(comment).toContain('- [ ] **`' + PREFIX + 'Harvester/Retry/Failed/<code>`**')
+      expect(comment).toContain('_(this PR changed this family)_')
+      expect(comment).not.toContain('Harvester/Retry/Attempted/<feature>`**')
+    })
+
+    test('does not treat every family as changed when the base has no registry', () => {
+      expect(renderComment(undefined, head, none)).toContain('Nothing in this PR needs a manual decision')
+    })
+
+    test('uses a status code hint for status code families and a feature hint for the retry attempts', () => {
+      const changed = { ...head, entries: entries.map(entry => entry.tag.startsWith('Harvester/') ? { ...entry, description: 'new wording' } : entry) }
+      const comment = renderComment(head, changed, none)
+
+      expect(comment).toContain('Failed/<code>`**: Decide which HTTP status codes')
+      expect(comment).toMatch(/Attempted\/<feature>`\*\*: Decide which features/)
+    })
   })
 
   test('includes the full list of names Angler should hold, collapsed', () => {

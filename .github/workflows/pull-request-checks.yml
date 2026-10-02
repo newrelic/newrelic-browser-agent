@@ -103,11 +103,15 @@ jobs:
       - name: Get the supportability metric registry from the base branch
         run: |
           git show "origin/${{ github.base_ref }}:tools/supportability-metrics/registry.js" > "$RUNNER_TEMP/base-registry.js" || rm -f "$RUNNER_TEMP/base-registry.js"
+      - name: Install the source parser
+        # Lets the comment list only the init settings and feature flags this PR adds. Without it the comment still works, but asks the author to check instead.
+        run: npm install --no-save --no-package-lock --ignore-scripts --no-audit --no-fund acorn@^8.17.0 acorn-walk@^8.3.5
       - name: Work out what Angler needs
         id: angler
         run: |
           node tools/supportability-metrics/angler-comment.js \
             --base-registry "$RUNNER_TEMP/base-registry.js" \
+            --base-ref "origin/${{ github.base_ref }}" \
             --out "$RUNNER_TEMP/angler-comment.md"
       - name: Tell the author what to do in Angler
         # Regenerated on every push to the pull request: the comment is found by its tag and updated in place.

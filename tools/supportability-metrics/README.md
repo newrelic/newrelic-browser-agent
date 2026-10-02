@@ -5,7 +5,7 @@
 | `registry.js` (types in `registry-types.js`) | The single source of truth for every supportability metric. `docs/supportability-metrics.md` is generated from it |
 | `check-usage.js` | `npm run supportability-metrics:check`. Scans `src/`, fails if it and the registry disagree. `-- --fix` adds stubs. Run by the pre-commit hook and CI |
 | `generate-docs.js` | `npm run supportability-metrics:generate-docs` |
-| `angler.js`, `angler-comment.js` | Write the pull request comment that tells the author what to do in Angler (below) |
+| `angler.js`, `angler-comment.js`, `detect.js` | Write the pull request comment that tells the author what to do in Angler (below). `detect.js` finds the `init` settings and feature flags a change adds, and needs the `acorn` parser, which is optional there |
 | `lib.js`, `colors.js` | Shared logic and terminal colors |
 
 How to add a metric and test it: see `CLAUDE.md` and `tests/components/supportability-metrics/README.md`.
@@ -23,8 +23,12 @@ When a pull request changes the registry, the comment (collapsed by default; its
   and to link that pull request from this one;
 - lists the names to add (new in this pull request), and the names removed. It says not to delete those from Angler yet, because older agent
   versions in the wild keep sending them;
-- calls out the families it **cannot** generate (an `init` setting path, a feature flag, an HTTP status code) as a checklist that the author
-  must decide on, marking the ones this pull request changed;
+- lists, as a checklist, only the decisions that apply to this pull request, because names for `init` settings and feature flags cannot be
+  generated from the registry. It compares the changed source files with the base branch and lists the exact name for each `init` setting
+  the PR adds (`Config/<path>/Enabled` for a boolean, `Config/<path>/Changed` for anything else), each setting it removes, and each new
+  feature flag. An open-ended family such as retry or connect response status codes is listed only if the PR changed its registry entry.
+  If nothing applies, it says so and drops that step. If the change could not be analyzed (the parser is not installed, or there is no git
+  history), it falls back to listing the `Config/*` and `Feature_Flag/*` items with "check whether your changes affect this" wording;
 - includes, collapsed, the full list of names Angler should contain for this version of the registry.
 
 It is regenerated on every push, in place (found by its `<!-- supportability_metric_check -->` tag). If a later push removes all the registry
@@ -34,7 +38,7 @@ To see the comment for your branch before opening a pull request:
 
 ```sh
 git show origin/main:tools/supportability-metrics/registry.js > /tmp/base-registry.js
-node tools/supportability-metrics/angler-comment.js --base-registry /tmp/base-registry.js --out /tmp/angler-comment.md
+node tools/supportability-metrics/angler-comment.js --base-registry /tmp/base-registry.js --base-ref origin/main --out /tmp/angler-comment.md
 ```
 
 It prints "unchanged" and writes nothing when the registry matches the base.

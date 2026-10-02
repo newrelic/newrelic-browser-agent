@@ -2,11 +2,9 @@
  * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { originTime } from '../constants/runtime'
 import { isNative } from '../util/monkey-patched'
-import { handle } from '../event-emitter/handle'
-import { FEATURE_NAMES } from '../../loaders/features/features'
+import { reportSupportabilityMetric } from '../event-emitter/report-supportability-metric'
 
 /**
  * Class used to adjust the timestamp of harvested data to New Relic server time. This
@@ -69,7 +67,7 @@ export class TimeKeeper {
         if (newDrift > 1000) {
           // Update measured drift and report it
           this.#measuredDrift = drift
-          if (this.#session) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/TimeKeeper/ClockDrift/Detected', drift], undefined, FEATURE_NAMES.metrics, this.#session.agentRef.ee)
+          if (this.#session) reportSupportabilityMetric(this.#session.agentRef.ee, 'Generic/TimeKeeper/ClockDrift/Detected', drift)
         }
       }
     } catch (err) {

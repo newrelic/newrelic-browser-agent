@@ -2,13 +2,12 @@
  * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
-import { FEATURE_TO_ENDPOINT, FEATURE_NAMES } from '../../loaders/features/features'
-import { handle } from '../event-emitter/handle'
+import { FEATURE_TO_ENDPOINT } from '../../loaders/features/features'
 import { subscribeToEOL } from '../unload/eol'
 import { getSubmitMethod, xhr as xhrMethod } from '../util/submit-data'
 import { send } from './send'
 import { Obfuscator } from '../util/obfuscate'
+import { reportSupportabilityMetric } from '../event-emitter/report-supportability-metric'
 
 const RETRY = 'Harvester/Retry/'
 const RETRY_ATTEMPTED = RETRY + 'Attempted/'
@@ -84,9 +83,10 @@ export class Harvester {
      */
     function cbFinished (result) {
       if (aggregateInst.harvestOpts.prevAttemptCode) { // this means we just retried a harvest that last failed
-        const reportSM = (message) => handle(SUPPORTABILITY_METRIC_CHANNEL, [message], undefined, FEATURE_NAMES.metrics, aggregateInst.ee)
-        reportSM(RETRY_ATTEMPTED + aggregateInst.featureName)
-        reportSM((result.retry ? RETRY_FAILED : RETRY_SUCCEEDED) + aggregateInst.harvestOpts.prevAttemptCode)
+        /* sm-registry: forwards the Harvester/Retry/* names passed to report() below (registry entries marked indirect) */
+        const report = (message) => reportSupportabilityMetric(aggregateInst.ee, message)
+        report(RETRY_ATTEMPTED + aggregateInst.featureName)
+        report((result.retry ? RETRY_FAILED : RETRY_SUCCEEDED) + aggregateInst.harvestOpts.prevAttemptCode)
         delete aggregateInst.harvestOpts.prevAttemptCode // always reset last observation so we don't falsely report again next harvest
         // In case this re-attempt failed again, that'll be handled (re-marked again) next.
       }

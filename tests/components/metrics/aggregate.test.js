@@ -138,3 +138,44 @@ function sum_sq (array) {
   while (i--) sum += Math.pow(array[i], 2)
   return sum
 }
+
+describe('feature flag supportability metrics', () => {
+  const getMetricNames = () => metricsAggregate.events.get({ aggregatorTypes: [SUPPORTABILITY_METRIC] })[SUPPORTABILITY_METRIC].map(x => x?.params?.name)
+
+  test('singleChecks reports a Seen metric for every feature flag in init', () => {
+    mainAgent.init.feature_flags = ['rum_v2', 'register']
+    metricsAggregate.singleChecks()
+
+    expect(getMetricNames()).toEqual(expect.arrayContaining(['Feature_Flag/rum_v2/Seen', 'Feature_Flag/register/Seen']))
+  })
+
+  test('singleChecks reports each feature flag only once', () => {
+    mainAgent.init.feature_flags = ['rum_v2']
+    metricsAggregate.singleChecks()
+
+    expect(getMetricNames().filter(name => name === 'Feature_Flag/rum_v2/Seen').length).toEqual(1)
+  })
+
+  test('singleChecks reports no feature flag metrics when none are set', () => {
+    mainAgent.init.feature_flags = []
+    metricsAggregate.singleChecks()
+
+    expect(getMetricNames().filter(name => name.startsWith('Feature_Flag/'))).toEqual([])
+  })
+})
+
+describe('config supportability metrics', () => {
+  const getMetricNames = () => metricsAggregate.events.get({ aggregatorTypes: [SUPPORTABILITY_METRIC] })[SUPPORTABILITY_METRIC].map(x => x?.params?.name)
+
+  afterEach(() => { // mainAgent is shared across tests, so put the setting back
+    mainAgent.init.session_replay.collect_fonts = false
+  })
+
+  test('singleChecks reports init settings by path', () => {
+    mainAgent.init.session_replay.collect_fonts = true
+    metricsAggregate.singleChecks()
+
+    expect(getMetricNames()).toEqual(expect.arrayContaining(['Config/session_replay/collect_fonts/Enabled', 'Config/ajax/enabled/Enabled']))
+    expect(getMetricNames()).not.toContain('Config/session_replay/inline_images/Enabled')
+  })
+})

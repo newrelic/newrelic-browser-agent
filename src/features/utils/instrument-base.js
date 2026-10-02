@@ -215,7 +215,7 @@ async function ensureRuntimeBootstrap (agentRef, ee, featureName) {
         setupAgentSession(agentRef) // sets agentRef.runtime.session, if successful
       } catch (e) {
         warn(20, e)
-        ee.emit('internal-error', [e])
+        ee.emit('internal-error', [e, 'Session-Setup'])
         handle(SESSION_ERROR, [e], undefined, featureName, ee)
       }
     }

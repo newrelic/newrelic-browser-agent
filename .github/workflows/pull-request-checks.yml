@@ -35,6 +35,23 @@ jobs:
       coverage: true
     secrets: inherit
 
+  supportability-metrics-check:
+    runs-on: ubuntu-latest
+    name: Supportability Metrics Check
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Install dependencies
+        run: npm ci
+      - name: Checking that supportability metrics match the registry and docs
+        run: npm run supportability-metrics:check
+
   types-test:
     runs-on: ubuntu-latest
     name: Types Test

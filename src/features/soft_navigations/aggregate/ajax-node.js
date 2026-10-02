@@ -4,12 +4,10 @@
  */
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
 import { createStringAdders } from '../../../common/payloads/payloads'
-import { handle } from '../../../common/event-emitter/handle'
-import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AJAX_ID } from '../../ajax/constants'
 import { NODE_TYPE } from '../constants'
 import { BelNode } from './bel-node'
+import { reportSupportabilityMetric } from '../../../common/event-emitter/report-supportability-metric'
 
 export class AjaxNode extends BelNode {
   constructor (ajaxEvent, ajaxContext) {
@@ -88,7 +86,7 @@ export class AjaxNode extends BelNode {
 
     // .length is UTF-16 code units, not true UTF-8 byte size, so this undercounts multi-byte characters -- but it reuses the
     // already-serialized payloadAttrs strings instead of re-stringifying/byte-counting, which is worth the imprecision here.
-    if (payloadAttrs.length) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Payload/Bytes-Added', payloadAttrs.join(';').length], undefined, FEATURE_NAMES.metrics, agentRef.ee)
+    if (payloadAttrs.length) reportSupportabilityMetric(agentRef.ee, 'Ajax/Events/Payload/Bytes-Added', payloadAttrs.join(';').length)
 
     let allAttachedNodes = [...regularAttrs, ...payloadAttrs]
     this.children.forEach(node => allAttachedNodes.push(node.serialize())) // no children is expected under ajax nodes at this time

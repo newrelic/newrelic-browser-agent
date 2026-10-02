@@ -50,6 +50,6 @@ test('should emit an "internal-error" event and still return a string if an erro
 
   const output = stringify('foo')
 
-  expect(eventEmitterModule.ee.emit).toHaveBeenCalledWith('internal-error', expect.any(Array))
+  expect(eventEmitterModule.ee.emit).toHaveBeenCalledWith('internal-error', [expect.any(Error), 'Stringify'])
   expect(output).toEqual('')
 })

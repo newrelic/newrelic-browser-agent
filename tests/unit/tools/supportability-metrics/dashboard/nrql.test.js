@@ -90,7 +90,12 @@ describe('queries', () => {
     expect(queries.appsReporting(condition)).toContain('uniqueCount(agent_id)')
   })
 
-  test('lists metric names from the data for the explorer picker, without the Browser/Supportability/ prefix so the list is easy to read', () => {
-    expect(queries.metricNames()).toBe("FROM Supportability SELECT uniques(substring(name, 23)) WHERE name LIKE 'Browser/Supportability/%' SINCE 7 days ago LIMIT MAX")
+  test('lists the accounts and apps for the pickers, with a limit past the default of 1,000', () => {
+    expect(queries.accountIds()).toBe("FROM Supportability SELECT uniques(account_id, 5000) WHERE name LIKE 'Browser/Supportability/%' SINCE 7 days ago")
+    expect(queries.appIds()).toContain('uniques(agent_id, 5000)')
+  })
+
+  test('lists the full metric names from the data for the explorer picker', () => {
+    expect(queries.metricNames()).toBe("FROM Supportability SELECT uniques(name) WHERE name LIKE 'Browser/Supportability/%' SINCE 7 days ago LIMIT MAX")
   })
 })

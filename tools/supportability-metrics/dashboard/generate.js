@@ -10,21 +10,34 @@
  * Instead of a set of charts per metric, which would be hundreds of widgets, it has:
  * - a Metric Explorer page, which comes first (the dashboard opens on it). It is the only page that uses the dashboard's one variable, `metric`,
  *   a picker filled from the data itself, so a metric Angler starts to track appears in it without the dashboard being regenerated. With no
- *   metric picked the picker is null and every chart on the page is empty; with one picked, every chart shows just that metric, and
+ *   metric picked the picker is null and the charts on the page have nothing to show; with one picked, every chart shows just that metric, and
  * - one page per registry section, in alphabetical order, with the count by metric, the accounts and apps reporting, the top accounts and
  *   apps, and the average, minimum and maximum of the metrics in that section that report a value. Their queries are fixed: they always
- *   show the whole section, whatever the picker is set to.
+ *   show the whole section, whatever the metric picker is set to.
+ *
+ * Every chart on every page also honors two more variables, `account` and `app`. Both default to a wildcard, so with nothing picked a chart covers
+ * all accounts and apps.
  */
 
-const { PREFIX } = require('../angler')
 const { queries, nameCondition, hasPlaceholder } = require('./nrql')
 
 const METRIC_VARIABLE = 'metric'
 /**
- * Narrows a chart to the one metric picked in the variable. The picker lists names without the `Browser/Supportability/` prefix, so the prefix is written
- * into the query ahead of the variable, inside the same quotes. With nothing picked the name is just the prefix, which no metric has, so the chart is empty.
+ * Narrows a chart to the one metric picked in the variable. The picker lists full names (with the `Browser/Supportability/` prefix), and the variable is
+ * replaced with the picked name as a quoted string. New Relic's charts do not support building the name from a prefix and the variable.
  */
-const METRIC_FILTER = `name = '${PREFIX}{{${METRIC_VARIABLE}}}'`
+const METRIC_FILTER = `name = {{${METRIC_VARIABLE}}}`
+const ACCOUNT_VARIABLE = 'account'
+const APP_VARIABLE = 'app'
+/** What the account and app pickers hold when nothing is picked: a wildcard, so every account and app is counted. */
+const ALL = '%'
+/**
+ * Narrows a chart to the account and app picked in the variables. Both default to `%`, which `LIKE` matches against everything, so with
+ * nothing picked a chart covers the data across all accounts and apps.
+ */
+const SCOPE = `account_id LIKE {{${ACCOUNT_VARIABLE}}} AND agent_id LIKE {{${APP_VARIABLE}}}`
+/** @param {string} condition @returns {string} The condition, also limited to the account and app in the pickers. */
+const scoped = (condition) => `${condition} AND ${SCOPE}`
 const GRID_COLUMNS = 12
 
 /** Lays widgets out left to right on a 12 column grid, starting a new row when one does not fit. */
@@ -166,7 +179,7 @@ function valueCharts (context, grid, condition, unit, subject, facet) {
  */
 function sectionPage (section, entries, context) {
   const grid = new Grid()
-  const condition = nameCondition(entries)
+  const condition = scoped(nameCondition(entries))
   // Charts are titled with what they show: the metric itself when the section is one metric, otherwise the section
   const subject = entries.length === 1 ? entries[0].tag : section.title
   const widgets = []
@@ -198,7 +211,7 @@ function sectionPage (section, entries, context) {
   entries.filter(entry => entry.value).forEach(entry => { (byUnit[entry.value.unit] = byUnit[entry.value.unit] || []).push(entry) })
   Object.entries(byUnit).forEach(([unit, valueEntries]) => {
     const only = Object.fromEntries(valueEntries.filter(entry => entry.value.for).map(entry => [entry.tag, entry.value.for]))
-    widgets.push(...valueCharts(context, grid, nameCondition(valueEntries, { only }), unit, titleList(namesFor(valueEntries, true)), true))
+    widgets.push(...valueCharts(context, grid, scoped(nameCondition(valueEntries, { only })), unit, titleList(namesFor(valueEntries, true)), true))
   })
   return { name: section.title, description: `Generated from the "${section.title}" section of the registry.`, widgets }
 }
@@ -210,7 +223,7 @@ function sectionPage (section, entries, context) {
  */
 function explorerPage (context) {
   const grid = new Grid()
-  const condition = METRIC_FILTER
+  const condition = scoped(METRIC_FILTER)
   const widgets = [
     chart(context, grid, 'viz.billboard', 'Calls', queries.totalCalls(condition), BILLBOARD),
     chart(context, grid, 'viz.billboard', 'Accounts reporting', queries.accountsReporting(condition), BILLBOARD),
@@ -230,17 +243,23 @@ function explorerPage (context) {
  * @returns {Object[]} The dashboard variables.
  */
 function variables (context) {
-  return [{
-    name: METRIC_VARIABLE,
-    title: 'Supportability Metric',
+  const picker = (name, title, query, defaultValues) => ({
+    name,
+    title,
     type: 'NRQL',
     items: null,
     isMultiSelection: false,
     replacementStrategy: 'STRING',
-    defaultValues: null,
-    nrqlQuery: { accountIds: [context.dataAccountId], query: queries.metricNames() },
+    defaultValues,
+    nrqlQuery: { accountIds: [context.dataAccountId], query },
     options: { ignoreTimeRange: true }
-  }]
+  })
+  const all = [{ value: { string: ALL } }]
+  return [
+    picker(METRIC_VARIABLE, 'Supportability Metric', queries.metricNames(), null),
+    picker(ACCOUNT_VARIABLE, 'Account', queries.accountIds(), all),
+    picker(APP_VARIABLE, 'App', queries.appIds(), all)
+  ]
 }
 
 /**
@@ -267,4 +286,4 @@ function buildDashboard (registry, { dataAccountId, name, description }) {
   }
 }
 
-module.exports = { buildDashboard, Grid, METRIC_VARIABLE }
+module.exports = { buildDashboard, Grid, METRIC_VARIABLE, ACCOUNT_VARIABLE, APP_VARIABLE }

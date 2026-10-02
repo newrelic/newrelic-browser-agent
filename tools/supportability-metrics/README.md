@@ -55,9 +55,11 @@ experimenting lasts only until the next update.)
 - **Metric Explorer** (the first tab, so the dashboard opens on it): the only page that uses the **Supportability Metric** dropdown. The dropdown has no
   default, so until a metric is picked every chart on this page is empty. Pick one and every chart shows just that metric: its calls, accounts and apps
   reporting, the count, the count for the top 10 accounts and the top 10 apps, and the average, maximum and minimum value. The dropdown is filled from the
-  data (every name in the last 7 days), so a metric appears in it as soon as Angler holds it, with no regeneration. It lists names without the
-  `Browser/Supportability/` prefix (`API/log/called`), to be easy to read, and every explorer query writes the prefix back in front of the variable:
-  `WHERE name = 'Browser/Supportability/{{metric}}'`.
+  data (every name in the last 7 days), so a metric appears in it as soon as Angler holds it, with no regeneration. It lists the full names
+  (`Browser/Supportability/API/log/called`), because charts cannot build a name from a prefix and the variable, so every explorer query uses the variable
+  as the whole name: `WHERE name = {{metric}}`.
+- **Account and App dropdowns**, which every chart on every page honors (the explorer's and the section pages'). Both are filled from the data and default
+  to `%`, which `LIKE` matches against everything, so with nothing changed a chart covers all accounts and apps: `WHERE ... AND account_id LIKE {{account}} AND agent_id LIKE {{app}}`.
 - **One page per registry section**, in alphabetical order after the explorer. Their queries are fixed and ignore the dropdown: the count over time, a pie of each metric's share, and the total and accounts per metric
   (bars, and a table with apps too) when the section has more than one metric, then the count for the top 10 accounts and the top 10 apps, and, for the section's metrics that report a value, the average, maximum and minimum
   (labelled with the unit). Every chart is titled with what it shows: the metric itself when a page is one metric, the metrics that report a value in the

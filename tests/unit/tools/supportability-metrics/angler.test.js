@@ -12,6 +12,17 @@ const head = { header: 'h', sections: [], entries }
 const without = (tag) => ({ ...head, entries: entries.filter(entry => entry.tag !== tag) })
 const withEntry = (entry) => ({ ...head, entries: [...entries, entry] })
 
+describe('loading in CI', () => {
+  test('does not load the JavaScript parser, because the pull request comment job runs plain node with nothing installed', () => {
+    jest.isolateModules(() => {
+      jest.doMock('acorn', () => { throw new Error('acorn must not be loaded by the pull request comment script') })
+      jest.doMock('acorn-walk', () => { throw new Error('acorn-walk must not be loaded by the pull request comment script') })
+
+      expect(() => require('../../../../tools/supportability-metrics/angler')).not.toThrow()
+    })
+  })
+})
+
 describe('listConcreteTags', () => {
   test('lists single metrics and expanded families with the prefix, and skips open-ended families', () => {
     expect(listConcreteTags(head)).toEqual([

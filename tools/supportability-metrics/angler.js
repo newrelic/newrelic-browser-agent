@@ -12,7 +12,7 @@
  * - tells the author to open a pull request against Angler and link it.
  */
 
-const { expandEntry } = require('./lib')
+const { expandEntry } = require('./expand')
 
 /** Every supportability metric in Angler's file starts with this. */
 const PREFIX = 'Browser/Supportability/'

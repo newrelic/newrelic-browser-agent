@@ -13,11 +13,11 @@ const fs = require('fs')
 const path = require('path')
 const acorn = require('acorn')
 const walk = require('acorn-walk')
+const { WILDCARD, shapeOf, toRegExp, expandEntry } = require('./expand')
 
 const ROOT = path.join(__dirname, '..', '..')
 const SRC_DIR = path.join(ROOT, 'src')
 const DOCS_PATH = path.join(ROOT, 'docs', 'supportability-metrics.md')
-const WILDCARD = '<*>'
 const INTERNAL_ERROR_EVENT = 'internal-error'
 
 /** A comment matching this on (or directly above) an SM call declares that the call forwards a name reported and registered elsewhere. */
@@ -136,38 +136,8 @@ function collectEmissions (code, file = '') {
 }
 
 /**
- * @param {string} text A registry tag or an emitted pattern.
- * @returns {string} The text with every `<placeholder>` replaced by the same marker, so dynamic shapes can be compared.
- */
-const shapeOf = (text) => text.replace(/<[^>]*>/g, WILDCARD)
-
-/**
- * @param {string} text A registry tag or an emitted pattern.
- * @returns {RegExp} Matches any concrete metric name the text describes.
- */
-function toRegExp (text) {
-  const escaped = text.split(/<[^>]*>/).map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.+')
-  return new RegExp('^' + escaped + '$')
-}
-
-/**
- * @param {E} entry A registry entry.
- * @returns {Array<{tag: string, description: string}>} The entry, with its placeholder expanded for each known value.
- */
-function expandEntry (entry) {
-  if (!entry.values) return [{ tag: entry.tag, description: entry.description }]
-  return entry.values.map(value => {
-    const [v, description] = Array.isArray(value) ? value : [value]
-    return {
-      tag: entry.tag.replace(/<[^>]*>/, v),
-      description: description || (entry.valueDescription ? entry.valueDescription.replace(/<v>/g, v) : entry.description)
-    }
-  })
-}
-
-/**
  * @param {string} pattern An emitted pattern.
- * @param {E} entry A registry entry.
+ * @param {import('./registry-types').RegistryEntry} entry A registry entry.
  * @returns {boolean} Whether the emitted pattern is covered by (i.e. produces or is an instance of) the entry.
  */
 function emissionMatchesEntry (pattern, entry) {

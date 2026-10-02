@@ -72,6 +72,29 @@ describe('diffRegistries', () => {
 })
 
 describe('renderComment', () => {
+  test('is collapsed by default, with a summary line that shows the counts', () => {
+    const comment = renderComment(without('Session/RaceCondition/Seen'), head)
+
+    expect(comment.startsWith('<details>\n<summary>')).toBe(true)
+    expect(comment).not.toMatch(/<details[^>]*\bopen\b/)
+    expect(comment).toMatch(/<summary><strong>Supportability metrics changed: this PR needs a matching Angler PR<\/strong> \(1 name to add, 0 removed, 4 families to decide\)<\/summary>/)
+    expect(comment.trimEnd().endsWith('</details>')).toBe(true)
+  })
+
+  test('uses the singular for one family to decide', () => {
+    const one = { ...head, entries: [entries[0], entries[2]] }
+
+    expect(renderComment(undefined, one)).toContain('1 family to decide')
+  })
+
+  test('counts removals in the summary', () => {
+    expect(renderComment(head, without('Session/RaceCondition/Seen'))).toContain('0 names to add, 1 removed')
+  })
+
+  test('leaves a blank line after the summary so the markdown inside renders', () => {
+    expect(renderComment(without('Session/RaceCondition/Seen'), head)).toMatch(/<\/summary>\n\nThis PR changes/)
+  })
+
   test('returns nothing when the pull request does not change the registry', () => {
     expect(renderComment(head, head)).toBeUndefined()
   })

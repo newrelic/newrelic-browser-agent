@@ -73,11 +73,11 @@ function diffRegistries (base, head) {
   }
 }
 
-const count = (n, noun) => `${n} ${noun}${n === 1 ? '' : 's'}`
+const count = (n, noun, plural = noun + 's') => `${n} ${n === 1 ? noun : plural}`
 const block = (lines) => '```text\n' + lines.join('\n') + '\n```'
 
 /**
- * Renders the pull request comment. Lines are left flush left on purpose: the comment action trims every line.
+ * Renders the pull request comment, collapsed by default. Lines are left flush left on purpose: the comment action trims every line.
  * @param {import('./registry-types').Registry | undefined} base The registry on the base branch, if it had one.
  * @param {import('./registry-types').Registry} head The registry on the pull request.
  * @returns {string | undefined} Markdown, or undefined if the pull request does not change any supportability metric.
@@ -89,7 +89,6 @@ function renderComment (base, head) {
   const all = listConcreteTags(head)
   const openFamilies = head.entries.filter(isOpenFamily)
   const parts = [
-    '## Supportability metrics changed: this PR needs a matching Angler PR',
     'This PR changes the supportability metric registry. A metric only appears in dashboards once its exact name is in Angler\'s shared `metric_names.txt`, and Angler is updated by hand. ' +
       'This comment is regenerated on every push, so it always reflects the latest commit.',
     '### What you need to do',
@@ -128,7 +127,9 @@ function renderComment (base, head) {
       '\n\nThis is every name the registry can list. It does not include the families above, and Angler may legitimately hold more than this (names for older agent versions, and the curated ones).\n\n</details>'
   )
 
-  return parts.join('\n\n') + '\n'
+  // The whole comment is collapsed by default so it does not crowd the conversation. The summary line stays visible and carries the counts.
+  const summary = `<strong>Supportability metrics changed: this PR needs a matching Angler PR</strong> (${count(added.length, 'name')} to add, ${removed.length} removed, ${count(openFamilies.length, 'family', 'families')} to decide)`
+  return `<details>\n<summary>${summary}</summary>\n\n${parts.join('\n\n')}\n\n</details>\n`
 }
 
 module.exports = { PREFIX, ANGLER_REPO_URL, ANGLER_FILE_URL, listConcreteTags, diffRegistries, renderComment }

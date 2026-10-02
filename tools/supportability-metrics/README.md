@@ -17,7 +17,7 @@ must list a metric's exact name before it appears in dashboards. It lives on the
 request to the browser agent cannot change it. Instead, the `sm-check` job in
 [pull-request-checks.yml](../../.github/workflows/pull-request-checks.yml) comments on the pull request with what the author has to do.
 
-When a pull request changes the registry, the comment:
+When a pull request changes the registry, the comment (collapsed by default; its one-line summary shows how many names to add and remove and how many families need a decision):
 
 - tells the author to open a pull request against [agents/angler](https://source.datanerd.us/agents/angler), with links to the repo and the file,
   and to link that pull request from this one;

@@ -264,12 +264,12 @@ function renderComment (base, head, detected, { dashboardUrl } = {}) {
       decisions.join('\n')
     )
   } else if (status.icon === '🟠') { // the green and yellow intros already say so
-    parts.push('### Needs your decision', 'Nothing in this PR needs a manual decision in Angler: it adds no `init` settings or feature flags and changes none of the open-ended families (status codes, audit combinations).')
+    parts.push('### Needs your decision', 'Nothing in this PR needs a manual decision in Angler: every name it adds is listed above.')
   }
 
   parts.push(
     `<details><summary>Full list of names Angler should contain for this version of the registry (${count(all.length, 'name')})</summary>\n\n` + block(all) +
-      '\n\nThis is every name the registry can list, plus the names for every `init` setting and feature flag found in the source' + (detected ? '' : ' (not available for this run, so they are missing)') + '. It does not include the open-ended families whose names depend on what happens at runtime (retry and connect response status codes, audit combinations), and Angler may legitimately hold more than this (names for older agent versions, and the curated ones).\n\n</details>'
+      '\n\nThis is every name the registry can list, plus the names for every `init` setting and feature flag found in the source' + (detected ? '' : ' (not available for this run, so they are missing)') + ', and the HTTP status codes the registry lists for retries and connect responses. Angler may legitimately hold more than this (names for older agent versions, other status codes, and the curated ones).\n\n</details>'
   )
 
   // The whole comment is collapsed by default so it does not crowd the conversation. The summary line stays visible, so it carries the status and the counts.

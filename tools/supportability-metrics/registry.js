@@ -250,30 +250,41 @@ Tags below are shown without the \`Browser/Supportability/\` prefix.`,
     },
 
     // Audit
-    {
+    ...[['page_view', 'hasReplay'], ['page_view', 'hasTrace'], ['session_replay', 'hasError']].map(([feature, flag]) => ({
       section: 'audit',
-      tag: 'audit/<feature>/<flag>/<flag value>/<result>',
-      description: 'Cross-event audit of a harvest flag against whether that harvest actually occurred. <result> is positive or negative; <flag value> is true when the flag matched reality. Currently: page_view/hasReplay, page_view/hasTrace and session_replay/hasError, each with false/positive (flag set, no harvest), false/negative (flag unset, harvest occurred), true/positive and true/negative',
+      tag: `audit/${feature}/${flag}/<outcome>`,
+      description: `Cross-event audit of the ${feature} \`${flag}\` flag against whether that harvest actually occurred`,
+      values: [
+        ['false/positive', 'The flag was set, but no harvest occurred'],
+        ['false/negative', 'The flag was not set, but a harvest occurred'],
+        ['true/positive', 'The flag was set, and a harvest occurred'],
+        ['true/negative', 'The flag was not set, and no harvest occurred']
+      ],
       indirect: 'built by formTag() in src/features/metrics/aggregate/harvest-metadata.js and reported through a forEach'
-    },
+    })),
 
     // Harvester
     {
       section: 'harvester',
       tag: 'Harvester/Retry/Attempted/<feature>',
       description: 'Harvester retried a harvest',
+      // The names of the features that harvest (FEATURE_NAMES in src/loaders/features/features.js), without the deprecated page_action
+      values: ['ajax', 'generic_events', 'jserrors', 'logging', 'metrics', 'page_view_event', 'page_view_timing', 'session_replay', 'session_trace', 'soft_navigations'],
       indirect: 'reported through a local report() wrapper in src/common/harvest/harvester.js'
     },
     {
       section: 'harvester',
       tag: 'Harvester/Retry/Failed/<code>',
-      description: 'Retry failed codes (dynamic)',
+      description: 'A retried harvest failed again with the HTTP status code of the harvest that was retried',
+      // The statuses the harvester retries on (shouldRetry() in src/common/harvest/send.js)
+      values: ['408', '429', '500', '502', '503', '504', '512', '513', '514', '515', '516', '517', '518', '519', '520', '521', '522', '523', '524', '525', '526', '527', '528', '529', '530'],
       indirect: 'reported through a local report() wrapper in src/common/harvest/harvester.js'
     },
     {
       section: 'harvester',
       tag: 'Harvester/Retry/Succeeded/<code>',
-      description: 'Retry succeeded codes (dynamic)',
+      description: 'A retried harvest succeeded. The code is the HTTP status of the harvest that was retried',
+      values: ['408', '429', '500', '502', '503', '504', '512', '513', '514', '515', '516', '517', '518', '519', '520', '521', '522', '523', '524', '525', '526', '527', '528', '529', '530'],
       indirect: 'reported through a local report() wrapper in src/common/harvest/harvester.js'
     },
 
@@ -281,7 +292,8 @@ Tags below are shown without the \`Browser/Supportability/\` prefix.`,
     {
       section: 'bcs',
       tag: 'BCS/Error/<code>',
-      description: 'HTTP status code of failed browser connect response',
+      description: 'HTTP status code of failed browser connect response. Reported for any status of 400 or more, and for 0 (a request that never completed). Only the codes a customer is likely to see are listed',
+      values: ['0', '400', '401', '403', '404', '405', '408', '413', '414', '429', '500', '502', '503', '504'],
       indirect: 'sent as a raw { params, stats } object in connector.js and page_view_event/aggregate'
     },
     {

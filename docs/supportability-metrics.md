@@ -334,20 +334,196 @@ Tags below are shown without the `Browser/Supportability/` prefix.
   * spa/Harvest/Early/Seen
 
 ### Audit
-<!--- Cross-event audit of a harvest flag against whether that harvest actually occurred. <result> is positive or negative; <flag value> is true when the flag matched reality. Currently: page_view/hasReplay, page_view/hasTrace and session_replay/hasError, each with false/positive (flag set, no harvest), false/negative (flag unset, harvest occurred), true/positive and true/negative --->
-* audit/<feature>/<flag>/<flag value>/<result>
+<!--- Cross-event audit of the page_view `hasReplay` flag against whether that harvest actually occurred --->
+* audit/page_view/hasReplay/<outcome>
+  <!--- The flag was set, but no harvest occurred --->
+  * audit/page_view/hasReplay/false/positive
+  <!--- The flag was not set, but a harvest occurred --->
+  * audit/page_view/hasReplay/false/negative
+  <!--- The flag was set, and a harvest occurred --->
+  * audit/page_view/hasReplay/true/positive
+  <!--- The flag was not set, and no harvest occurred --->
+  * audit/page_view/hasReplay/true/negative
+<!--- Cross-event audit of the page_view `hasTrace` flag against whether that harvest actually occurred --->
+* audit/page_view/hasTrace/<outcome>
+  <!--- The flag was set, but no harvest occurred --->
+  * audit/page_view/hasTrace/false/positive
+  <!--- The flag was not set, but a harvest occurred --->
+  * audit/page_view/hasTrace/false/negative
+  <!--- The flag was set, and a harvest occurred --->
+  * audit/page_view/hasTrace/true/positive
+  <!--- The flag was not set, and no harvest occurred --->
+  * audit/page_view/hasTrace/true/negative
+<!--- Cross-event audit of the session_replay `hasError` flag against whether that harvest actually occurred --->
+* audit/session_replay/hasError/<outcome>
+  <!--- The flag was set, but no harvest occurred --->
+  * audit/session_replay/hasError/false/positive
+  <!--- The flag was not set, but a harvest occurred --->
+  * audit/session_replay/hasError/false/negative
+  <!--- The flag was set, and a harvest occurred --->
+  * audit/session_replay/hasError/true/positive
+  <!--- The flag was not set, and no harvest occurred --->
+  * audit/session_replay/hasError/true/negative
 
 ### Harvester
 <!--- Harvester retried a harvest --->
 * Harvester/Retry/Attempted/<feature>
-<!--- Retry failed codes (dynamic) --->
+  <!--- Harvester retried a harvest --->
+  * Harvester/Retry/Attempted/ajax
+  <!--- Harvester retried a harvest --->
+  * Harvester/Retry/Attempted/generic_events
+  <!--- Harvester retried a harvest --->
+  * Harvester/Retry/Attempted/jserrors
+  <!--- Harvester retried a harvest --->
+  * Harvester/Retry/Attempted/logging
+  <!--- Harvester retried a harvest --->
+  * Harvester/Retry/Attempted/metrics
+  <!--- Harvester retried a harvest --->
+  * Harvester/Retry/Attempted/page_view_event
+  <!--- Harvester retried a harvest --->
+  * Harvester/Retry/Attempted/page_view_timing
+  <!--- Harvester retried a harvest --->
+  * Harvester/Retry/Attempted/session_replay
+  <!--- Harvester retried a harvest --->
+  * Harvester/Retry/Attempted/session_trace
+  <!--- Harvester retried a harvest --->
+  * Harvester/Retry/Attempted/soft_navigations
+<!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
 * Harvester/Retry/Failed/<code>
-<!--- Retry succeeded codes (dynamic) --->
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/408
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/429
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/500
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/502
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/503
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/504
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/512
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/513
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/514
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/515
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/516
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/517
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/518
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/519
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/520
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/521
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/522
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/523
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/524
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/525
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/526
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/527
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/528
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/529
+  <!--- A retried harvest failed again with the HTTP status code of the harvest that was retried --->
+  * Harvester/Retry/Failed/530
+<!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
 * Harvester/Retry/Succeeded/<code>
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/408
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/429
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/500
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/502
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/503
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/504
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/512
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/513
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/514
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/515
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/516
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/517
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/518
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/519
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/520
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/521
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/522
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/523
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/524
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/525
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/526
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/527
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/528
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/529
+  <!--- A retried harvest succeeded. The code is the HTTP status of the harvest that was retried --->
+  * Harvester/Retry/Succeeded/530
 
 ### Browser Connect Response Metrics
-<!--- HTTP status code of failed browser connect response --->
+<!--- HTTP status code of failed browser connect response. Reported for any status of 400 or more, and for 0 (a request that never completed). Only the codes a customer is likely to see are listed --->
 * BCS/Error/<code>
+  <!--- HTTP status code of failed browser connect response. Reported for any status of 400 or more, and for 0 (a request that never completed). Only the codes a customer is likely to see are listed --->
+  * BCS/Error/0
+  <!--- HTTP status code of failed browser connect response. Reported for any status of 400 or more, and for 0 (a request that never completed). Only the codes a customer is likely to see are listed --->
+  * BCS/Error/400
+  <!--- HTTP status code of failed browser connect response. Reported for any status of 400 or more, and for 0 (a request that never completed). Only the codes a customer is likely to see are listed --->
+  * BCS/Error/401
+  <!--- HTTP status code of failed browser connect response. Reported for any status of 400 or more, and for 0 (a request that never completed). Only the codes a customer is likely to see are listed --->
+  * BCS/Error/403
+  <!--- HTTP status code of failed browser connect response. Reported for any status of 400 or more, and for 0 (a request that never completed). Only the codes a customer is likely to see are listed --->
+  * BCS/Error/404
+  <!--- HTTP status code of failed browser connect response. Reported for any status of 400 or more, and for 0 (a request that never completed). Only the codes a customer is likely to see are listed --->
+  * BCS/Error/405
+  <!--- HTTP status code of failed browser connect response. Reported for any status of 400 or more, and for 0 (a request that never completed). Only the codes a customer is likely to see are listed --->
+  * BCS/Error/408
+  <!--- HTTP status code of failed browser connect response. Reported for any status of 400 or more, and for 0 (a request that never completed). Only the codes a customer is likely to see are listed --->
+  * BCS/Error/413
+  <!--- HTTP status code of failed browser connect response. Reported for any status of 400 or more, and for 0 (a request that never completed). Only the codes a customer is likely to see are listed --->
+  * BCS/Error/414
+  <!--- HTTP status code of failed browser connect response. Reported for any status of 400 or more, and for 0 (a request that never completed). Only the codes a customer is likely to see are listed --->
+  * BCS/Error/429
+  <!--- HTTP status code of failed browser connect response. Reported for any status of 400 or more, and for 0 (a request that never completed). Only the codes a customer is likely to see are listed --->
+  * BCS/Error/500
+  <!--- HTTP status code of failed browser connect response. Reported for any status of 400 or more, and for 0 (a request that never completed). Only the codes a customer is likely to see are listed --->
+  * BCS/Error/502
+  <!--- HTTP status code of failed browser connect response. Reported for any status of 400 or more, and for 0 (a request that never completed). Only the codes a customer is likely to see are listed --->
+  * BCS/Error/503
+  <!--- HTTP status code of failed browser connect response. Reported for any status of 400 or more, and for 0 (a request that never completed). Only the codes a customer is likely to see are listed --->
+  * BCS/Error/504
 <!--- Total dropped payload size of failed browser connect response Reports a value (bytes). --->
 * BCS/Error/Dropped/Bytes
 <!--- Response time of failed browser connect response Reports a value (ms). --->

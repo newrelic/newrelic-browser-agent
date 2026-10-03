@@ -29,11 +29,12 @@ When a pull request changes the registry, the comment (collapsed by default; its
   else) and scans `src` for the feature flags it recognizes. The ones a pull request adds go under the names to add, the ones it removes (or
   turns from a boolean into something else) under removed, and all of them are in the full list, so an `init` setting or flag change needs an
   Angler PR even when the registry is unchanged. The `Internal/Error/<reason>` names are already concrete, because the registry lists every reason;
-- lists, as a checklist, only the decisions that are left: an open-ended family whose names depend on runtime (retry and connect response status
-  codes, audit combinations) is listed only if the PR changed its registry entry, and a highlighted note lists those families so the author knows
-  Angler must hold the names they care about. If nothing applies, it says so and drops that step. If the source could not be analyzed (the parser
-  is not installed, or there is no git history), it falls back to listing the `Config/*` and `Feature_Flag/*` families with "check whether your
-  changes affect this" wording, and the full list says the settings and flags are missing;
+- lists, as a checklist, only the decisions that are left. Every family now has its known values in the registry (the retried features and status
+  codes, the connect response codes, the audit outcomes), so they are expanded into exact names like any other metric. A family left without
+  `values` is listed only if the PR changed its registry entry, and a highlighted note lists those families so the author knows Angler must
+  hold the names they care about. If nothing applies, it says so and drops that step. If the source could not be analyzed (the parser is not
+  installed, or there is no git history), it falls back to listing the `Config/*` and `Feature_Flag/*` families with "check whether your changes
+  affect this" wording, and the full list says the settings and flags are missing;
 - includes, collapsed, the full list of names Angler should contain for this version of the registry.
 
 It is regenerated on every push, in place (found by its `<!-- supportability_metric_check -->` tag). If a later push removes all the registry

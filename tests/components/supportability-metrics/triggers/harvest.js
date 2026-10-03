@@ -50,9 +50,9 @@ module.exports = {
     expect(trigger).toHaveBeenCalled()
   }),
 
-  'audit/<feature>/<flag>/<flag value>/<result>': {
-    tags: Object.keys(auditCases),
-    run: async (tag, ctx) => {
+  ...Object.fromEntries([['page_view', 'hasReplay'], ['page_view', 'hasTrace'], ['session_replay', 'hasError']].map(([feature, flag]) => [
+    `audit/${feature}/${flag}/<outcome>`,
+    async (outcome, ctx) => {
       const metrics = await ctx.feature(Metrics)
       metrics.singleChecks() // registers the 'harvest-metadata' handler
       ctx.forceDrain(metrics) // the handler is registered against the metrics feature group, so drain it or metadata emitted next stays buffered
@@ -60,12 +60,12 @@ module.exports = {
       const original = metrics.harvestMetadata
       metrics.harvestMetadata = {}
       try {
-        ctx.agent.ee.emit('harvest-metadata', [auditCases[tag]])
+        ctx.agent.ee.emit('harvest-metadata', [auditCases[`audit/${feature}/${flag}/${outcome}`]])
         await ctx.settle()
         metrics.harvestOpts.beforeUnload()
       } finally {
         metrics.harvestMetadata = original
       }
     }
-  }
+  ]))
 }

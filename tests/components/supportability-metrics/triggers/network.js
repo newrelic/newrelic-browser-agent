@@ -62,23 +62,19 @@ function failConnect (agent, status) {
 
 module.exports = {
   'Harvester/Retry/Attempted/<feature>': {
-    samples: ['generic_events', 'logging'],
     run: (featureName, { agent }) => harvestTwice(agent, featureName, 503, true)
   },
 
   'Harvester/Retry/Failed/<code>': {
-    samples: ['429', '503'],
     run: (code, { agent }) => harvestTwice(agent, 'logging', Number(code), false)
   },
 
   'Harvester/Retry/Succeeded/<code>': {
-    samples: ['429', '503'],
     run: (code, { agent }) => harvestTwice(agent, 'logging', Number(code), true)
   },
 
   'BCS/Error/<code>': {
-    tags: ['BCS/Error/500', 'BCS/Error/403'],
-    run: (tag, { agent }) => failConnect(agent, Number(tag.split('/').pop()))
+    run: (code, { agent }) => failConnect(agent, Number(code))
   },
 
   'BCS/Error/Dropped/Bytes': (_, { agent }) => failConnect(agent, 500),

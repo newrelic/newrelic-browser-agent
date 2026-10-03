@@ -196,14 +196,19 @@ export class Aggregate extends AggregateBase {
     this.#writeToStorage({ sessionReplayMode: this.mode })
   }
 
+  /** Loads the compressor as its own chunk. Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin. */
+  importCompressor () {
+    return import(/* webpackChunkName: "compressor" */'fflate')
+  }
+
   async prepUtils () {
     try {
-      // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
-      const { gzipSync, strToU8 } = await import(/* webpackChunkName: "compressor" */'fflate')
+      const { gzipSync, strToU8 } = await this.importCompressor()
       this.gzipper = gzipSync
       this.u8 = strToU8
     } catch (err) {
       this.shouldCompress = false
+      this.ee.emit('internal-error', [err, 'SessionReplay-Compressor'])
       // compressor failed to load, but we can still try to record without compression as a last ditch effort
     }
   }

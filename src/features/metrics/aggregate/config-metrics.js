@@ -33,9 +33,10 @@ const isSame = (value, defaultValue) => {
  * @param {import('../../../common/config/init-types').Init} init The customer's merged init object.
  * @param {import('../../../common/config/init-types').Init} defaults A default init object to compare against.
  * @param {string[]} [path] The keys walked so far. Used for recursion.
+ * @param {function(Error): void} [onError] Called with the error if evaluating a level of the config fails, so it can be reported as an internal error.
  * @returns {string[]} The supportability metric tags.
  */
-export function evaluateConfig (init, defaults, path = []) {
+export function evaluateConfig (init, defaults, path = [], onError) {
   const tags = []
   try {
     Object.keys(init).forEach(key => {
@@ -45,11 +46,12 @@ export function evaluateConfig (init, defaults, path = []) {
       const keyPath = [...path, key]
       if (typeof value === 'boolean') {
         if (value) tags.push(`Config/${keyPath.join('/')}/Enabled`)
-      } else if (isPlainObject(value)) tags.push(...evaluateConfig(value, defaultValue, keyPath))
+      } else if (isPlainObject(value)) tags.push(...evaluateConfig(value, defaultValue, keyPath, onError))
       else if (!isSame(value, defaultValue)) tags.push(`Config/${keyPath.join('/')}/Changed`)
     })
   } catch (err) {
-    // failed to evaluate config... ignore
+    // failed to evaluate config... report it, and return what was evaluated so far
+    onError?.(err)
   }
   return tags
 }

@@ -42,3 +42,21 @@ test('does not report feature_flags as config', () => {
 test('returns an empty array instead of throwing on bad input', () => {
   expect(evaluateConfig(undefined, mergeInit({}))).toEqual([])
 })
+
+test('calls onError, and keeps the tags it had evaluated, when a setting cannot be read', () => {
+  const init = mergeInit({ session_replay: { collect_fonts: true } })
+  Object.defineProperty(init, 'zzz_broken', { enumerable: true, get () { throw new Error('cannot read') } })
+  const onError = jest.fn()
+
+  const tags = evaluateConfig(init, mergeInit({}), [], onError)
+
+  expect(onError).toHaveBeenCalledWith(expect.any(Error))
+  expect(tags).toContain('Config/session_replay/collect_fonts/Enabled')
+})
+
+test('does not need an onError callback', () => {
+  const init = mergeInit({})
+  Object.defineProperty(init, 'zzz_broken', { enumerable: true, get () { throw new Error('cannot read') } })
+
+  expect(() => evaluateConfig(init, mergeInit({}))).not.toThrow()
+})

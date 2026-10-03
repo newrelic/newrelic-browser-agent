@@ -89,7 +89,7 @@ export class Aggregate extends AggregateBase {
     /* Every init setting is reported by its path, as Enabled (booleans that are true) or Changed (anything else that differs from the default).
        Note that settings a feature flag can also turn on (e.g. api.register.enabled) read as Enabled for either route. */
     /* sm-registry: forwards the Config/* tags built in config-metrics.js (registry entries marked indirect) */
-    evaluateConfig(this.agentRef.init, mergeInit({})).forEach(tag => this.storeSupportabilityMetrics(tag))
+    evaluateConfig(this.agentRef.init, mergeInit({}), [], (err) => this.ee.emit('internal-error', [err, 'Config-Metrics'])).forEach(tag => this.storeSupportabilityMetrics(tag))
 
     if (isBrowserScope) {
       if (this.agentNonce && this.agentNonce !== '') {

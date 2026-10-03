@@ -282,6 +282,12 @@ Tags below are shown without the `Browser/Supportability/` prefix.
   * Internal/Error/SessionReplay-Record
   <!--- the session manager failed to set up --->
   * Internal/Error/Session-Setup
+  <!--- a feature's aggregate failed to load or to be constructed, so that feature was aborted --->
+  * Internal/Error/Feature-Load
+  <!--- evaluating the init object for the Config metrics failed --->
+  * Internal/Error/Config-Metrics
+  <!--- the session replay compressor failed to load, so replay runs uncompressed --->
+  * Internal/Error/SessionReplay-Compressor
   <!--- waiting on the RUM response flags failed in a feature aggregate --->
   * Internal/Error/RumFlags
   <!--- JSON.stringify failed in the agent's stringify utility --->

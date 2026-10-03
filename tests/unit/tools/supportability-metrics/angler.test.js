@@ -338,6 +338,22 @@ describe('renderComment', () => {
       expect(full).toContain(PREFIX + 'Feature_Flag/rum_v2/Seen')
     })
 
+    test('adds every setting and flag when the base branch has no entry for their family, even though the source did not change', () => {
+      const detected = { ...none, settings: [{ path: 'a.b', tag: 'Config/a/b/Enabled' }], flags: ['rum_v2'] }
+      const comment = renderComment(undefined, head, detected)
+
+      expect(comment).toContain(PREFIX + 'Config/a/b/Enabled\n')
+      expect(comment).toContain(PREFIX + 'Feature_Flag/rum_v2/Seen\n')
+    })
+
+    test('adds only the new settings and flags when the base branch already has the families', () => {
+      const detected = { ...none, settings: [{ path: 'a.b', tag: 'Config/a/b/Enabled' }], flags: ['rum_v2'] }
+      const added = renderComment(withBase, head, detected).split('### Add to Angler')[1].split('###')[0]
+
+      expect(added).not.toContain('Config/a/b/Enabled')
+      expect(added).not.toContain('Feature_Flag/rum_v2/Seen')
+    })
+
     test('does not add a name twice when it is both new and in the full list', () => {
       const comment = renderComment(withBase, head, { ...none, settings: [{ path: 'a.b', tag: 'Config/a/b/Enabled' }], addedSettings: [{ path: 'a.b', tag: 'Config/a/b/Enabled' }] })
 

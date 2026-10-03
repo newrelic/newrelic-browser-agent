@@ -156,16 +156,24 @@ function listDecisions (head, changedOpenFamilies, detected) {
 
 /**
  * @param {import('./detect').DetectedChanges | undefined} detected
+ * @param {import('./registry-types').Registry | undefined} base The registry on the base branch, if it had one.
  * @returns {{all: string[], added: string[], removed: string[]}} The full metric names for the `init` settings and feature flags found in the source: all of them, and the ones
  *   this change adds and removes. Empty when the source could not be analyzed.
  */
-function namesFromSource (detected) {
+function namesFromSource (detected, base) {
   if (!detected) return { all: [], added: [], removed: [] }
+  // Angler has no reason to hold these names before the registry lists their family, so when the base branch has no entry for one, all of its names are new
+  const baseHas = (start) => Boolean(base?.entries.some(entry => entry.tag.startsWith(start)))
   const flag = (name) => PREFIX + `Feature_Flag/${name}/Seen`
   const setting = ({ tag }) => PREFIX + tag
+  const settings = detected.settings || []
+  const flags = detected.flags || []
   return {
-    all: [...(detected.settings || []).map(setting), ...(detected.flags || []).map(flag)],
-    added: [...detected.addedSettings.map(setting), ...detected.addedFlags.map(flag)],
+    all: [...settings.map(setting), ...flags.map(flag)],
+    added: [
+      ...(baseHas('Config/') ? detected.addedSettings : settings).map(setting),
+      ...(baseHas('Feature_Flag/') ? detected.addedFlags : flags).map(flag)
+    ],
     removed: detected.removedSettings.map(setting)
   }
 }
@@ -209,7 +217,7 @@ function openFamilyCallout (head, detected) {
 function renderComment (base, head, detected, { dashboardUrl } = {}) {
   const diff = diffRegistries(base, head)
   const { relevant, changedOpenFamilies } = diff
-  const fromSource = namesFromSource(detected)
+  const fromSource = namesFromSource(detected, base)
   const unique = (names) => [...new Set(names)]
   // Changes to settings and flags matter even when the registry is unchanged, because the registry only has the family
   const added = unique([...diff.added, ...fromSource.added])

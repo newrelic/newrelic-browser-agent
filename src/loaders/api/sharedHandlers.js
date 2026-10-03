@@ -6,10 +6,9 @@ import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 import { handle } from '../../common/event-emitter/handle'
 import { now } from '../../common/timing/now'
 import { warn } from '../../common/util/console'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { AgentBase } from '../agent-base'
-import { FEATURE_NAMES } from '../features/features'
 import { prefix } from './constants'
+import { reportSupportabilityMetric } from '../../common/event-emitter/report-supportability-metric'
 
 /**
  * setupAPI is a utility function that assigns API methods to an object while emitting supportability metrics and global events.
@@ -25,7 +24,7 @@ export function setupAPI (name, fn, agent, obj) {
   // We only set the global API event if the API is not already overridden from the default
   if (!api || (!!api[name] && api[name] !== AgentBase.prototype[name])) return
   api[name] = function () {
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
+    reportSupportabilityMetric(agent.ee, 'API/' + name + '/called')
     dispatchGlobalEvent({
       drained: !!agent.runtime?.activatedFeatures,
       type: 'data',

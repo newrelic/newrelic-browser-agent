@@ -24,6 +24,7 @@ import { cleanURL } from '../../../common/url/clean-url'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
 import { PAUSE_REPLAY } from '../../../loaders/api/constants'
 import { Obfuscator } from '../../../common/util/obfuscate'
+import { reportSupportabilityMetric } from '../../../common/event-emitter/report-supportability-metric'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -60,8 +61,6 @@ export class Aggregate extends AggregateBase {
 
     this.isSessionTrackingEnabled = canEnableSessionTracking(agentRef.init) && !!agentRef.runtime.session
 
-    this.reportSupportabilityMetric('Config/SessionReplay/Enabled')
-
     // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
     this.ee.on(SESSION_EVENTS.RESET, () => {
       this.abort(ABORT_REASONS.RESET)
@@ -92,8 +91,6 @@ export class Aggregate extends AggregateBase {
       this.handleError(e)
     }, this.featureName, this.ee)
 
-    const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = agentRef.init.session_replay
-
     this.waitForFlags(['srs', 'sr']).then(([srMode, entitled]) => {
       this.entitled = !!entitled
       if (!this.entitled) {
@@ -102,7 +99,7 @@ export class Aggregate extends AggregateBase {
         this.deregisterDrain()
         if (this.agentRef.runtime.isRecording) {
           this.abort(ABORT_REASONS.ENTITLEMENTS)
-          this.reportSupportabilityMetric('SessionReplay/EnabledNotEntitled/Detected')
+          reportSupportabilityMetric(this.ee, 'SessionReplay/EnabledNotEntitled/Detected')
         }
         return
       }
@@ -114,17 +111,6 @@ export class Aggregate extends AggregateBase {
       }
       sharedChannel.onReplayReady(this.mode)
     }) // notify watchers that replay started with the mode
-
-    /** Detect if the default configs have been altered and report a SM.  This is useful to evaluate what the reasonable defaults are across a customer base over time */
-    if (!autoStart) this.reportSupportabilityMetric('Config/SessionReplay/AutoStart/Modified')
-    if (collect_fonts === true) this.reportSupportabilityMetric('Config/SessionReplay/CollectFonts/Modified')
-    if (inline_images === true) this.reportSupportabilityMetric('Config/SessionReplay/InlineImages/Modifed')
-    if (mask_all_inputs !== true) this.reportSupportabilityMetric('Config/SessionReplay/MaskAllInputs/Modified')
-    if (block_selector !== '[data-nr-block]') this.reportSupportabilityMetric('Config/SessionReplay/BlockSelector/Modified')
-    if (mask_text_selector !== '*') this.reportSupportabilityMetric('Config/SessionReplay/MaskTextSelector/Modified')
-
-    this.reportSupportabilityMetric('Config/SessionReplay/SamplingRate/Value', sampling_rate)
-    this.reportSupportabilityMetric('Config/SessionReplay/ErrorSamplingRate/Value', error_sampling_rate)
   }
 
   replayIsActive () {
@@ -210,14 +196,19 @@ export class Aggregate extends AggregateBase {
     this.#writeToStorage({ sessionReplayMode: this.mode })
   }
 
+  /** Loads the compressor as its own chunk. Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin. */
+  importCompressor () {
+    return import(/* webpackChunkName: "compressor" */'fflate')
+  }
+
   async prepUtils () {
     try {
-      // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
-      const { gzipSync, strToU8 } = await import(/* webpackChunkName: "compressor" */'fflate')
+      const { gzipSync, strToU8 } = await this.importCompressor()
       this.gzipper = gzipSync
       this.u8 = strToU8
     } catch (err) {
       this.shouldCompress = false
+      this.ee.emit('internal-error', [err, 'SessionReplay-Compressor'])
       // compressor failed to load, but we can still try to record without compression as a last ditch effort
     }
   }
@@ -238,7 +229,7 @@ export class Aggregate extends AggregateBase {
       return
     }
 
-    this.reportSupportabilityMetric('SessionReplay/Harvest/Attempts')
+    reportSupportabilityMetric(this.ee, 'SessionReplay/Harvest/Attempts')
 
     let len = 0
     if (!!this.gzipper && !!this.u8) {
@@ -384,7 +375,7 @@ export class Aggregate extends AggregateBase {
   /** Abort the feature, once aborted it will not resume */
   abort (reason = {}, data) {
     warn(33, reason.message)
-    this.reportSupportabilityMetric(`SessionReplay/Abort/${reason.sm}`, data)
+    reportSupportabilityMetric(this.ee, `SessionReplay/Abort/${reason.sm}`, data)
     this.blocked = true
     this.mode = MODE.OFF
     this.recorder?.stopRecording?.()

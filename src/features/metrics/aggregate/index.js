@@ -8,10 +8,12 @@ import { getFrameworks } from './framework-detection'
 import { isFileProtocol } from '../../../common/url/protocol'
 import { onDOMContentLoaded } from '../../../common/window/load'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
-import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime'
+import { isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { evaluateHarvestMetadata } from './harvest-metadata'
+import { mergeInit } from '../../../common/config/init'
+import { evaluateConfig } from './config-metrics'
 import { Obfuscator } from '../../../common/util/obfuscate'
 // import { WEBSOCKET_TAG } from '../../../common/wrap/wrap-websocket'
 // import { handleWebsocketEvents } from './websocket-detection'
@@ -29,6 +31,7 @@ export class Aggregate extends AggregateBase {
     this.harvestMetadata = {}
     this.harvestOpts.beforeUnload = () => {
       evaluateHarvestMetadata(this.harvestMetadata).forEach(smTag => {
+        /* sm-registry: forwards the audit/* tags built in harvest-metadata.js (registry entry marked indirect) */
         this.storeSupportabilityMetrics(smTag)
       })
     }
@@ -74,14 +77,21 @@ export class Aggregate extends AggregateBase {
   singleChecks () {
     // report loaderType
     const { distMethod, loaderType } = this.agentRef.runtime
-    const { proxy, privacy } = this.agentRef.init
+    const { feature_flags: featureFlags } = this.agentRef.init
 
     if (loaderType) this.storeSupportabilityMetrics(`Generic/LoaderType/${loaderType}/Detected`)
     if (distMethod) this.storeSupportabilityMetrics(`Generic/DistMethod/${distMethod}/Detected`)
 
-    if (isBrowserScope) {
-      this.storeSupportabilityMetrics('Generic/Runtime/Browser/Detected')
+    /* Every feature flag in use is reported by name. This is intentionally generic -- which flags show up in dashboards is curated by
+       the downstream tag list, not by hard-coding flag names here. */
+    featureFlags.forEach(flag => this.storeSupportabilityMetrics(`Feature_Flag/${flag}/Seen`))
 
+    /* Every init setting is reported by its path, as Enabled (booleans that are true) or Changed (anything else that differs from the default).
+       Note that settings a feature flag can also turn on (e.g. api.register.enabled) read as Enabled for either route. */
+    /* sm-registry: forwards the Config/* tags built in config-metrics.js (registry entries marked indirect) */
+    evaluateConfig(this.agentRef.init, mergeInit({}), [], (err) => this.ee.emit('internal-error', [err, 'Config-Metrics'])).forEach(tag => this.storeSupportabilityMetrics(tag))
+
+    if (isBrowserScope) {
       if (this.agentNonce && this.agentNonce !== '') {
         this.storeSupportabilityMetrics('Generic/Runtime/Nonce/Detected')
       }
@@ -92,12 +102,6 @@ export class Aggregate extends AggregateBase {
           this.storeSupportabilityMetrics('Framework/' + framework + '/Detected')
         })
       })
-
-      if (!privacy.cookies_enabled) this.storeSupportabilityMetrics('Config/SessionTracking/Disabled')
-    } else if (isWorkerScope) {
-      this.storeSupportabilityMetrics('Generic/Runtime/Worker/Detected')
-    } else {
-      this.storeSupportabilityMetrics('Generic/Runtime/Unknown/Detected')
     }
 
     // Track if the agent is being loaded using a file protocol such as is the case in some
@@ -111,26 +115,7 @@ export class Aggregate extends AggregateBase {
       this.storeSupportabilityMetrics('Generic/Obfuscate/Detected')
     }
 
-    // Check if proxy for either chunks or beacon is being used
-    if (proxy.assets) this.storeSupportabilityMetrics('Config/AssetsUrl/Changed')
-    if (proxy.beacon) this.storeSupportabilityMetrics('Config/BeaconUrl/Changed')
-
-    if (isBrowserScope && window.MutationObserver) {
-      if (isIFrameWindow(window)) { this.storeSupportabilityMetrics('Generic/Runtime/IFrame/Detected') }
-      const preExistingVideos = window.document.querySelectorAll('video').length
-      if (preExistingVideos) this.storeSupportabilityMetrics('Generic/VideoElement/Added', preExistingVideos)
-      const preExistingIframes = window.document.querySelectorAll('iframe').length
-      if (preExistingIframes) this.storeSupportabilityMetrics('Generic/IFrame/Added', preExistingIframes)
-      const mo = new MutationObserver(records => {
-        records.forEach(record => {
-          record.addedNodes.forEach(addedNode => {
-            if (addedNode instanceof HTMLVideoElement) { this.storeSupportabilityMetrics('Generic/VideoElement/Added', 1) }
-            if (addedNode instanceof HTMLIFrameElement) { this.storeSupportabilityMetrics('Generic/IFrame/Added', 1) }
-          })
-        })
-      })
-      mo.observe(window.document.body, { childList: true, subtree: true })
-    }
+    if (isBrowserScope && isIFrameWindow(window)) this.storeSupportabilityMetrics('Generic/Runtime/IFrame/Detected')
 
     // webdriver detection
     if (navigator.webdriver) this.storeSupportabilityMetrics('Generic/WebDriver/Detected')

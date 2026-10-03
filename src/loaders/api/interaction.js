@@ -5,10 +5,10 @@
 
 import { handle } from '../../common/event-emitter/handle'
 import { now } from '../../common/timing/now'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { FEATURE_NAMES } from '../features/features'
 import { INTERACTION, SET_CURRENT_ROUTE_NAME, spaPrefix } from './constants'
 import { setupAPI } from './sharedHandlers'
+import { reportSupportabilityMetric } from '../../common/event-emitter/report-supportability-metric'
 
 export function setupInteractionAPI (agent) {
   const tracerEE = agent.ee.get('tracer')
@@ -26,7 +26,7 @@ export function setupInteractionAPI (agent) {
       var contextStore = {}
       var ixn = this
       var hasCb = typeof cb === 'function'
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/createTracer/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
+      reportSupportabilityMetric(agent.ee, 'API/createTracer/called')
       return function () {
         tracerEE.emit((hasCb ? '' : 'no-') + 'fn-start', [now(), ixn, hasCb], contextStore)
         if (hasCb) {

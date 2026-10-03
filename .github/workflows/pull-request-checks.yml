@@ -35,6 +35,23 @@ jobs:
       coverage: true
     secrets: inherit
 
+  supportability-metrics-check:
+    runs-on: ubuntu-latest
+    name: Supportability Metrics Check
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Install dependencies
+        run: npm ci
+      - name: Checking that supportability metrics match the registry and docs
+        run: npm run supportability-metrics:check
+
   types-test:
     runs-on: ubuntu-latest
     name: Types Test
@@ -66,9 +83,60 @@ jobs:
     with:
       ref: ${{ github.ref }}
 
+  # Decides whether this pull request changes the supportability metric registry or the dashboard generator. It is a separate, cheap job so
+  # the preview below, which needs the assigned IP runner, only starts when there is something to preview.
+  sm-changes:
+    name: Supportability changes
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    timeout-minutes: 5
+    outputs:
+      changed: ${{ steps.changes.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check whether the registry or the dashboard generator changed
+        id: changes
+        run: |
+          if git diff --quiet "origin/${{ github.base_ref }}...HEAD" -- tools/supportability-metrics/registry.js tools/supportability-metrics/dashboard; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  # Creates or updates a copy of the generated supportability dashboard in staging for this pull request, so the registry change can be
+  # previewed. It runs on the assigned IP runner because staging is reached from there, like the other jobs that call it. It only runs
+  # for pull requests from this repository (forks do not get secrets), and a failure never blocks the pull request: the comment just
+  # has no link.
+  sm-dashboard-preview:
+    name: Supportability dashboard preview
+    needs: [sm-changes]
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    if: needs.sm-changes.outputs.changed == 'true'
+    continue-on-error: true
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      url: ${{ steps.preview.outputs.dashboard_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Create or update the preview dashboard in staging
+        id: preview
+        env:
+          NR_API_KEY_STAGING: ${{ secrets.NR_API_KEY_STAGING }}
+        run: node tools/supportability-metrics/dashboard/apply.js --env staging --validate --pr "${{ github.event.number }}"
+
   sm-check:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    needs: [sm-dashboard-preview]
+    # Runs even when the preview was skipped (a fork) or failed; it just has no link to show
+    if: ${{ !cancelled() && github.event_name == 'pull_request' }}
     timeout-minutes: 30
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -83,24 +151,44 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
-      - name: Search for string in changed lines or file changes
-        id: supportability_check
-        uses: ./.github/actions/supportability-check
-      - name: Comment pull request
-        if: steps.supportability_check.outputs.found_string != '' || steps.supportability_check.outputs.found_file == 'true'
+      - name: Get the supportability metric registry from the base branch
+        run: |
+          git show "origin/${{ github.base_ref }}:tools/supportability-metrics/registry.js" > "$RUNNER_TEMP/base-registry.js" || rm -f "$RUNNER_TEMP/base-registry.js"
+      - name: Install the source parser
+        # Lets the comment list only the init settings and feature flags this PR adds. Without it the comment still works, but asks the author to check instead.
+        run: npm install --no-save --no-package-lock --ignore-scripts --no-audit --no-fund acorn@^8.17.0 acorn-walk@^8.3.5
+      - name: Work out what Angler needs
+        id: angler
+        run: |
+          node tools/supportability-metrics/angler-comment.js \
+            --base-registry "$RUNNER_TEMP/base-registry.js" \
+            --base-ref "origin/${{ github.base_ref }}" \
+            --dashboard-url "${{ needs.sm-dashboard-preview.outputs.url }}" \
+            --out "$RUNNER_TEMP/angler-comment.md"
+      - name: Tell the author what to do in Angler
+        # Regenerated on every push to the pull request: the comment is found by its tag and updated in place.
+        if: steps.angler.outputs.relevant == 'true'
         uses: ./.github/actions/comment-pull-request
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           pr_number: ${{ github.event.number }}
-          comment: |
-            ## Supportability Metric Usage Changes:
-            ${{ steps.supportability_check.outputs.found_string }}
-
-            ## Supportability Metrics .md File Changes:
-            supportability_metrics.md was changed? `${{ steps.supportability_check.outputs.found_file }}`
-
-            ***New supportability metrics require changes to [supportability_metrics.md](https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/supportability-metrics.md), as well as a new PR to [Angler](https://source.datanerd.us/agents/angler).  Please ensure an Angler PR is created and linked to this PR.***
+          comment_file: ${{ runner.temp }}/angler-comment.md
           comment_tag: <!-- supportability_metric_check -->
+      - name: Update the comment if the pull request no longer changes supportability metrics
+        if: steps.angler.outputs.relevant != 'true'
+        run: |
+          echo "## 🟢 Supportability metrics: nothing to do in Angler" > "$RUNNER_TEMP/angler-comment-cleared.md"
+          echo "" >> "$RUNNER_TEMP/angler-comment-cleared.md"
+          echo "This PR no longer changes the supportability metric registry, so no Angler PR is needed for it." >> "$RUNNER_TEMP/angler-comment-cleared.md"
+      - name: Post the cleared comment, only if an earlier one exists
+        if: steps.angler.outputs.relevant != 'true'
+        uses: ./.github/actions/comment-pull-request
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pr_number: ${{ github.event.number }}
+          comment_file: ${{ runner.temp }}/angler-comment-cleared.md
+          comment_tag: <!-- supportability_metric_check -->
+          only_update_existing: 'true'
 
   resolve-latest-release:
     runs-on: ubuntu-latest

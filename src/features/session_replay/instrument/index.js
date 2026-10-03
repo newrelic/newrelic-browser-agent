@@ -90,7 +90,7 @@ export class Instrument extends InstrumentBase {
         return this.recorder
       })
       .catch(err => {
-        this.ee.emit('internal-error', [err])
+        this.ee.emit('internal-error', [err, 'SessionReplay-Import'])
         this.blocked = true
         /** return the err for promise chaining */
         throw err

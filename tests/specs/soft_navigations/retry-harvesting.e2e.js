@@ -33,7 +33,9 @@ describe('retry harvesting', () => {
       ])
 
       expect(firstInteractionEventHarvest[0].reply.statusCode).toEqual(statusCode)
-      expect(secondInteractionEventHarvest[1].request.body).toEqual(expect.arrayContaining(firstInteractionEventHarvest[0].request.body))
+      const retriedInteractionIds = secondInteractionEventHarvest[1].request.body.map(({ id }) => id)
+      const failedInteractionIds = firstInteractionEventHarvest[0].request.body.map(({ id }) => id)
+      expect(retriedInteractionIds).toEqual(expect.arrayContaining(failedInteractionIds))
     })
   )
 

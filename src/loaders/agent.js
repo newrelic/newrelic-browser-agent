@@ -18,6 +18,8 @@ import { Instrument as PageViewEvent } from '../features/page_view_event/instrum
 import { gosNREUM, setNREUMInitializedAgent } from '../common/window/nreum'
 import { warn } from '../common/util/console'
 import { globalScope } from '../common/constants/runtime'
+import { ee } from '../common/event-emitter/contextual-ee'
+import { reportWarnings } from '../common/dispatch/report-warnings'
 // agent-level API files
 import { setupSetCustomAttributeAPI } from './api/setCustomAttribute'
 import { setupSetUserIdAPI } from './api/setUserId'
@@ -62,6 +64,13 @@ export class Agent extends AgentBase {
     // NR1 creates an index on the rum call, and if not seen for a few days, will remove the browser app!
     // Future work is being planned to evaluate removing this behavior from the backend, but for now we must ensure this call is made
     this.desiredFeatures.add(PageViewEvent)
+
+    /*
+     * Counts every warning the agent gives from here on, starting before configure() so the ones about invalid init settings are included. Only the main
+     * agent does this: the warning event is page-wide, so each micro agent listening would count the same warning again. The emitter holds the
+     * metrics until the metrics feature starts. Until init exists the metrics are assumed to be on, and after that they are only counted if they are.
+     */
+    reportWarnings(ee.get(this.agentIdentifier), () => this.init?.metrics?.enabled !== false)
 
     configure(this, options, options.loaderType || 'agent') // add api, exposed, and other config properties
 

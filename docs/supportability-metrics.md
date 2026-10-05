@@ -339,6 +339,174 @@ Tags below are shown without the `Browser/Supportability/` prefix.
   <!--- spa harvest was sent before the interval elapsed (bytes captured) --->
   * spa/Harvest/Early/Seen
 
+### Warnings
+<!--- The agent warned the page about something, each time it did. <code> is the number of the warning in docs/warning-codes.md. Only the code is reported, never the details of the warning --->
+* Warn/<code>/Seen
+  <!--- An error occurred while setting a property of a Configurable. --->
+  * Warn/1/Seen
+  <!--- An error occurred while setting a Configurable. --->
+  * Warn/2/Seen
+  <!--- Setting a Configurable requires an object as input. --->
+  * Warn/3/Seen
+  <!--- Setting a Configurable requires a model to set its initial properties. --->
+  * Warn/4/Seen
+  <!--- An invalid session_replay.mask_selector was provided. * will be used. --->
+  * Warn/5/Seen
+  <!--- An invalid session_replay.block_selector was provided and will not be used. --->
+  * Warn/6/Seen
+  <!--- An invalid session_replay.mask_input_option was provided and will not be used. --->
+  * Warn/7/Seen
+  <!--- Shared context requires an object as input. --->
+  * Warn/8/Seen
+  <!--- An error occurred while setting SharedContext. --->
+  * Warn/9/Seen
+  <!--- Failed to read from storage API. --->
+  * Warn/10/Seen
+  <!--- Failed to write to the storage API. --->
+  * Warn/11/Seen
+  <!--- An obfuscation replacement rule was detected missing a "regex" value. --->
+  * Warn/12/Seen
+  <!--- An obfuscation replacement rule contains a "regex" value with an invalid type (must be a string or RegExp). --->
+  * Warn/13/Seen
+  <!--- An obfuscation replacement rule contains a "replacement" value with an invalid type (must be a string). --->
+  * Warn/14/Seen
+  <!--- An error occurred while intercepting XHR. --->
+  * Warn/15/Seen
+  <!--- Could not cast log message to string. --->
+  * Warn/16/Seen
+  <!--- Could not calculate New Relic server time. Agent shutting down. --->
+  * Warn/17/Seen
+  <!--- RUM call failed. Agent shutting down. --->
+  * Warn/18/Seen
+  <!--- SPA scheduler is not initialized. Saved interaction is not sent! --->
+  * Warn/19/Seen
+  <!--- A problem occurred when starting up session manager. This page will not start or extend any session. --->
+  * Warn/20/Seen
+  <!--- Failed to initialize the agent. Could not determine the runtime environment. --->
+  * Warn/21/Seen
+  <!--- Failed to initialize all enabled instrument classes (agent aborted) - --->
+  * Warn/22/Seen
+  <!--- An unexpected issue occurred. --->
+  * Warn/23/Seen
+  <!--- Something prevented the agent from instrumenting. --->
+  * Warn/24/Seen
+  <!--- Something prevented the agent from being downloaded. --->
+  * Warn/25/Seen
+  <!--- Failed to initialize instrument classes. --->
+  * Warn/26/Seen
+  <!--- Downloading runtime APIs failed... --->
+  * Warn/27/Seen
+  <!--- The Browser Agent is attempting to send a very large payload. This is usually tied to large amounts of custom attributes. Please check your configurations. --->
+  * Warn/28/Seen
+  <!--- Failed to wrap logger: invalid argument(s). --->
+  * Warn/29/Seen
+  <!--- Invalid log level. --->
+  * Warn/30/Seen
+  <!--- Ignored log: Log is larger than maximum payload size. --->
+  * Warn/31/Seen
+  <!--- Ignored log: Invalid message. --->
+  * Warn/32/Seen
+  <!--- Session Replay Aborted. --->
+  * Warn/33/Seen
+  <!--- Downloading and initializing a feature failed... --->
+  * Warn/34/Seen
+  <!--- Call to agent api failed. The API is not currently initialized. --->
+  * Warn/35/Seen
+  <!--- A feature is enabled but one or more dependent features have not been initialized. This may cause unintended consequences or missing data... --->
+  * Warn/36/Seen
+  <!--- Invalid feature name supplied. --->
+  * Warn/37/Seen
+  <!--- Call to api was made before agent fully initialized. --->
+  * Warn/38/Seen
+  <!--- Failed to execute setCustomAttribute. Name must be a string type. --->
+  * Warn/39/Seen
+  <!--- Failed to execute setCustomAttribute. Non-null value must be a string, number or boolean type. --->
+  * Warn/40/Seen
+  <!--- Failed to execute setUserId. Non-null value must be a string type. --->
+  * Warn/41/Seen
+  <!--- Failed to execute setApplicationVersion. Expected <String | null>. --->
+  * Warn/42/Seen
+  <!--- Agent not configured properly. --->
+  * Warn/43/Seen
+  <!--- Invalid object passed to generic event aggregate. Missing "eventType". --->
+  * Warn/44/Seen
+  <!--- An internal agent process failed to execute. --->
+  * Warn/45/Seen
+  <!--- A reserved eventType was provided to recordCustomEvent(...) -- The event was not recorded. --->
+  * Warn/46/Seen
+  <!--- We tried to access a stylesheet's contents but failed due to browser security. For best results, ensure that cross-domain CSS assets are decorated with "crossorigin='anonymous'" attribution or are otherwise publicly accessible. --->
+  * Warn/47/Seen
+  <!--- Supplied an invalid API target. Must be an <Object> that contains valid (string) id and name properties. --->
+  * Warn/48/Seen
+  <!--- Supplied API target is missing an entityGuid. Some APIs may not behave correctly without a valid entityGuid (ex. logs). --->
+  * Warn/49/Seen
+  <!--- Failed to connect. Cannot allow registered API. --->
+  * Warn/50/Seen
+  <!--- Container agent is not available to register with. Can not connect. --->
+  * Warn/51/Seen
+  <!--- Unexpected problem encountered. There should be at least one app for harvest! --->
+  * Warn/52/Seen
+  <!--- Failed to parse connect response. --->
+  * Warn/53/Seen
+  <!--- An experimental feature is being used. Support can not be offered for issues. --->
+  * Warn/54/Seen
+  <!--- Register API has been disabled on the container agent. --->
+  * Warn/55/Seen
+  <!--- Could not find a matching entity to store data. --->
+  * Warn/56/Seen
+  <!--- Failed to execute measure. Arguments must have valid types. --->
+  * Warn/57/Seen
+  <!--- Failed to execute measure. Resulting duration must be non-negative. --->
+  * Warn/58/Seen
+  <!--- Session replay harvested before a session trace payload could be sent. This could be problematic for replays that rely on a trace. --->
+  * Warn/59/Seen
+  <!--- Session trace aborted. --->
+  * Warn/60/Seen
+  <!--- Timestamps must be non-negative and end time cannot be before start time. --->
+  * Warn/61/Seen
+  <!--- Timestamp must be a unix timestamp greater than the page origin time. --->
+  * Warn/62/Seen
+  <!--- A single event was larger than the maximum allowed payload size. --->
+  * Warn/63/Seen
+  <!--- Required globals have been mutated before being accessed by the browser agent. This can cause issues and should be avoided. --->
+  * Warn/64/Seen
+  <!--- Consent API argument must be boolean or undefined. --->
+  * Warn/65/Seen
+  <!--- A new agent session has started. --->
+  * Warn/66/Seen
+  <!--- The "spa" feature has been deprecated and disabled. Please use/import "soft_navigations" instead for tracking of BrowserInteraction data. --->
+  * Warn/67/Seen
+  <!--- API has been deregistered and can no longer be used. Call "register" API again with credentials to start over. --->
+  * Warn/68/Seen
+  <!--- More than one Browser agent is running on the page. --->
+  * Warn/69/Seen
+  <!--- A session replay payload failed to send and is being retried. Recording is paused during the retry period, and will resume when a successful harvest is made. Some replay activity may be missed during retry phases. --->
+  * Warn/70/Seen
+  <!--- An invalid feature mode was detected and set to "off". --->
+  * Warn/71/Seen
+  <!--- RegisteredIframeEntity failed to transmit API data from an iframe to window context. --->
+  * Warn/72/Seen
+  <!--- RegisteredIframeEntity failed to register with window context. --->
+  * Warn/73/Seen
+  <!--- RegisteredIframeEntity rejected message from unauthorized origin. --->
+  * Warn/74/Seen
+  <!--- RegisteredIframeEntity rejected message with mismatched iframeInterfaceId. --->
+  * Warn/75/Seen
+  <!--- Agent rejected post message, could not match with existing entity. --->
+  * Warn/76/Seen
+  <!--- Agent rejected post message, could not validate origin. --->
+  * Warn/77/Seen
+  <!--- RegisteredIframeEntity could not determine parent origin and will not register, to avoid trusting messages from any origin. --->
+  * Warn/78/Seen
+  <!--- Unable to initialize Connector and/or Harvester. --->
+  * Warn/79/Seen
+  <!--- An invalid manifest option was provided to register() and will be ignored. --->
+  * Warn/80/Seen
+  <!--- Entities were detected that share a name with different IDs - This can cause multiple entities to have the same name in New Relic. --->
+  * Warn/81/Seen
+  <!--- Entities were detected that share an ID with different names - This can cause your entity's name to change unexpectedly. --->
+  * Warn/82/Seen
+
 ### Audit
 <!--- Cross-event audit of the page_view `hasReplay` flag against whether that harvest actually occurred --->
 * audit/page_view/hasReplay/<outcome>

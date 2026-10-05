@@ -4,6 +4,8 @@
  */
 
 const mockPveCtor = jest.fn()
+const mockReportWarnings = jest.fn()
+const mockConfigure = jest.fn()
 
 class MockPageViewEvent {
   static featureName = 'page_view_event'
@@ -34,6 +36,7 @@ beforeEach(() => {
   jest.doMock('../../../src/loaders/configure/configure', () => ({
     __esModule: true,
     configure: jest.fn((agent, options) => {
+      mockConfigure()
       agent.info = options.info || { licenseKey: 'license', applicationID: 'app-id' }
       agent.init = options.init || { feature_flags: [] }
       agent.loader_config = options.loader_config || {}
@@ -73,6 +76,11 @@ beforeEach(() => {
     globalScope: {}
   }))
 
+  jest.doMock('../../../src/common/dispatch/report-warnings', () => ({
+    __esModule: true,
+    reportWarnings: mockReportWarnings
+  }))
+
   jest.doMock('../../../src/loaders/api/setCustomAttribute', () => ({ __esModule: true, setupSetCustomAttributeAPI: jest.fn() }))
   jest.doMock('../../../src/loaders/api/setUserId', () => ({ __esModule: true, setupSetUserIdAPI: jest.fn() }))
   jest.doMock('../../../src/loaders/api/setApplicationVersion', () => ({ __esModule: true, setupSetApplicationVersionAPI: jest.fn() }))
@@ -103,5 +111,48 @@ describe('Agent run behavior with rum_v2', () => {
     })
 
     expect(mockPveCtor).not.toHaveBeenCalled()
+  })
+})
+
+describe('Agent counts the warnings it gives', () => {
+  const build = async (options = {}) => {
+    const { Agent } = await import('../../../src/loaders/agent')
+    return new Agent({ info: { licenseKey: 'license', applicationID: 'app-id' }, ...options })
+  }
+
+  test('starts before configure(), so the warnings about invalid init settings are included', async () => {
+    mockReportWarnings.mockImplementation(() => expect(mockConfigure).not.toHaveBeenCalled())
+
+    await build()
+
+    expect(mockReportWarnings).toHaveBeenCalledTimes(1)
+    expect(mockConfigure).toHaveBeenCalledTimes(1)
+  })
+
+  test('reports on the agent\'s own emitter', async () => {
+    const { ee } = await import('../../../src/common/event-emitter/contextual-ee')
+
+    await build()
+
+    expect(mockReportWarnings.mock.calls[0][0]).toBe(ee.get('agent-id'))
+  })
+
+  test('counts while init does not exist yet, and while the metrics feature is on', async () => {
+    const agent = await build()
+    const isEnabled = mockReportWarnings.mock.calls[0][1]
+
+    delete agent.init
+    expect(isEnabled()).toBe(true)
+    agent.init = { metrics: { enabled: true } }
+    expect(isEnabled()).toBe(true)
+    agent.init = {}
+    expect(isEnabled()).toBe(true)
+  })
+
+  test('stops counting when the metrics feature is turned off, because nothing would drain the metrics', async () => {
+    const agent = await build({ init: { metrics: { enabled: false }, feature_flags: [] } })
+
+    expect(mockReportWarnings.mock.calls[0][1]()).toBe(false)
+    expect(agent.init.metrics.enabled).toBe(false)
   })
 })

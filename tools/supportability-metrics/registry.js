@@ -22,6 +22,18 @@
  */
 
 /** @type {import('./registry-types').Registry} */
+const fs = require('fs')
+const path = require('path')
+
+/**
+ * @returns {Array<[string, string]>} Every warning code in docs/warning-codes.md with its message. The docs are where a new `warn()` code has to be
+ *   documented (a pre-commit check enforces it), so reading them here keeps the registry in step with no second list to maintain.
+ */
+function warningCodes () {
+  const docs = fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'warning-codes.md'), 'utf8')
+  return [...docs.matchAll(/^### (\d+)\r?\n`(.*)`\s*$/gm)].map(([, code, message]) => [code, message])
+}
+
 const registry = {
   header: `# Supportability Metrics
 ---
@@ -56,6 +68,7 @@ Tags below are shown without the \`Browser/Supportability/\` prefix.`,
     },
     { id: 'event_buffer', title: 'Event Buffer' },
     { id: 'harvest', title: 'Harvest' },
+    { id: 'warnings', title: 'Warnings' },
     { id: 'audit', title: 'Audit' },
     { id: 'harvester', title: 'Harvester' },
     { id: 'bcs', title: 'Browser Connect Response Metrics' }
@@ -250,6 +263,14 @@ Tags below are shown without the \`Browser/Supportability/\` prefix.`,
       value: { unit: 'bytes' },
       valueDescription: '<v> harvest was sent before the interval elapsed (bytes captured)',
       values: ['ajax', 'generic_events', 'logging', 'page_view_timing', 'soft_navigations', 'spa']
+    },
+
+    // Warnings
+    {
+      section: 'warnings',
+      tag: 'Warn/<code>/Seen',
+      description: 'The agent warned the page about something, each time it did. <code> is the number of the warning in docs/warning-codes.md. Only the code is reported, never the details of the warning',
+      values: warningCodes()
     },
 
     // Audit

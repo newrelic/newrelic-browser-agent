@@ -4,6 +4,8 @@
  */
 import { Instrument as Metrics } from '../../../../src/features/metrics/instrument'
 import { Instrument as JSErrors } from '../../../../src/features/jserrors/instrument'
+import { warn } from '../../../../src/common/util/console'
+import { reportWarnings } from '../../../../src/common/dispatch/report-warnings'
 import * as iframeModule from '../../../../src/common/dom/iframe'
 import * as protocolModule from '../../../../src/common/url/protocol'
 
@@ -142,6 +144,19 @@ module.exports = {
     const args = reason === 'Other' ? [internalErrorFor(reason)] : [internalErrorFor(reason), reason]
     ctx.agent.ee.emit('internal-error', args)
     ctx.forceDrain(jserrors) // the error waits in the emitter buffer until the feature is drained, which normally follows the RUM response
+    await ctx.settle()
+  },
+
+  'Warn/<code>/Seen': async (code, ctx) => {
+    const metrics = await ctx.feature(Metrics) // starts the feature that stores the metric
+    const stop = reportWarnings(ctx.agent.ee) // the Agent constructor starts this for a real agent, which the shared test agent is not
+    jest.spyOn(console, 'debug').mockImplementation(() => {})
+    try {
+      warn(Number(code))
+    } finally {
+      stop()
+    }
+    ctx.forceDrain(metrics) // the metric waits in the emitter until the metrics feature is drained
     await ctx.settle()
   },
 

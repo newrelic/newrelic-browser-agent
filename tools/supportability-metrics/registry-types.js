@@ -11,7 +11,7 @@
 /**
  * The id of a section of the generated docs page. Keep this list in sync with `Registry.sections` in registry.js: a unit test fails when
  * the two drift apart.
- * @typedef {'websockets' | 'user_actions' | 'session' | 'ajax' | 'generic' | 'frameworks' | 'config' | 'flags' | 'session_replay' | 'api' | 'internal_errors' | 'event_buffer' | 'harvest' | 'audit' | 'harvester' | 'bcs'} RegistrySectionId
+ * @typedef {'websockets' | 'user_actions' | 'session' | 'ajax' | 'generic' | 'frameworks' | 'config' | 'flags' | 'session_replay' | 'api' | 'internal_errors' | 'event_buffer' | 'harvest' | 'warnings' | 'audit' | 'harvester' | 'bcs'} RegistrySectionId
  */
 
 /**

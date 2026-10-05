@@ -1,4 +1,4 @@
-const { PREFIX, ANGLER_REPO_URL, ANGLER_FILE_URL, listConcreteTags, diffRegistries, renderComment } = require('../../../../tools/supportability-metrics/angler')
+const { PREFIX, ANGLER_REPO_URL, ANGLER_FILE_URL, ANGLER_EDIT_URL, listConcreteTags, diffRegistries, renderComment } = require('../../../../tools/supportability-metrics/angler')
 
 const entries = [
   { section: 'session', tag: 'Session/RaceCondition/Seen', description: 'd' },
@@ -162,6 +162,28 @@ describe('renderComment open-ended families', () => {
   })
 })
 
+describe('the link to edit Angler\'s file', () => {
+  const none = { settings: [], flags: [], addedSettings: [], removedSettings: [], addedFlags: [] }
+
+  test('points at the editor for metric_names.txt on the internal GitHub', () => {
+    expect(ANGLER_EDIT_URL).toBe('https://source.datanerd.us/agents/angler/edit/master/src/main/resources/metric_names.txt')
+  })
+
+  test('is on the title that says an Angler PR is needed', () => {
+    const comment = renderComment(without('Session/RaceCondition/Seen'), head, none)
+
+    expect(comment).toContain(`<a href="${ANGLER_EDIT_URL}">Supportability metrics changed: this PR needs a matching Angler PR</a>`)
+  })
+
+  test('is not on the titles that say nothing needs to change in Angler', () => {
+    const green = renderComment(head, head, none, { dashboardUrl: 'https://example.com/dash' })
+    const yellow = renderComment(head, without('Session/RaceCondition/Seen'), none)
+
+    expect(green).not.toContain(ANGLER_EDIT_URL)
+    expect(yellow).not.toContain(`href="${ANGLER_EDIT_URL}"`)
+  })
+})
+
 describe('renderComment status', () => {
   const none = { settings: [], flags: [], addedSettings: [], removedSettings: [], addedFlags: [] }
   const onlyDescriptionChanged = { ...head, entries: entries.map(entry => entry.tag === 'Session/RaceCondition/Seen' ? { ...entry, description: 'new wording' } : entry) }
@@ -188,7 +210,7 @@ describe('renderComment status', () => {
   })
 
   test('is orange when there are names to add', () => {
-    expect(renderComment(without('Session/RaceCondition/Seen'), head, none)).toContain('<summary>🟠 <strong>Supportability metrics changed: this PR needs a matching Angler PR</strong>')
+    expect(renderComment(without('Session/RaceCondition/Seen'), head, none)).toContain('<summary>🟠 <strong><a href="' + ANGLER_EDIT_URL + '">Supportability metrics changed: this PR needs a matching Angler PR</a></strong>')
   })
 
   test('is orange when a decision is left to make, even with nothing to add', () => {
@@ -217,7 +239,7 @@ describe('renderComment', () => {
 
     expect(comment.startsWith('<details>\n<summary>')).toBe(true)
     expect(comment).not.toMatch(/<details[^>]*\bopen\b/)
-    expect(comment).toMatch(/<summary>🟠 <strong>Supportability metrics changed: this PR needs a matching Angler PR<\/strong> \(1 name to add, 0 removed, 2 decisions\)<\/summary>/)
+    expect(comment).toMatch(/<summary>🟠 <strong><a href="[^"]+">Supportability metrics changed: this PR needs a matching Angler PR<\/a><\/strong> \(1 name to add, 0 removed, 2 decisions\)<\/summary>/)
     expect(comment.trimEnd().endsWith('</details>')).toBe(true)
   })
 

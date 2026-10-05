@@ -18,6 +18,8 @@ const { expandEntry } = require('./expand')
 const PREFIX = 'Browser/Supportability/'
 const ANGLER_REPO_URL = 'https://source.datanerd.us/agents/angler'
 const ANGLER_FILE_URL = ANGLER_REPO_URL + '/blob/master/src/main/resources/metric_names.txt'
+/** Opens the file in the editor on the internal GitHub, which is where an Angler pull request starts. */
+const ANGLER_EDIT_URL = ANGLER_REPO_URL + '/edit/master/src/main/resources/metric_names.txt'
 
 /**
  * @param {import('./registry-types').RegistryEntry} entry
@@ -274,10 +276,12 @@ function renderComment (base, head, detected, { dashboardUrl } = {}) {
 
   // The whole comment is collapsed by default so it does not crowd the conversation. The summary line stays visible, so it carries the status and the counts.
   const decisionsSummary = decisions.length ? count(decisions.length, 'decision') : 'no decisions'
-  const summary = `${status.icon} <strong>${status.title}</strong> (${count(added.length, 'name')} to add, ${removed.length} removed, ${decisionsSummary})`
+  // When an Angler PR is needed, the title that says so links straight to the editor for the file
+  const title = status.icon === '🟠' ? `<a href="${ANGLER_EDIT_URL}">${status.title}</a>` : status.title
+  const summary = `${status.icon} <strong>${title}</strong> (${count(added.length, 'name')} to add, ${removed.length} removed, ${decisionsSummary})`
   const collapsed = `<details>\n<summary>${summary}</summary>\n\n${parts.join('\n\n')}\n\n</details>\n`
   // The link goes above the collapsed section, so it is visible without opening the comment
   return dashboardUrl ? `${dashboardLink(dashboardUrl)}\n\n${collapsed}` : collapsed
 }
 
-module.exports = { PREFIX, ANGLER_REPO_URL, ANGLER_FILE_URL, listConcreteTags, diffRegistries, renderComment }
+module.exports = { PREFIX, ANGLER_REPO_URL, ANGLER_FILE_URL, ANGLER_EDIT_URL, listConcreteTags, diffRegistries, renderComment }

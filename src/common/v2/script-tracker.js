@@ -104,6 +104,9 @@ if (globalScope.MutationObserver && globalScope.document) {
         if (node.nodeName === 'SCRIPT' && node.src) {
           const cleanedSrc = cleanURL(node.src)
           const correlation = getOrCreateCorrelation(cleanedSrc)
+          /* The first node wins, same as the performance entry below. Skipping here also means no load/error listeners
+             are attached for duplicate references. */
+          if (correlation.dom.value) return
 
           correlation.dom.start = now()
           correlation.dom.value = node
@@ -131,9 +134,13 @@ if (globalScope.PerformanceObserver?.supportedEntryTypes.includes('resource')) {
       if (validEntryCriteria(entry)) {
         const entryUrl = cleanURL(entry.name)
         const correlation = getOrCreateCorrelation(entryUrl)
-        correlation.performance.start = Math.floor(entry.startTime)
-        correlation.performance.end = Math.floor(entry.responseEnd)
-        correlation.performance.value = entry
+        /* The first entry wins. A script referenced more than once is typically re-served from the browser cache, so a
+           later entry for the same URL would overwrite the real network timing with a near-instant one. */
+        if (!correlation.performance.value) {
+          correlation.performance.start = Math.floor(entry.startTime)
+          correlation.performance.end = Math.floor(entry.responseEnd)
+          correlation.performance.value = entry
+        }
       }
 
       // Late-resolution subscribers can be for any asset type (not just scripts), so every entry is checked here,

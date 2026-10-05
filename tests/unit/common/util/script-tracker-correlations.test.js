@@ -236,6 +236,49 @@ describe('script-tracker correlations', () => {
       expect(correlation.dom.value).toBeUndefined() // default
     })
 
+    test('keeps the first performance entry when the same script URL emits another entry', async () => {
+      const scriptUrl = 'https://cdn.example.com/duplicated.js'
+
+      performanceObserverCallback({
+        getEntries: () => [{ name: scriptUrl, initiatorType: 'script', startTime: 50, responseEnd: 400 }]
+      })
+      // a duplicate reference, re-served from the browser cache
+      performanceObserverCallback({
+        getEntries: () => [{ name: scriptUrl, initiatorType: 'script', startTime: 900, responseEnd: 902 }]
+      })
+
+      const correlation = scriptTrackerModule.scriptCorrelations.get(scriptUrl)
+      expect(correlation.performance.start).toBe(50)
+      expect(correlation.performance.end).toBe(400)
+      expect(correlation.performance.value.startTime).toBe(50)
+    })
+
+    test('keeps the first script node when the same script URL is added again', async () => {
+      const scriptUrl = 'https://cdn.example.com/duplicated-node.js'
+      const first = document.createElement('script')
+      first.src = scriptUrl
+      const second = document.createElement('script')
+      second.src = scriptUrl
+      createdScripts.push(first, second)
+      const secondListener = jest.spyOn(second, 'addEventListener')
+
+      currentTime = 100
+      mutationObserverCallback([{ addedNodes: [first] }])
+      currentTime = 900
+      mutationObserverCallback([{ addedNodes: [second] }])
+
+      currentTime = 950
+      second.dispatchEvent(new Event('load'))
+      currentTime = 300
+      first.dispatchEvent(new Event('load'))
+
+      const correlation = scriptTrackerModule.scriptCorrelations.get(scriptUrl)
+      expect(correlation.dom.start).toBe(100)
+      expect(correlation.dom.value).toBe(first)
+      expect(correlation.dom.end).toBe(300)
+      expect(secondListener).not.toHaveBeenCalled()
+    })
+
     test('correlation handles DOM-only (no performance yet) scenario', async () => {
       const scriptUrl = 'https://cdn.example.com/dom-only.js'
 

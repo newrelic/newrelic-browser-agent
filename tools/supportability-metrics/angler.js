@@ -280,4 +280,4 @@ function renderComment (base, head, detected, { dashboardUrl } = {}) {
   return dashboardUrl ? `${dashboardLink(dashboardUrl)}\n\n${collapsed}` : collapsed
 }
 
-module.exports = { PREFIX, ANGLER_REPO_URL, ANGLER_FILE_URL, listConcreteTags, namesFromSource, diffRegistries, renderComment }
+module.exports = { PREFIX, ANGLER_REPO_URL, ANGLER_FILE_URL, listConcreteTags, diffRegistries, renderComment }

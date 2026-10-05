@@ -49,26 +49,6 @@ node tools/supportability-metrics/angler-comment.js --base-registry /tmp/base-re
 
 It prints "unchanged" and writes nothing when the registry matches the base.
 
-## Experimental: raising the Angler pull request from GitHub
-
-The `sm-angler-sync` job in [pull-request-checks.yml](../../.github/workflows/pull-request-checks.yml) tries to do what the comment asks of the author: rewrite
-the browser agent's block of names in Angler's `metric_names.txt` to the set generated from this repository, and open a pull request against `agents/angler`.
-Nothing else depends on it, it never blocks a pull request, and the comment above is still how an author learns what to add.
-
-- **It only touches `Browser/Supportability/` lines.** Every other line of the shared file belongs to other teams and is kept exactly as it is, in the same
-  order. `tools/supportability-metrics/angler-sync.js` checks that itself and refuses to write otherwise, the job checks the diff a second time before
-  pushing, and it refuses a change that would remove more than half of the browser agent's names. It only opens a pull request and never merges one.
-- **The network decides whether it can work.** The internal GitHub (`source.datanerd.us`) is reachable from inside the company network only. The first step
-  of the job reports whether the runner can reach it (DNS, and the HTTP status of the API with the token) and writes the answer to the run's summary, so a failure says
-  why. It uses the assigned IP runner the staging dashboard jobs use; set the `ANGLER_SYNC_RUNNER` repository variable to try another runner without a commit.
-- **Needs the `ANGLER_GITHUB_TOKEN` secret**: a personal access token for the internal GitHub (classic, with the `repo` scope, from a dedicated account that
-  can push to `agents/angler`; single sign-on authorized if the organization requires it) that can push a branch to, and open pull requests on, the Angler repository.
-- **A dry run by default.** It runs on pull requests that change the registry, the dashboard generator, the script or this workflow, and reports what it would
-  change. To raise the real pull request, add the `angler-sync` label to the pull request and re-run the job: the label is read when the job runs, so it does not need a new push.
-  `keep_existing` is not offered here because older agent versions keep sending the names it would remove, and removing a name drops that data: the Angler pull
-  request lists each removal with that warning so it can be reviewed.
-- **Try it without the network:** `node tools/supportability-metrics/angler-sync.js --angler-file <a copy of metric_names.txt> --dry-run --summary-file summary.md`.
-
 ## The generated dashboard
 
 A dashboard in New Relic is generated from the registry, so charts follow the metrics without anyone building them by hand. It sits beside

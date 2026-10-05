@@ -254,7 +254,9 @@ function appendToRegistry (stubs, registryPath = path.join(__dirname, 'registry.
   const source = fs.readFileSync(registryPath, 'utf8')
   const end = source.lastIndexOf('\n  ]\n}')
   if (end < 0) throw new Error('Could not find the end of the entries array in registry.js')
-  fs.writeFileSync(registryPath, source.slice(0, end) + ',\n\n' + stubs + source.slice(end))
+  // The last entry can be followed by blank lines or already have a trailing comma, and the comma must stay on the entry's own line to pass lint
+  const existing = source.slice(0, end).replace(/\s+$/, '')
+  fs.writeFileSync(registryPath, existing + (existing.endsWith(',') ? '' : ',') + '\n\n' + stubs + source.slice(end))
 }
 
 const REGISTRY_PATH = path.join(__dirname, 'registry.js')

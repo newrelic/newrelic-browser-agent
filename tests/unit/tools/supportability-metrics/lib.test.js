@@ -1,6 +1,6 @@
 const fs = require('fs')
 const path = require('path')
-const { collectEmissions, compare, checkValues, expandEntry, renderDocs, renderStubs, appendToPending, registryLocation, checkRepo, TODO_DESCRIPTION } = require('../../../../tools/supportability-metrics/lib')
+const { collectEmissions, compare, checkValues, expandEntry, renderDocs, renderStubs, appendToRegistry, appendToPending, registryLocation, checkRepo, TODO_DESCRIPTION } = require('../../../../tools/supportability-metrics/lib')
 const registry = require('../../../../tools/supportability-metrics/registry')
 
 const patterns = (code) => collectEmissions(code).filter(emission => !emission.unresolved).map(emission => emission.pattern)
@@ -153,6 +153,46 @@ describe('expandEntry', () => {
   test('fills the placeholder for each value, using value descriptions, then the template, then the entry description', () => {
     const expanded = expandEntry({ tag: 'A/<x>/B', description: 'family', valueDescription: '<v> happened', values: [['one', 'first'], 'two'] })
     expect(expanded).toEqual([{ tag: 'A/one/B', description: 'first' }, { tag: 'A/two/B', description: 'two happened' }])
+  })
+})
+
+describe('appendToRegistry', () => {
+  const stub = "    // src/a.js:1\n    { section: 'generic', tag: 'New/Thing', description: 'TODO: describe this metric' }"
+  const write = (lastEntry) => {
+    const file = path.join(require('os').tmpdir(), `registry-${Math.random()}.js`)
+    fs.writeFileSync(file, `const registry = {\n  entries: [\n    { section: 'generic', tag: 'A' }${lastEntry}\n  ]\n}\n\nmodule.exports = registry\n`)
+    return file
+  }
+
+  test('keeps the comma on the end of the last entry, even when a blank line follows it, so the file passes lint', () => {
+    const file = write('\n')
+    appendToRegistry(stub, file)
+
+    expect(fs.readFileSync(file, 'utf8')).toContain("{ section: 'generic', tag: 'A' },\n\n    // src/a.js:1\n")
+    expect(fs.readFileSync(file, 'utf8')).not.toMatch(/^\s*,/m)
+  })
+
+  test('does not add a second comma when the last entry already has one', () => {
+    const file = write(',')
+    appendToRegistry(stub, file)
+
+    expect(fs.readFileSync(file, 'utf8')).toContain("tag: 'A' },\n\n")
+    expect(fs.readFileSync(file, 'utf8')).not.toContain(',,')
+  })
+
+  test('produces a file that can be loaded, with the new entry last', () => {
+    const file = write('\n')
+    appendToRegistry(stub, file)
+
+    expect(require(file).entries.map(entry => entry.tag)).toEqual(['A', 'New/Thing'])
+  })
+
+  test('appends more than once', () => {
+    const file = write('')
+    appendToRegistry(stub, file)
+    appendToRegistry(stub.replace('New/Thing', 'Newer/Thing'), file)
+
+    expect(require(file).entries.map(entry => entry.tag)).toEqual(['A', 'New/Thing', 'Newer/Thing'])
   })
 })
 

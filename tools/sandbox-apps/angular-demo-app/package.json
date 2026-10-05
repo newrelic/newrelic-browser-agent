@@ -27,5 +27,8 @@
     "@angular/cli": "~20.3.37",
     "@angular/compiler-cli": "^20.3.31",
     "typescript": "~5.8.3"
+  },
+  "overrides": {
+    "webpack-dev-middleware": "7.4.6"
   }
 }

@@ -92,6 +92,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       changed: ${{ steps.changes.outputs.changed }}
+      sync_changed: ${{ steps.changes.outputs.sync_changed }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -103,6 +104,12 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+          # The Angler sync below is experimental, so changes to it (or to this workflow) also run it
+          if git diff --quiet "origin/${{ github.base_ref }}...HEAD" -- tools/supportability-metrics/angler-sync.js .github/workflows/pull-request-checks.yml; then
+            echo "sync_changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "sync_changed=true" >> "$GITHUB_OUTPUT"
           fi
 
   # Creates or updates a copy of the generated supportability dashboard in staging for this pull request, so the registry change can be
@@ -189,6 +196,139 @@ jobs:
           comment_file: ${{ runner.temp }}/angler-comment-cleared.md
           comment_tag: <!-- supportability_metric_check -->
           only_update_existing: 'true'
+
+  # EXPERIMENTAL. Tries to raise a pull request against Angler (agents/angler, on the internal GitHub) that rewrites the browser agent's block of
+  # names in metric_names.txt to the set generated from this repository. The comment from sm-check is still how an author learns what to add.
+  #
+  # It only touches lines that start with `Browser/Supportability/`. Every other line of the file belongs to other teams and is kept exactly as it
+  # is: tools/supportability-metrics/angler-sync.js checks that itself and refuses to write otherwise, and the job checks the diff a second time before
+  # it pushes. It only opens a pull request and never merges one.
+  #
+  # The internal GitHub is reachable from inside the company network only, so the first step reports whether this runner can reach it. The runner can be
+  # changed without a commit by setting the ANGLER_SYNC_RUNNER repository variable. It needs the ANGLER_GITHUB_TOKEN secret (a personal access token for
+  # the internal GitHub that can push a branch to, and open pull requests on, the Angler repository).
+  #
+  # By default it is a dry run: it reports what would change and stops. To raise the real pull request, add the `angler-sync` label to this pull
+  # request and re-run this job (the label is read when the job runs, not from when the workflow started). It never blocks the pull request.
+  sm-angler-sync:
+    name: Angler sync (experimental)
+    needs: [sm-changes]
+    runs-on: ${{ vars.ANGLER_SYNC_RUNNER || 'Browser-Agent-Assigned-IP-Linux' }}
+    if: needs.sm-changes.outputs.changed == 'true' || needs.sm-changes.outputs.sync_changed == 'true'
+    continue-on-error: true
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    env:
+      ANGLER_HOST: source.datanerd.us
+      ANGLER_REPO: agents/angler
+      BASE_BRANCH: master
+      ANGLER_FILE: src/main/resources/metric_names.txt
+      ANGLER_GITHUB_TOKEN: ${{ secrets.ANGLER_GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PR_NUMBER: ${{ github.event.number }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      # Only the parser is needed, not the whole dependency tree, to work out the `init` setting and feature flag names
+      - name: Install the parser
+        run: npm install --no-save --no-package-lock --ignore-scripts --no-audit --no-fund acorn@^8.17.0 acorn-walk@^8.3.5
+
+      - name: Dry run, or raise the pull request?
+        id: mode
+        run: |
+          # Read now, not from the event, so adding the label and re-running this job is enough
+          labels=$(curl -sS --max-time 20 -H "Authorization: Bearer ${GITHUB_TOKEN}" "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).map(l=>l.name).join("\n"))}catch(e){}})')
+          if echo "$labels" | grep -qx 'angler-sync'; then dry_run=false; else dry_run=true; fi
+          echo "dry_run=${dry_run}" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Angler sync"
+            echo "- Runner: \`${RUNNER_NAME}\` (${RUNNER_OS}, ${RUNNER_ARCH})"
+            echo "- Target: \`${ANGLER_HOST}/${ANGLER_REPO}\` (\`${BASE_BRANCH}\`)"
+            if [ "$dry_run" = "true" ]; then echo "- Mode: **dry run** (add the \`angler-sync\` label to this pull request and re-run this job to raise the pull request)"; else echo "- Mode: **raise the pull request** (the \`angler-sync\` label is on this pull request)"; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Can this runner reach the internal GitHub?
+        run: |
+          if [ -z "$ANGLER_GITHUB_TOKEN" ]; then
+            echo "::error::The ANGLER_GITHUB_TOKEN secret is not set, so there is no way to sign in to ${ANGLER_HOST}."
+            echo "- Token: **not set**" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "- Token: set" >> "$GITHUB_STEP_SUMMARY"
+          echo "Resolving ${ANGLER_HOST}:"
+          (getent hosts "$ANGLER_HOST" || nslookup "$ANGLER_HOST" || true) 2>&1 | head -5
+          status=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 -H "Authorization: token ${ANGLER_GITHUB_TOKEN}" "https://${ANGLER_HOST}/api/v3/repos/${ANGLER_REPO}" 2>/tmp/curl-error || true)
+          echo "Status from https://${ANGLER_HOST}/api/v3/repos/${ANGLER_REPO}: ${status}"
+          cat /tmp/curl-error 2>/dev/null || true
+          case "$status" in
+            200) echo "- Reach: **yes** (HTTP 200)" >> "$GITHUB_STEP_SUMMARY" ;;
+            401|403|404) echo "- Reach: **yes, but the token was refused or cannot see the repository** (HTTP ${status})" >> "$GITHUB_STEP_SUMMARY"; echo "::error::${ANGLER_HOST} answered HTTP ${status}. Check the ANGLER_GITHUB_TOKEN secret and its access to ${ANGLER_REPO}."; exit 1 ;;
+            *) echo "- Reach: **no** (no answer, or HTTP ${status}). The runner is probably not on the network that can reach ${ANGLER_HOST}, or needs the VPN." >> "$GITHUB_STEP_SUMMARY"; echo "::error::Could not reach ${ANGLER_HOST} from runner ${RUNNER_NAME}. It is probably not on the network that can reach it."; exit 1 ;;
+          esac
+
+      - name: Clone Angler
+        run: git clone --depth 1 --branch "$BASE_BRANCH" "https://x-access-token:${ANGLER_GITHUB_TOKEN}@${ANGLER_HOST}/${ANGLER_REPO}.git" angler
+
+      - name: Rewrite the browser agent's names
+        id: sync
+        env:
+          DRY_RUN: ${{ steps.mode.outputs.dry_run }}
+        run: |
+          args=(--angler-file "angler/${ANGLER_FILE}" --summary-file angler-sync-summary.md)
+          if [ "${DRY_RUN}" = "true" ]; then args+=(--dry-run); fi
+          node tools/supportability-metrics/angler-sync.js "${args[@]}" | tee sync.log
+          {
+            echo
+            echo '```text'
+            cat sync.log
+            echo '```'
+            if [ -f angler-sync-summary.md ]; then
+              echo '<details><summary>Pull request description</summary>'
+              echo
+              cat angler-sync-summary.md
+              echo
+              echo '</details>'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check that only browser agent names changed
+        if: steps.sync.outputs.changed == 'true' && steps.mode.outputs.dry_run != 'true'
+        working-directory: angler
+        run: |
+          # The script checks this itself; this is a second, independent look at the result, so the pull request can never carry a change to another team's name
+          changed_lines=$(git diff -U0 -- "${ANGLER_FILE}" | grep -E '^[+-][^+-]' | grep -vE '^[+-]\s*Browser/Supportability/' || true)
+          if [ -n "$changed_lines" ]; then
+            echo "::error::The change touches lines that are not browser agent names. Not raising a pull request."
+            echo "$changed_lines" | head -20
+            exit 1
+          fi
+
+      - name: Open the pull request
+        if: steps.sync.outputs.changed == 'true' && steps.mode.outputs.dry_run != 'true'
+        working-directory: angler
+        run: |
+          branch="browser-agent/supportability-names-${GITHUB_RUN_ID}"
+          git config user.name "New Relic Browser Agent CI"
+          git config user.email "browser-agent-ci@users.noreply.${ANGLER_HOST}"
+          git checkout -b "$branch"
+          git add "${ANGLER_FILE}"
+          git commit -m "Update the browser agent's supportability metric names"
+          git push origin "$branch"
+          # printf, not an indented block, so the description does not pick up leading spaces (four of them would turn it into a code block)
+          body="$(printf '%s\n\nRaised by %s/%s/actions/runs/%s from %s (%s/%s/pull/%s). Nothing merges this automatically.\n' "$(cat ../angler-sync-summary.md)" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$GITHUB_SHA" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$PR_NUMBER")"
+          payload=$(node -e 'console.log(JSON.stringify({ title: process.argv[1], head: process.argv[2], base: process.argv[3], body: process.argv[4] }))' "Update the browser agent's supportability metric names" "$branch" "$BASE_BRANCH" "$body")
+          response=$(curl -sS --max-time 30 -X POST -H "Authorization: token ${ANGLER_GITHUB_TOKEN}" -H "Content-Type: application/json" -d "$payload" "https://${ANGLER_HOST}/api/v3/repos/${ANGLER_REPO}/pulls")
+          url=$(echo "$response" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).html_url||"")}catch(e){console.log("")}})')
+          if [ -z "$url" ]; then
+            echo "::error::The branch was pushed, but the pull request was not opened: $(echo "$response" | head -c 500)"
+            exit 1
+          fi
+          echo "Opened ${url}"
+          echo "- Pull request: ${url}" >> "$GITHUB_STEP_SUMMARY"
 
   resolve-latest-release:
     runs-on: ubuntu-latest

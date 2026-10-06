@@ -1152,6 +1152,45 @@ init@https://cdn.example.com/gecko-app.js:20:10`
       expect(timings.asset).toBe('https://cdn.example.com/app.js')
     })
 
+    test('keeps the first load\'s fetch window when a manifest asset is loaded again', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'dup.js', type: 'script' }] })
+      const url = 'https://cdn.example.com/dup.js'
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: url, initiatorType: 'script', startTime: 10, responseEnd: 60, transferSize: 500 },
+        // a duplicate reference, re-served from the browser cache
+        { name: url, initiatorType: 'script', startTime: 900, responseEnd: 903, transferSize: 0 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.fetchStart).toBe(10)
+      expect(timings.fetchEnd).toBe(60)
+      expect(timings.totalWeight).toBe(500)
+    })
+
+    test('keeps the first load\'s fetch window when a duplicate of a manifest asset arrives late', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'dup.js', type: 'script' }] })
+      const url = 'https://cdn.example.com/dup.js'
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: url, initiatorType: 'script', startTime: 10, responseEnd: 60, transferSize: 500 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      performanceObserverCallback({
+        getEntries: () => [{ name: url, initiatorType: 'script', startTime: 900, responseEnd: 903, transferSize: 0 }]
+      })
+
+      expect(timings.fetchStart).toBe(10)
+      expect(timings.fetchEnd).toBe(60)
+    })
+
     test('resolves a late-loading non-script manifest asset (e.g. an image) via the shared observer', async () => {
       // Regression test: the shared observer used to filter every entry through validEntryCriteria (script-like
       // only) before ever checking it against a pending late-resolution subscriber, so a non-script manifest

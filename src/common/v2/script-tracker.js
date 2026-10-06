@@ -54,6 +54,7 @@ function getOrCreateInternals (timings) {
   if (!internals) {
     internals = {
       weighedAssetUrls: new Set(),
+      widenedAssetUrls: new Set(),
       recordManifestScriptWindow: (start, end) => {
         if (start) timings.scriptStart = timings.scriptStart > 0 ? Math.min(timings.scriptStart, start) : start
         if (end) timings.scriptEnd = timings.scriptEnd > 0 ? Math.max(timings.scriptEnd, end) : end
@@ -292,7 +293,8 @@ function subscribeToLatePerformanceEntry (timings, mfeScriptUrl) {
 
 /**
  * Applies one manifest asset's performance entry to a timings object: weight/renderBlocking always accumulate;
- * fetchStart/fetchEnd and scriptStart/scriptEnd widen (never shrink) only when `timingMethod` calls for it; asset/
+ * fetchStart/fetchEnd and scriptStart/scriptEnd widen (never shrink) only when `timingMethod` calls for it, and only for
+ * the first entry seen per URL; asset/
  * type get anchored to the first script asset seen to resolve.
  * @param {RegisterAPITimings} timings
  * @param {PerformanceResourceTiming} entry
@@ -305,6 +307,13 @@ function applyManifestEntry (timings, entry, asset, entryState, timingMethod) {
   applyResourceWeight(timings, entry)
 
   if (timingMethod !== 'scripts' && timingMethod !== 'all') return // no timing-widening effect at the 'entry' default/unset
+
+  /* Only the first entry per URL widens timing. A resource referenced more than once is typically re-served from the
+     browser cache with a later responseEnd, which would otherwise stretch fetchEnd out to the duplicate's load. */
+  const { widenedAssetUrls } = getOrCreateInternals(timings)
+  const url = cleanURL(entry.name)
+  if (widenedAssetUrls.has(url)) return
+  widenedAssetUrls.add(url)
 
   const widensAllAssets = timingMethod === 'all'
   // Under 'scripts', only script assets widen the fetch window; under 'all', every matched asset does.

@@ -8,7 +8,7 @@ describe('Register API - script referenced more than once', () => {
     await browser.destroyAgentSession()
   })
 
-  it('reports fetch and execution timing from the first load, not a later cached one', async () => {
+  async function loadScriptTwice () {
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
       init: { feature_flags: ['register'] }
     }))
@@ -26,6 +26,11 @@ describe('Register API - script referenced more than once', () => {
     const secondTagAddedAt = await browser.execute(() => Math.floor(performance.now()))
     await addScript()
     await browser.pause(500)
+    return secondTagAddedAt
+  }
+
+  it('reports fetch and execution timing from the first load, not a later cached one', async () => {
+    const secondTagAddedAt = await loadScriptTwice()
 
     const { entries, fetchStart, fetchEnd, scriptStart } = await browser.execute(function () {
       const api = window.registerDuplicateRef('duplicate-ref-mfe')
@@ -41,5 +46,26 @@ describe('Register API - script referenced more than once', () => {
     expect(fetchEnd).toBe(entries[0].end)
     // scriptStart is max(dom.start, performance.end) of the first load, so it must land before the second tag was added
     expect(scriptStart).toBeLessThan(secondTagAddedAt)
+  })
+
+  it('keeps the first load\'s fetch window for a manifest asset referenced more than once', async () => {
+    await loadScriptTwice()
+
+    const { entries, fetchStart, fetchEnd } = await browser.execute(function () {
+      const api = window.registerDuplicateRef('duplicate-ref-manifest-mfe', {
+        manifest: { assets: [{ matcher: 'mfe-duplicate-ref.js', type: 'script' }] },
+        timingMethod: 'scripts'
+      })
+      const entries = performance.getEntriesByType('resource')
+        .filter(e => e.name.includes('mfe-duplicate-ref.js'))
+        .map(e => ({ start: Math.floor(e.startTime), end: Math.floor(e.responseEnd) }))
+      const { fetchStart, fetchEnd } = api.metadata.timings
+      return { entries, fetchStart, fetchEnd }
+    })
+
+    expect(entries.length).toBeGreaterThanOrEqual(2)
+    expect(fetchStart).toBe(entries[0].start)
+    // without first-wins, the manifest widening would stretch fetchEnd out to the cached duplicate's responseEnd
+    expect(fetchEnd).toBe(entries[0].end)
   })
 })

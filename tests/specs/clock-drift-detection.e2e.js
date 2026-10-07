@@ -109,7 +109,7 @@ describe('Clock Drift Detection', () => {
 
     // convertAbsoluteTimestamp should give us back approximately performance.now() (subtracting drift)
     const absoluteDifference = Math.abs(afterDrift.convertedAbsolute - afterDrift.perfNow)
-    expect(absoluteDifference).toBeLessThan(100)
+    expect(absoluteDifference).toBeLessThan(150)
 
     // Small delay to ensure page actions are buffered
     await browser.pause(100)

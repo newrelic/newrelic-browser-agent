@@ -107,11 +107,14 @@ export class RegisteredIframeEntity {
       return
     }
 
+    /* Script timings are found by parsing the call stack for the script that called register(), so this has to run
+       synchronously here. By the time the registration promise resolves, that caller is no longer on the stack. */
+    const timings = findScriptTimings(opts)
+
     // Store the registration promise so other methods can wait for it
     this.#registrationPromise = this.#register(opts)
     this.#registrationPromise
       .then(() => {
-        const timings = findScriptTimings()
         // Send initial timing values, skipping ones still at their "not yet known" default
         // (e.g. reportedAt: undefined, fetchStart: 0) to avoid pointless postMessage calls
         for (const [key, value] of Object.entries(timings)) {

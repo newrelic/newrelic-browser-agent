@@ -9,6 +9,12 @@ function getAttr (event, key) {
   return child?.value
 }
 
+// Matches the actual outgoing AJAX request to the mock JSON endpoint, so DT headers can be inspected directly.
+function assetServerJsonTest (request) {
+  if (request.method !== 'GET') return false
+  return new URL(request.url, 'resolve://').pathname === '/json'
+}
+
 describe('Register API - Auto-Detection - AJAX', () => {
   beforeEach(async () => {
     await browser.enableLogging()
@@ -106,6 +112,9 @@ describe('Register API - Auto-Detection - AJAX', () => {
       { test: testMFEAjaxEventsRequest },
       { test: testInteractionEventsRequest }
     ])
+    const [outgoingJsonRequests] = await browser.testHandle.createNetworkCaptures('assetServer', [
+      { test: assetServerJsonTest }
+    ])
 
     await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-mfe/index.html', {
       init: {
@@ -114,12 +123,21 @@ describe('Register API - Auto-Detection - AJAX', () => {
             enabled: true,
             duplicate_data_to_container: true
           }
+        },
+        distributed_tracing: {
+          enabled: true
         }
       },
-      loader: 'spa'
+      loader: 'spa',
+      injectUpdatedLoaderConfig: true
     }))
 
     await browser.waitForAgentLoad()
+
+    // The harness's own test-id cookie is scoped to /build/ and /tests/assets/ only, so it never reaches a plain
+    // route like /json -- broaden it to path '/' so the network capture above can correlate the MFE's own outgoing
+    // AJAX calls (both fire on click, after this point) back to this test.
+    await browser.setCookies({ name: 'test-id', value: browser.testHandle.testId, path: '/' })
 
     // trigger all the events
     await interactWithPage()
@@ -150,5 +168,40 @@ describe('Register API - Auto-Detection - AJAX', () => {
     const duplicatedMainMfeEvent = allMfeAjaxEvents.find(e => getAttr(e, 'child.id') === 'vite-main-mfe')
     expect(duplicatedMainMfeEvent).toBeDefined()
     expect(getAttr(duplicatedMainMfeEvent, 'child.type')).toEqual('MFE')
+
+    // Check: the MFE-attributed event and its container-duplicate copy
+    // represent the SAME real HTTP call, so they must carry two independent trace/span-ID pairs. If the agent ever
+    // regressed to reusing the MFE event's IDs for the duplicate, BELC would create conflicting span/trace IDs.
+    expect(mainMfeEvent.guid).toBeTruthy()
+    expect(mainMfeEvent.traceId).toBeTruthy()
+    expect(duplicatedMainMfeEvent.guid).toBeTruthy()
+    expect(duplicatedMainMfeEvent.traceId).toBeTruthy()
+    expect(duplicatedMainMfeEvent.guid).not.toEqual(mainMfeEvent.guid)
+    expect(duplicatedMainMfeEvent.traceId).not.toEqual(mainMfeEvent.traceId)
+
+    // Check: the MFE-attributed event's IDs should be what went out on the wire (headers stay
+    // container-sourced regardless of target; only the id namespace differs downstream), while the
+    // container-duplicate's independently-generated IDs never appear in any outgoing request header.
+    // Both the legacy `newrelic` header and the W3C `traceparent` header carry their own encoding of the same
+    // spanId/traceId, so both are checked independently rather than assuming one implies the other.
+    const outgoingRequests = await outgoingJsonRequests.waitForResult({ timeout: 10000 })
+    expect(outgoingRequests.length).toBeGreaterThan(0)
+    const decodedHeaders = outgoingRequests.map(r => {
+      const newrelicHeader = JSON.parse(atob(r.request.headers.newrelic))
+      const [, traceparentTraceId, traceparentSpanId] = r.request.headers.traceparent.split('-')
+      return { newrelicHeader, traceparentTraceId, traceparentSpanId }
+    })
+
+    const matchingLiveHeader = decodedHeaders.find(h => h.newrelicHeader.d.id === mainMfeEvent.guid)
+    expect(matchingLiveHeader).toBeDefined()
+    expect(matchingLiveHeader.newrelicHeader.d.tr).toEqual(mainMfeEvent.traceId)
+    expect(matchingLiveHeader.newrelicHeader.d.ty).toEqual('Browser')
+    expect(matchingLiveHeader.traceparentSpanId).toEqual(mainMfeEvent.guid)
+    expect(matchingLiveHeader.traceparentTraceId).toEqual(mainMfeEvent.traceId)
+
+    expect(decodedHeaders.some(h => h.newrelicHeader.d.id === duplicatedMainMfeEvent.guid)).toBe(false)
+    expect(decodedHeaders.some(h => h.newrelicHeader.d.tr === duplicatedMainMfeEvent.traceId)).toBe(false)
+    expect(decodedHeaders.some(h => h.traceparentSpanId === duplicatedMainMfeEvent.guid)).toBe(false)
+    expect(decodedHeaders.some(h => h.traceparentTraceId === duplicatedMainMfeEvent.traceId)).toBe(false)
   })
 })

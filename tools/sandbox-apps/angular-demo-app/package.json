@@ -32,6 +32,7 @@
     "webpack-dev-middleware": "7.4.6",
     "piscina": "5.3.2",
     "source-map-js": "1.2.2",
-    "@modelcontextprotocol/sdk": "1.31.0"
+    "@modelcontextprotocol/sdk": "1.31.0",
+    "http-cache-semantics": "4.3.0"
   }
 }

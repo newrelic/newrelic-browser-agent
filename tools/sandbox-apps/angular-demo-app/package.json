@@ -17,7 +17,7 @@
     "@angular/forms": "^20.3.31",
     "@angular/platform-browser": "^20.3.31",
     "@angular/platform-browser-dynamic": "^20.3.31",
-    "@angular/router": "^20.3.31",
+    "@angular/router": "^20.3.32",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.1"
@@ -30,6 +30,8 @@
   },
   "overrides": {
     "webpack-dev-middleware": "7.4.6",
-    "piscina": "5.3.2"
+    "piscina": "5.3.2",
+    "source-map-js": "1.2.2",
+    "@modelcontextprotocol/sdk": "1.31.0"
   }
 }

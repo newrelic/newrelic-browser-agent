@@ -33,9 +33,13 @@ describe('retry harvesting', () => {
       ])
 
       expect(firstInteractionEventHarvest[0].reply.statusCode).toEqual(statusCode)
-      const retriedInteractionIds = secondInteractionEventHarvest[1].request.body.map(({ id }) => id)
-      const failedInteractionIds = firstInteractionEventHarvest[0].request.body.map(({ id }) => id)
-      expect(retriedInteractionIds).toEqual(expect.arrayContaining(failedInteractionIds))
+      /*
+       * The initial page load interaction reads firstPaint/firstContentfulPaint lazily, so if the first harvest is sent
+       * before paint timing is recorded (slow devices), the retried payload legitimately has values the original lacked.
+       * Those fields are excluded so the comparison only checks that the same interaction was retried.
+       */
+      const withoutPaint = interactions => interactions.map(({ firstPaint, firstContentfulPaint, ...rest }) => rest)
+      expect(withoutPaint(secondInteractionEventHarvest[1].request.body)).toEqual(expect.arrayContaining(withoutPaint(firstInteractionEventHarvest[0].request.body)))
     })
   )
 

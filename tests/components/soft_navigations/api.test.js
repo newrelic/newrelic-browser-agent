@@ -352,7 +352,9 @@ test('multiple finished ixns retain the correct start/end timestamps in payload'
     expect(payload.start).toEqual(starts.shift())
   })
   // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
-  expect(harvestPayloadBody).toEqual("bel.7;1,,,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,8c,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,jg,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
+  // (soft-nav spike POC) count bumped +1 per ixn and `8,'softNavApiSupported` node added -- the Interaction constructor
+  // now stamps this custom attribute on every interaction, see interaction.js.
+  expect(harvestPayloadBody).toEqual("bel.7;1,1,,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;8,'softNavApiSupported;;1,1,8c,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;8,'softNavApiSupported;;1,1,jg,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;8,'softNavApiSupported;")
 
   performanceNowSpy.mockRestore()
 })
@@ -385,7 +387,9 @@ test('multiple finished ixns with ajax have correct start/end timestamps (in aja
 
   expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(2)
   // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
-  expect(softNavAggregate.makeHarvestPayload().body).toEqual("bel.7;1,2,1,3,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;2,1,1,3,,,,,,,,,,'2,!!!;5,'ajaxRequest.id,'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa;2,1,2,3,,,,,,,,,,'3,!!!;5,'ajaxRequest.id,'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb;;1,2,9,4,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'4,!!;2,1,a,1,,,,,,,,,,'5,!!!;5,'ajaxRequest.id,'cccccccc-cccc-cccc-cccc-cccccccccccc;2,1,b,1,,,,,,,,,,'6,!!!;5,'ajaxRequest.id,'dddddddd-dddd-dddd-dddd-dddddddddddd;")
+  // (soft-nav spike POC) count bumped +1 per ixn and `8,'softNavApiSupported` node added right after each ixn's own
+  // custom attributes and before its ajax children -- see interaction.js constructor.
+  expect(softNavAggregate.makeHarvestPayload().body).toEqual("bel.7;1,3,1,3,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;8,'softNavApiSupported;2,1,1,3,,,,,,,,,,'2,!!!;5,'ajaxRequest.id,'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa;2,1,2,3,,,,,,,,,,'3,!!!;5,'ajaxRequest.id,'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb;;1,3,9,4,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'4,!!;8,'softNavApiSupported;2,1,a,1,,,,,,,,,,'5,!!!;5,'ajaxRequest.id,'cccccccc-cccc-cccc-cccc-cccccccccccc;2,1,b,1,,,,,,,,,,'6,!!!;5,'ajaxRequest.id,'dddddddd-dddd-dddd-dddd-dddddddddddd;")
 })
 
 function getIxnContext (ixn) {

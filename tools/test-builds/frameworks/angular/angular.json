@@ -40,7 +40,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "../../../tests/assets/test-builds/angular-demo-app",
+            "outputPath": "../../../../tests/assets/test-builds/frameworks/angular",
             "baseHref": "./",
             "index": "src/index.html",
             "main": "src/main.ts",

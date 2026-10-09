@@ -8,7 +8,7 @@ import { EventBuffer } from '../../../../src/features/utils/event-buffer'
 import { EventAggregator } from '../../../../src/common/aggregate/event-aggregator'
 import { Aggregate as PVEAggregate } from '../../../../src/features/page_view_event/aggregate/index'
 import { ee } from '../../../../src/common/event-emitter/contextual-ee'
-import { IDEAL_PAYLOAD_SIZE, MIN_EARLY_HARVEST_INTERVAL } from '../../../../src/common/constants/agent-constants'
+import { IDEAL_PAYLOAD_SIZE, MIN_EARLY_HARVEST_INTERVAL, EARLY_HARVEST_BYPASS_SIZE } from '../../../../src/common/constants/agent-constants'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/aggregate-base')
@@ -287,6 +287,32 @@ describe('decideEarlyHarvest', () => {
     }
     expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(2) // at 0ms and 500ms
     expect(aggregate.events.length).toBe(1000) // nothing was dropped
+  })
+
+  test('harvests early inside the minimum interval once the payload reaches the bypass size', () => {
+    aggregate.events.add(bigEvent())
+    const filler = EARLY_HARVEST_BYPASS_SIZE - aggregate.events.byteSize() - 2 // 2 accounts for the quotes added when stringified
+    nowMs = 1
+    aggregate.events.add('x'.repeat(filler)) // estimated size is now exactly the bypass size
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(2)
+    expect(aggregate.lastEarlyHarvestAt).toBe(1)
+  })
+
+  test('still suppresses early harvests inside the minimum interval just below the bypass size', () => {
+    aggregate.events.add(bigEvent())
+    const filler = EARLY_HARVEST_BYPASS_SIZE - aggregate.events.byteSize() - 3 // one byte under the bypass size
+    nowMs = 1
+    aggregate.events.add('x'.repeat(filler))
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
+  })
+
+  test('counts separate custom attribute bytes toward the bypass size', () => {
+    aggregate.customAttributesAreSeparate = true
+    aggregate.events.add(bigEvent())
+    mainAgent.runtime.jsAttributesMetadata.bytes = EARLY_HARVEST_BYPASS_SIZE
+    nowMs = 1
+    aggregate.events.add('tiny')
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(2)
   })
 
   test('early harvest tracking is independent per feature instance', () => {

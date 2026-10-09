@@ -141,5 +141,24 @@ describe('should harvest early', () => {
       // nothing was dropped by limiting the early harvests
       expect(new Set(floodMessages.map(message => message.split(' ')[1])).size).toEqual(totalLogs)
     })
+
+    /** a flood larger than the buffer's maximum size must not lose logs while early harvests are being limited */
+    it('should not drop logs when a flood is larger than the buffer can hold', async () => {
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { harvest: { interval: 5 } } }))
+        .then(() => browser.waitForAgentLoad())
+
+      const totalLogs = 2000
+      await browser.execute(function (total) {
+        const padding = 'x'.repeat(1000)
+        for (let i = 0; i < total; i++) newrelic.log('bigflood ' + i + ' ' + padding)
+      }, totalLogs)
+
+      const results = await loggingEventsCapture.waitForResult({ timeout: 15000 })
+      const floodMessages = getLogMessages(results).filter(message => message.startsWith('bigflood '))
+
+      /* 2000 logs of ~1.2KB each is more than the 1MB buffer maximum, so any logs held back instead of harvested would be dropped. */
+      expect(results.length).toBeLessThanOrEqual(10)
+      expect(new Set(floodMessages.map(message => message.split(' ')[1])).size).toEqual(totalLogs)
+    })
   })
 })

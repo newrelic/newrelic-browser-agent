@@ -381,14 +381,40 @@ test('limits early harvests during a flood of logs without dropping any', async 
   jest.spyOn(performance, 'now').mockImplementation(() => nowMs)
 
   mainAgent.runtime.harvester.triggerHarvestFor.mockClear() // only count harvests caused by the synchronous work below
-  const bigLog = 'x'.repeat(5000)
-  for (let i = 0; i < 150; i++) { // 150 * ~5KB stays under the 1MB buffer cap
+  const bigLog = 'x'.repeat(2000)
+  for (let i = 0; i < 150; i++) { // 150 * ~2KB stays under the size at which the limit no longer applies
     nowMs = 1000 + i // one log per ms
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, bigLog, {}, 'INFO'])
   }
 
   expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1) // the 150ms flood fits inside one minimum interval
   expect(loggingAggregate.events.length).toEqual(150) // everything is still buffered for the next harvest
+  jest.restoreAllMocks()
+})
+
+test('harvests early inside the minimum interval when a flood fills the buffer, so no logs are dropped', async () => {
+  await mockLoggingRumResponse(LOGGING_MODE.INFO, LOGGING_MODE.INFO)
+  await new Promise(resolve => setTimeout(resolve, 5)) // let the post-drain harvest, which is not an early harvest, fire before observing
+  let harvestedLogs = 0
+  jest.spyOn(mainAgent.runtime.harvester, 'triggerHarvestFor').mockImplementation((aggregate) => { // behaves like a real harvest, which empties the buffer
+    harvestedLogs += aggregate.events.length
+    aggregate.events.clear()
+  })
+  let nowMs = 1000
+  jest.spyOn(performance, 'now').mockImplementation(() => nowMs)
+
+  mainAgent.runtime.harvester.triggerHarvestFor.mockClear() // only count harvests caused by the synchronous work below
+  const totalLogs = 400
+  const bigLog = 'x'.repeat(5000) // 400 * ~5KB is about 2MB, double the buffer's maximum size
+  for (let i = 0; i < totalLogs; i++) {
+    nowMs = 1000 + i // one log per ms, so the whole flood happens inside a single minimum interval
+    loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, bigLog, {}, 'INFO'])
+  }
+
+  expect(mainAgent.runtime.harvester.triggerHarvestFor.mock.calls.length).toBeGreaterThan(1) // more than the single early harvest the interval alone allows
+  expect(mainAgent.runtime.harvester.triggerHarvestFor.mock.calls.length).toBeLessThan(10) // and still far fewer than one per ~16KB
+  expect(harvestedLogs + loggingAggregate.events.length).toEqual(totalLogs) // every log was either harvested or is still buffered
+  expect(consoleModule.warn).not.toHaveBeenCalled()
   jest.restoreAllMocks()
 })
 

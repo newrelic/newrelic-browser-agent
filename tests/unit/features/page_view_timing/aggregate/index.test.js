@@ -148,6 +148,62 @@ describe('PVT aggregate', () => {
     expect(timing4.attrs.pageUrl).toBe('https://example.com/test-page')
     expect(timing5.attrs.pageUrl).toBe('https://example.com/test-page')
   })
+
+  describe('timestamp attribute', () => {
+    afterEach(() => {
+      delete pvtAgg.agentRef.runtime.timeKeeper
+    })
+
+    test('sets a server-corrected timestamp attribute from the node value when timeKeeper is ready', () => {
+      pvtAgg.agentRef.runtime.timeKeeper = {
+        ready: true,
+        correctRelativeTimestamp: (relativeTime) => relativeTime + 1000000
+      }
+      const timing = pvtAgg.addTiming('fp', 500)
+      expect(timing.attrs.timestamp).toEqual(1000500)
+    })
+
+    test('omits the timestamp attribute when timeKeeper is not ready', () => {
+      pvtAgg.agentRef.runtime.timeKeeper = { ready: false }
+      const timing = pvtAgg.addTiming('fp', 500)
+      expect(timing.attrs.timestamp).toBeUndefined()
+    })
+
+    test('omits the timestamp attribute when there is no timeKeeper at all', () => {
+      const timing = pvtAgg.addTiming('fp', 500)
+      expect(timing.attrs.timestamp).toBeUndefined()
+    })
+
+    test('derives the timestamp from the explicit relativeTime param rather than value, when given', () => {
+      // covers 'cls', whose value is a unitless score rather than a usable time offset -- callers pass the
+      // vital's observedAt (captured at the time of the actual layout shift) as relativeTime instead
+      pvtAgg.agentRef.runtime.timeKeeper = {
+        ready: true,
+        correctRelativeTimestamp: (relativeTime) => relativeTime
+      }
+      const timing = pvtAgg.addTiming('cls', 111.9, null, 9999)
+      expect(timing.attrs.timestamp).toEqual(9999)
+    })
+
+    test('omits the timestamp attribute for a non-finite relative time', () => {
+      pvtAgg.agentRef.runtime.timeKeeper = {
+        ready: true,
+        correctRelativeTimestamp: (relativeTime) => relativeTime
+      }
+      const timing = pvtAgg.addTiming('loadTime', NaN)
+      expect(timing.attrs.timestamp).toBeUndefined()
+    })
+
+    test('is filtered from user jsAttributes so it cannot override the system-set value', () => {
+      pvtAgg.agentRef.info.jsAttributes = { timestamp: 'fake' }
+      const timing = { name: 'fp', value: 100, attrs: { timestamp: 123456789, webdriverDetected: false } }
+      const payload = pvtAgg.serializer([timing])
+      const events = qp.decode(payload)
+      const timestampAttrs = events[0].attributes.filter(attr => attr.key === 'timestamp')
+      expect(timestampAttrs.length).toEqual(1)
+      expect(timestampAttrs[0].value).toEqual(123456789)
+    })
+  })
 })
 
 function testCases () {

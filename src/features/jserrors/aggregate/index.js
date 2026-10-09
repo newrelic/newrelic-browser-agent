@@ -23,7 +23,7 @@ import { getRegisteredTargetsFromFilename, getVersion2Attributes, getVersion2Dup
 import { buildCauseString } from './cause-string'
 import { ShortCircuit } from '../../../common/util/short-circuit'
 import { EVENT_TYPES } from '../../../common/constants/events'
-import { SESSION_EVENTS } from '../../../common/session/constants'
+import { SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -57,9 +57,17 @@ export class Aggregate extends AggregateBase {
      * already-seen error resends its full stack_trace once, instead of a browser_stack_hash the
      * backend can no longer resolve.
      */
-    this.ee.on(SESSION_EVENTS.RESET, () => {
+    const forgetReportedStacks = () => {
       this.stackReported = {}
       this.observedAt = {}
+    }
+    let currentSessionId = this.agentRef.runtime.session?.state?.value
+    this.ee.on(SESSION_EVENTS.RESET, forgetReportedStacks)
+    this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
+      if (!data?.value) return
+      /* A reset in another tab arrived as a cross-tab update carrying a new session id. */
+      if (type === SESSION_EVENT_TYPES.CROSS_TAB && currentSessionId && data.value !== currentSessionId) forgetReportedStacks()
+      currentSessionId = data.value // also tracks same-tab writes, so a local reset's new id is picked up
     })
 
     // 0 == off, 1 == on

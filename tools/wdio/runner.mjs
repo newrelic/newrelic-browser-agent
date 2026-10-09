@@ -28,7 +28,7 @@ if (electronModes.length > 0) ensureElectronBuilt()
 const wdioConfig = deepmerge(
   baseConfig(),
   specsConfig(),
-  electronModes.length > 0 ? electronConfig(electronModes) : lambdaTestConfig()
+  electronModes.length > 0 ? electronConfig(electronModes, { devtools: args.electronDevtools }) : lambdaTestConfig()
 )
 const configFilePath = path.join(
   path.resolve(__dirname, '../../node_modules/.cache/wdio'),

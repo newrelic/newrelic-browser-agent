@@ -85,6 +85,10 @@ const args = yargs(hideBin(process.argv))
   .default('framework', false)
   .describe('framework', 'Run framework informational tests')
 
+  .boolean('electron-devtools')
+  .default('electron-devtools', false)
+  .describe('electron-devtools', 'Dock DevTools to the side of each Electron browser window, narrowing the page viewport (use with -b electron)')
+
   .string('B')
   .alias('B', 'report-to-bam')
   .describe('B', 'Supply a JSON string or file path with expected BAM configs to send agent traffic to BAM instead of local service')

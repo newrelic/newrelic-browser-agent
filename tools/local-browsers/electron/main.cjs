@@ -10,12 +10,17 @@
  *   scripts with the nonce given by `--nr-csp-nonce=<nonce>` (the testing server does this for a
  *   `nonce` query param, which it also answers with its own CSP header that is replaced here).
  *   Specs that don't know about the nonce should use loose mode.
+ *
+ * Optional launch arguments for debugging: `--nr-devtools` opens DevTools docked to the side of the window, and
+ * `--nr-url=<url>` loads that page instead of a blank one (see open.mjs).
  */
 const { app, BrowserWindow, session } = require('electron')
 
 const launchArg = (name) => process.argv.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3)
 const mode = launchArg('nr-mode') === 'strict' ? 'strict' : 'loose'
 const nonce = launchArg('nr-csp-nonce')
+const startUrl = launchArg('nr-url') || 'about:blank'
+const devtools = process.argv.includes('--nr-devtools')
 
 const WEB_PREFERENCES = {
   loose: { nodeIntegration: true, contextIsolation: false, sandbox: false },
@@ -58,7 +63,9 @@ app.whenReady().then(() => {
   // Pages set the window title through their <title> on every navigation (e.g. a framework app's
   // "Vite Template"), which made it unclear which window belongs to the test run
   win.on('page-title-updated', (event) => event.preventDefault())
-  win.loadURL('about:blank')
+  // Docked to the side of the window. This narrows the page's viewport, so it's only for debugging
+  if (devtools) win.webContents.openDevTools({ mode: 'right' })
+  win.loadURL(startUrl)
 })
 
 app.on('window-all-closed', () => app.quit())

@@ -48,9 +48,11 @@ export function electronModesFromSpec (spec = '', framework = false) {
  * calls when an Electron browser is requested).
  *
  * @param {string[]} modes The security modes (see the app's main.cjs) to run a session for
+ * @param {object} [options]
+ * @param {boolean} [options.devtools] Open a DevTools window with each Electron window
  * @returns An object defining the local Electron capabilities and chromedriver service.
  */
-export default function config (modes) {
+export default function config (modes, { devtools = false } = {}) {
   const appRequire = module.createRequire(path.join(APP_DIR, 'package.json'))
   const driverPath = path.join(path.dirname(appRequire.resolve('electron-chromedriver/package.json')), 'bin', 'chromedriver')
 
@@ -81,6 +83,7 @@ export default function config (modes) {
           args: [
             `--nr-mode=${mode}`,
             ...(mode === 'strict' ? [`--nr-csp-nonce=${runId}`] : []),
+            ...(devtools ? ['--nr-devtools'] : []),
             `--user-data-dir=${userDataDirs[i]}`,
             // Linux CI runners cannot use the chromium sandbox; only the test app runs here
             ...(process.platform === 'linux' ? ['--no-sandbox', '--disable-gpu'] : [])

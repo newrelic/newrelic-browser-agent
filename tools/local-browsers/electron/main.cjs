@@ -54,7 +54,10 @@ app.whenReady().then(() => {
     })
   }
 
-  const win = new BrowserWindow({ width: 800, height: 600, webPreferences: WEB_PREFERENCES[mode] })
+  const win = new BrowserWindow({ width: 800, height: 600, title: 'Electron', webPreferences: WEB_PREFERENCES[mode] })
+  // Pages set the window title through their <title> on every navigation (e.g. a framework app's
+  // "Vite Template"), which made it unclear which window belongs to the test run
+  win.on('page-title-updated', (event) => event.preventDefault())
   win.loadURL('about:blank')
 })
 

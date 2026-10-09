@@ -21,7 +21,7 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
  * properly passed to the worker processes.
  */
 
-const electronModes = electronModesFromSpec(args.browsers)
+const electronModes = electronModesFromSpec(args.browsers, args.framework)
 // Electron is only installed and packaged on runs that test against it, once, before any worker starts
 if (electronModes.length > 0) ensureElectronBuilt()
 

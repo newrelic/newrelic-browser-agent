@@ -13,22 +13,30 @@ const CHROMEDRIVER_PORT = 9515
 const MODES = ['loose', 'strict']
 
 /**
- * Works out which Electron security modes a `-b` browser spec asks for: `electron` is every mode and
- * `electron-loose` / `electron-strict` just that one. Electron runs on this machine with its own
- * chromedriver while every other browser runs on LambdaTest, so the two can't share a run.
+ * Works out which Electron security modes a `-b` browser spec asks for: `electron` and `electron-loose`
+ * are the loose mode and `electron-strict` the strict one (ask for both with `electron-loose,electron-strict`).
+ * Electron runs on this machine with its own chromedriver while every other browser runs on LambdaTest,
+ * so the two can't share a run.
  * @param {string} [spec] The comma separated `-b` browsers value
+ * @param {boolean} [framework] Whether this is a `--framework` run
  * @returns {string[]} The requested modes, empty when the spec has no Electron entry
- * @throws {Error} If Electron is combined with other browsers or an unknown Electron mode is requested
+ * @throws {Error} If Electron is combined with other browsers, an unknown mode is requested, or strict
+ * mode is requested outside a `--framework` run
  */
-export function electronModesFromSpec (spec = '') {
+export function electronModesFromSpec (spec = '', framework = false) {
   const names = spec.split(',').map(entry => parseSpecString(entry.trim()).browserName)
   const electronNames = names.filter(name => name === 'electron' || name.startsWith('electron-'))
   if (electronNames.length === 0) return []
   if (electronNames.length !== names.length) throw new Error(`Electron cannot be combined with other browsers in one run, received: ${spec}`)
 
-  const modes = electronNames.flatMap(name => name === 'electron' ? MODES : [name.slice('electron-'.length)])
+  const modes = electronNames.map(name => name === 'electron' ? 'loose' : name.slice('electron-'.length))
   const unknown = modes.find(mode => !MODES.includes(mode))
   if (unknown) throw new Error(`Unknown Electron mode "${unknown}", expected one of: ${MODES.join(', ')}`)
+  /*
+   * Strict mode's CSP only admits inline scripts carrying its nonce, which the framework specs supply and
+   * ordinary specs don't, so those would never load the agent.
+   */
+  if (modes.includes('strict') && !framework) throw new Error('electron-strict can only be used with --framework runs. Use electron-loose for other specs')
   return [...new Set(modes)]
 }
 

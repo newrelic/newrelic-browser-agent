@@ -79,6 +79,9 @@ export const onlyIOS = new SpecMatcher()
 export const onlyAndroid = new SpecMatcher()
   .include('android')
 
+export const onlyElectron = new SpecMatcher()
+  .include('electron')
+
 export const onlyChromium = new SpecMatcher()
   .include('android')
   .include('chrome')

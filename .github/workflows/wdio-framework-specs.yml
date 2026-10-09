@@ -78,7 +78,7 @@ jobs:
         # own Electron instance, and write their rows to the same .framework-results folder as the step above.
         run: |
           xvfb-run -a node --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
-            --framework -b electron --concurrent=2 \
+            --framework -b electron-loose,electron-strict --concurrent=2 \
             ${{ runner.debug && '-v -L -d' || '' }}
         continue-on-error: true
       - name: Generate framework informational report

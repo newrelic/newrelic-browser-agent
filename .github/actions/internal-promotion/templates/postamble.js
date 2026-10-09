@@ -1,4 +1,8 @@
 // Reset config values back to released
+window.NREUM = window.NREUM || {};
+window.NREUM.loader_config = window.NREUM.loader_config || {};
+window.NREUM.info = window.NREUM.info || {};
+window.NREUM.init = window.NREUM.init || {};
 window.NREUM.loader_config.agentID = '{{{args.appId}}}'
 window.NREUM.loader_config.applicationID = '{{{args.appId}}}'
 window.NREUM.loader_config.licenseKey = '{{{args.licenseKey}}}'

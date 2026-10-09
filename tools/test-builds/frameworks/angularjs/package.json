@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "type": "module",
   "frameworkPackage": "angular",
   "dependencies": {
     "@newrelic/browser-agent": "file:../../../../temp/newrelic-browser-agent-1.323.0.tgz",

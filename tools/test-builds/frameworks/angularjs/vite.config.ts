@@ -12,7 +12,8 @@ export default defineConfig({
     })
   ],
   build: {
-    outDir: path.resolve(__dirname, '../../../../tests/assets/test-builds/frameworks/angularjs'),
+    outDir: path.resolve(import.meta.dirname, '../../../../tests/assets/test-builds/frameworks/angularjs'),
+    emptyOutDir: true,
     rollupOptions: {
       onwarn(warning, warn) {
         console.log('Vite build failed with rollup warning')

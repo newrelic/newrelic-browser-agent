@@ -71,6 +71,14 @@ jobs:
             --framework \
             ${{ runner.debug && '-v -L -D -d' || '' }}
         continue-on-error: true
+      - name: Run WDIO framework informational tests against Electron
+        # Runs locally (not on LambdaTest) against the Chromium embedded in tools/test-builds/frameworks/electron
+        # and writes its row to the same .framework-results folder the report is generated from.
+        run: |
+          xvfb-run -a node --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
+            --framework --electron \
+            ${{ runner.debug && '-v -L -d' || '' }}
+        continue-on-error: true
       - name: Generate framework informational report
         run: npm run test-builds:framework-report
       - name: Upload report to S3

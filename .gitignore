@@ -31,3 +31,8 @@ tests/assets/scripts/**/*
 /.lambdatest
 bam.json
 /.framework-results
+
+# Angular CLI build cache (tools/test-builds/frameworks/angular)
+**/.angular
+# Packaged Electron framework test app
+tools/test-builds/frameworks/electron/out

@@ -85,6 +85,10 @@ const args = yargs(hideBin(process.argv))
   .default('framework', false)
   .describe('framework', 'Run framework informational tests')
 
+  .boolean('electron')
+  .default('electron', false)
+  .describe('electron', 'Run specs locally against the Electron framework test app instead of LambdaTest (use with --framework)')
+
   .string('B')
   .alias('B', 'report-to-bam')
   .describe('B', 'Supply a JSON string or file path with expected BAM configs to send agent traffic to BAM instead of local service')

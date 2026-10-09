@@ -1,5 +1,6 @@
 import fs from 'fs'
 import path from 'path'
+import vm from 'vm'
 import {
   testRumRequest,
   testTimingEventsRequest,
@@ -23,9 +24,18 @@ const FRAMEWORKS_DIR = path.resolve(__dirname, '../../tools/test-builds/framewor
  * in the app's node_modules whose version is reported. Frameworks whose package name differs from
  * the folder name (e.g. @angular/core) can set `frameworkPackage` in the app's package.json.
  */
+const ELECTRON = 'electron'
+// `--electron` (see tools/wdio/config/electron.conf.mjs) runs this suite locally against the Electron
+// app's embedded Chromium only; the regular LambdaTest browser run skips the electron app.
+const IS_ELECTRON_RUN = process.env.NR_ELECTRON === 'true'
 const FRAMEWORKS = fs.readdirSync(FRAMEWORKS_DIR, { withFileTypes: true })
   .filter(dir => dir.isDirectory())
   .map(dir => dir.name)
+  .filter(name => (name === ELECTRON) === IS_ELECTRON_RUN)
+
+// The launch args the electron wdio config (tools/wdio/config/electron.conf.mjs) gave this session's app
+const electronArg = (name) => browser.requestedCapabilities['goog:chromeOptions'].args
+  .find(arg => arg.startsWith(`--${name}=`)).slice(name.length + 3)
 
 const TEST_ERROR_MESSAGE = 'framework-spec-test-error'
 const TEST_LOG_MESSAGE = 'framework-spec-test-log'
@@ -78,6 +88,8 @@ const FEATURE_CHECKS = [
 for (const framework of FRAMEWORKS) {
   describe(`${framework} informational feature coverage`, () => {
     it('records which agent features report data for this framework build', async () => {
+      // Each electron session runs the packaged app in one security mode (loose/strict) and gets its own report row
+      const label = IS_ELECTRON_RUN ? `${framework}-${electronArg('nr-mode')}` : framework
       const captures = await browser.testHandle.createNetworkCaptures('bamServer', FEATURE_CHECKS.map(({ test }) => ({ test })))
       const [metricsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [{ test: METRICS_CHECK.test }])
 
@@ -98,10 +110,34 @@ for (const framework of FRAMEWORKS) {
       // test flaky/stuck when the trigger lived behind a button. Firing on mount rides along with
       // the already-fast "initial page load" interaction instead.
       // Session replay also defaults to disabled.
-      const url = await browser.testHandle.assetURL(`test-builds/frameworks/${framework}/index.html`, {
-        init: { session_replay: { enabled: true } }
-      })
-      await browser.url(url)
+      const initOverrides = { session_replay: { enabled: true } }
+      let url
+      if (IS_ELECTRON_RUN) {
+        /*
+         * The packaged Electron app loads its own renderer from disk, so there is no asset server page to
+         * navigate to. Instead take the NREUM info/init the testing server would have injected into a page,
+         * hand them to the app through its bootstrap file and reload the window so the agent starts fresh.
+         * The same page doubles as the (CORS-enabled, http) target of the app's ajax trigger.
+         */
+        url = await browser.testHandle.assetURL('instrumented.html', { init: initOverrides })
+        const html = await (await fetch(url)).text()
+        const sandbox = {}
+        sandbox.window = sandbox
+        for (const [, script] of html.matchAll(/<script[^>]*>([^<]*NREUM\.(?:info|init)=[^<]*)<\/script>/g)) {
+          vm.runInNewContext(script, sandbox)
+        }
+        fs.writeFileSync(electronArg('nr-bootstrap-file'), JSON.stringify({
+          info: sandbox.NREUM.info,
+          init: sandbox.NREUM.init,
+          fetchUrl: url
+        }))
+        await browser.refresh()
+      } else {
+        url = await browser.testHandle.assetURL(`test-builds/frameworks/${framework}/index.html`, {
+          init: initOverrides
+        })
+        await browser.url(url)
+      }
 
       const results = {}
       await Promise.all(FEATURE_CHECKS.map(async ({ name, verify }, i) => {
@@ -123,21 +159,27 @@ for (const framework of FRAMEWORKS) {
       ))
       const agentPkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../package.json'), 'utf-8'))
 
+      // chromedriver reports an Electron app as chrome + its Chromium version; report the Electron
+      // version instead so the electron row is identifiable in the "Tested on" summary.
+      const electronVersion = IS_ELECTRON_RUN
+        ? (await browser.execute(() => navigator.userAgent)).match(/Electron\/([\d.]+)/)?.[1]
+        : undefined
+
       fs.mkdirSync(RESULTS_DIR, { recursive: true })
       fs.writeFileSync(
-        path.join(RESULTS_DIR, `${framework.replace(/[^\w.-]/g, '_')}.json`),
+        path.join(RESULTS_DIR, `${label.replace(/[^\w.-]/g, '_')}.json`),
         JSON.stringify({
-          framework,
+          framework: label,
           version: frameworkPkg.version,
           agentVersion: agentPkg.version,
-          browser: browser.capabilities.browserName,
-          browserVersion: browser.capabilities.browserVersion,
+          browser: electronVersion ? 'electron' : browser.capabilities.browserName,
+          browserVersion: electronVersion || browser.capabilities.browserVersion,
           results
         }, null, 2)
       )
 
       // eslint-disable-next-line no-console
-      console.log(`[framework-specs] ${framework}@${frameworkPkg.version} feature results:`, results)
+      console.log(`[framework-specs] ${label}@${frameworkPkg.version} feature results:`, results)
     })
   })
 }

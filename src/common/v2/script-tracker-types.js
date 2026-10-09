@@ -16,6 +16,9 @@
  * `script-tracker.js`). Cleaned URLs already folded into `timings.totalWeight`/`timings.renderBlocking` by
  * `applyResourceWeight`, so the same underlying resource (e.g. a manifest asset that's also the .register calling
  * script itself) is never counted twice.
+ * @property {Set<string>} widenedAssetUrls - Always present. Cleaned URLs of manifest assets whose entry has already
+ * widened `fetchStart`/`fetchEnd`/the script window, so a duplicate load of the same URL (typically cache-served,
+ * with a later `responseEnd`) can't stretch the window a second time.
  * @property {RecordManifestScriptWindowFn} recordManifestScriptWindow - Always present (seeded by
  * `getOrCreateInternals`, see `script-tracker.js`). `findScriptTimings` overrides the seeded default with one that
  * folds into the live `scriptStart`/`scriptEnd` getters instead.

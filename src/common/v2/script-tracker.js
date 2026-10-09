@@ -54,6 +54,7 @@ function getOrCreateInternals (timings) {
   if (!internals) {
     internals = {
       weighedAssetUrls: new Set(),
+      widenedAssetUrls: new Set(),
       recordManifestScriptWindow: (start, end) => {
         if (start) timings.scriptStart = timings.scriptStart > 0 ? Math.min(timings.scriptStart, start) : start
         if (end) timings.scriptEnd = timings.scriptEnd > 0 ? Math.max(timings.scriptEnd, end) : end
@@ -104,6 +105,9 @@ if (globalScope.MutationObserver && globalScope.document) {
         if (node.nodeName === 'SCRIPT' && node.src) {
           const cleanedSrc = cleanURL(node.src)
           const correlation = getOrCreateCorrelation(cleanedSrc)
+          /* The first node wins, same as the performance entry below. Skipping here also means no load/error listeners
+             are attached for duplicate references. */
+          if (correlation.dom.value) return
 
           correlation.dom.start = now()
           correlation.dom.value = node
@@ -131,9 +135,13 @@ if (globalScope.PerformanceObserver?.supportedEntryTypes.includes('resource')) {
       if (validEntryCriteria(entry)) {
         const entryUrl = cleanURL(entry.name)
         const correlation = getOrCreateCorrelation(entryUrl)
-        correlation.performance.start = Math.floor(entry.startTime)
-        correlation.performance.end = Math.floor(entry.responseEnd)
-        correlation.performance.value = entry
+        /* The first entry wins. A script referenced more than once is typically re-served from the browser cache, so a
+           later entry for the same URL would overwrite the real network timing with a near-instant one. */
+        if (!correlation.performance.value) {
+          correlation.performance.start = Math.floor(entry.startTime)
+          correlation.performance.end = Math.floor(entry.responseEnd)
+          correlation.performance.value = entry
+        }
       }
 
       // Late-resolution subscribers can be for any asset type (not just scripts), so every entry is checked here,
@@ -285,7 +293,8 @@ function subscribeToLatePerformanceEntry (timings, mfeScriptUrl) {
 
 /**
  * Applies one manifest asset's performance entry to a timings object: weight/renderBlocking always accumulate;
- * fetchStart/fetchEnd and scriptStart/scriptEnd widen (never shrink) only when `timingMethod` calls for it; asset/
+ * fetchStart/fetchEnd and scriptStart/scriptEnd widen (never shrink) only when `timingMethod` calls for it, and only for
+ * the first entry seen per URL; asset/
  * type get anchored to the first script asset seen to resolve.
  * @param {RegisterAPITimings} timings
  * @param {PerformanceResourceTiming} entry
@@ -298,6 +307,13 @@ function applyManifestEntry (timings, entry, asset, entryState, timingMethod) {
   applyResourceWeight(timings, entry)
 
   if (timingMethod !== 'scripts' && timingMethod !== 'all') return // no timing-widening effect at the 'entry' default/unset
+
+  /* Only the first entry per URL widens timing. A resource referenced more than once is typically re-served from the
+     browser cache with a later responseEnd, which would otherwise stretch fetchEnd out to the duplicate's load. */
+  const { widenedAssetUrls } = getOrCreateInternals(timings)
+  const url = cleanURL(entry.name)
+  if (widenedAssetUrls.has(url)) return
+  widenedAssetUrls.add(url)
 
   const widensAllAssets = timingMethod === 'all'
   // Under 'scripts', only script assets widen the fetch window; under 'all', every matched asset does.
@@ -335,34 +351,46 @@ function applyManifestEntry (timings, entry, asset, entryState, timingMethod) {
 }
 
 /**
- * Subscribes to late resource timing emissions for manifest assets not yet resolved against the buffered entries.
- * Reuses the shared page-wide scriptObserver/poSubscribers mechanism (one PerformanceObserver for all MFEs, not
- * one per MFE) and, unlike that observer's own correlation bookkeeping, checks every resource entry -- not just
- * script-like ones -- so lazy-loaded images/fonts/stylesheets resolve too.
+ * Finds the manifest asset a resource entry should be credited to. An entry matching several assets is applied once;
+ * a script asset is preferred so an overlapping non-script matcher can't cause 'scripts' mode to skip a script entry.
+ * @param {import('./manifest').ParsedManifestAsset[]} assets
+ * @param {PerformanceResourceTiming} entry
+ * @returns {import('./manifest').ParsedManifestAsset|undefined}
+ */
+function findMatchingManifestAsset (assets, entry) {
+  const matches = assets.filter(asset => asset.test(entry.name))
+  return matches.find(asset => asset.isScript) || matches[0]
+}
+
+/**
+ * Subscribes to late resource timing emissions for manifest assets. Reuses the shared page-wide
+ * scriptObserver/poSubscribers mechanism (one PerformanceObserver for all MFEs, not one per MFE) and, unlike that
+ * observer's own correlation bookkeeping, checks every resource entry -- not just script-like ones -- so lazy-loaded
+ * images/fonts/stylesheets resolve too. A matcher can legitimately match many resources (e.g. a hashed-chunk RegExp),
+ * so this subscriber never reports itself as finished; it is cleared by the shared observer's expiry instead.
  * @param {RegisterAPITimings} timings
- * @param {Set<import('./manifest').ParsedManifestAsset>} pending - manifest assets still unresolved
+ * @param {import('./manifest').ParsedManifestAsset[]} assets - every manifest asset to match late entries against
  * @param {{ resolved: boolean }} entryState - shared "first script asset wins" guard for a single `applyManifestTimings` call
  * @param {'entry'|'scripts'|'all'} [timingMethod] - forwarded to `applyManifestEntry` for each late-resolving asset
  */
-function subscribeToLateManifestEntries (timings, pending, entryState, timingMethod) {
+function subscribeToLateManifestEntries (timings, assets, entryState, timingMethod) {
   if (!globalScope.PerformanceObserver?.supportedEntryTypes?.includes('resource')) return
 
   poSubscribers.push({
     addedAt: now(),
     test: (entry) => {
-      const matched = [...pending].find(asset => asset.test(entry.name))
-      if (matched) {
-        applyManifestEntry(timings, entry, matched, entryState, timingMethod)
-        pending.delete(matched)
-      }
-      return pending.size === 0
+      const matched = findMatchingManifestAsset(assets, entry)
+      if (matched) applyManifestEntry(timings, entry, matched, entryState, timingMethod)
+      return false
     }
   })
 }
 
 /**
  * Applies a registered MFE's manifest to a timings object (already populated by `findScriptTimings`). No-op if no
- * manifest is present. Weight/renderBlocking always accumulate from every detected manifest asset; timing widening
+ * manifest is present. Every resource entry matching any manifest asset contributes -- an asset is not consumed by its
+ * first match, so a broad matcher (e.g. a RegExp for hashed chunks) credits all of the chunks it matches.
+ * Weight/renderBlocking always accumulate from every detected manifest asset; timing widening
  * (fetchStart/fetchEnd/scriptStart/scriptEnd/asset anchor) is opt-in via `timingMethod` -- see `applyManifestEntry`.
  * @param {RegisterAPITimings} timings - the timings object to widen in place
  * @param {RegisterAPITarget} target - the registered MFE target, which may carry a parsed `manifest`
@@ -372,18 +400,17 @@ export function applyManifestTimings (timings, target) {
   if (!parsedManifest || !parsedManifest.assets.length) return
 
   const entryState = { resolved: false }
-  const pending = new Set(parsedManifest.assets)
+  const { assets } = parsedManifest
 
   const resourceEntries = globalScope.performance?.getEntriesByType('resource') || []
   resourceEntries.forEach((entry) => {
-    const matched = [...pending].find(asset => asset.test(entry.name))
-    if (matched) {
-      applyManifestEntry(timings, entry, matched, entryState, target.timingMethod)
-      pending.delete(matched)
-    }
+    const matched = findMatchingManifestAsset(assets, entry)
+    if (matched) applyManifestEntry(timings, entry, matched, entryState, target.timingMethod)
   })
 
-  if (pending.size) subscribeToLateManifestEntries(timings, pending, entryState, target.timingMethod)
+  // Always subscribe: assets may still match resources that load after this point, and (unlike an exact matcher) a
+  // wildcard can't know its last match has been seen.
+  subscribeToLateManifestEntries(timings, assets, entryState, target.timingMethod)
 }
 
 /**

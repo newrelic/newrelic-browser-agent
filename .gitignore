@@ -31,3 +31,6 @@ tests/assets/scripts/**/*
 /.lambdatest
 bam.json
 /.framework-results
+
+**/.next
+tools/test-builds/frameworks/nextjs/next-env.d.ts

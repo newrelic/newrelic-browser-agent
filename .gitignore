@@ -31,3 +31,9 @@ tests/assets/scripts/**/*
 /.lambdatest
 bam.json
 /.framework-results
+
+# Angular CLI build cache (tools/test-builds/frameworks/angular)
+**/.angular
+# Packaged Electron browser built on demand for `-b electron`
+tools/local-browsers/electron/out
+tools/local-browsers/electron/package-lock.json

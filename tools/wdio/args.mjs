@@ -19,7 +19,7 @@ const args = yargs(hideBin(process.argv))
   .alias('b', 'browsers')
   .describe(
     'b',
-    'a comma separated list of browsers with an optional semver range. (eg. chrome@>39)'
+    'a comma separated list of browsers with an optional semver range. (eg. chrome@>39). electron (same as electron-loose) and electron-strict run locally against the packaged Electron browser in tools/local-browsers (built on demand) instead of LambdaTest, and cannot be combined with other browsers. electron-strict adds a CSP and is only allowed with --framework; ask for both modes with electron-loose,electron-strict'
   )
 
   .number('concurrent')
@@ -84,6 +84,10 @@ const args = yargs(hideBin(process.argv))
   .boolean('framework')
   .default('framework', false)
   .describe('framework', 'Run framework informational tests')
+
+  .boolean('electron-devtools')
+  .default('electron-devtools', !process.env.CI)
+  .describe('electron-devtools', 'Dock DevTools to the side of each Electron browser window, narrowing the page viewport. On by default except in CI, turn off with --no-electron-devtools (use with -b electron)')
 
   .string('B')
   .alias('B', 'report-to-bam')

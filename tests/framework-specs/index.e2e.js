@@ -13,6 +13,7 @@ import {
   testInteractionEventsRequest
 } from '../../tools/testing-server/utils/expect-tests'
 import { rumFlags } from '../../tools/testing-server/constants'
+import { getBrowserVersion, getElectronMode } from '../../tools/browsers-lists/utils.mjs'
 
 const RESULTS_DIR = path.resolve(__dirname, '../../.framework-results')
 const FRAMEWORKS_DIR = path.resolve(__dirname, '../../tools/test-builds/frameworks')
@@ -24,8 +25,18 @@ const FRAMEWORKS_DIR = path.resolve(__dirname, '../../tools/test-builds/framewor
  * the folder name (e.g. @angular/core) can set `frameworkPackage` in the app's package.json.
  */
 const FRAMEWORKS = fs.readdirSync(FRAMEWORKS_DIR, { withFileTypes: true })
-  .filter(dir => dir.isDirectory())
+  .filter(dir => dir.isDirectory() && fs.existsSync(path.join(FRAMEWORKS_DIR, dir.name, 'package.json')))
   .map(dir => dir.name)
+
+/*
+ * The same framework apps run in every browser of the run. LambdaTest browsers report as they are;
+ * the local Electron browser (`-b electron`, see tools/wdio/config/electron.conf.mjs) is identified by
+ * the launch args its capabilities carry, and in strict mode needs the nonce those args supply so the
+ * testing server's inline scripts satisfy its CSP. Sessions run concurrently, so everything here is
+ * derived per session and result files are keyed by framework + browser + version.
+ */
+const launchArg = (name) => browser.requestedCapabilities['goog:chromeOptions']?.args
+  ?.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3)
 
 const TEST_ERROR_MESSAGE = 'framework-spec-test-error'
 const TEST_LOG_MESSAGE = 'framework-spec-test-log'
@@ -78,6 +89,10 @@ const FEATURE_CHECKS = [
 for (const framework of FRAMEWORKS) {
   describe(`${framework} informational feature coverage`, () => {
     it('records which agent features report data for this framework build', async () => {
+      const electronMode = getElectronMode(browser.requestedCapabilities)
+      const testedBrowser = electronMode
+        ? { name: `electron-${electronMode}`, version: getBrowserVersion(browser.requestedCapabilities), local: true }
+        : { name: browser.capabilities.browserName, version: browser.capabilities.browserVersion, local: false }
       const captures = await browser.testHandle.createNetworkCaptures('bamServer', FEATURE_CHECKS.map(({ test }) => ({ test })))
       const [metricsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [{ test: METRICS_CHECK.test }])
 
@@ -99,7 +114,8 @@ for (const framework of FRAMEWORKS) {
       // the already-fast "initial page load" interaction instead.
       // Session replay also defaults to disabled.
       const url = await browser.testHandle.assetURL(`test-builds/frameworks/${framework}/index.html`, {
-        init: { session_replay: { enabled: true } }
+        init: { session_replay: { enabled: true } },
+        ...(launchArg('nr-csp-nonce') && { nonce: launchArg('nr-csp-nonce') })
       })
       await browser.url(url)
 
@@ -125,19 +141,20 @@ for (const framework of FRAMEWORKS) {
 
       fs.mkdirSync(RESULTS_DIR, { recursive: true })
       fs.writeFileSync(
-        path.join(RESULTS_DIR, `${framework.replace(/[^\w.-]/g, '_')}.json`),
+        path.join(RESULTS_DIR, `${framework}.${testedBrowser.name}.${testedBrowser.version}`.replace(/[^\w.-]/g, '_') + '.json'),
         JSON.stringify({
           framework,
           version: frameworkPkg.version,
           agentVersion: agentPkg.version,
-          browser: browser.capabilities.browserName,
-          browserVersion: browser.capabilities.browserVersion,
+          browser: testedBrowser.name,
+          browserVersion: testedBrowser.version,
+          local: testedBrowser.local,
           results
         }, null, 2)
       )
 
       // eslint-disable-next-line no-console
-      console.log(`[framework-specs] ${framework}@${frameworkPkg.version} feature results:`, results)
+      console.log(`[framework-specs] ${framework}@${frameworkPkg.version} on ${testedBrowser.name} ${testedBrowser.version} feature results:`, results)
     })
   })
 }

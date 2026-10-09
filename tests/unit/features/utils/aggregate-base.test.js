@@ -8,12 +8,16 @@ import { EventBuffer } from '../../../../src/features/utils/event-buffer'
 import { EventAggregator } from '../../../../src/common/aggregate/event-aggregator'
 import { Aggregate as PVEAggregate } from '../../../../src/features/page_view_event/aggregate/index'
 import { ee } from '../../../../src/common/event-emitter/contextual-ee'
+import { IDEAL_PAYLOAD_SIZE, MIN_EARLY_HARVEST_INTERVAL, EARLY_HARVEST_BYPASS_SIZE } from '../../../../src/common/constants/agent-constants'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/aggregate-base')
 jest.unmock('../../../../src/features/utils/feature-base')
 jest.unmock('../../../../src/common/event-emitter/contextual-ee')
 jest.unmock('../../../../src/features/page_view_event/aggregate/index')
+jest.unmock('../../../../src/features/utils/event-buffer')
+jest.unmock('../../../../src/common/util/stringify')
+jest.unmock('../../../../src/common/timing/now')
 
 jest.mock('../../../../src/common/event-emitter/register-handler', () => ({
   __esModule: true,
@@ -203,5 +207,139 @@ test('handles events storage correctly across multiple features - multiple agent
 
   eventAggregatorAggs.forEach((agg, i) => {
     expect(agg.events === eventAggregator2Aggs[i].events).toEqual(false) // should not be the same instance
+  })
+})
+
+describe('decideEarlyHarvest', () => {
+  let aggregate
+  let nowMs
+
+  const bigEvent = () => 'x'.repeat(IDEAL_PAYLOAD_SIZE + 1)
+
+  beforeEach(() => {
+    nowMs = 0
+    jest.spyOn(performance, 'now').mockImplementation(() => nowMs)
+    mainAgent.runtime.harvester = { triggerHarvestFor: jest.fn() }
+    mainAgent.runtime.jsAttributesMetadata = { bytes: 0 }
+    aggregate = new AggregateBase(mainAgent, FEATURE_NAMES.logging)
+    jest.spyOn(aggregate, 'reportSupportabilityMetric').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  test('does not harvest when below the ideal payload size', () => {
+    aggregate.events.add('small')
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).not.toHaveBeenCalled()
+    expect(aggregate.lastEarlyHarvestAt).toBeUndefined()
+  })
+
+  test('harvests early on the first oversized add, even right at page start', () => {
+    nowMs = 3
+    aggregate.events.add(bigEvent())
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledWith(aggregate)
+    expect(aggregate.reportSupportabilityMetric).toHaveBeenCalledWith(`${FEATURE_NAMES.logging}/Harvest/Early/Seen`, expect.any(Number))
+  })
+
+  test('suppresses further early harvests inside the minimum interval', () => {
+    aggregate.events.add(bigEvent())
+    nowMs = MIN_EARLY_HARVEST_INTERVAL - 1
+    aggregate.events.add(bigEvent())
+    aggregate.events.add(bigEvent())
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
+    expect(aggregate.reportSupportabilityMetric).toHaveBeenCalledTimes(1)
+  })
+
+  test('never drops suppressed data; it stays buffered for the next harvest', () => {
+    aggregate.events.add(bigEvent()) // harvester is mocked, so nothing clears the buffer
+    nowMs = 1
+    aggregate.events.add('second')
+    aggregate.events.add('third')
+    expect(aggregate.events.length).toBe(3)
+    expect(aggregate.events.get()).toEqual([expect.any(String), 'second', 'third'])
+  })
+
+  test('harvests early again once the minimum interval has elapsed', () => {
+    aggregate.events.add(bigEvent())
+    nowMs = MIN_EARLY_HARVEST_INTERVAL
+    aggregate.events.add('another')
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(2)
+    expect(aggregate.lastEarlyHarvestAt).toBe(MIN_EARLY_HARVEST_INTERVAL)
+  })
+
+  test('a suppressed attempt does not extend the window', () => {
+    aggregate.events.add(bigEvent())
+    nowMs = MIN_EARLY_HARVEST_INTERVAL - 1
+    aggregate.events.add('suppressed')
+    expect(aggregate.lastEarlyHarvestAt).toBe(0)
+    nowMs = MIN_EARLY_HARVEST_INTERVAL
+    aggregate.events.add('allowed')
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(2)
+  })
+
+  test('limits a flood to one early harvest per interval', () => {
+    aggregate.events.add(bigEvent()) // the harvester is mocked, so the buffer stays over the ideal size for the rest of the test
+    for (let i = 1; i < 1000; i++) {
+      nowMs = i // 1 event per ms for 1000ms
+      aggregate.events.add('x')
+    }
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(2) // at 0ms and 500ms
+    expect(aggregate.events.length).toBe(1000) // nothing was dropped
+  })
+
+  test('harvests early inside the minimum interval once the payload reaches the bypass size', () => {
+    aggregate.events.add(bigEvent())
+    const filler = EARLY_HARVEST_BYPASS_SIZE - aggregate.events.byteSize() - 2 // 2 accounts for the quotes added when stringified
+    nowMs = 1
+    aggregate.events.add('x'.repeat(filler)) // estimated size is now exactly the bypass size
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(2)
+    expect(aggregate.lastEarlyHarvestAt).toBe(1)
+  })
+
+  test('still suppresses early harvests inside the minimum interval just below the bypass size', () => {
+    aggregate.events.add(bigEvent())
+    const filler = EARLY_HARVEST_BYPASS_SIZE - aggregate.events.byteSize() - 3 // one byte under the bypass size
+    nowMs = 1
+    aggregate.events.add('x'.repeat(filler))
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
+  })
+
+  test('counts separate custom attribute bytes toward the bypass size', () => {
+    aggregate.customAttributesAreSeparate = true
+    aggregate.events.add(bigEvent())
+    mainAgent.runtime.jsAttributesMetadata.bytes = EARLY_HARVEST_BYPASS_SIZE
+    nowMs = 1
+    aggregate.events.add('tiny')
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(2)
+  })
+
+  test('early harvest tracking is independent per feature instance', () => {
+    const other = new AggregateBase(mainAgent, FEATURE_NAMES.genericEvents)
+    jest.spyOn(other, 'reportSupportabilityMetric').mockImplementation(() => {})
+    aggregate.events.add(bigEvent())
+    other.events.add(bigEvent())
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(2)
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledWith(aggregate)
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledWith(other)
+  })
+
+  test('counts separate custom attribute bytes toward the estimate', () => {
+    aggregate.customAttributesAreSeparate = true
+    mainAgent.runtime.jsAttributesMetadata.bytes = IDEAL_PAYLOAD_SIZE
+    aggregate.events.add('tiny')
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
+  })
+
+  test.each([
+    ['blocked', (inst) => { inst.blocked = true }],
+    ['retrying', (inst) => { inst.isRetrying = true }],
+    ['unable to harvest early', (inst) => { inst.canHarvestEarly = false }]
+  ])('does not harvest or start the window when %s', (_, setup) => {
+    setup(aggregate)
+    aggregate.events.add(bigEvent())
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).not.toHaveBeenCalled()
+    expect(aggregate.lastEarlyHarvestAt).toBeUndefined()
   })
 })

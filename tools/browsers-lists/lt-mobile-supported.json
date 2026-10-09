@@ -16,7 +16,7 @@
   "android": [
     {
       "device_name": "Pixel 10",
-      "version": "16",
+      "version": "17",
       "platformName": "android",
       "browserName": "Chrome"
     }

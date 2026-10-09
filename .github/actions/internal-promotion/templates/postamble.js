@@ -109,36 +109,3 @@ try {
 } catch (e) {
   newrelic.noticeError(new Error("NRBA: swallowed preamble error", { cause: e }));
 }
-
-try {
-  // Browser Pressure POC
-  if (typeof window.PressureObserver === "function") {
-    let lastPressure = ''
-    const pressureObserverCallback = (records) => {
-      const latestRecord = records[records.length - 1];
-      const impact = {
-        "nominal": 0,
-        "fair": 1,
-        "serious": 2,
-        "critical": 3
-      }
-      if (lastPressure === latestRecord.state) return // report once per status change
-
-      lastPressure = latestRecord.state
-      newrelic.setCustomAttribute("pressure", latestRecord.state);
-      newrelic.setCustomAttribute("pressureImpact", impact[latestRecord.state]);
-
-      newrelic.recordCustomEvent('BrowserPressure', {
-        pressure: latestRecord.state,
-        pressureImpact: impact[latestRecord.state],
-        pageHasLoaded: document.readyState === 'complete',
-        originSource: 'cpu',
-        deviceCpu: navigator.deviceMemory
-      })
-    };
-    const pressureObserver = new window.PressureObserver(pressureObserverCallback);
-    pressureObserver.observe("cpu", { sampleInterval: 1000 });
-  }
-} catch (e) {
-  newrelic.noticeError(new Error("NRBA: swallowed preamble error", { cause: e }));
-}

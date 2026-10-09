@@ -45,10 +45,23 @@
   }
   
   // ===== NORMAL RELEASED LOADER =====
+  /* TEMPORARILY DISABLED: exclude logging on pages served with locally hosted nerdpacks (?nerdpacks=local), since
+  their console output is not representative of real usage. Left commented out until the agent's log flooding fix is
+  confirmed locally. To re-enable, uncomment the block below and the `logging` entry in `init`. */
+  // var isLocalNerdpacks = false
+  // try {
+  //   isLocalNerdpacks = new URLSearchParams(window.location.search).get('nerdpacks') === 'local'
+  // } catch (e) {
+  //   // query param detection failed, leave logging on
+  // }
+
   // config
   window.NREUM={
     init: {
       feature_flags: ['register', 'rum_v2'],
+      // logging: {
+      //   enabled: !isLocalNerdpacks
+      // },
       distributed_tracing: {
         enabled: true
       },

@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     viteStaticCopy({
       targets: [
-        { src: 'node_modules/angular/angular.js', dest: 'lib/angular' }
+        { src: 'node_modules/angular/angular.js', dest: 'lib/angular', rename: { stripBase: 2 } }
       ]
     })
   ],

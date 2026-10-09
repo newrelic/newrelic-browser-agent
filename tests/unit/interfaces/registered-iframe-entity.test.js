@@ -9,6 +9,7 @@ describe('RegisteredIframeEntity blocked state', () => {
   let RegisteredIframeEntity
   let messageListener
   let postMessage
+  let findScriptTimings
   const parentOrigin = 'https://parent.example.com'
   const iframeInterfaceId = 'test-iframe-id'
 
@@ -39,8 +40,9 @@ describe('RegisteredIframeEntity blocked state', () => {
     jest.doMock('../../../src/common/util/console', () => ({
       warn: jest.fn()
     }))
+    findScriptTimings = jest.fn(() => ({}))
     jest.doMock('../../../src/common/v2/script-tracker', () => ({
-      findScriptTimings: () => ({})
+      findScriptTimings
     }))
     jest.doMock('../../../src/common/url/add-url', () => ({
       addUrl: jest.fn()
@@ -79,6 +81,31 @@ describe('RegisteredIframeEntity blocked state', () => {
       }
     })
   }
+
+  it('looks up script timings synchronously in the constructor, then posts them once registration completes', async () => {
+    findScriptTimings.mockReturnValue({ fetchStart: 5, fetchEnd: 25, asset: 'https://cdn.example.com/mfe.js', type: 'script' })
+    const opts = { id: 'my-id', name: 'my-name' }
+
+    // the caller's script is only on the call stack while the constructor is running
+    const entity = new RegisteredIframeEntity(opts)
+    expect(findScriptTimings).toHaveBeenCalledTimes(1)
+    expect(findScriptTimings).toHaveBeenCalledWith(opts)
+    postMessage.mockClear()
+
+    await flushMicrotasks()
+    respondToLastMessage({ target: { id: 'my-id', name: 'my-name', blocked: false } })
+    await flushMicrotasks()
+
+    expect(findScriptTimings).toHaveBeenCalledTimes(1)
+    const posted = postMessage.mock.calls.flatMap(([payload]) => payload.entries || [])
+    expect(posted).toEqual(expect.arrayContaining([
+      { property: 'fetchStart', value: 5 },
+      { property: 'fetchEnd', value: 25 },
+      { property: 'asset', value: 'https://cdn.example.com/mfe.js' },
+      { property: 'type', value: 'script' }
+    ]))
+    expect(entity.metadata.timings.asset).toBe('https://cdn.example.com/mfe.js')
+  })
 
   it('still constructs and registers the remaining vitals when a web-vitals registration throws', async () => {
     jest.resetModules()

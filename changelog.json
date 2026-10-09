@@ -5,6 +5,31 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "13f9fbe877ef1471200bb1460c1cb0158c302ad7",
+          "message": "find iframe entity script timings at registration",
+          "issues": [
+            "1891"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "b4b2e9686fc454642454e1cf5804507f1449d495",
+          "message": "Enable distributed tracing for registered Micro Frontends",
+          "issues": [
+            "1871"
+          ]
+        }
+      ],
+      "version": "1.324.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "c2333e69-4e8b-4c53-a5c6-f64d260eed34",
+      "createTime": "2026-10-09T18:25:03.292Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "5e865062e5162acc7c4ee2924cf7b1db9d8f5685",
           "message": "correct DT header timestamp to server time",
           "issues": [
@@ -4325,5 +4350,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-09-30T15:45:02.842Z"
+  "updateTime": "2026-10-09T18:25:03.292Z"
 }

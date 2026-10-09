@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.324.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.323.0...v1.324.0) (2026-10-09)
+
+
+### Features
+
+* Enable distributed tracing for registered Micro Frontends ([#1871](https://github.com/newrelic/newrelic-browser-agent/issues/1871)) ([b4b2e96](https://github.com/newrelic/newrelic-browser-agent/commit/b4b2e9686fc454642454e1cf5804507f1449d495))
+
+
+### Bug Fixes
+
+* find iframe entity script timings at registration ([#1891](https://github.com/newrelic/newrelic-browser-agent/issues/1891)) ([13f9fbe](https://github.com/newrelic/newrelic-browser-agent/commit/13f9fbe877ef1471200bb1460c1cb0158c302ad7))
+
 ## [1.323.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.322.0...v1.323.0) (2026-09-30)
 
 

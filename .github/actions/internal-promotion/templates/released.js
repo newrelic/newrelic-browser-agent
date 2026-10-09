@@ -3,6 +3,12 @@
   // Query-param based experiment loading: ?nrbaExperiment={branch-name}
   // Loads config.js (sets window.NREUM) then nr-loader-spa.min.js
   try {
+
+    window.NREUM = window.NREUM || {};
+    window.NREUM.loader_config = window.NREUM.loader_config || {};
+    window.NREUM.info = window.NREUM.info || {};
+    window.NREUM.init = window.NREUM.init || {};
+
     var urlParams = new URLSearchParams(window.location.search);
     var experiment = urlParams.get('nrbaExperiment');
     

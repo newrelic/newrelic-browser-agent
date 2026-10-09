@@ -482,6 +482,7 @@ describe('Register API - Manifest', () => {
     const [logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testLogsRequest }
     ])
+    await mockInfoLoggingRumResponse()
 
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
       init: { feature_flags: ['register'], logging: { enabled: true } }

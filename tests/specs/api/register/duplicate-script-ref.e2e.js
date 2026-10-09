@@ -14,12 +14,21 @@ describe('Register API - script referenced more than once', () => {
     }))
       .then(() => browser.waitForAgentLoad())
 
-    const addScript = () => browser.executeAsync(function (done) {
-      const script = document.createElement('script')
-      script.src = './js/mfe/mfe-duplicate-ref.js'
-      script.onload = script.onerror = () => done()
-      document.head.appendChild(script)
-    })
+    /*
+     * Uses a polled flag instead of executeAsync: iOS Safari sessions can apply a ~0ms async script timeout,
+     * which made executeAsync fail immediately.
+     */
+    let loadCount = 0
+    const addScript = async () => {
+      const key = `__dupRefLoaded${++loadCount}`
+      await browser.execute(function (flag) {
+        const script = document.createElement('script')
+        script.src = './js/mfe/mfe-duplicate-ref.js'
+        script.onload = script.onerror = () => { window[flag] = true }
+        document.head.appendChild(script)
+      }, key)
+      await browser.waitUntil(() => browser.execute(flag => !!window[flag], key), { timeout: 10000, timeoutMsg: 'script did not load' })
+    }
     await addScript()
     await browser.pause(500)
     // the second reference is typically re-served from the browser cache

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --prefix tools/sandbox-apps/** install)",
+      "Bash(npm --prefix tools/sandbox-apps/** run build)",
+      "Bash(npm --prefix tools/sandbox-apps/** run build:*)",
+      "Bash(npm --prefix tools/test-builds/** install)",
+      "Bash(npm --prefix tools/test-builds/** run build)",
+      "Bash(npm --prefix tools/test-builds/** run build:*)",
+      "Bash(rm -rf tools/sandbox-apps/**/node_modules tools/sandbox-apps/**/package-lock.json)",
+      "Bash(rm -rf tools/test-builds/**/node_modules tools/test-builds/**/package-lock.json)",
+      "Bash(npm run build:npm)"
+    ]
+  }
+}

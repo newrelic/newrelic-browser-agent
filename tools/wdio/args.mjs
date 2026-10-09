@@ -86,8 +86,8 @@ const args = yargs(hideBin(process.argv))
   .describe('framework', 'Run framework informational tests')
 
   .boolean('electron-devtools')
-  .default('electron-devtools', false)
-  .describe('electron-devtools', 'Dock DevTools to the side of each Electron browser window, narrowing the page viewport (use with -b electron)')
+  .default('electron-devtools', !process.env.CI)
+  .describe('electron-devtools', 'Dock DevTools to the side of each Electron browser window, narrowing the page viewport. On by default except in CI, turn off with --no-electron-devtools (use with -b electron)')
 
   .string('B')
   .alias('B', 'report-to-bam')

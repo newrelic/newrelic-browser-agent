@@ -14,7 +14,7 @@
  * Optional launch arguments for debugging: `--nr-devtools` opens DevTools docked to the side of the window, and
  * `--nr-url=<url>` loads that page instead of a blank one (see open.mjs).
  */
-const { app, BrowserWindow, session } = require('electron')
+const { app, BrowserWindow, screen, session } = require('electron')
 
 const launchArg = (name) => process.argv.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3)
 const mode = launchArg('nr-mode') === 'strict' ? 'strict' : 'loose'
@@ -59,7 +59,15 @@ app.whenReady().then(() => {
     })
   }
 
-  const win = new BrowserWindow({ width: 800, height: 600, title: 'Electron', webPreferences: WEB_PREFERENCES[mode] })
+  // 80% of the screen (minus the dock/menu bar) so there is room to watch a run and keep other windows in view
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize
+  const win = new BrowserWindow({
+    width: Math.round(width * 0.8),
+    height: Math.round(height * 0.8),
+    center: true,
+    title: 'Electron',
+    webPreferences: WEB_PREFERENCES[mode]
+  })
   // Pages set the window title through their <title> on every navigation (e.g. a framework app's
   // "Vite Template"), which made it unclear which window belongs to the test run
   win.on('page-title-updated', (event) => event.preventDefault())

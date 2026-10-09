@@ -63,7 +63,7 @@ export function wrapXhr (sharedEE, agentRef) {
     } catch (e) {
       warn(15, e)
       try {
-        ee.emit('internal-error', [e])
+        ee.emit('internal-error', [e, 'Wrap-XHR'])
       } catch (err) {
         // do nothing
       }

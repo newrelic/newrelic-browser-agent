@@ -23,6 +23,7 @@ import { getRegisteredTargetsFromFilename, getVersion2Attributes, getVersion2Dup
 import { buildCauseString } from './cause-string'
 import { ShortCircuit } from '../../../common/util/short-circuit'
 import { EVENT_TYPES } from '../../../common/constants/events'
+import { reportSupportabilityMetric } from '../../../common/event-emitter/report-supportability-metric'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -175,7 +176,7 @@ export class Aggregate extends AggregateBase {
   #swallowError (stackInfo, internal, swallowReason) {
     const { shouldSwallow, reason } = evaluateInternalError(stackInfo, internal, swallowReason)
     if (shouldSwallow) {
-      this.reportSupportabilityMetric('Internal/Error/' + reason)
+      reportSupportabilityMetric(this.ee, 'Internal/Error/' + reason)
       throw new ShortCircuit()
     }
   }

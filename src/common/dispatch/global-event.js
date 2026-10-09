@@ -1,10 +1,10 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { globalScope } from '../constants/runtime'
 
-const GLOBAL_EVENT_NAMESPACE = 'newrelic'
+export const GLOBAL_EVENT_NAMESPACE = 'newrelic'
 
 export function dispatchGlobalEvent (detail = {}) {
   try {

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 export const SessionEntity = jest.fn(function () {
@@ -11,7 +11,6 @@ export const SessionEntity = jest.fn(function () {
   this.refresh = jest.fn()
   this.isExpired = jest.fn(() => false)
   this.isInvalid = jest.fn(() => false)
-  this.collectSM = jest.fn()
   this.getFutureTimestamp = jest.fn()
   this.syncCustomAttribute = jest.fn()
 

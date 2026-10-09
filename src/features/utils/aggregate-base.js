@@ -6,11 +6,10 @@ import { FeatureBase } from './feature-base'
 import { drain } from '../../common/drain/drain'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { EventBuffer } from './event-buffer'
-import { handle } from '../../common/event-emitter/handle'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../metrics/constants'
 import { EventAggregator } from '../../common/aggregate/event-aggregator'
 import { MAX_PAYLOAD_SIZE, IDEAL_PAYLOAD_SIZE, SUPPORTS_REGISTERED_ENTITIES } from '../../common/constants/agent-constants'
 import { warn } from '../../common/util/console'
+import { reportSupportabilityMetric } from '../../common/event-emitter/report-supportability-metric'
 
 export class AggregateBase extends FeatureBase {
   /**
@@ -93,7 +92,7 @@ export class AggregateBase extends FeatureBase {
     const estimatedSize = this.events.byteSize() + (this.customAttributesAreSeparate ? this.agentRef.runtime.jsAttributesMetadata.bytes : 0)
     if (estimatedSize > IDEAL_PAYLOAD_SIZE) {
       this.agentRef.runtime.harvester.triggerHarvestFor(this)
-      this.reportSupportabilityMetric(`${this.featureName}/Harvest/Early/Seen`, estimatedSize)
+      reportSupportabilityMetric(this.ee, `${this.featureName}/Harvest/Early/Seen`, estimatedSize)
     }
   }
 
@@ -120,7 +119,7 @@ export class AggregateBase extends FeatureBase {
       }
     })
     return flagsPromise.catch(err => {
-      this.ee.emit('internal-error', [err])
+      this.ee.emit('internal-error', [err, 'RumFlags'])
       this.blocked = true
       this.deregisterDrain()
     })
@@ -174,14 +173,5 @@ export class AggregateBase extends FeatureBase {
     this.isRetrying = result.sent && result.retry
     if (this.isRetrying) this.events.reloadSave(this.harvestOpts)
     this.events.clearSave(this.harvestOpts)
-  }
-
-  /**
-   * Report a supportability metric
-   * @param {*} metricName The tag of the name matching the Angler aggregation tag
-   * @param {*} [value] An optional value to supply. If not supplied, the metric count will be incremented by 1 for every call.
-   */
-  reportSupportabilityMetric (metricName, value) {
-    handle(SUPPORTABILITY_METRIC_CHANNEL, [metricName, value], undefined, FEATURE_NAMES.metrics, this.ee)
   }
 }

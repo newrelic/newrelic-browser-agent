@@ -321,7 +321,7 @@ describe('prepareHarvest', () => {
   })
 
   test('reports Ajax/Events/Payload/Bytes-Added SM when payload attributes are present', () => {
-    const spy = jest.spyOn(ajaxAggregate, 'reportSupportabilityMetric')
+    const spy = jest.spyOn(handleModule, 'handle')
 
     context.requestHeaders = { 'content-type': 'application/json' }
     context.requestBody = 'fooBody'
@@ -332,21 +332,21 @@ describe('prepareHarvest', () => {
 
     ajaxAggregate.makeHarvestPayload(false)
 
-    expect(spy).toHaveBeenCalledWith('Ajax/Events/Payload/Bytes-Added', expect.any(Number))
-    const [, bytesAdded] = spy.mock.calls.find(call => call[0] === 'Ajax/Events/Payload/Bytes-Added')
+    expect(reportedMetrics(spy)).toContainEqual(['Ajax/Events/Payload/Bytes-Added', expect.any(Number)])
+    const [, bytesAdded] = reportedMetrics(spy).find(([name]) => name === 'Ajax/Events/Payload/Bytes-Added')
     expect(bytesAdded).toBeGreaterThan(0)
 
     spy.mockRestore()
   })
 
   test('does not report Ajax/Events/Payload/Bytes-Added SM when no payload attributes are present', () => {
-    const spy = jest.spyOn(ajaxAggregate, 'reportSupportabilityMetric')
+    const spy = jest.spyOn(handleModule, 'handle')
 
     ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
     ajaxAggregate.makeHarvestPayload(false)
 
-    expect(spy).not.toHaveBeenCalledWith('Ajax/Events/Payload/Bytes-Added', expect.any(Number))
+    expect(reportedMetrics(spy).map(([name]) => name)).not.toContain('Ajax/Events/Payload/Bytes-Added')
 
     spy.mockRestore()
   })
@@ -531,4 +531,9 @@ function validateCustomAttributeValues (expectedCustomAttributes, childrenNodes)
         throw new Error('unexpected custom attribute type')
     }
   })
+}
+
+/** The supportability metrics (name and optional value) reported through the event emitter, as spied on with `jest.spyOn(handleModule, 'handle')`. */
+function reportedMetrics (handleSpy) {
+  return handleSpy.mock.calls.filter(([channel]) => channel === 'storeSupportabilityMetrics').map(([, args]) => args)
 }

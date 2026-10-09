@@ -285,6 +285,17 @@ describe('Session Replay Harvest Behaviors', () => {
     expect(harvestContents.body).toEqual(expect.any(Object))
   })
 
+  test('reports an internal error, and stops compressing, when the compressor fails to load', async () => {
+    jest.spyOn(sessionReplayAggregate, 'importCompressor').mockRejectedValue(new Error('ChunkLoadError'))
+    const emit = jest.spyOn(sessionReplayAggregate.ee, 'emit')
+    sessionReplayAggregate.shouldCompress = true
+
+    await sessionReplayAggregate.prepUtils()
+
+    expect(sessionReplayAggregate.shouldCompress).toBe(false)
+    expect(emit).toHaveBeenCalledWith('internal-error', [expect.objectContaining({ message: 'ChunkLoadError' }), 'SessionReplay-Compressor'])
+  })
+
   test('Clears the event buffer when staged for harvesting', async () => {
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)

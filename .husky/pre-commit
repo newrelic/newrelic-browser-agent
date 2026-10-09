@@ -37,6 +37,20 @@ if git diff --cached --name-only --diff-filter=ACM | grep -q '^docs/warning-code
   git add src/common/util/console.js
 fi
 
+# Keep docs/supportability-metrics.md generated from the supportability metric registry, and block the commit if src/ emits a metric
+# the registry does not cover (or the registry lists one that is never emitted), then prove every registered metric is actually reported
+if git diff --cached --name-only --diff-filter=ACMD | grep -qE '^(src/.*\.js|tools/supportability-metrics/.*|docs/supportability-metrics\.md)$'; then
+  # --fix regenerates the docs and stubs a registry entry for any new metric (it also lists the metric as pending a test). A stub still fails
+  # the check until its description is written, so stage what --fix changed, then stop the commit: the author fills in the stub and commits again.
+  if ! npm run --silent supportability-metrics:check -- --fix; then
+    git add docs/supportability-metrics.md tools/supportability-metrics/registry.js tests/components/supportability-metrics/pending.js
+    exit 1
+  fi
+  git add docs/supportability-metrics.md
+  # every registered metric needs a generated test proving it is reported (metrics listed in pending.js only warn)
+  npm run supportability-metrics:test
+fi
+
 npm run lint
 
 npm run test -- --onlyChanged

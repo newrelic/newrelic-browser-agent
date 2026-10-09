@@ -16,6 +16,7 @@ import { canCapturePayload, isLikelyHumanReadable, parseQueryString, createStrin
 import { Obfuscator } from '../../../common/util/obfuscate'
 import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate, isMfeTarget } from '../../../common/v2/utils'
 import { EVENT_TYPES } from '../../../common/constants/events'
+import { reportSupportabilityMetric } from '../../../common/event-emitter/report-supportability-metric'
 import { generateSpanId, generateTraceId, generateUuid } from '../../../common/ids/unique-id'
 
 export class Aggregate extends AggregateBase {
@@ -75,13 +76,13 @@ export class Aggregate extends AggregateBase {
     if (!shouldCollect) {
       if (params.hostname === this.agentRef.info.errorBeacon || (this.agentRef.init.proxy?.beacon && params.hostname === this.agentRef.init.proxy.beacon)) {
         // This doesn't make a distinction if the same-domain request is going to a different port or path...
-        this.reportSupportabilityMetric('Ajax/Events/Excluded/Agent')
+        reportSupportabilityMetric(this.ee, 'Ajax/Events/Excluded/Agent')
 
-        if (shouldOmitAjaxMetrics) this.reportSupportabilityMetric('Ajax/Metrics/Excluded/Agent')
+        if (shouldOmitAjaxMetrics) reportSupportabilityMetric(this.ee, 'Ajax/Metrics/Excluded/Agent')
       } else {
-        this.reportSupportabilityMetric('Ajax/Events/Excluded/App')
+        reportSupportabilityMetric(this.ee, 'Ajax/Events/Excluded/App')
 
-        if (shouldOmitAjaxMetrics) this.reportSupportabilityMetric('Ajax/Metrics/Excluded/App')
+        if (shouldOmitAjaxMetrics) reportSupportabilityMetric(this.ee, 'Ajax/Metrics/Excluded/App')
       }
       return // do not send this ajax as an event
     }
@@ -133,8 +134,6 @@ export class Aggregate extends AggregateBase {
       // timeKeeper was ready when the request started -- reuse it if present, otherwise correct it here now, to avoid double-correcting.
       event.spanTimestamp = ctx.dt.timestampCorrected ?? Math.floor(this.agentRef.runtime.timeKeeper.correctAbsoluteTimestamp(ctx.dt.timestamp))
     }
-
-    if (event.gql) this.reportSupportabilityMetric('Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length)
 
     /** make a copy of the event for the MFE target if it exists */
     if (isMfeTarget(target)) {
@@ -227,7 +226,7 @@ export class Aggregate extends AggregateBase {
 
       // .length is UTF-16 code units, not true UTF-8 byte size, so this undercounts multi-byte characters -- but it reuses the
       // already-serialized payloadAttrs strings instead of re-stringifying/byte-counting, which is worth the imprecision here.
-      if (payloadAttrs.length) this.reportSupportabilityMetric('Ajax/Events/Payload/Bytes-Added', payloadAttrs.join(';').length)
+      if (payloadAttrs.length) reportSupportabilityMetric(this.ee, 'Ajax/Events/Payload/Bytes-Added', payloadAttrs.join(';').length)
 
       const attrParts = [...regularAttrs, ...payloadAttrs]
       fields.unshift(numeric(attrParts.length))

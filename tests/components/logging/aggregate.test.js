@@ -356,6 +356,42 @@ test('can harvest early', async () => {
   expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalled()
 })
 
+test('does not harvest early per log after a custom attribute is overwritten many times', async () => {
+  await mockLoggingRumResponse(LOGGING_MODE.INFO, LOGGING_MODE.INFO)
+  await new Promise(resolve => setTimeout(resolve, 5)) // let the post-drain harvest, which is not an early harvest, fire before observing
+  jest.spyOn(mainAgent.runtime.harvester, 'triggerHarvestFor').mockImplementation(() => {})
+
+  for (let i = 0; i < 2000; i++) mainAgent.info.jsAttributes.pressure = 'some-value' // a page re-setting an unchanged attribute over and over
+  const realAttributeBytes = 'pressure'.length + JSON.stringify('some-value').length
+  expect(mainAgent.runtime.jsAttributesMetadata.bytes).toEqual(realAttributeBytes)
+
+  mainAgent.runtime.harvester.triggerHarvestFor.mockClear() // only count harvests caused by the synchronous work below
+  for (let i = 0; i < 20; i++) loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'a small log', {}, 'INFO'])
+
+  expect(loggingAggregate.events.length).toEqual(20)
+  expect(mainAgent.runtime.harvester.triggerHarvestFor).not.toHaveBeenCalled()
+  delete mainAgent.info.jsAttributes.pressure
+})
+
+test('limits early harvests during a flood of logs without dropping any', async () => {
+  await mockLoggingRumResponse(LOGGING_MODE.INFO, LOGGING_MODE.INFO)
+  await new Promise(resolve => setTimeout(resolve, 5)) // let the post-drain harvest, which is not an early harvest, fire before observing
+  jest.spyOn(mainAgent.runtime.harvester, 'triggerHarvestFor').mockImplementation(() => {})
+  let nowMs = 1000
+  jest.spyOn(performance, 'now').mockImplementation(() => nowMs)
+
+  mainAgent.runtime.harvester.triggerHarvestFor.mockClear() // only count harvests caused by the synchronous work below
+  const bigLog = 'x'.repeat(5000)
+  for (let i = 0; i < 150; i++) { // 150 * ~5KB stays under the 1MB buffer cap
+    nowMs = 1000 + i // one log per ms
+    loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, bigLog, {}, 'INFO'])
+  }
+
+  expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1) // the 150ms flood fits inside one minimum interval
+  expect(loggingAggregate.events.length).toEqual(150) // everything is still buffered for the next harvest
+  jest.restoreAllMocks()
+})
+
 test('should not error if aborting before events have been set', async () => {
   delete loggingAggregate.events
   expect(() => loggingAggregate.abort()).not.toThrow()

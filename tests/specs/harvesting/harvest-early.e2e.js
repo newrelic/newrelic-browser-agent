@@ -95,4 +95,51 @@ describe('should harvest early', () => {
       })
     ]))
   })
+
+  describe('when a page floods the agent with logs', () => {
+    afterEach(async () => {
+      // logging mode is sticky to the session, so we need to reset before the next test
+      await browser.destroyAgentSession()
+    })
+
+    const getLogMessages = (results) => results.flatMap(({ request: { body } }) => {
+      const payload = typeof body === 'string' ? JSON.parse(body) : body
+      return payload[0].logs.map(log => log.message)
+    })
+
+    /** an attribute that is overwritten repeatedly must not make the agent believe every single log is over the early harvest size */
+    it('should not harvest logs early on every log after an attribute is overwritten repeatedly', async () => {
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { harvest: { interval: 30 } } }))
+        .then(() => browser.waitForAgentLoad())
+
+      await browser.execute(function () {
+        for (let i = 0; i < 2000; i++) newrelic.setCustomAttribute('pressure', 'some-value')
+        for (let i = 0; i < 20; i++) newrelic.log('overwrite flood ' + i)
+      })
+
+      const results = await loggingEventsCapture.waitForResult({ timeout: 5000 })
+
+      /* Before the fix, each of the 20 logs triggered its own request. Allow a small margin for the one-time harvest that happens right as the feature drains. */
+      expect(results.length).toBeLessThanOrEqual(2)
+    })
+
+    it('should limit early harvests during a flood of logs and deliver every log', async () => {
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { harvest: { interval: 5 } } }))
+        .then(() => browser.waitForAgentLoad())
+
+      const totalLogs = 150
+      await browser.execute(function (total) {
+        const padding = 'x'.repeat(1000)
+        for (let i = 0; i < total; i++) newrelic.log('flood ' + i + ' ' + padding)
+      }, totalLogs)
+
+      const results = await loggingEventsCapture.waitForResult({ timeout: 12000 })
+      const floodMessages = getLogMessages(results).filter(message => message.startsWith('flood '))
+
+      /* 150 logs of ~1KB each is roughly 150KB. Without a limit, that is roughly one early harvest per 16KB (about a dozen requests). With it: at most one early harvest, plus the interval harvests that pick up the rest. */
+      expect(results.length).toBeLessThanOrEqual(5)
+      // nothing was dropped by limiting the early harvests
+      expect(new Set(floodMessages.map(message => message.split(' ')[1])).size).toEqual(totalLogs)
+    })
+  })
 })

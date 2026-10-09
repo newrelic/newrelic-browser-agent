@@ -76,7 +76,7 @@ jobs:
         # and writes its row to the same .framework-results folder the report is generated from.
         run: |
           xvfb-run -a node --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
-            --framework --electron \
+            --framework -b electron \
             ${{ runner.debug && '-v -L -d' || '' }}
         continue-on-error: true
       - name: Generate framework informational report

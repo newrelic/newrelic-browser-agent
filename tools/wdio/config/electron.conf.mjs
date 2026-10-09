@@ -3,11 +3,32 @@ import module from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
 import url from 'node:url'
+import { parseSpecString } from '../../browser-matcher/spec-parser.mjs'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 const APP_DIR = path.resolve(__dirname, '../../test-builds/frameworks/electron')
 const CHROMEDRIVER_PORT = 9515
 const MODES = ['loose', 'strict']
+
+/**
+ * Works out which Electron security modes a `-b` browser spec asks for: `electron` is every mode and
+ * `electron-loose` / `electron-strict` just that one. Electron runs on this machine with its own
+ * chromedriver while every other browser runs on LambdaTest, so the two can't share a run.
+ * @param {string} [spec] The comma separated `-b` browsers value
+ * @returns {string[]} The requested modes, empty when the spec has no Electron entry
+ * @throws {Error} If Electron is combined with other browsers or an unknown Electron mode is requested
+ */
+export function electronModesFromSpec (spec = '') {
+  const names = spec.split(',').map(entry => parseSpecString(entry.trim()).browserName)
+  const electronNames = names.filter(name => name === 'electron' || name.startsWith('electron-'))
+  if (electronNames.length === 0) return []
+  if (electronNames.length !== names.length) throw new Error(`Electron cannot be combined with other browsers in one run, received: ${spec}`)
+
+  const modes = electronNames.flatMap(name => name === 'electron' ? MODES : [name.slice('electron-'.length)])
+  const unknown = modes.find(mode => !MODES.includes(mode))
+  if (unknown) throw new Error(`Unknown Electron mode "${unknown}", expected one of: ${MODES.join(', ')}`)
+  return [...new Set(modes)]
+}
 
 /**
  * Finds the executable electron-packager produced for this platform and architecture.
@@ -33,9 +54,10 @@ function packagedExecutable () {
  * against LambdaTest. The app's own `electron-chromedriver` package is used so the driver always matches
  * the Chromium inside the app's Electron; build the app first (`npm run build:frameworks`).
  *
+ * @param {string[]} modes The security modes (see the app's main.cjs) to run a session for
  * @returns An object defining the local Electron capabilities and chromedriver service.
  */
-export default function config () {
+export default function config (modes) {
   const appRequire = module.createRequire(path.join(APP_DIR, 'package.json'))
   if (!fs.existsSync(path.join(APP_DIR, 'node_modules'))) {
     throw new Error('The Electron test app has no node_modules. Run `npm run build:frameworks` first.')
@@ -50,19 +72,16 @@ export default function config () {
    */
   delete process.env.ELECTRON_RUN_AS_NODE
 
-  // Lets tests/framework-specs know to only cover the electron app (and, outside this config, to skip it)
-  process.env.NR_ELECTRON = 'true'
-
   return {
     hostname: '127.0.0.1',
     port: CHROMEDRIVER_PORT,
     path: '/',
     /*
-     * One session per security mode (see the app's main.cjs). The packaged app reads its agent config
+     * One session per requested security mode. The packaged app reads its agent config
      * from the bootstrap file passed here; the spec writes it once the test's testId exists, and reads
      * the mode and file path back out of these args.
      */
-    capabilities: MODES.map(mode => {
+    capabilities: modes.map(mode => {
       const bootstrapFile = path.join(os.tmpdir(), `nr-electron-bootstrap-${process.pid}-${mode}.json`)
       return {
         browserName: 'chrome',

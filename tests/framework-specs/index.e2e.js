@@ -14,6 +14,7 @@ import {
   testInteractionEventsRequest
 } from '../../tools/testing-server/utils/expect-tests'
 import { rumFlags } from '../../tools/testing-server/constants'
+import { getBrowserName } from '../../tools/browsers-lists/utils.mjs'
 
 const RESULTS_DIR = path.resolve(__dirname, '../../.framework-results')
 const FRAMEWORKS_DIR = path.resolve(__dirname, '../../tools/test-builds/frameworks')
@@ -25,9 +26,9 @@ const FRAMEWORKS_DIR = path.resolve(__dirname, '../../tools/test-builds/framewor
  * the folder name (e.g. @angular/core) can set `frameworkPackage` in the app's package.json.
  */
 const ELECTRON = 'electron'
-// `--electron` (see tools/wdio/config/electron.conf.mjs) runs this suite locally against the Electron
-// app's embedded Chromium only; the regular LambdaTest browser run skips the electron app.
-const IS_ELECTRON_RUN = process.env.NR_ELECTRON === 'true'
+// `-b electron` (see tools/wdio/config/electron.conf.mjs) runs this suite locally against the packaged
+// Electron app only; the regular LambdaTest browser run skips the electron app.
+const IS_ELECTRON_RUN = getBrowserName(browser.requestedCapabilities) === 'electron'
 const FRAMEWORKS = fs.readdirSync(FRAMEWORKS_DIR, { withFileTypes: true })
   .filter(dir => dir.isDirectory())
   .map(dir => dir.name)

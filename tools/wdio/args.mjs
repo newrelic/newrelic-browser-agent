@@ -19,7 +19,7 @@ const args = yargs(hideBin(process.argv))
   .alias('b', 'browsers')
   .describe(
     'b',
-    'a comma separated list of browsers with an optional semver range. (eg. chrome@>39)'
+    'a comma separated list of browsers with an optional semver range. (eg. chrome@>39). electron, electron-loose and electron-strict run locally against the packaged Electron test app instead of LambdaTest and cannot be combined with other browsers'
   )
 
   .number('concurrent')
@@ -84,10 +84,6 @@ const args = yargs(hideBin(process.argv))
   .boolean('framework')
   .default('framework', false)
   .describe('framework', 'Run framework informational tests')
-
-  .boolean('electron')
-  .default('electron', false)
-  .describe('electron', 'Run specs locally against the Electron framework test app instead of LambdaTest (use with --framework)')
 
   .string('B')
   .alias('B', 'report-to-bam')

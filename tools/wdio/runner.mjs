@@ -9,7 +9,7 @@ import { serialize } from '../shared/serializer.js'
 import baseConfig from './config/base.conf.mjs'
 import specsConfig from './config/specs.conf.mjs'
 import lambdaTestConfig from './config/lambdatest.conf.mjs'
-import electronConfig from './config/electron.conf.mjs'
+import electronConfig, { electronModesFromSpec } from './config/electron.conf.mjs'
 import args from './args.mjs'
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
@@ -20,10 +20,11 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
  * properly passed to the worker processes.
  */
 
+const electronModes = electronModesFromSpec(args.browsers)
 const wdioConfig = deepmerge(
   baseConfig(),
   specsConfig(),
-  args.electron ? electronConfig() : lambdaTestConfig()
+  electronModes.length > 0 ? electronConfig(electronModes) : lambdaTestConfig()
 )
 const configFilePath = path.join(
   path.resolve(__dirname, '../../node_modules/.cache/wdio'),

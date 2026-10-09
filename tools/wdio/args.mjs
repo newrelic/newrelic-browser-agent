@@ -19,7 +19,7 @@ const args = yargs(hideBin(process.argv))
   .alias('b', 'browsers')
   .describe(
     'b',
-    'a comma separated list of browsers with an optional semver range. (eg. chrome@>39). electron, electron-loose and electron-strict run locally against the packaged Electron test app instead of LambdaTest and cannot be combined with other browsers'
+    'a comma separated list of browsers with an optional semver range. (eg. chrome@>39). electron, electron-loose and electron-strict run locally against the packaged Electron browser in tools/local-browsers (built on demand) instead of LambdaTest, and cannot be combined with other browsers. electron-strict adds a CSP that only specs passing its nonce satisfy, use electron-loose for general specs'
   )
 
   .number('concurrent')

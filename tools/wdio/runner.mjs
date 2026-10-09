@@ -10,6 +10,7 @@ import baseConfig from './config/base.conf.mjs'
 import specsConfig from './config/specs.conf.mjs'
 import lambdaTestConfig from './config/lambdatest.conf.mjs'
 import electronConfig, { electronModesFromSpec } from './config/electron.conf.mjs'
+import { ensureBuilt as ensureElectronBuilt } from '../local-browsers/electron/build.mjs'
 import args from './args.mjs'
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
@@ -21,6 +22,9 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
  */
 
 const electronModes = electronModesFromSpec(args.browsers)
+// Electron is only installed and packaged on runs that test against it, once, before any worker starts
+if (electronModes.length > 0) ensureElectronBuilt()
+
 const wdioConfig = deepmerge(
   baseConfig(),
   specsConfig(),

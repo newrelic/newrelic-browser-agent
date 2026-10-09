@@ -2,12 +2,12 @@ import fs from 'node:fs'
 import path from 'node:path'
 import url from 'node:url'
 
-const ELECTRON_PKG = path.resolve(url.fileURLToPath(new URL('.', import.meta.url)), '../test-builds/frameworks/electron/node_modules/electron/package.json')
+const ELECTRON_PKG = path.resolve(url.fileURLToPath(new URL('.', import.meta.url)), '../local-browsers/electron/node_modules/electron/package.json')
 
 /**
  * Electron sessions are chromedriver sessions that, to chromedriver, look like chrome (it rejects any other
  * browserName or a browserVersion that isn't the Chromium version). They are identified by the `--nr-mode`
- * launch arg tools/wdio/config/electron.conf.mjs gives the packaged test app.
+ * launch arg tools/wdio/config/electron.conf.mjs gives the packaged Electron browser.
  * @param {object} capabilities WDIO capabilities of a session
  * @returns {string|undefined} The Electron app's security mode (`loose` or `strict`), undefined for any other browser
  */

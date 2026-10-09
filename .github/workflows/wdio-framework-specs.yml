@@ -10,7 +10,7 @@ on:
         description: 'Which browser(s) and version(s) to target with the wdio test: chrome@latest OR chrome@* are examples'
         required: false
         type: string
-        default: 'chrome@latest'
+        default: 'chrome@latest,edge@latest,firefox@latest,safari@latest'
   workflow_call:
     inputs:
       ref:
@@ -21,7 +21,7 @@ on:
         description: 'Which browser(s) and version(s) to target with the wdio test: chrome@latest OR chrome@* are examples'
         required: false
         type: string
-        default: 'chrome@latest'
+        default: 'chrome@latest,edge@latest,firefox@latest,safari@latest'
     secrets:
       LAMBDA_USERNAME:
         required: true
@@ -67,16 +67,18 @@ jobs:
         run: |
           node --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
             -T \
-            -b '${{ inputs.browser-target || 'chrome@latest' }}' \
+            --concurrent=4 \
+            -b '${{ inputs.browser-target || 'chrome@latest,edge@latest,firefox@latest,safari@latest' }}' \
             --framework \
             ${{ runner.debug && '-v -L -D -d' || '' }}
         continue-on-error: true
       - name: Run WDIO framework informational tests against Electron
-        # Runs locally (not on LambdaTest) against the Chromium embedded in tools/test-builds/frameworks/electron
-        # and writes its row to the same .framework-results folder the report is generated from.
+        # Runs locally (not on LambdaTest) in the packaged Electron browser at tools/local-browsers/electron,
+        # which the runner installs and packages on demand. Both security modes run concurrently, each in its
+        # own Electron instance, and write their rows to the same .framework-results folder as the step above.
         run: |
           xvfb-run -a node --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
-            --framework -b electron \
+            --framework -b electron --concurrent=2 \
             ${{ runner.debug && '-v -L -d' || '' }}
         continue-on-error: true
       - name: Generate framework informational report

@@ -1,20 +1,23 @@
 import { spawn } from 'node:child_process'
+import fs from 'node:fs'
 import net from 'node:net'
 
 /**
  * This is a WDIO launcher plugin that starts the chromedriver bundled with the Electron framework
  * test app (`electron-chromedriver`, version-matched to the app's `electron`) for the duration of
- * the run. WDIO then talks to it like any local chromedriver, with the Electron binary as the
- * "chrome" binary under test.
+ * the run, and removes the Electron instances' temporary user-data-dirs when it ends. WDIO then talks
+ * to it like any local chromedriver, with the Electron binary as the "chrome" binary under test.
  */
 export default class ElectronChromedriverLauncher {
   #chromedriver
   #port
   #driverPath
+  #tempDirs
 
-  constructor ({ driverPath, port }) {
+  constructor ({ driverPath, port, tempDirs = [] }) {
     this.#driverPath = driverPath
     this.#port = port
+    this.#tempDirs = tempDirs
   }
 
   async onPrepare () {
@@ -37,6 +40,8 @@ export default class ElectronChromedriverLauncher {
 
   async onComplete () {
     this.#chromedriver?.kill()
+    // Each Electron instance's throwaway user-data-dir (see electron.conf.mjs)
+    this.#tempDirs.forEach(dir => fs.rmSync(dir, { recursive: true, force: true }))
   }
 
   #canConnect () {

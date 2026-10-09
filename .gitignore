@@ -34,5 +34,6 @@ bam.json
 
 # Angular CLI build cache (tools/test-builds/frameworks/angular)
 **/.angular
-# Packaged Electron framework test app
-tools/test-builds/frameworks/electron/out
+# Packaged Electron browser built on demand for `-b electron`
+tools/local-browsers/electron/out
+tools/local-browsers/electron/package-lock.json

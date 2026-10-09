@@ -1,0 +1,16 @@
+{
+  "name": "local-browser-electron",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A packaged Electron window that tools/wdio drives as a local browser (-b electron)",
+  "main": "main.cjs",
+  "license": "MIT",
+  "dependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "44.7.0",
+    "electron-chromedriver": "44.7.0"
+  },
+  "scripts": {
+    "package": "electron-packager . electron-browser --out=out --overwrite --asar --electron-version=$(node -p \"require('electron/package.json').version\") --ignore='^/(node_modules|out)$'"
+  }
+}

@@ -1,12 +1,14 @@
+import crypto from 'node:crypto'
 import fs from 'node:fs'
 import module from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
 import url from 'node:url'
 import { parseSpecString } from '../../browser-matcher/spec-parser.mjs'
+import { packagedExecutable } from '../../local-browsers/electron/build.mjs'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
-const APP_DIR = path.resolve(__dirname, '../../test-builds/frameworks/electron')
+const APP_DIR = path.resolve(__dirname, '../../local-browsers/electron')
 const CHROMEDRIVER_PORT = 9515
 const MODES = ['loose', 'strict']
 
@@ -31,39 +33,17 @@ export function electronModesFromSpec (spec = '') {
 }
 
 /**
- * Finds the executable electron-packager produced for this platform and architecture.
- * @returns {string} Absolute path to the packaged app's executable.
- */
-function packagedExecutable () {
-  const outDir = path.join(APP_DIR, 'out')
-  const packageDir = (fs.existsSync(outDir) ? fs.readdirSync(outDir) : [])
-    .find(dir => dir === `framework-electron-${process.platform}-${process.arch}`)
-  if (!packageDir) {
-    throw new Error(`No packaged Electron app for ${process.platform}-${process.arch} in ${outDir}. Run \`npm run build:frameworks\` first.`)
-  }
-
-  const root = path.join(outDir, packageDir)
-  if (process.platform === 'darwin') return path.join(root, 'framework-electron.app/Contents/MacOS/framework-electron')
-  if (process.platform === 'win32') return path.join(root, 'framework-electron.exe')
-  return path.join(root, 'framework-electron')
-}
-
-/**
- * Generates the wdio configuration for running specs against the packaged Electron framework test app
- * (tools/test-builds/frameworks/electron, packaged by its `npm run build`) on this machine, instead of
- * against LambdaTest. The app's own `electron-chromedriver` package is used so the driver always matches
- * the Chromium inside the app's Electron; build the app first (`npm run build:frameworks`).
+ * Generates the wdio configuration for running specs against the packaged Electron browser
+ * (tools/local-browsers/electron) on this machine, instead of against LambdaTest. The folder's own
+ * `electron-chromedriver` package is used so the driver always matches the Chromium inside the
+ * Electron being tested. The packaged app must already be built (see `ensureBuilt`, which the runner
+ * calls when an Electron browser is requested).
  *
  * @param {string[]} modes The security modes (see the app's main.cjs) to run a session for
  * @returns An object defining the local Electron capabilities and chromedriver service.
  */
 export default function config (modes) {
   const appRequire = module.createRequire(path.join(APP_DIR, 'package.json'))
-  if (!fs.existsSync(path.join(APP_DIR, 'node_modules'))) {
-    throw new Error('The Electron test app has no node_modules. Run `npm run build:frameworks` first.')
-  }
-
-  const electronBinary = packagedExecutable()
   const driverPath = path.join(path.dirname(appRequire.resolve('electron-chromedriver/package.json')), 'bin', 'chromedriver')
 
   /*
@@ -72,24 +52,28 @@ export default function config (modes) {
    */
   delete process.env.ELECTRON_RUN_AS_NODE
 
+  // Sessions can run concurrently (`--concurrent`), so they get a nonce and userData dir of their own. Only strict mode uses a nonce.
+  const runId = crypto.randomBytes(8).toString('hex')
+  const userDataDirs = modes.map(mode => fs.mkdtempSync(path.join(os.tmpdir(), 'nr-electron-' + mode + '-')))
+
   return {
     hostname: '127.0.0.1',
     port: CHROMEDRIVER_PORT,
     path: '/',
     /*
-     * One session per requested security mode. The packaged app reads its agent config
-     * from the bootstrap file passed here; the spec writes it once the test's testId exists, and reads
-     * the mode and file path back out of these args.
+     * One session per requested security mode. A single chromedriver serves all of them; each app
+     * instance gets its own user-data-dir so concurrent windows never share storage or profile locks.
+     * The mode and CSP nonce are read back from these args by tools/browsers-lists/utils.mjs and the specs.
      */
-    capabilities: modes.map(mode => {
-      const bootstrapFile = path.join(os.tmpdir(), `nr-electron-bootstrap-${process.pid}-${mode}.json`)
+    capabilities: modes.map((mode, i) => {
       return {
         browserName: 'chrome',
         'goog:chromeOptions': {
-          binary: electronBinary,
+          binary: packagedExecutable(),
           args: [
             `--nr-mode=${mode}`,
-            `--nr-bootstrap-file=${bootstrapFile}`,
+            ...(mode === 'strict' ? [`--nr-csp-nonce=${runId}`] : []),
+            `--user-data-dir=${userDataDirs[i]}`,
             // Linux CI runners cannot use the chromium sandbox; only the test app runs here
             ...(process.platform === 'linux' ? ['--no-sandbox', '--disable-gpu'] : [])
           ]
@@ -97,7 +81,7 @@ export default function config (modes) {
       }
     }),
     services: [
-      [path.resolve(__dirname, '../plugins/electron-chromedriver.mjs'), { driverPath, port: CHROMEDRIVER_PORT }]
+      [path.resolve(__dirname, '../plugins/electron-chromedriver.mjs'), { driverPath, port: CHROMEDRIVER_PORT, tempDirs: userDataDirs }]
     ]
   }
 }

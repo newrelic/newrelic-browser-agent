@@ -18,7 +18,7 @@
     "@types/node": "22.19.x",
     "@types/underscore": "^1.13.0",
     "typescript": "4.9.5",
-    "vite": "4.2.0"
+    "vite": "8.3.3"
   },
   "keywords": [],
   "description": ""

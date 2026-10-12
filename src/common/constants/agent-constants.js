@@ -6,6 +6,10 @@ import { FEATURE_NAMES } from '../../loaders/features/features'
 
 export const IDEAL_PAYLOAD_SIZE = 16000
 export const MAX_PAYLOAD_SIZE = 1000000
+/** The minimum time (ms) between early harvests of a single feature. Data that arrives inside this window stays buffered for the next harvest. */
+export const MIN_EARLY_HARVEST_INTERVAL = 500
+/** The estimated payload size at which a feature may harvest early even inside the minimum interval, so that a flood of data cannot fill the buffer to MAX_PAYLOAD_SIZE (and start dropping events) while waiting. */
+export const EARLY_HARVEST_BYPASS_SIZE = MAX_PAYLOAD_SIZE / 2
 export const DEFAULT_KEY = 'NR_CONTAINER_AGENT'
 export const SESSION_ERROR = 'SESSION_ERROR'
 

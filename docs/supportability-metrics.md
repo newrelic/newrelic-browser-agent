@@ -271,6 +271,18 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * SoftNav/Interaction/RouteChange/Duration/Ms
 <!--- Soft nav Custom Interaction Duration in Ms --->
 * SoftNav/Interaction/Custom/Duration/Ms
+<!--- POC (soft-nav spike): a soft-nav-scoped web-vitals metric (interactionLCP/interactionCLS/interactionINP) had no navigationStartTime, so it couldn't be correlated to any interaction --->
+* SoftNav/Vital/interactionLCP/MissingStartTime
+* SoftNav/Vital/interactionCLS/MissingStartTime
+* SoftNav/Vital/interactionINP/MissingStartTime
+<!--- POC (soft-nav spike): a soft-nav-scoped web-vitals metric had a navigationStartTime but no interaction was active or still buffered at that time -- e.g. the originating interaction was already harvested by the time the vital fired --->
+* SoftNav/Vital/interactionLCP/Unattributed
+* SoftNav/Vital/interactionCLS/Unattributed
+* SoftNav/Vital/interactionINP/Unattributed
+<!--- POC (soft-nav spike): a soft-nav-scoped web-vitals metric matched an interaction by timestamp, but the browser's own navigationURL for that soft nav didn't match the interaction's newURL -- reported as telemetry only, the match is still used (see #resolveSoftNavInteraction) --->
+* SoftNav/Vital/interactionLCP/UrlMismatch
+* SoftNav/Vital/interactionCLS/UrlMismatch
+* SoftNav/Vital/interactionINP/UrlMismatch
 <!--- Spa initial page load Interaction Duration in Ms --->
 * Spa/Interaction/InitialPageLoad/Duration/Ms
 <!--- Spa route change Interaction Duration in Ms --->

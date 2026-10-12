@@ -12,16 +12,25 @@ import { cleanURL } from '../url/clean-url'
 export const largestContentfulPaint = new VitalMetric(VITAL_NAMES.LARGEST_CONTENTFUL_PAINT)
 
 if (isBrowserScope) {
-  const handleLCP = ({ value, attribution }) => {
-  /* Largest Contentful Paint - As of WV v3, it still imperfectly tries to detect document vis state asap and isn't supposed to report if page starts hidden. */
-    if (initiallyHidden || largestContentfulPaint.isValid) return
+  const handleLCP = ({ value, attribution, navigationType, navigationId, navigationInteractionId, navigationStartTime, navigationURL }) => {
+  /* Largest Contentful Paint - As of WV v3, it still imperfectly tries to detect document vis state asap and isn't supposed to report if page starts hidden.
+     POC (soft-nav spike): with `reportSoftNavs` enabled, web-vitals resets LCP measurement at each soft navigation and emits a distinct metric instance
+     (own .id) per route change -- so the "only once" guard below must only apply to the initial hard-nav LCP, or every soft-nav LCP after the first would
+     be silently dropped. */
+    const isSoftNav = navigationType === 'soft-navigation'
+    if (initiallyHidden || (largestContentfulPaint.isValid && !isSoftNav)) return
 
     let attrs = {
       timeToFirstByte: attribution.timeToFirstByte,
       resourceLoadDelay: attribution.resourceLoadDelay,
       resourceLoadDuration: attribution.resourceLoadDuration,
       resourceLoadTime: attribution.resourceLoadDuration, // kept for NR backwards compatibility, deprecated in v3->v4
-      elementRenderDelay: attribution.elementRenderDelay
+      elementRenderDelay: attribution.elementRenderDelay,
+      navigationType,
+      navigationId,
+      navigationInteractionId,
+      navigationStartTime,
+      navigationURL: cleanURL(navigationURL) // the soft nav's destination URL per the browser itself, distinct from `elUrl` (the LCP element's own resource URL)
     }
     const lcpEntry = attribution.lcpEntry
     if (lcpEntry) {
@@ -34,5 +43,5 @@ if (isBrowserScope) {
 
     largestContentfulPaint.update({ value, attrs })
   }
-  registerVital(() => onLCP(handleLCP))
+  registerVital(() => onLCP(handleLCP, { reportSoftNavs: true }))
 }

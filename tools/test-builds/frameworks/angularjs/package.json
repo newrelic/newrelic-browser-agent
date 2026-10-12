@@ -1,0 +1,24 @@
+{
+  "name": "framework-angularjs",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "frameworkPackage": "angular",
+  "dependencies": {
+    "@newrelic/browser-agent": "file:../../../../temp/newrelic-browser-agent-1.323.0.tgz",
+    "angular": "1.8.3"
+  },
+  "scripts": {
+    "start": "vite",
+    "build": "tsc && vite build"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.x",
+    "typescript": "7.0.2",
+    "vite": "8.3.4",
+    "vite-plugin-static-copy": "4.1.1"
+  },
+  "keywords": [],
+  "description": ""
+}

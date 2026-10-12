@@ -1,6 +1,21 @@
 import { testAjaxEventsRequest, testAjaxTimeSlicesRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { checkAjaxEvents, checkAjaxMetrics } from '../../util/basic-checks'
 
+/**
+ * Waits until one of the captured harvests contains a matching payload.
+ * @param {import('../../../tools/wdio/plugins/testing-server/network-capture-connector.mjs').NetworkCaptureConnector} capture
+ * @param {(body: any) => boolean} includes
+ * @returns {Promise<Array<object>>}
+ */
+async function waitForHarvestContaining (capture, includes) {
+  let harvests
+  await browser.waitUntil(async () => {
+    harvests = await capture.getCurrentResults()
+    return harvests.some(harvest => includes(harvest.request.body))
+  }, { timeout: 10000 })
+  return harvests
+}
+
 describe('xhr retry harvesting', () => {
   ;[408, 429, 500, 502, 504, 520].forEach(statusCode =>
     it(`should send the ajax event and metric on the next harvest when the first harvest statusCode is ${statusCode}`, async () => {
@@ -20,8 +35,8 @@ describe('xhr retry harvesting', () => {
       })
 
       const [firstAjaxEventsHarvest, firstAjaxMetricsHarvest] = await Promise.all([
-        ajaxEventsCapture.waitForResult({ totalCount: 2 }),
-        ajaxMetricsCapture.waitForResult({ totalCount: 2 }),
+        waitForHarvestContaining(ajaxEventsCapture, body => body?.some(xhr => xhr.path === '/json')),
+        waitForHarvestContaining(ajaxMetricsCapture, body => body?.xhr?.some(xhr => xhr.params.pathname === '/json')),
         browser.url(await browser.testHandle.assetURL('instrumented.html'))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {

@@ -104,7 +104,7 @@ jobs:
       
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.11.0
+          node-version: 24.14.0
       
       # Determine branch name for webpack version suffix
       - name: Determine branch name for version
@@ -231,7 +231,7 @@ jobs:
       
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.11.0
+          node-version: 24.14.0
       
       # Build and deploy RC assets
       - name: Deploy RC assets for staging
@@ -337,7 +337,7 @@ jobs:
       
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.11.0
+          node-version: 24.14.0
       
       # Build and deploy RC assets
       - name: Deploy RC assets for eu-prod
@@ -444,7 +444,7 @@ jobs:
       
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.11.0
+          node-version: 24.14.0
       
       # Build and deploy RC assets
       - name: Deploy RC assets for jp-prod
@@ -551,7 +551,7 @@ jobs:
       
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.11.0
+          node-version: 24.14.0
       
       # Build and deploy RC assets
       - name: Deploy RC assets for us-prod

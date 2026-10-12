@@ -7,9 +7,10 @@ import { drain } from '../../common/drain/drain'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { EventBuffer } from './event-buffer'
 import { EventAggregator } from '../../common/aggregate/event-aggregator'
-import { MAX_PAYLOAD_SIZE, IDEAL_PAYLOAD_SIZE, SUPPORTS_REGISTERED_ENTITIES } from '../../common/constants/agent-constants'
+import { MAX_PAYLOAD_SIZE, IDEAL_PAYLOAD_SIZE, MIN_EARLY_HARVEST_INTERVAL, EARLY_HARVEST_BYPASS_SIZE, SUPPORTS_REGISTERED_ENTITIES } from '../../common/constants/agent-constants'
 import { warn } from '../../common/util/console'
 import { reportSupportabilityMetric } from '../../common/event-emitter/report-supportability-metric'
+import { now } from '../../common/timing/now'
 
 export class AggregateBase extends FeatureBase {
   /**
@@ -26,6 +27,8 @@ export class AggregateBase extends FeatureBase {
     this.canHarvestEarly = true
     /** @type {Boolean} indicates if the feature is actively in a retry deferral period */
     this.isRetrying = false
+    /** @type {number|undefined} the timestamp (ms, relative to page start) of the last early harvest triggered by this feature, if any */
+    this.lastEarlyHarvestAt = undefined
 
     this.harvestOpts = {} // features aggregate classes can define custom opts for when their harvest is called
 
@@ -84,13 +87,19 @@ export class AggregateBase extends FeatureBase {
 
   /**
    * Evaluates whether a harvest should be made early by estimating the size of the current payload.  Currently, this only happens if the event storage is EventBuffer, since that triggers this method directly.
-   * If conditions are met, a new harvest will be triggered immediately.
+   * If conditions are met, a new harvest will be triggered immediately, unless this feature already harvested early within the last `MIN_EARLY_HARVEST_INTERVAL` ms.
+   * Data held back by that limit stays buffered until the next early, interval, or final harvest. Once the estimated payload reaches `EARLY_HARVEST_BYPASS_SIZE`
+   * the limit no longer applies, so a flood of data cannot fill the buffer to its maximum size, where new events would be dropped, while waiting.
    * @returns void
    */
   decideEarlyHarvest () {
     if (!this.canHarvestEarly || this.blocked || this.isRetrying) return
     const estimatedSize = this.events.byteSize() + (this.customAttributesAreSeparate ? this.agentRef.runtime.jsAttributesMetadata.bytes : 0)
     if (estimatedSize > IDEAL_PAYLOAD_SIZE) {
+      const currentTime = now()
+      /* Bounds the request rate when a page produces data in a flood, regardless of how fast or whether requests complete. Large payloads skip the limit to avoid dropping data. */
+      if (estimatedSize < EARLY_HARVEST_BYPASS_SIZE && this.lastEarlyHarvestAt !== undefined && currentTime - this.lastEarlyHarvestAt < MIN_EARLY_HARVEST_INTERVAL) return
+      this.lastEarlyHarvestAt = currentTime
       this.agentRef.runtime.harvester.triggerHarvestFor(this)
       reportSupportabilityMetric(this.ee, `${this.featureName}/Harvest/Early/Seen`, estimatedSize)
     }

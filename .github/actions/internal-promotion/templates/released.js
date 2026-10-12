@@ -3,6 +3,12 @@
   // Query-param based experiment loading: ?nrbaExperiment={branch-name}
   // Loads config.js (sets window.NREUM) then nr-loader-spa.min.js
   try {
+
+    window.NREUM = window.NREUM || {};
+    window.NREUM.loader_config = window.NREUM.loader_config || {};
+    window.NREUM.info = window.NREUM.info || {};
+    window.NREUM.init = window.NREUM.init || {};
+
     var urlParams = new URLSearchParams(window.location.search);
     var experiment = urlParams.get('nrbaExperiment');
     
@@ -45,10 +51,22 @@
   }
   
   // ===== NORMAL RELEASED LOADER =====
+  /* Pages served with locally hosted nerdpacks (?nerdpacks=local) are developer sessions. Their console output is
+  not representative of real usage, so logging is excluded for them. */
+  var isLocalNerdpacks = false
+  try {
+    isLocalNerdpacks = new URLSearchParams(window.location.search).get('nerdpacks') === 'local'
+  } catch (e) {
+    // query param detection failed, leave logging on
+  }
+
   // config
   window.NREUM={
     init: {
       feature_flags: ['register', 'rum_v2'],
+      logging: {
+        enabled: !isLocalNerdpacks
+      },
       distributed_tracing: {
         enabled: true
       },

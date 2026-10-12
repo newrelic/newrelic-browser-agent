@@ -11,12 +11,14 @@ async function asFeature (ctx, name, fn) {
   const aggregate = await ctx.feature(PageViewTiming)
   const original = aggregate.featureName
   const originalMax = aggregate.events.maxPayloadSize
+  aggregate.lastEarlyHarvestAt = undefined
   aggregate.featureName = name
   try {
     await fn(aggregate)
   } finally {
     aggregate.featureName = original
     aggregate.events.maxPayloadSize = originalMax
+    aggregate.lastEarlyHarvestAt = undefined // early harvests are rate limited per aggregate, which is shared across scenarios
     aggregate.events.clear()
   }
 }

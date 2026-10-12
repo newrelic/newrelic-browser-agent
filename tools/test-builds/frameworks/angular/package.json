@@ -1,6 +1,7 @@
 {
   "name": "demo-app",
   "version": "0.0.0",
+  "frameworkPackage": "@angular/core",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --host 0.0.0.0",
@@ -10,14 +11,13 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/animations": "^20.3.31",
     "@angular/common": "^20.3.31",
     "@angular/compiler": "^20.3.31",
     "@angular/core": "^20.3.31",
     "@angular/forms": "^20.3.31",
     "@angular/platform-browser": "^20.3.31",
-    "@angular/platform-browser-dynamic": "^20.3.31",
     "@angular/router": "^20.3.32",
+    "@newrelic/browser-agent": "file:../../../../temp/newrelic-browser-agent-1.323.0.tgz",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.1"
@@ -33,6 +33,7 @@
     "piscina": "5.3.2",
     "source-map-js": "1.2.2",
     "@modelcontextprotocol/sdk": "1.31.0",
-    "http-cache-semantics": "4.3.0"
+    "http-cache-semantics": "4.3.0",
+    "uuid": "^11.0.3"
   }
 }

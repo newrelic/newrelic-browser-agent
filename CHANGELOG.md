@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.324.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.323.0...v1.324.0) (2026-10-12)
+
+
+### Features
+
+* Enable distributed tracing for registered Micro Frontends ([#1871](https://github.com/newrelic/newrelic-browser-agent/issues/1871)) ([b4b2e96](https://github.com/newrelic/newrelic-browser-agent/commit/b4b2e9686fc454642454e1cf5804507f1449d495))
+* Improve script matching in manifest ([#1879](https://github.com/newrelic/newrelic-browser-agent/issues/1879)) ([5b7d6fa](https://github.com/newrelic/newrelic-browser-agent/commit/5b7d6fa2435967156cb520a0b73ac1934638da74))
+
+
+### Bug Fixes
+
+* find iframe entity script timings at registration ([#1891](https://github.com/newrelic/newrelic-browser-agent/issues/1891)) ([13f9fbe](https://github.com/newrelic/newrelic-browser-agent/commit/13f9fbe877ef1471200bb1460c1cb0158c302ad7))
+* **jserrors:** reset stack hash memory on session reset ([#1878](https://github.com/newrelic/newrelic-browser-agent/issues/1878)) ([b0d01bf](https://github.com/newrelic/newrelic-browser-agent/commit/b0d01bf582782d2176d1715aaab290019106eef3))
+* prevent runaway log harvests from inflated attribute size ([#1897](https://github.com/newrelic/newrelic-browser-agent/issues/1897)) ([1803e4c](https://github.com/newrelic/newrelic-browser-agent/commit/1803e4c1800e12c0486625e26b39e2a00146ab64))
+
 ## [1.323.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.322.0...v1.323.0) (2026-09-30)
 
 

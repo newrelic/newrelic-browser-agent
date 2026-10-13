@@ -7,7 +7,7 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 const FRAMEWORKS_DIR = path.join(__dirname, 'frameworks')
 const LOCAL_BROWSERS_DIR = path.join(__dirname, '../local-browsers')
 
-// Every app under ./frameworks always tracks the latest stable release of its dependencies
+// Every app under ./frameworks always tracks the latest stable release of its dependencies + devDependencies
 // (everything except the agent itself) before the framework informational test suite builds
 // them. The local browsers (../local-browsers, e.g. the packaged Electron the suite also runs the
 // framework apps in) are bumped the same way so the report covers the latest of those too. Only
@@ -23,14 +23,16 @@ for (const appDir of apps) {
   const pkgPath = path.join(appDir, 'package.json')
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
 
-  for (const name of Object.keys(pkg.dependencies || {})) {
-    if (name === '@newrelic/browser-agent') continue
+  for (const depField of ['dependencies', 'devDependencies']) {
+    for (const name of Object.keys(pkg[depField] || {})) {
+      if (name === '@newrelic/browser-agent') continue
 
-    const previous = pkg.dependencies[name]
-    const latest = execSync(`npm view ${name} version`, { encoding: 'utf-8' }).trim()
-    pkg.dependencies[name] = latest
+      const previous = pkg[depField][name]
+      const latest = execSync(`npm view ${name} version`, { encoding: 'utf-8' }).trim()
+      pkg[depField][name] = latest
 
-    console.log(`[bump-latest] ${app}: ${name} ${previous} -> ${latest}`)
+      console.log(`[bump-latest] ${app}: ${name} ${previous} -> ${latest}`)
+    }
   }
 
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n')

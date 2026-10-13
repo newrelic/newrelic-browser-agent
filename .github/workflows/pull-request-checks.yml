@@ -44,7 +44,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.ref }}
       - uses: actions/setup-node@v4
@@ -77,7 +77,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v4
@@ -112,7 +112,7 @@ jobs:
     outputs:
       tag: ${{ steps.latest-tag.outputs.tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Find latest release tag
@@ -150,12 +150,12 @@ jobs:
       # the size-diff action code used below is always the version being
       # introduced by this PR, regardless of which ref is actually built
       # (main/a release tag won't have this PR's action code yet).
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.ref }}
       # The ref actually being measured is checked out into ./target so it
       # never overwrites the action code above.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ matrix.ref }}
           path: target
@@ -238,7 +238,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.ref }}
       - uses: actions/setup-node@v4
@@ -329,7 +329,7 @@ jobs:
     outputs:
       pull-request-target: ${{ steps.pull-request-target.outputs.results }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 24.14.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
@@ -351,7 +351,7 @@ jobs:
     steps:
       - name: Setup runner
         run: sudo apt update && DEBIAN_FRONTEND=noninteractive sudo apt install -y git tzdata
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
       - uses: actions/setup-node@v4
@@ -394,7 +394,7 @@ jobs:
     steps:
       - name: Setup container
         run: sudo apt update && DEBIAN_FRONTEND=noninteractive sudo apt install -y git tzdata
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
       - uses: actions/setup-node@v4

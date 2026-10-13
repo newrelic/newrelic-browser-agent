@@ -45,13 +45,13 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
             ref: ${{ github.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: 24.14.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
-      
+
       # Determine environment and branch based on trigger type
       - name: Determine experiment configuration
         id: config
@@ -65,7 +65,7 @@ jobs:
             echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
             echo "🔧 Manual build: environment=${{ inputs.nr_environment }}, branch=${{ github.ref_name }}"
           fi
-      
+
       - name: Install project dependencies
         run: npm ci
       - name: Clean branch name
@@ -73,7 +73,7 @@ jobs:
         run: echo "results=$(echo '${{ steps.config.outputs.branch }}' | sed 's/[^[:alnum:].-]/-/g')" >> $GITHUB_OUTPUT
       - name: Build experiment
         run: npm run cdn:build:experiment -- --env branchName='${{ steps.config.outputs.environment }}/${{ steps.clean-branch-name.outputs.results }}'
-      
+
       # Create comprehensive config.js with A/B account configuration
       - name: Create experiment config file
         run: |
@@ -134,7 +134,7 @@ jobs:
             sa: 1
           };
           EOF
-      
+
       - name: Upload experiment
         id: s3-upload
         uses: ./.github/actions/s3-upload

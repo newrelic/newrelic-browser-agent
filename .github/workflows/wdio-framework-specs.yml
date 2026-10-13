@@ -51,7 +51,7 @@ jobs:
       LAMBDA_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
       LAMBDA_ACCESS_KEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.ref }}
       - uses: actions/setup-node@v4

@@ -5,6 +5,56 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "1803e4c1800e12c0486625e26b39e2a00146ab64",
+          "message": "prevent runaway log harvests from inflated attribute size",
+          "issues": [
+            "1897"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "5b7d6fa2435967156cb520a0b73ac1934638da74",
+          "message": "Improve script matching in manifest",
+          "issues": [
+            "1879"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "b0d01bf582782d2176d1715aaab290019106eef3",
+          "message": "reset stack hash memory on session reset",
+          "issues": [
+            "1878"
+          ],
+          "scope": "jserrors"
+        },
+        {
+          "type": "fix",
+          "sha": "13f9fbe877ef1471200bb1460c1cb0158c302ad7",
+          "message": "find iframe entity script timings at registration",
+          "issues": [
+            "1891"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "b4b2e9686fc454642454e1cf5804507f1449d495",
+          "message": "Enable distributed tracing for registered Micro Frontends",
+          "issues": [
+            "1871"
+          ]
+        }
+      ],
+      "version": "1.324.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "3e22b2bc-fb18-4726-836e-8b4f1baad598",
+      "createTime": "2026-10-12T17:08:27.105Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "5e865062e5162acc7c4ee2924cf7b1db9d8f5685",
           "message": "correct DT header timestamp to server time",
           "issues": [
@@ -4325,5 +4375,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-09-30T15:45:02.842Z"
+  "updateTime": "2026-10-12T17:08:27.105Z"
 }

@@ -4,6 +4,7 @@ releaseDate: "{{frontMatter.releaseDate}}"
 version: {{frontMatter.version}}
 downloadLink: {{frontMatter.downloadLink}}
 features: {{frontMatter.features}}
+enhancements: {{frontMatter.enhancements}}
 bugs: {{frontMatter.bugs}}
 security: {{frontMatter.security}}
 ---
@@ -13,9 +14,19 @@ security: {{frontMatter.security}}
 **[View this release on GitHub →]({{bodyContent.releaseUrl}})** for the full technical changelog and build size information.
 {{#if bodyContent.features}}
 
-### Features
+### New features
 
 {{#each bodyContent.features}}
+#### {{this.title}}
+{{this.description}}
+
+{{/each}}
+{{/if}}
+{{#if bodyContent.enhancements}}
+
+### Improvements and enhancements
+
+{{#each bodyContent.enhancements}}
 #### {{this.title}}
 {{this.description}}
 
@@ -33,7 +44,7 @@ security: {{frontMatter.security}}
 {{/if}}
 {{#if bodyContent.security}}
 
-### Security fixes
+### Security updates
 
 {{#each bodyContent.security}}
 #### {{this.title}}

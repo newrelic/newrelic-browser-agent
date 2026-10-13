@@ -2,16 +2,18 @@ import fs from 'fs'
 import { BROWSER_LASTEST_VERSIONS_FILE_PATH, MOBILE_VERSIONS_FILE_PATH } from './constants.js'
 
 /**
- * Strips the conventional commit prefix and Jira issue suffix from a title.
+ * Strips the conventional commit prefix (including any `(scope)` and breaking-change `!`) and Jira issue suffix from a title,
+ * then capitalizes the first letter.
  *
  * @param {string} rawTitle - A PR title.
  * @returns {string} A title string ready for release notes.
  */
 export function cleanTitle (rawTitle) {
   return rawTitle
-    .replaceAll(/^feat:\s*|^fix:\s*|^security:\s*/gi, '')
+    .replaceAll(/^(?:feat|enhancement|fix|security|chore)(?:\([^)]*\))?!?:\s*/gi, '')
     .replaceAll(/(?:[ \-(]*)(?:NR|NEWRELIC)-\d+(?:[, \-)]*)/gi, '')
     .trim()
+    .replace(/^./, char => char.toUpperCase())
 }
 
 /**

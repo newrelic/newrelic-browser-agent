@@ -17,7 +17,7 @@
     "@angular/forms": "^20.3.31",
     "@angular/platform-browser": "^20.3.31",
     "@angular/router": "^20.3.32",
-    "@newrelic/browser-agent": "file:../../../../temp/newrelic-browser-agent-1.323.0.tgz",
+    "@newrelic/browser-agent": "file:../../../../temp/newrelic-browser-agent-1.324.0.tgz",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.1"

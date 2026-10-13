@@ -7,7 +7,7 @@ describe('hasReplay', () => {
     const [errors] = await Promise.all([
       errorsCapture.waitForResult({ totalCount: 2, timeout: 15000 }),
       browser.url(await browser.testHandle.assetURL('rrweb-hasreplay-after-resume.html',
-        srConfig({ session_replay: { preload: false, sampling_rate: 100 } })))
+        srConfig({ session_replay: { preload: false } })))
         .then(() => browser.waitForSessionReplayRecording())
     ])
 

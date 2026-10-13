@@ -1052,7 +1052,7 @@ init@https://cdn.example.com/gecko-app.js:20:10`
       expect(timings.type).toBe('script')
     })
 
-    test('subscribes to late resource entries for manifest assets not yet in the performance buffer, and keeps the subscriber alive until every pending asset resolves', async () => {
+    test('subscribes to late resource entries for manifest assets not yet in the performance buffer, and keeps the subscriber alive across every late entry', async () => {
       const manifestModule = await import('../../../../src/common/v2/manifest')
       const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'a.js' }, { matcher: 'b.js' }] })
 
@@ -1065,19 +1065,130 @@ init@https://cdn.example.com/gecko-app.js:20:10`
       expect(timings.fetchStart).toBe(0)
       expect(timings.fetchEnd).toBe(0)
 
-      // First late entry resolves only one of the two pending assets -- subscriber must not clear yet
+      // First late entry resolves only one of the two assets -- subscriber must not clear
       performanceObserverCallback({
         getEntries: () => [{ name: 'https://cdn.example.com/a.js', initiatorType: 'script', startTime: 10, responseEnd: 20 }]
       })
       expect(timings.fetchStart).toBe(10)
       expect(timings.fetchEnd).toBe(20)
 
-      // Second late entry resolves the remaining pending asset
+      // Second late entry resolves the remaining asset
       performanceObserverCallback({
         getEntries: () => [{ name: 'https://cdn.example.com/b.js', initiatorType: 'script', startTime: 30, responseEnd: 50 }]
       })
       expect(timings.fetchStart).toBe(10)
       expect(timings.fetchEnd).toBe(50)
+    })
+
+    test('a RegExp matcher credits every buffered resource it matches, not just the first', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: /catalog-chunk-[a-f0-9]+\.js/, type: 'script' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/catalog-chunk-a1.js', initiatorType: 'script', startTime: 10, responseEnd: 60, transferSize: 100, renderBlockingStatus: 'non-blocking' },
+        { name: 'https://cdn.example.com/catalog-chunk-b2.js', initiatorType: 'script', startTime: 5, responseEnd: 90, transferSize: 200 },
+        { name: 'https://cdn.example.com/catalog-chunk-c3.js', initiatorType: 'script', startTime: 30, responseEnd: 120, transferSize: 300, renderBlockingStatus: 'blocking' },
+        { name: 'https://cdn.example.com/unrelated.js', initiatorType: 'script', startTime: 1, responseEnd: 500, transferSize: 999 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.totalWeight).toBe(600)
+      expect(timings.renderBlocking).toBe(true)
+      expect(timings.fetchStart).toBe(5)
+      expect(timings.fetchEnd).toBe(120)
+      // asset/type still anchor to the first resolved script only
+      expect(timings.asset).toBe('https://cdn.example.com/catalog-chunk-a1.js')
+    })
+
+    test('a RegExp matcher credits every late-arriving resource it matches', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: /catalog-chunk-[a-f0-9]+\.js/, type: 'script' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/catalog-chunk-a1.js', initiatorType: 'script', startTime: 10, responseEnd: 20, transferSize: 100 }]
+      })
+      performanceObserverCallback({
+        getEntries: () => [{ name: 'https://cdn.example.com/catalog-chunk-b2.js', initiatorType: 'script', startTime: 30, responseEnd: 80, transferSize: 250 }]
+      })
+
+      expect(timings.totalWeight).toBe(350)
+      expect(timings.fetchStart).toBe(10)
+      expect(timings.fetchEnd).toBe(80)
+    })
+
+    test('a resource matching several manifest assets is weighed once', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'app.js' }, { matcher: /app\.js/ }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/app.js', initiatorType: 'script', startTime: 10, responseEnd: 20, transferSize: 100 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0 }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.totalWeight).toBe(100)
+    })
+
+    test('an entry matching both a non-script and a script asset is treated as a script under "scripts" mode', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: /app/, type: 'asset' }, { matcher: 'app.js' }] })
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: 'https://cdn.example.com/app.js', initiatorType: 'script', startTime: 10, responseEnd: 20, transferSize: 100 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0 }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.fetchStart).toBe(10)
+      expect(timings.asset).toBe('https://cdn.example.com/app.js')
+    })
+
+    test('keeps the first load\'s fetch window when a manifest asset is loaded again', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'dup.js', type: 'script' }] })
+      const url = 'https://cdn.example.com/dup.js'
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: url, initiatorType: 'script', startTime: 10, responseEnd: 60, transferSize: 500 },
+        // a duplicate reference, re-served from the browser cache
+        { name: url, initiatorType: 'script', startTime: 900, responseEnd: 903, transferSize: 0 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      expect(timings.fetchStart).toBe(10)
+      expect(timings.fetchEnd).toBe(60)
+      expect(timings.totalWeight).toBe(500)
+    })
+
+    test('keeps the first load\'s fetch window when a duplicate of a manifest asset arrives late', async () => {
+      const manifestModule = await import('../../../../src/common/v2/manifest')
+      const parsedManifest = manifestModule.parseManifest({ assets: [{ matcher: 'dup.js', type: 'script' }] })
+      const url = 'https://cdn.example.com/dup.js'
+
+      global.performance.getEntriesByType = jest.fn(() => [
+        { name: url, initiatorType: 'script', startTime: 10, responseEnd: 60, transferSize: 500 }
+      ])
+
+      const timings = { fetchStart: 0, fetchEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+      scriptTrackerModule.applyManifestTimings(timings, { manifest: parsedManifest, timingMethod: 'scripts' })
+
+      performanceObserverCallback({
+        getEntries: () => [{ name: url, initiatorType: 'script', startTime: 900, responseEnd: 903, transferSize: 0 }]
+      })
+
+      expect(timings.fetchStart).toBe(10)
+      expect(timings.fetchEnd).toBe(60)
     })
 
     test('resolves a late-loading non-script manifest asset (e.g. an image) via the shared observer', async () => {

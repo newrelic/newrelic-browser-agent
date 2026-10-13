@@ -37,3 +37,5 @@ bam.json
 # Packaged Electron browser built on demand for `-b electron`
 tools/local-browsers/electron/out
 tools/local-browsers/electron/package-lock.json
+**/.next
+tools/test-builds/frameworks/nextjs/next-env.d.ts

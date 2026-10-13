@@ -23,6 +23,7 @@ import { getRegisteredTargetsFromFilename, getVersion2Attributes, getVersion2Dup
 import { buildCauseString } from './cause-string'
 import { ShortCircuit } from '../../../common/util/short-circuit'
 import { EVENT_TYPES } from '../../../common/constants/events'
+import { SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -47,6 +48,27 @@ export class Aggregate extends AggregateBase {
     register('err', this.processError.bind(this), this.featureName, this.ee)
     register('ierr', this.processError.bind(this), this.featureName, this.ee)
     register('returnJserror', (jsErrorEvent, softNavAttrs) => this.#storeJserrorForHarvest(jsErrorEvent, softNavAttrs), this.featureName, this.ee)
+
+    /*
+     * The backend only remembers a stack trace for as long as the session that first reported it.
+     * The SessionEntity emits SESSION_EVENTS.RESET whenever the session expires (max duration or
+     * inactivity) or is otherwise reset, which is the same boundary the backend uses to forget
+     * previously-seen stack hashes. Forget them here too, so the next occurrence of an
+     * already-seen error resends its full stack_trace once, instead of a browser_stack_hash the
+     * backend can no longer resolve.
+     */
+    const forgetReportedStacks = () => {
+      this.stackReported = {}
+      this.observedAt = {}
+    }
+    let currentSessionId = this.agentRef.runtime.session?.state?.value
+    this.ee.on(SESSION_EVENTS.RESET, forgetReportedStacks)
+    this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
+      if (!data?.value) return
+      /* A reset in another tab arrived as a cross-tab update carrying a new session id. */
+      if (type === SESSION_EVENT_TYPES.CROSS_TAB && currentSessionId && data.value !== currentSessionId) forgetReportedStacks()
+      currentSessionId = data.value // also tracks same-tab writes, so a local reset's new id is picked up
+    })
 
     // 0 == off, 1 == on
     this.waitForFlags(['err']).then(([errFlag]) => {

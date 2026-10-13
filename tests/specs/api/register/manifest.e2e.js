@@ -401,6 +401,55 @@ describe('Register API - Manifest', () => {
     expect(timingEvents[0].totalWeight).toBeGreaterThan(0)
   })
 
+  it('counts every resource a broad RegExp matcher matches toward totalWeight, not just the first', async () => {
+    const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testMFEInsRequest }
+    ])
+
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+      init: { feature_flags: ['register'] }
+    })).then(() => browser.waitForAgentLoad())
+
+    await browser.execute(function () {
+      // Same two scripts loaded for both MFEs: one matches only the first script by exact string, the other matches
+      // both via a single RegExp (like /catalog-chunk-[a-f0-9]+\.js/ would for hashed chunks).
+      window.narrowApi = newrelic.register({
+        id: 'manifest-narrow-weight-mfe',
+        name: 'ManifestNarrowWeightMFE',
+        manifest: { assets: [{ matcher: 'mfe-manifest-secondary.js' }] }
+      })
+      window.broadApi = newrelic.register({
+        id: 'manifest-broad-weight-mfe',
+        name: 'ManifestBroadWeightMFE',
+        manifest: { assets: [{ matcher: /mfe-manifest-secondary(-2)?\.js/, type: 'script' }] }
+      })
+    })
+    await browser.execute(loadSecondaryScript)
+    await browser.execute(function () {
+      loadScript('./js/mfe/mfe-manifest-secondary-2.js')
+      function loadScript (src) {
+        var script = document.createElement('script')
+        script.src = src
+        document.head.appendChild(script)
+      }
+    })
+
+    await browser.pause(500)
+    await browser.execute(function () {
+      window.narrowApi.deregister()
+      window.broadApi.deregister()
+    })
+
+    const insightsHarvests = await mfeInsightsCapture.waitForResult({ timeout: 10000 })
+    const timingEvents = insightsHarvests.flatMap(({ request: { body } }) => body.ins)
+    const narrow = timingEvents.find(event => event.eventType === 'MicroFrontEndTiming' && event['source.id'] === 'manifest-narrow-weight-mfe')
+    const broad = timingEvents.find(event => event.eventType === 'MicroFrontEndTiming' && event['source.id'] === 'manifest-broad-weight-mfe')
+
+    expect(narrow.totalWeight).toBeGreaterThan(0)
+    // The RegExp matches two resources, so it must weigh strictly more than the single-resource matcher.
+    expect(broad.totalWeight).toBeGreaterThan(narrow.totalWeight)
+  })
+
   it('attributes errors from TWO independent manifest-listed scripts to the same MFE', async () => {
     const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testMFEErrorsRequest }
@@ -433,6 +482,7 @@ describe('Register API - Manifest', () => {
     const [logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testLogsRequest }
     ])
+    await mockInfoLoggingRumResponse()
 
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
       init: { feature_flags: ['register'], logging: { enabled: true } }

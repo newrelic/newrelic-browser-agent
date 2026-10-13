@@ -33,6 +33,32 @@ describe('newrelic api', () => {
       })).toEqual(0)
     })
 
+    it('does not inflate the jsAttributes metadata when an attribute is overwritten', async () => {
+      const testUrl = await browser.testHandle.assetURL('instrumented.html')
+      await browser.url(testUrl)
+        .then(() => browser.waitForAgentLoad())
+
+      const getBytes = () => browser.execute(function () {
+        return Object.values(newrelic.initializedAgents)[0].runtime.jsAttributesMetadata.bytes
+      })
+
+      await browser.execute(function () {
+        for (let i = 0; i < 1000; i++) newrelic.setCustomAttribute('testing', 123)
+      })
+      expect(await getBytes()).toEqual(10) // testing (7) + 123 (3) = 10, regardless of how many times it was set
+
+      await browser.execute(function () {
+        newrelic.setCustomAttribute('testing', 'a longer value')
+      })
+      expect(await getBytes()).toEqual(7 + 16) // testing (7) + "a longer value" (16, including quotes)
+
+      await browser.execute(function () {
+        newrelic.setCustomAttribute('testing', null)
+        newrelic.setCustomAttribute('never-set', null) // removing an attribute that doesn't exist must not change the tally
+      })
+      expect(await getBytes()).toEqual(0)
+    })
+
     it('persists attribute onto subsequent page loads until unset', async () => {
       const rumCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testRumRequest })
       const testUrl = await browser.testHandle.assetURL('api/custom-attribute.html', {

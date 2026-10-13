@@ -1,0 +1,24 @@
+{
+  "name": "framework-nextjs",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@newrelic/browser-agent": "file:../../../../temp/newrelic-browser-agent-1.323.0.tgz",
+    "next": "16.4.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "frameworkPackage": "next",
+  "scripts": {
+    "build": "next build && node inject-placeholders.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.x",
+    "@types/react": "*",
+    "@types/react-dom": "*",
+    "typescript": "5.9.3"
+  },
+  "keywords": [],
+  "description": ""
+}

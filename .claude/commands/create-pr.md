@@ -70,7 +70,10 @@ it is CI-enforced by `.github/workflows/validate-pr.yml`.
    `gh pr ready <number>`. Do not mark it ready while any check is failing or
    still pending.
 
-10. **Trigger the WDIO checks in boosted mode — and don't wait on them.** The
+10. **Trigger the WDIO checks in boosted mode — and don't wait on them.**
+    **Skip this step entirely if the PR title's type is `chore`** (e.g.
+    `chore:` or `chore(scope):`) — say that you skipped it and why. Only
+    `feat`, `fix`, and `security` PRs get the wdio dispatch. The
     wdio tests only run via the manually dispatched `Pull Request Checks`
     workflow (`workflow_dispatch`), not on `pull_request`:
     `gh workflow run pull-request-checks.yml --ref <branch> -f boosted=true`

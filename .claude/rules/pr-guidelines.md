@@ -53,9 +53,10 @@ reviewer will expect to see both mentioned, not just one).
    (`gh pr checks <number> --watch`).
 3. Once they pass, mark it ready for review (`gh pr ready <number>`). If any
    fail, leave it as a draft and report to the user.
-4. Dispatch the wdio checks in boosted mode
+4. Unless the PR title type is `chore`, dispatch the wdio checks in boosted mode
    (`gh workflow run pull-request-checks.yml --ref <branch> -f boosted=true`)
    but do **not** wait for them (15-30 min) — the human author monitors those.
+   `chore` PRs skip this step.
 
 See [create-pr.md](../commands/create-pr.md) for the full steps.
 

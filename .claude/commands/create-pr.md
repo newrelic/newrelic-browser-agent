@@ -47,11 +47,38 @@ it is CI-enforced by `.github/workflows/validate-pr.yml`.
    or changes a shared-visibility artifact.
 
 7. **Submit.**
-   - New PR: `gh pr create --base main --title "<title>" --body "<body>"`
+   - New PR: **always open it as a draft** —
+     `gh pr create --draft --base main --title "<title>" --body "<body>"`
      (add `--head <branch>` only if not already on that branch's remote by
-     default).
-   - Existing PR: `gh pr edit <number> --title "<title>" --body "<body>"`.
+     default). Never open a new PR as ready for review.
+   - Existing PR: `gh pr edit <number> --title "<title>" --body "<body>"`
+     (don't change its draft/ready state; skip steps 8-10 unless the user
+     asks for them).
    - Report back the PR URL.
+
+8. **Check the PR checks (new PRs only).** Immediately after creating the
+   draft PR, check the status of the checks kicked off by `pull_request`
+   (`Pull Request Checks`, `Validate PR`, jest, lint, etc.):
+   - `gh pr checks <number> --watch --fail-fast` (or poll
+     `gh pr checks <number>` / `gh run list --branch <branch>` if `--watch`
+     isn't practical).
+   - If a check fails, report which one and why
+     (`gh run view <run-id> --log-failed`) and stop — leave the PR as a draft and let the user decide how to proceed.
+   Don't push fixes unprompted.
+
+9. **Mark ready for review.** Once all of those checks pass, run
+   `gh pr ready <number>`. Do not mark it ready while any check is failing or
+   still pending.
+
+10. **Trigger the WDIO checks in boosted mode — and don't wait on them.** The
+    wdio tests only run via the manually dispatched `Pull Request Checks`
+    workflow (`workflow_dispatch`), not on `pull_request`:
+    `gh workflow run pull-request-checks.yml --ref <branch> -f boosted=true`
+    (`latest-only` defaults to `true`; leave it unless the user asks for the
+    full browser matrix). Confirm the run started (`gh run list --workflow
+    pull-request-checks.yml --branch <branch> --limit 1`), include its URL in
+    your report, and **stop there**. These runs take 15-30 minutes; the human
+    author checks on them. Do not poll or watch them to completion.
 
 ## Notes
 
@@ -60,6 +87,8 @@ it is CI-enforced by `.github/workflows/validate-pr.yml`.
   a correctly-formatted PR, not re-validating it. If the diff obviously looks
   unfinished (e.g. no test files touched for a behavior change), mention it,
   but don't block on it.
+- Draft-first applies to **new** PRs only. Never open a new PR as ready for
+  review, and never mark it ready while checks are failing or pending.
 - Never force-push, never target a branch other than `main`, never guess at
   a GitHub username or org — `gh` already acts as the locally authenticated
   user.

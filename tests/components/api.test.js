@@ -1182,7 +1182,6 @@ describe('API tests', () => {
           expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), 'myObservedLogger', [agent.runtime.v2Target]])
           expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined, [agent.runtime.v2Target]])
 
-          expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/logging/info/called'])
           expectHandled('log', [expect.any(Number), 'test1', {}, 'INFO', false, agent.runtime.v2Target])
 
           const callCount = agent.ee.emit.mock.calls.length
@@ -1210,7 +1209,6 @@ describe('API tests', () => {
           expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName, [agent.runtime.v2Target]])
           expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined, [agent.runtime.v2Target]])
 
-          expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/logging/warn/called'])
           expectHandled('log', [expect.any(Number), 'test1', {}, 'warn', false, agent.runtime.v2Target])
         })
 
@@ -1269,7 +1267,6 @@ describe('API tests', () => {
             agent.log(...args)
 
             expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/log/called'])
-            expectHandled(SUPPORTABILITY_METRIC_CHANNEL, [`API/logging/${logMethod.toLowerCase().replace('log', '')}/called`])
             expectHandled('log', [expect.any(Number), args[0], args[1].customAttributes, logMethod.replace('log', ''), false])
           })
         })

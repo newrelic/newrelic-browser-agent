@@ -5,7 +5,6 @@
 import { handle } from '../../../common/event-emitter/handle'
 import { now } from '../../../common/timing/now'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { LOGGING_EVENT_EMITTER_CHANNEL, LOG_LEVELS } from '../constants'
 
 /**
@@ -17,7 +16,6 @@ import { LOGGING_EVENT_EMITTER_CHANNEL, LOG_LEVELS } from '../constants'
    * @param {object=} targets - the optional targets found
    */
 export function bufferLog (ee, message, customAttributes = {}, level = LOG_LEVELS.INFO, autoCaptured = true, targets, timestamp = now()) {
-  handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/logging/${level.toLowerCase()}/called`], undefined, FEATURE_NAMES.metrics, ee)
   handle(LOGGING_EVENT_EMITTER_CHANNEL, [timestamp, message, customAttributes, level, autoCaptured, targets], undefined, FEATURE_NAMES.logging, ee)
 }
 

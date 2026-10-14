@@ -132,6 +132,7 @@ export class InstrumentBase extends FeatureBase {
         this.loadedSuccessfully(true)
       } catch (e) {
         warn(34, e)
+        this.ee.emit('internal-error', [e, 'Feature-Load']) // before aborting, so the jserrors feature can still take it in when it is a different feature that failed
         this.abortHandler?.()
         // not supported yet but nice to do: "abort" this agent's EE for this feature specifically
         drain(this.agentRef, this.featureName, true)
@@ -215,7 +216,7 @@ async function ensureRuntimeBootstrap (agentRef, ee, featureName) {
         setupAgentSession(agentRef) // sets agentRef.runtime.session, if successful
       } catch (e) {
         warn(20, e)
-        ee.emit('internal-error', [e])
+        ee.emit('internal-error', [e, 'Session-Setup'])
         handle(SESSION_ERROR, [e], undefined, featureName, ee)
       }
     }

@@ -9,11 +9,9 @@ import { LocalStorage } from '../../common/storage/local-storage.js'
 import { getAppSessionHash } from '../../common/session/session-key'
 import { mergeInfo } from '../../common/config/info'
 import { trackObjectAttributeSize } from '../../common/util/attribute-size'
-import { handle } from '../../common/event-emitter/handle'
 import { SET_USER_ID } from '../../loaders/api/constants'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../metrics/constants'
-import { FEATURE_NAMES } from '../../loaders/features/features'
 import { appendJsAttribute } from '../../loaders/api/sharedHandlers'
+import { reportSupportabilityMetric } from '../../common/event-emitter/report-supportability-metric'
 
 export function setupAgentSession (agentRef) {
   if (agentRef.runtime.session) return agentRef.runtime.session // already setup
@@ -63,7 +61,7 @@ export function setupAgentSession (agentRef) {
 
   registerHandler('api-setUserIdAndResetSession', (value) => {
     agentRef.runtime.session.reset()
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + SET_USER_ID + '/resetSession/called'], undefined, FEATURE_NAMES.metrics, sharedEE)
+    reportSupportabilityMetric(sharedEE, 'API/' + SET_USER_ID + '/resetSession/called')
     appendJsAttribute(agentRef, 'enduser.id', value, SET_USER_ID, true)
   }, 'session', sharedEE)
 

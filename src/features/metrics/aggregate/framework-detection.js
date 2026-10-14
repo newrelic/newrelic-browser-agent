@@ -1,200 +1,57 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { isBrowserScope } from '../../../common/constants/runtime'
 
-const FRAMEWORKS = {
-  REACT: 'React',
-  NEXTJS: 'NextJS',
+const has = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key)
+const query = (selector) => document.querySelector(selector)
 
-  VUE: 'Vue',
-  NUXTJS: 'NuxtJS',
+/**
+ * Each entry is [name, test, parent?]. The name is reported as `Framework/<name>/Detected`, so adding a framework here is all that is needed.
+ * - `test` is either a string, meaning "window has that own property", or a function that returns truthy when the framework is detected.
+ * - `parent` is the name of a framework that must also be detected first (e.g. NextJS is only checked when React is detected).
+ * Entries must be ordered so that a parent comes before its children.
+ * @type {Array<[string, (string|function(): *), string=]>}
+ */
+const FRAMEWORKS = [
+  ['React', () => ['React', 'ReactDOM', 'ReactRedux'].some(key => has(window, key)) || query('[data-reactroot], [data-reactid]') ||
+    [...document.querySelectorAll('body > div')].some(div => has(div, '_reactRootContainer'))],
+  ['NextJS', () => has(window, 'next') && has(window.next, 'version'), 'React'],
+  ['Vue', 'Vue'],
+  ['NuxtJS', () => has(window, '$nuxt') && has(window.$nuxt, 'nuxt'), 'Vue'],
+  ['Angular', () => has(window, 'ng') || query('[ng-version]')],
+  ['AngularUniversal', () => query('[ng-server-context]'), 'Angular'],
+  ['Svelte', '__svelte'],
+  ['SvelteKit', () => Object.keys(window).some(key => key.startsWith('__sveltekit')), 'Svelte'],
+  ['Preact', 'preact'],
+  ['PreactSSR', () => query('script[type="__PREACT_CLI_DATA__"]'), 'Preact'],
+  ['AngularJS', () => has(window, 'angular') || query('.ng-binding, [ng-app], [data-ng-app], [ng-controller], [data-ng-controller], [ng-repeat], [data-ng-repeat], script[src*="angular.js"], script[src*="angular.min.js"]')],
+  ['Backbone', 'Backbone'],
+  ['Ember', 'Ember'],
+  ['Meteor', 'Meteor'],
+  ['Zepto', 'Zepto'],
+  ['Jquery', 'jQuery'],
+  ['MooTools', 'MooTools'],
+  ['Qwik', 'qwikevents'],
+  ['Flutter', '_flutter'],
+  ['Electron', () => navigator.userAgent.includes('Electron')]
+]
 
-  ANGULAR: 'Angular',
-  ANGULARUNIVERSAL: 'AngularUniversal',
-
-  SVELTE: 'Svelte',
-  SVELTEKIT: 'SvelteKit',
-
-  PREACT: 'Preact',
-  PREACTSSR: 'PreactSSR',
-
-  ANGULARJS: 'AngularJS',
-  BACKBONE: 'Backbone',
-  EMBER: 'Ember',
-  METEOR: 'Meteor',
-  ZEPTO: 'Zepto',
-  JQUERY: 'Jquery',
-  MOOTOOLS: 'MooTools',
-  QWIK: 'Qwik',
-  FLUTTER: 'Flutter',
-
-  ELECTRON: 'Electron'
-}
-
+/**
+ * Detects which supported frameworks are present on the page.
+ * @returns {string[]} The names of the detected frameworks. Always empty outside of the main window context.
+ */
 export function getFrameworks () {
   if (!isBrowserScope) return [] // don't bother detecting frameworks if not in the main window context
 
   const frameworks = []
-  try {
-    if (detectReact()) {
-      frameworks.push(FRAMEWORKS.REACT)
-
-      if (detectNextJS()) frameworks.push(FRAMEWORKS.NEXTJS)
+  FRAMEWORKS.forEach(([name, test, parent]) => {
+    try {
+      if ((!parent || frameworks.includes(parent)) && (typeof test === 'string' ? has(window, test) : test())) frameworks.push(name)
+    } catch (err) {
+      // Possibly not supported
     }
-    if (detectVue()) {
-      frameworks.push(FRAMEWORKS.VUE)
-
-      if (detectNuxtJS()) frameworks.push(FRAMEWORKS.NUXTJS)
-    }
-    if (detectAngular()) {
-      frameworks.push(FRAMEWORKS.ANGULAR)
-
-      if (detectAngularUniversal()) frameworks.push(FRAMEWORKS.ANGULARUNIVERSAL)
-    }
-    if (detectSvelte()) {
-      frameworks.push(FRAMEWORKS.SVELTE)
-
-      if (detectSvelteKit()) frameworks.push(FRAMEWORKS.SVELTEKIT)
-    }
-    if (detectPreact()) {
-      frameworks.push(FRAMEWORKS.PREACT)
-
-      if (detectPreactSSR()) frameworks.push(FRAMEWORKS.PREACTSSR)
-    }
-
-    if (detectAngularJs()) frameworks.push(FRAMEWORKS.ANGULARJS)
-    if (Object.prototype.hasOwnProperty.call(window, 'Backbone')) frameworks.push(FRAMEWORKS.BACKBONE)
-    if (Object.prototype.hasOwnProperty.call(window, 'Ember')) frameworks.push(FRAMEWORKS.EMBER)
-    if (Object.prototype.hasOwnProperty.call(window, 'Meteor')) frameworks.push(FRAMEWORKS.METEOR)
-    if (Object.prototype.hasOwnProperty.call(window, 'Zepto')) frameworks.push(FRAMEWORKS.ZEPTO)
-    if (Object.prototype.hasOwnProperty.call(window, 'jQuery')) frameworks.push(FRAMEWORKS.JQUERY)
-    if (Object.prototype.hasOwnProperty.call(window, 'MooTools')) frameworks.push(FRAMEWORKS.MOOTOOLS)
-    if (Object.prototype.hasOwnProperty.call(window, 'qwikevents')) frameworks.push(FRAMEWORKS.QWIK)
-    if (Object.hasOwn(window, '_flutter')) frameworks.push(FRAMEWORKS.FLUTTER)
-
-    if (detectElectron()) frameworks.push(FRAMEWORKS.ELECTRON)
-  } catch (err) {
-    // Possibly not supported
-  }
+  })
   return frameworks
-}
-
-function detectReact () {
-  try {
-    return Object.prototype.hasOwnProperty.call(window, 'React') ||
-      Object.prototype.hasOwnProperty.call(window, 'ReactDOM') ||
-      Object.prototype.hasOwnProperty.call(window, 'ReactRedux') ||
-      document.querySelector('[data-reactroot], [data-reactid]') ||
-      (() => {
-        const divs = document.querySelectorAll('body > div')
-        for (let i = 0; i < divs.length; i++) {
-          if (Object.prototype.hasOwnProperty.call(divs[i], '_reactRootContainer')) {
-            return true
-          }
-        }
-      })()
-  } catch (err) {
-    return false
-  }
-}
-
-function detectNextJS () {
-  // React SSR
-  try {
-    return Object.prototype.hasOwnProperty.call(window, 'next') &&
-    Object.prototype.hasOwnProperty.call(window.next, 'version')
-  } catch (err) {
-    return false
-  }
-}
-
-function detectVue () {
-  try {
-    return Object.prototype.hasOwnProperty.call(window, 'Vue')
-  } catch (err) {
-    return false
-  }
-}
-
-function detectNuxtJS () {
-  // Vue SSR
-  try {
-    return Object.prototype.hasOwnProperty.call(window, '$nuxt') &&
-      Object.prototype.hasOwnProperty.call(window.$nuxt, 'nuxt')
-  } catch (err) {
-    return false
-  }
-}
-
-function detectAngular () {
-  try {
-    return Object.prototype.hasOwnProperty.call(window, 'ng') ||
-      document.querySelector('[ng-version]')
-  } catch (err) {
-    return false
-  }
-}
-
-function detectAngularUniversal () {
-  // Anguler SSR
-  try {
-    return document.querySelector('[ng-server-context]')
-  } catch (err) {
-    return false
-  }
-}
-
-function detectSvelte () {
-  try {
-    return Object.prototype.hasOwnProperty.call(window, '__svelte')
-  } catch (err) {
-    return false
-  }
-}
-
-function detectSvelteKit () {
-  // Svelte SSR
-  try {
-    return !!Object.keys(window).find(prop => prop.startsWith('__sveltekit'))
-  } catch (err) {
-    return false
-  }
-}
-
-function detectPreact () {
-  try {
-    return Object.prototype.hasOwnProperty.call(window, 'preact')
-  } catch (err) {
-    return false
-  }
-}
-
-function detectPreactSSR () {
-  // Svelte SSR
-  try {
-    return document.querySelector('script[type="__PREACT_CLI_DATA__"]')
-  } catch (err) {
-    return false
-  }
-}
-
-function detectAngularJs () {
-  try {
-    return Object.prototype.hasOwnProperty.call(window, 'angular') ||
-      document.querySelector('.ng-binding, [ng-app], [data-ng-app], [ng-controller], [data-ng-controller], [ng-repeat], [data-ng-repeat]') ||
-      document.querySelector('script[src*="angular.js"], script[src*="angular.min.js"]')
-  } catch (err) {
-    return false
-  }
-}
-
-function detectElectron () {
-  try {
-    return typeof navigator === 'object' && typeof navigator.userAgent === 'string' &&
-      navigator.userAgent.indexOf('Electron') >= 0
-  } catch (err) {
-    return false
-  }
 }

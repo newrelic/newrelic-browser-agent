@@ -649,6 +649,26 @@ jobs:
   # Verify promotion status for PR gating
   # This job can be used as a required status check to block release-please PR merges
   # until full production promotion completes, while allowing normal PRs to pass through
+  # Update the generated supportability dashboard in US production. It runs after the US production promotion (which needs its manual
+  # approval), so the production dashboard only changes once a release reaches production. The dashboard is replaced whole from the
+  # metric registry in this commit. A failure here never fails the promotion: it is a dashboard update, not part of the release.
+  update-supportability-dashboard-us-prod:
+    name: Update the supportability dashboard (US production)
+    needs: [deploy-us-prod]
+    if: needs.deploy-us-prod.result == 'success'
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    continue-on-error: true
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0
+      - name: Update the US production supportability dashboard
+        env:
+          NR_API_KEY_PRODUCTION: ${{ secrets.NR_API_KEY_PRODUCTION }}
+        run: node tools/supportability-metrics/dashboard/apply.js --env us-prod --validate
+
   verify-promotion:
     runs-on: ubuntu-latest
     if: always() && github.event_name == 'pull_request'

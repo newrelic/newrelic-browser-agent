@@ -40,7 +40,6 @@ export class Aggregate extends AggregateBase {
 
     loadTime.subscribe(({ value: loadEventTime }) => {
       this.initialPageLoadInteraction.done(loadEventTime)
-      this.reportSupportabilityMetric('SoftNav/Interaction/InitialPageLoad/Duration/Ms', Math.round(loadEventTime))
     })
 
     this.latestRouteSetByApi = null
@@ -75,9 +74,6 @@ export class Aggregate extends AggregateBase {
       // Provided there isn't another long task, the ixn span will be extended to include this long task that would finish the interaction.
       this.interactionInProgress.customEnd = task.end
       this.interactionInProgress.watchLongtaskTimer = setTimeout(() => this.interactionInProgress.done(), NO_LONG_TASK_WINDOW)
-
-      // Report metric on frequency of ixn extension due to long task
-      this.reportSupportabilityMetric('SoftNav/Interaction/Extended')
     })
 
     this.#registerApiHandlers()
@@ -113,24 +109,15 @@ export class Aggregate extends AggregateBase {
     }
     this.interactionInProgress.cancellationTimer = setTimeout(() => {
       this.interactionInProgress.done()
-      // Report metric on frequency of cancellation due to timeout for UI ixn
-      this.reportSupportabilityMetric('SoftNav/Interaction/TimeOut')
     }, 30000) // UI ixn are disregarded after 30 seconds if it's not completed by then
     this.setClosureHandlers()
   }
 
   setClosureHandlers () {
     this.interactionInProgress.on('finished', () => {
-      const ref = this.interactionInProgress
       this.events.add(this.interactionInProgress) // add the ixn to the buffer for harvest
       this.interactionInProgress = null
       this.domObserver.disconnect() // can stop observing whenever our interaction logic completes a cycle
-
-      // Report metric on the ixn duration
-      this.reportSupportabilityMetric(
-        `SoftNav/Interaction/${ref.newURL !== ref.oldURL ? 'RouteChange' : 'Custom'}/Duration/Ms`,
-        Math.round(ref.end - ref.start)
-      )
     })
     this.interactionInProgress.on('cancelled', () => {
       this.interactionInProgress = null

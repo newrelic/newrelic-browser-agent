@@ -3,6 +3,7 @@ import { AJAX_ID } from '../../../../../src/features/ajax/constants'
 
 jest.enableAutomock()
 jest.unmock('../../../../../src/features/soft_navigations/aggregate/ajax-node')
+jest.unmock('../../../../../src/common/event-emitter/report-supportability-metric')
 jest.unmock('../../../../../src/features/soft_navigations/aggregate/bel-node')
 jest.unmock('../../../../../src/common/serialize/bel-serializer')
 jest.unmock('../../../../../src/common/util/obfuscate')

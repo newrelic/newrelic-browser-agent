@@ -1,12 +1,14 @@
+import fs from 'fs'
 import * as github from '@actions/github'
 import { args } from './args.js'
 
 const octokit = github.getOctokit(args.githubToken)
 
-const comment = process.env.COMMENT
+const comment = process.env.COMMENT_FILE ? fs.readFileSync(process.env.COMMENT_FILE, 'utf8') : process.env.COMMENT
 if (!comment) {
-  throw new Error('COMMENT environment variable is required')
+  throw new Error('COMMENT or COMMENT_FILE environment variable is required')
 }
+const onlyUpdateExisting = process.env.ONLY_UPDATE_EXISTING === 'true'
 const commentTag = process.env.COMMENT_TAG || ''
 
 let commentBody = comment.split('\n')
@@ -50,6 +52,8 @@ if (existingComment) {
     comment_id: existingComment.id,
     body: commentBody.join('\n')
   })
+} else if (onlyUpdateExisting) {
+  console.log('No existing comment with this tag, and only_update_existing is set, so nothing was posted.')
 } else {
   await octokit.rest.issues.createComment({
     owner: github.context.repo.owner,

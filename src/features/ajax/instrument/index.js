@@ -16,7 +16,6 @@ import { responseSizeFromXhr } from './response-size'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { CAPTURE_PAYLOAD_SETTINGS, FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { SUPPORTABILITY_METRIC } from '../../metrics/constants'
 import { now } from '../../../common/timing/now'
 import { hasUndefinedHostname } from '../../../common/deny-list/deny-list'
 import { extractUrl } from '../../../common/url/extract-url'
@@ -29,6 +28,7 @@ var origRequest = gosNREUMOriginals().o.REQ
 var origXHR = gosNREUMOriginals().o.XHR
 const NR_CAT_HEADER = 'X-NewRelic-App-Data'
 const INTERNAL_ERROR = 'internal-error'
+const INTERNAL_ERROR_REASON = 'Ajax-Instrument'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -181,7 +181,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
         if (evt.type !== 'load' || ((context.called === context.totalCbs) && (context.onloadCalled || typeof (xhr.onload) !== 'function') && typeof context.end === 'function')) context.end(xhr)
       } catch (e) {
         try {
-          ee.emit(INTERNAL_ERROR, [e])
+          ee.emit(INTERNAL_ERROR, [e, INTERNAL_ERROR_REASON])
         } catch (err) {
           // do nothing
         }
@@ -404,7 +404,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
         }.bind(this))
       }
     }).catch((err) => {
-      ee.emit(INTERNAL_ERROR, [err])
+      ee.emit(INTERNAL_ERROR, [err, INTERNAL_ERROR_REASON])
     }).finally(() => {
       finishAndReport()
     })
@@ -451,7 +451,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
       try {
         this.responseHeaders = parseResponseHeaders(xhr.getAllResponseHeaders())
       } catch (err) {
-        ee.emit(INTERNAL_ERROR, [err])
+        ee.emit(INTERNAL_ERROR, [err, INTERNAL_ERROR_REASON])
       }
     }
 
@@ -473,7 +473,6 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     if (ctx.sameOrigin && xhr.getAllResponseHeaders().indexOf(NR_CAT_HEADER) >= 0) {
       var header = xhr.getResponseHeader(NR_CAT_HEADER)
       if (header) {
-        handle(SUPPORTABILITY_METRIC, ['Ajax/CrossApplicationTracing/Header/Seen'], undefined, FEATURE_NAMES.metrics, ee)
         ctx.params.cat = header.split(', ').pop()
       }
     }

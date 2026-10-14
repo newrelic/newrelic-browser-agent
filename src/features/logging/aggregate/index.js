@@ -16,8 +16,6 @@ import { canEnableSessionTracking } from '../../utils/feature-gates'
 import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate } from '../../../common/v2/utils'
 import { EVENT_TYPES } from '../../../common/constants/events'
 
-const LOGGING_EVENT = 'Logging/Event/'
-
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
@@ -80,7 +78,6 @@ export class Aggregate extends AggregateBase {
     if (typeof level === 'string') level = level.toUpperCase()
     if (!isValidLogLevel(level)) return warn(30, level)
     if (modeForThisLog < (LOGGING_MODE[level] || Infinity)) {
-      this.reportSupportabilityMetric(LOGGING_EVENT + 'Dropped/Sampling')
       return
     }
 
@@ -97,7 +94,6 @@ export class Aggregate extends AggregateBase {
       }
     } catch (err) {
       warn(16, message)
-      this.reportSupportabilityMetric(LOGGING_EVENT + 'Dropped/Casting')
       return
     }
     if (typeof message !== 'string' || !message) return warn(32)
@@ -110,7 +106,7 @@ export class Aggregate extends AggregateBase {
         level
       )
 
-      if (this.events.add(log)) this.reportSupportabilityMetric(LOGGING_EVENT + (autoCaptured ? 'Auto' : 'API') + '/Added')
+      this.events.add(log)
     }
 
     addEvent({ ...attributes, ...getVersion2Attributes(target, this) })
@@ -153,7 +149,6 @@ export class Aggregate extends AggregateBase {
 
   /** Abort the feature, once aborted it will not resume */
   abort (reason = {}) {
-    this.reportSupportabilityMetric(`Logging/Abort/${reason.sm}`)
     this.blocked = true
     if (this.events) {
       this.events.clear()

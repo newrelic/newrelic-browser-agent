@@ -1,9 +1,10 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { stringify } from '../../common/util/stringify'
 import { MAX_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
+import { reportSupportabilityMetric } from '../../common/event-emitter/report-supportability-metric'
 
 export class EventBuffer {
   #buffer = []
@@ -51,8 +52,10 @@ export class EventBuffer {
     const addSize = evaluatedSize || stringify(event)?.length || 0 // (estimate) # of bytes a directly stringified event it would take to send
     if (this.#rawBytes + addSize > this.maxPayloadSize) {
       const smTag = inject => `EventBuffer/${inject}/Dropped/Bytes`
-      this.featureAgg?.reportSupportabilityMetric(smTag(this.featureAgg.featureName), addSize) // bytes dropped for this feature will aggregate with this metric tag
-      this.featureAgg?.reportSupportabilityMetric(smTag('Combined'), addSize) // all bytes dropped across all features will aggregate with this metric tag
+      if (this.featureAgg) {
+        reportSupportabilityMetric(this.featureAgg.ee, smTag(this.featureAgg.featureName), addSize) // bytes dropped for this feature will aggregate with this metric tag
+        reportSupportabilityMetric(this.featureAgg.ee, smTag('Combined'), addSize) // all bytes dropped across all features will aggregate with this metric tag
+      }
       return false
     }
     this.#buffer.push(event)

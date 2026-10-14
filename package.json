@@ -228,7 +228,7 @@
   },
   "dependencies": {
     "@newrelic/rrweb": "^1.1.2",
-    "fflate": "0.8.2",
+    "fflate": "0.8.3",
     "web-vitals": "6.2.1"
   },
   "devDependencies": {

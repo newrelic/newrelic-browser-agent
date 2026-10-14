@@ -98,8 +98,7 @@ for (const framework of FRAMEWORKS) {
 
       // Logging verbosity and session replay's sampling mode are decided server-side via RUM
       // response flags (`log`/`logapi` and `sr`/`srs`) - the default log level cycles 1-5 per RUM
-      // call, which can land below our INFO-level test log, and init.session_replay.sampling_rate
-      // is deprecated/ineffective client-side config for the sampling decision. Force both so this
+      // call, which can land below our INFO-level test log. Force both so this
       // test is deterministic.
       await browser.testHandle.scheduleReply('bamServer', {
         test: testRumRequest,

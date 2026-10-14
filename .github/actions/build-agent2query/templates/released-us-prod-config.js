@@ -7,8 +7,6 @@ NREUM.init = {
     enabled: true,
     block_selector: '',
     mask_text_selector: '*',
-    sampling_rate: 100.0,
-    error_sampling_rate: 100.0,
     mask_all_inputs: true,
     collect_fonts: true,
     inline_images: false,

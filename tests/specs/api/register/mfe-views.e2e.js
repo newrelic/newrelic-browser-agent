@@ -3,21 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { testMFEInsRequest } from '../../../../tools/testing-server/utils/expect-tests'
+import { testMFEViewRequest, testMFETimingRequest } from '../../../../tools/testing-server/utils/expect-tests'
 
 const MFE_ID = 'views-mfe'
-
-/**
- * Helper to get MFE events of a given type from harvests
- * @param {Array} harvests - Insights harvests
- * @param {string} eventType - the custom event type to filter by
- * @returns {Array} Filtered events
- */
-function getMFEEvents (harvests, eventType) {
-  return harvests
-    .flatMap(({ request: { body } }) => body?.ins || [])
-    .filter(event => event.eventType === eventType && event['source.id'] === MFE_ID)
-}
 
 /**
  * Loads the page, registers the MFE, and defines a helper to mount tracked nodes in the page.
@@ -40,11 +28,29 @@ async function loadPage () {
 }
 
 describe('Register API - MFE Views', () => {
-  let mfeInsightsCapture
+  let mfeViewsCapture
+  let mfeTimingCapture
+
+  /**
+   * Waits for the deregistration flush (the harvest carrying MicroFrontEndTiming, which proves everything recorded before
+   * deregister() has been sent), then collects every MicroFrontEndView harvested so far.
+   * @returns {Promise<Array>} all MicroFrontEndView events, across harvests
+   */
+  async function waitForViews () {
+    const timingHarvests = await mfeTimingCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+    expect(timingHarvests.length).toBeGreaterThan(0)
+    const viewHarvests = await mfeViewsCapture.waitForResult({ timeout: 1000 })
+    return viewHarvests
+      .flatMap(({ request: { body } }) => body?.ins || [])
+      .filter(event => event.eventType === 'MicroFrontEndView')
+  }
+
+  const isOurs = event => event['source.id'] === MFE_ID
 
   beforeEach(async () => {
-    ;[mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-      { test: testMFEInsRequest }
+    ;[mfeViewsCapture, mfeTimingCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testMFEViewRequest },
+      { test: testMFETimingRequest }
     ])
   })
 
@@ -69,8 +75,7 @@ describe('Register API - MFE Views', () => {
 
     await browser.execute(function () { window.mfeApi.deregister() })
 
-    const harvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
-    const views = getMFEEvents(harvests, 'MicroFrontEndView')
+    const views = (await waitForViews()).filter(isOurs)
 
     expect(views.length).toEqual(4)
     views.forEach(view => {
@@ -97,8 +102,7 @@ describe('Register API - MFE Views', () => {
     await browser.pause(500)
     await browser.execute(function () { window.mfeApi.deregister() })
 
-    const harvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
-    expect(getMFEEvents(harvests, 'MicroFrontEndView').length).toEqual(1)
+    expect((await waitForViews()).filter(isOurs).length).toEqual(1)
   })
 
   it('should not record a view for nodes that are never visible', async () => {
@@ -113,9 +117,7 @@ describe('Register API - MFE Views', () => {
     await browser.pause(1000)
     await browser.execute(function () { window.mfeApi.deregister() })
 
-    const harvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
-    expect(getMFEEvents(harvests, 'MicroFrontEndTiming').length).toEqual(1) // proves the harvest happened
-    expect(getMFEEvents(harvests, 'MicroFrontEndView').length).toEqual(0)
+    expect((await waitForViews()).filter(isOurs).length).toEqual(0)
   })
 
   it('should not record views after deregister', async () => {
@@ -125,8 +127,7 @@ describe('Register API - MFE Views', () => {
     await browser.execute(function () { window.mountView() })
     await browser.pause(1000)
 
-    const harvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
-    expect(getMFEEvents(harvests, 'MicroFrontEndView').length).toEqual(0)
+    expect((await waitForViews()).filter(isOurs).length).toEqual(0)
   })
 
   it('should hand an unseen node to another instance sharing the id when the claiming instance deregisters', async () => {
@@ -146,8 +147,7 @@ describe('Register API - MFE Views', () => {
     await browser.pause(1000)
     await browser.execute(function () { window.mfeApi2.deregister() })
 
-    const harvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
-    expect(getMFEEvents(harvests, 'MicroFrontEndView').length).toEqual(1)
+    expect((await waitForViews()).filter(isOurs).length).toEqual(1)
   })
 
   it('should attribute views to the correct MFE when 4 MFEs render in the same viewport', async () => {
@@ -178,10 +178,8 @@ describe('Register API - MFE Views', () => {
     await browser.pause(1000)
 
     await browser.execute(function () { window.apis.forEach(api => api.deregister()) })
-    await browser.pause(2000)
 
-    const harvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
-    const allViews = harvests.flatMap(({ request: { body } }) => body?.ins || []).filter(e => e.eventType === 'MicroFrontEndView')
+    const allViews = await waitForViews()
 
     Object.entries(expectedCounts).forEach(([id, count]) => {
       const views = allViews.filter(e => e['source.id'] === id)

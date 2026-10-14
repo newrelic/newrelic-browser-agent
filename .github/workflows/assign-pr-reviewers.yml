@@ -1,0 +1,65 @@
+# Assigns a PR to anyone who reviews it or comments on it (approve, request changes, review comment, or a comment in the
+# conversation). Assignment is additive, so multiple reviewers accumulate and nobody is ever unassigned. The PR author is
+# never assigned, and users GitHub considers non-assignable (e.g. no repo access) are silently ignored by the API.
+#
+# Security posture: this workflow never checks out or executes PR code, uses no third-party actions, requests only
+# `pull-requests: write`, and passes every event-derived value through `env:` rather than interpolating into the script.
+# Reviews on fork PRs are skipped because `pull_request_review` gives fork PRs a read-only token; conversation comments on
+# fork PRs still work since `issue_comment` runs from the default branch. Deliberately NOT using `pull_request_target`
+# or `workflow_run` to widen fork coverage.
+
+name: "Assign PR to Reviewers"
+on:
+  pull_request_review:
+    types:
+      - submitted
+  issue_comment:
+    types:
+      - created
+
+permissions:
+  pull-requests: write
+
+jobs:
+  assign:
+    name: Assign PR
+    # issue_comment also fires for plain issues, so only continue for PRs. Skip bots and fork-PR reviews (read-only token).
+    if: >-
+      github.event.sender.type != 'Bot' &&
+      (
+        (github.event_name == 'pull_request_review' &&
+          github.event.pull_request.head.repo.full_name == github.repository) ||
+        (github.event_name == 'issue_comment' && github.event.issue.pull_request)
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Add reviewer as assignee
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login || github.event.issue.user.login }}
+          REVIEWER: ${{ github.event.sender.login }}
+        run: |
+          # Defense in depth: only proceed with values shaped like a PR number / GitHub login
+          if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]] || ! [[ "$REVIEWER" =~ ^[A-Za-z0-9-]+$ ]]; then
+            echo "Unexpected PR number or login format; skipping."
+            exit 0
+          fi
+
+          # Shared/service accounts that should never be assigned (compared case-insensitively, as GitHub logins are)
+          for blocked in newrelic-browser-agent-team; do
+            if [ "${REVIEWER,,}" = "$blocked" ]; then
+              echo "$REVIEWER is a blocked account; not assigning."
+              exit 0
+            fi
+          done
+
+          if [ "$REVIEWER" = "$PR_AUTHOR" ]; then
+            echo "$REVIEWER is the PR author; not assigning."
+            exit 0
+          fi
+
+          gh api --method POST "repos/$REPO/issues/$PR_NUMBER/assignees" -f "assignees[]=$REVIEWER" --silent
+          echo "Requested assignment of #$PR_NUMBER to $REVIEWER."

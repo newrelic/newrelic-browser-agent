@@ -80,17 +80,17 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
-      
+      - uses: actions/checkout@v7
+
       - name: Determine Entity GUID and API Key
         id: entity-config
         run: |
           ACCOUNT_ID="${{ inputs.accountId }}"
           APPLICATION="${{ inputs.application }}"
-          
+
           # Note: All API calls go to staging-api.newrelic.com
           # The application parameter determines which entity GUID to use
-          
+
           # Determine API key based on account ID
           if [ "$ACCOUNT_ID" = "1067061" ]; then
             echo "apiKey=${{ secrets.NR_CHANGE_TRACKING_API_KEY_NR1 }}" >> $GITHUB_OUTPUT
@@ -100,7 +100,7 @@ jobs:
             echo "Error: Unknown account ID: $ACCOUNT_ID"
             exit 1
           fi
-          
+
           # Determine entity GUID based on account ID and application
           if [ "$ACCOUNT_ID" = "550352" ]; then
             case "$APPLICATION" in
@@ -136,7 +136,7 @@ jobs:
                 ;;
             esac
           fi
-      
+
       - name: Create Change Tracking Event
         uses: ./.github/actions/change-tracking
         with:
@@ -155,7 +155,7 @@ jobs:
           deepLink: ${{ inputs.deepLink }}
           user: ${{ github.actor }}
           groupId: ${{ inputs.groupId }}
-      
+
       - name: Summary
         run: |
           echo "## Change Tracking Event Created! :rocket:" >> $GITHUB_STEP_SUMMARY

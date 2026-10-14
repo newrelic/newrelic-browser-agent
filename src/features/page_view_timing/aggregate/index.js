@@ -56,9 +56,9 @@ export class Aggregate extends AggregateBase {
         /* Downstream, the event consumer interprets all timing node value as ms-unit and converts it to seconds via division by 1000. CLS is unitless so this normally is a problem.
           bel.6 schema also doesn't support decimal values, of which cls within [0,1). However, the two nicely cancels out, and we can multiply cls by 1000 to both negate the division
           and send an integer > 1. We effectively lose some precision down to 3 decimal places for this workaround. E.g. (real) 0.749132... -> 749.132...-> 749 -> 0.749 (final) */
-        const { name, value, attrs } = cumulativeLayoutShift.current
+        const { name, value, attrs, observedAt } = cumulativeLayoutShift.current
         if (value === undefined) return
-        this.addTiming(name, value * 1000, attrs)
+        this.addTiming(name, value * 1000, attrs, observedAt)
       }, true, true) // CLS node should only report on vis change rather than on every change.
       /* NOTE: the capture=true is required -- empirically verified against a real browser (Chrome) for CLS
       timing node to reliably be in the same final harvest as the rest, alongside Harvester#startTimer's
@@ -80,7 +80,18 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  addTiming (name, value, attrs) {
+  /**
+   * Records a page view timing node, decorating it with system attributes (page URL, connection info,
+   * CLS-so-far, webdriver detection, and a server-corrected absolute timestamp) before buffering it for harvest.
+   * @param {string} name The timing node's name (e.g. 'fp', 'fcp', 'lcp', 'cls', 'fi', 'pageHide', 'unload').
+   * @param {number} value The timing node's value; a ms offset from page origin for most nodes, but a unitless
+   * score for 'cls'.
+   * @param {object} [attrs] Additional custom attributes to attach to the node.
+   * @param {number} [relativeTime] The page-origin-relative time the node's timestamp attribute should be
+   * derived from, for nodes (namely 'cls') whose `value` isn't itself a usable time offset. Defaults to `value`.
+   * @returns {{name: string, value: number, attrs: object}} The recorded timing node.
+   */
+  addTiming (name, value, attrs, relativeTime = value) {
     attrs = attrs || {}
     attrs.pageUrl = cleanURL(getNavigationEntry()?.name || initialLocation)
 
@@ -99,6 +110,11 @@ export class Aggregate extends AggregateBase {
     }
 
     attrs.webdriverDetected = webdriverDetected
+
+    const timeKeeper = this.agentRef.runtime.timeKeeper
+    if (timeKeeper?.ready && Number.isFinite(relativeTime)) {
+      attrs.timestamp = Math.floor(timeKeeper.correctRelativeTimestamp(relativeTime))
+    }
 
     const timing = {
       name,
@@ -134,7 +150,7 @@ export class Aggregate extends AggregateBase {
 
   #getGlobalCustomAttributes () {
     const reservedAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elTag', 'elUrl', 'net-type',
-      'net-etype', 'net-rtt', 'net-dlink', 'webdriverDetected']
+      'net-etype', 'net-rtt', 'net-dlink', 'webdriverDetected', 'timestamp']
 
     return Object.fromEntries(
       Object.entries(this.agentRef.info.jsAttributes || {}).filter(([key]) => !reservedAttributes.includes(key))

@@ -1,6 +1,9 @@
 Please add a one-paragraph summary here, suitable for a release notes description. This will help with documentation.
 ---
 <!--
+PR title must be `type(scope): description` where type is one of: feat (brand-new capability), enhancement (improves/extends an existing feature), fix, security, chore (no user-facing impact). See CONTRIBUTING.md.
+-->
+<!--
 Thank you for submitting a pull request. This code is leveraged to monitor critical services. Before contributing, please read our [contributing guidelines](https://github.com/newrelic/newrelic-browser-agent/blob/main/CONTRIBUTING.md) and [code of conduct](https://github.com/newrelic/.github/blob/main/CODE_OF_CONDUCT.md).
 -->
 

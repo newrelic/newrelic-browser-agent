@@ -16,6 +16,22 @@ Before submitting an Issue, please search for similar ones in the
 
 If you’re planning on contributing a new feature or an otherwise complex contribution, we kindly ask you to start a conversation with the maintainer team by opening up a Github issue first.
 
+### Pull Request Titles
+
+PR titles must follow the format `type(scope): description` (scope optional; add `!` after the type/scope, e.g. `feat!: ...`, to flag a breaking change) and be 70 characters or fewer. The type determines which section of the release notes the change appears in:
+
+| Type | Use when | Release notes section | Version bump |
+| ---- | -------- | --------------------- | ------------ |
+| `feat` | The change introduces a new capability that did not previously exist. | New features | Minor |
+| `enhancement` | The change improves or extends an existing feature (e.g. a new option, better performance or accuracy) without introducing a new capability. | Improvements and enhancements | Patch |
+| `fix` | The change corrects a bug. | Bug fixes | Patch |
+| `security` | The change addresses a security vulnerability or hardens the agent. | Security updates | Patch |
+| `chore` | The change has no user-facing impact (tests, tooling, CI, docs). | Not included | None (does not trigger a release) |
+
+The version bump for a release is determined by the highest-impact change it contains, so a release containing any `feat` is a minor bump and a release with only `enhancement`, `fix`, and/or `security` changes is a patch bump. A breaking change (a `!` in the title, or a `BREAKING CHANGE:` footer in the commit message) of any type forces a major bump.
+
+If you are unsure between `feat` and `enhancement`, ask: _would a customer describe this as something the agent can do now that it couldn't before?_ If yes, use `feat`; if it makes something the agent already does better, use `enhancement`.
+
 ### General Guidelines
 
 This project is licensed under the Apache-2.0 license. Any third party libraries added as dependencies of the project must have a similarly permissive open source license, e.g. MIT.

@@ -404,6 +404,28 @@ module.exports.testMFEInsRequest = function testInsRequest (request) {
   }
 }
 
+/**
+ * Matches an MFE insights harvest that contains at least one MicroFrontEndTiming event. Use this instead of
+ * testMFEInsRequest when waiting for timing data, since other MFE events (e.g. MicroFrontEndView) can be harvested separately and earlier.
+ */
+module.exports.testMFETimingRequest = function testMFETimingRequest (request) {
+  // note: must be self-contained (no references to other module members), these predicates are evaluated in the test server
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== `/ins/2/${this.testId}`) {
+    return false
+  }
+
+  let ins = request?.body?.ins
+  if (!Array.isArray(ins) && request?.query?.ins) {
+    try {
+      ins = JSON.parse(request.query.ins)
+    } catch (error) {
+      return false
+    }
+  }
+  return Array.isArray(ins) && ins.some(event => event?.eventType === 'MicroFrontEndTiming')
+}
+
 module.exports.testResourcesRequest = function testResourcesRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/resources/1/${this.testId}`) {

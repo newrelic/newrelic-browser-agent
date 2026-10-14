@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { testMFEInsRequest } from '../../../../tools/testing-server/utils/expect-tests'
+import { testMFETimingRequest } from '../../../../tools/testing-server/utils/expect-tests'
 import { supportsCumulativeLayoutShift, supportsInteractionToNextPaint, supportsLargestContentfulPaint } from '../../../../tools/browser-matcher/common-matchers.mjs'
 
 /**
@@ -87,7 +87,7 @@ describe('Register API - MFE Vitals Tracking', () => {
 
   beforeEach(async () => {
     ;[mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-      { test: testMFEInsRequest }
+      { test: testMFETimingRequest }
     ])
   })
 

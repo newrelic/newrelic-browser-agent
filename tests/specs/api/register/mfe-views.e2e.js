@@ -20,11 +20,10 @@ function getMFEEvents (harvests, eventType) {
 }
 
 /**
- * Registers the MFE and, in the page, mounts a visible tracked node. Resolves once the node is in the DOM.
- * @param {string[]} flags feature flags to load the agent with
+ * Loads the page, registers the MFE, and defines a helper to mount tracked nodes in the page.
  */
-async function loadPage (flags) {
-  await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { feature_flags: flags } }))
+async function loadPage () {
+  await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { feature_flags: ['register'] } }))
     .then(() => browser.waitForAgentLoad())
 
   await browser.execute(function (id) {
@@ -54,7 +53,7 @@ describe('Register API - MFE Views', () => {
   })
 
   it('should record a MicroFrontEndView for each new visible node, including after a remount', async () => {
-    await loadPage(['register', 'register.views'])
+    await loadPage()
 
     // mount, unmount, then remount a brand new node: 2 views. Pauses give the IntersectionObserver time to report.
     await browser.execute(function () { window.first = window.mountView() })
@@ -84,7 +83,7 @@ describe('Register API - MFE Views', () => {
   })
 
   it('should count a node already in the DOM when register() is called', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { feature_flags: ['register', 'register.views'] } }))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { feature_flags: ['register'] } }))
       .then(() => browser.waitForAgentLoad())
 
     await browser.execute(function (id) {
@@ -103,7 +102,7 @@ describe('Register API - MFE Views', () => {
   })
 
   it('should not record a view for nodes that are never visible', async () => {
-    await loadPage(['register', 'register.views'])
+    await loadPage()
 
     await browser.execute(function () {
       window.mountView('display:none;') // CSS-hidden
@@ -120,30 +119,18 @@ describe('Register API - MFE Views', () => {
   })
 
   it('should not record views after deregister', async () => {
-    await loadPage(['register', 'register.views'])
+    await loadPage()
 
     await browser.execute(function () { window.mfeApi.deregister() })
     await browser.execute(function () { window.mountView() })
     await browser.pause(1000)
 
     const harvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
-    expect(getMFEEvents(harvests, 'MicroFrontEndView').length).toEqual(0)
-  })
-
-  it('should not record any views without the register.views feature flag', async () => {
-    await loadPage(['register'])
-
-    await browser.execute(function () { window.mountView() })
-    await browser.pause(1000)
-    await browser.execute(function () { window.mfeApi.deregister() })
-
-    const harvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
-    expect(getMFEEvents(harvests, 'MicroFrontEndTiming').length).toEqual(1) // proves the harvest happened
     expect(getMFEEvents(harvests, 'MicroFrontEndView').length).toEqual(0)
   })
 
   it('should hand an unseen node to another instance sharing the id when the claiming instance deregisters', async () => {
-    await loadPage(['register', 'register.views'])
+    await loadPage()
 
     await browser.execute(function (id) {
       // a second independent registration sharing the id; the first registration claims inserted nodes
@@ -164,7 +151,7 @@ describe('Register API - MFE Views', () => {
   })
 
   it('should attribute views to the correct MFE when 4 MFEs render in the same viewport', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { feature_flags: ['register', 'register.views'] } }))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { feature_flags: ['register'] } }))
       .then(() => browser.waitForAgentLoad())
 
     // each MFE mounts a different number of nodes, so any cross-attribution or double-counting shows up as a wrong tally

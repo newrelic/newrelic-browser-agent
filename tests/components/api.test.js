@@ -697,24 +697,15 @@ describe('API tests', () => {
 
       describe('MicroFrontEndView', () => {
         afterEach(() => {
-          agent.init.feature_flags = []
           trackMFEViews.mockClear()
         })
 
-        test('should not track views without the register.views feature flag', () => {
-          agent.init.feature_flags = []
-          agent.register({ id, name })
-          expect(trackMFEViews).not.toHaveBeenCalled()
-        })
-
-        test('should not track views for a blocked (invalid) target even with the flag', () => {
-          agent.init.feature_flags = ['register.views']
+        test('should not track views for a blocked (invalid) target', () => {
           agent.register({ id })
           expect(trackMFEViews).not.toHaveBeenCalled()
         })
 
-        test('should track views with the register.views feature flag and record a MicroFrontEndView event per view', () => {
-          agent.init.feature_flags = ['register.views']
+        test('should track views and record a MicroFrontEndView event per view', () => {
           const myApi = agent.register({ id, name })
           expect(trackMFEViews).toHaveBeenCalledTimes(1)
           expect(trackMFEViews).toHaveBeenCalledWith(myApi.metadata.target, expect.any(Function))
@@ -728,7 +719,6 @@ describe('API tests', () => {
         })
 
         test('should stop tracking views on deregister and not record further views', () => {
-          agent.init.feature_flags = ['register.views']
           const myApi = agent.register({ id, name })
           const tracker = trackMFEViews.mock.results[0].value
           myApi.deregister()

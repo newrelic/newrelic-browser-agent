@@ -20,7 +20,6 @@ import { subscribeToPageUnload } from '../../common/window/page-visibility'
 import { findScriptTimings, applyManifestTimings } from '../../common/v2/script-tracker'
 import { trackMFEVitals } from '../../common/v2/mfe-vitals'
 import { trackMFEViews } from '../../common/v2/mfe-views'
-import { FEATURE_FLAGS } from '../../features/generic_events/constants'
 import { generateRandomHexString } from '../../common/ids/unique-id'
 import { parseManifest } from '../../common/v2/manifest'
 import { cleanURL } from '../../common/url/clean-url'
@@ -135,7 +134,7 @@ function register (agentRef, target) {
 
   /** @type {Function} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
   let invalidApiResponse = () => {}
-  /** @type {{disconnect: () => void}} the tracker for MicroFrontEndView events. A no-op unless the register.views feature flag is on. */
+  /** @type {{disconnect: () => void}} the tracker for MicroFrontEndView events */
   let views = { disconnect: () => {} }
   /** @type {Array} the array of registered target APIs */
   const registeredEntities = agentRef.runtime.registeredEntities
@@ -207,10 +206,8 @@ function register (agentRef, target) {
   if (!isBlocked()) {
     registeredEntities.push(api)
     subscribeToPageUnload(reportTimings)
-    /* Staging-only: emit a MicroFrontEndView custom event each time a new tracked node becomes visible. Gated behind the register.views feature flag. */
-    if (agentRef.init.feature_flags.includes(FEATURE_FLAGS.REGISTER_VIEWS)) {
-      views = trackMFEViews(target, () => api.recordCustomEvent('MicroFrontEndView'))
-    }
+    /* Emit a MicroFrontEndView custom event each time a new tracked node becomes visible. */
+    views = trackMFEViews(target, () => api.recordCustomEvent('MicroFrontEndView'))
   }
 
   /**

@@ -81,7 +81,7 @@ jobs:
           // Comprehensive experiment configuration for dev A/B account
           window.NREUM = window.NREUM || {};
           window.NREUM.init = {
-            feature_flags: ['ajax_metrics_deny_list', 'register', 'register.views'],
+            feature_flags: ['ajax_metrics_deny_list', 'register'],
             distributed_tracing: {
               enabled: true
             },

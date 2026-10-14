@@ -19,6 +19,7 @@ export const RESERVED_EVENT_TYPES = [EVENT_TYPES.PA, EVENT_TYPES.UA, EVENT_TYPES
 
 export const FEATURE_FLAGS = {
   RESOURCES: 'experimental.resources',
-  REGISTER: 'register'
+  REGISTER: 'register',
+  REGISTER_VIEWS: 'register.views'
   // register.jserrors and register.generic_events are also used, but not referenced directly so no need to represent here
 }

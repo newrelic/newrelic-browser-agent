@@ -91,7 +91,6 @@ test('init props exist and return expected defaults', () => {
     block_selector: '[data-nr-block]',
     collect_fonts: false,
     enabled: false,
-    error_sampling_rate: 100,
     fix_stylesheets: true,
     ignore_class: 'nr-ignore',
     inline_images: false,
@@ -116,8 +115,7 @@ test('init props exist and return expected defaults', () => {
     },
     mask_text_class: 'nr-mask',
     mask_text_selector: '*',
-    preload: false,
-    sampling_rate: 10
+    preload: false
   })
   expect(config.session_trace).toEqual({
     autoStart: true,

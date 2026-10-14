@@ -94,8 +94,6 @@ const validOptions: AgentOptions = {
       autoStart: true,
       enabled: false,
       preload: false,
-      // sampling_rate: 10,
-      // error_sampling_rate: 100,
       collect_fonts: false,
       inline_images: false,
       fix_stylesheets: true,

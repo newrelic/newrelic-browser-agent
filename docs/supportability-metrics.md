@@ -227,10 +227,6 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Config/SessionReplay/BlockSelector/Modified
 <!--- init.Session_replay.mask_text_selector was Changed from the default --->
 * Config/SessionReplay/MaskTextSelector/Modified
-<!--- init.Session_replay.sampling_rate --->
-* Config/SessionReplay/SamplingRate/Value
-<!--- init.Session_replay.error_sampling_rate  --->
-* Config/SessionReplay/ErrorSamplingRate/Value
 <!--- init.Session_replay.fix_stylesheets was modified  --->
 * Config/SessionReplay/InlineStylesheet/Modified
 

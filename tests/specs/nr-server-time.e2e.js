@@ -103,7 +103,7 @@ describe('NR Server Time', () => {
     serverTime = await browser.mockDateResponse(undefined, { flags: { sr: 1, srs: 1 } })
     const [[{ request: replayData }], timeKeeper] = await Promise.all([
       sessionReplayCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { sampling_rate: 100, preload: false } })))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { preload: false } })))
         .then(() => browser.waitForSessionReplayRecording())
         .then(() => browser.getPageTime())
     ])

@@ -38,7 +38,7 @@ jobs:
   resolve-version:
     # Only run for manual dispatch or release-please PRs
     if: |
-      github.event_name == 'workflow_dispatch' || 
+      github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please--'))
     runs-on: ubuntu-latest
     outputs:
@@ -50,7 +50,7 @@ jobs:
         id: determine-mode
         run: |
           CDN_PATH="${{ inputs.deployment_source }}"
-          
+
           if [[ -z "$CDN_PATH" ]]; then
             echo "is_rc_mode=true" >> $GITHUB_OUTPUT
             echo "🚀 Release Candidate mode: Will build fresh from current branch for each environment"
@@ -58,13 +58,13 @@ jobs:
             echo "is_rc_mode=false" >> $GITHUB_OUTPUT
             echo "📦 Specific version mode: Will use provided version/URL"
           fi
-      
+
       - name: Resolve CDN path for specific version mode
         if: steps.determine-mode.outputs.is_rc_mode == 'false'
         id: resolve-cdn-path
         run: |
           CDN_PATH="${{ inputs.deployment_source }}"
-          
+
           if [[ "$CDN_PATH" =~ ^https?:// ]]; then
             # Full URL provided
             SCRIPT_URL="$CDN_PATH"
@@ -87,7 +87,7 @@ jobs:
             echo "  - Full URL: https://js-agent.newrelic.com/nr-loader-spa-1.314.0.min.js"
             exit 1
           fi
-          
+
           echo "script_url=$SCRIPT_URL" >> $GITHUB_OUTPUT
           echo "version_label=$VERSION_LABEL" >> $GITHUB_OUTPUT
           echo "✅ Resolved CDN path: $SCRIPT_URL"
@@ -100,12 +100,12 @@ jobs:
     environment: nr1-dev
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
         with:
           node-version: 24.14.0
-      
+
       # Determine branch name for webpack version suffix
       - name: Determine branch name for version
         id: branch-name
@@ -115,12 +115,12 @@ jobs:
           else
             BRANCH="${{ github.ref_name }}"
           fi
-          
+
           # Clean branch name for version suffix (lowercase, replace special chars with hyphens)
           CLEAN_BRANCH=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
           echo "branch_name=${CLEAN_BRANCH}" >> $GITHUB_OUTPUT
           echo "🏷️  Using branch-specific version suffix: ${CLEAN_BRANCH}"
-      
+
       # Build and deploy RC assets
       - name: Deploy RC assets for dev
         if: needs.resolve-version.outputs.is_rc_mode == 'true'
@@ -136,7 +136,7 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-      
+
       - name: Promote agent to Dev
         uses: ./.github/actions/internal-promotion
         with:
@@ -149,7 +149,7 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-    
+
     outputs:
       version_label: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.version_label || needs.resolve-version.outputs.version_label }}
 
@@ -160,7 +160,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Create dev change tracking event (Account 1067061)
         uses: ./.github/actions/change-tracking
         with:
@@ -187,7 +187,7 @@ jobs:
     outputs:
       slack_payload: ${{ steps.health-check.outputs.slack_payload }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Run NRQL health check
         id: health-check
         uses: ./.github/actions/nrql-health-check
@@ -206,7 +206,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
@@ -227,12 +227,12 @@ jobs:
     environment: nr1-staging
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
         with:
           node-version: 24.14.0
-      
+
       # Build and deploy RC assets
       - name: Deploy RC assets for staging
         if: needs.resolve-version.outputs.is_rc_mode == 'true'
@@ -247,7 +247,7 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-      
+
       - name: Promote agent to Staging
         uses: ./.github/actions/internal-promotion
         with:
@@ -260,7 +260,7 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-    
+
     outputs:
       version_label: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.version_label || needs.resolve-version.outputs.version_label }}
 
@@ -271,7 +271,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Create staging change tracking event (Account 1067061)
         uses: ./.github/actions/change-tracking
         with:
@@ -298,7 +298,7 @@ jobs:
     outputs:
       slack_payload: ${{ steps.health-check.outputs.slack_payload }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Run NRQL health check
         id: health-check
         uses: ./.github/actions/nrql-health-check
@@ -317,7 +317,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
@@ -333,12 +333,12 @@ jobs:
     environment: nr1-eu-prod
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
         with:
           node-version: 24.14.0
-      
+
       # Build and deploy RC assets
       - name: Deploy RC assets for eu-prod
         if: needs.resolve-version.outputs.is_rc_mode == 'true'
@@ -353,7 +353,7 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-      
+
       - name: Promote agent to EU Production
         uses: ./.github/actions/internal-promotion
         with:
@@ -366,7 +366,7 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-    
+
     outputs:
       version_label: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.version_label || needs.resolve-version.outputs.version_label }}
 
@@ -377,7 +377,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Create EU production change tracking event (Account 1067061)
         uses: ./.github/actions/change-tracking
         with:
@@ -404,7 +404,7 @@ jobs:
     outputs:
       slack_payload: ${{ steps.health-check.outputs.slack_payload }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Run NRQL health check
         id: health-check
         uses: ./.github/actions/nrql-health-check
@@ -423,7 +423,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
@@ -440,12 +440,12 @@ jobs:
     environment: nr1-jp-prod
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
         with:
           node-version: 24.14.0
-      
+
       # Build and deploy RC assets
       - name: Deploy RC assets for jp-prod
         if: needs.resolve-version.outputs.is_rc_mode == 'true'
@@ -460,7 +460,7 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-      
+
       - name: Promote agent to JP Production
         uses: ./.github/actions/internal-promotion
         with:
@@ -473,7 +473,7 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-    
+
     outputs:
       version_label: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.version_label || needs.resolve-version.outputs.version_label }}
 
@@ -484,7 +484,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Create JP production change tracking event (Account 1067061)
         uses: ./.github/actions/change-tracking
         with:
@@ -511,7 +511,7 @@ jobs:
     outputs:
       slack_payload: ${{ steps.health-check.outputs.slack_payload }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Run NRQL health check
         id: health-check
         uses: ./.github/actions/nrql-health-check
@@ -530,7 +530,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
@@ -539,7 +539,7 @@ jobs:
           payload: ${{ needs.health-check-jp-prod.outputs.slack_payload }}
           dashboard_url: 'https://staging.onenr.io/0gR7nJbxkwo'
 
-  
+
   # Step 5: Deploy to US Production
   deploy-us-prod:
     needs: [resolve-version, deploy-jp-prod]
@@ -547,12 +547,12 @@ jobs:
     environment: nr1-us-prod
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
         with:
           node-version: 24.14.0
-      
+
       # Build and deploy RC assets
       - name: Deploy RC assets for us-prod
         if: needs.resolve-version.outputs.is_rc_mode == 'true'
@@ -567,7 +567,7 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-      
+
       - name: Promote agent to US Production
         uses: ./.github/actions/internal-promotion
         with:
@@ -580,7 +580,7 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-    
+
     outputs:
       version_label: ${{ needs.resolve-version.outputs.is_rc_mode == 'true' && steps.deploy-rc.outputs.version_label || needs.resolve-version.outputs.version_label }}
 
@@ -591,7 +591,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Create US production change tracking event (Account 1067061)
         uses: ./.github/actions/change-tracking
         with:
@@ -618,7 +618,7 @@ jobs:
     outputs:
       slack_payload: ${{ steps.health-check.outputs.slack_payload }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Run NRQL health check
         id: health-check
         uses: ./.github/actions/nrql-health-check
@@ -637,7 +637,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:

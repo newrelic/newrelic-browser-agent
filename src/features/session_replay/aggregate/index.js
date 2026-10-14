@@ -92,7 +92,7 @@ export class Aggregate extends AggregateBase {
       this.handleError(e)
     }, this.featureName, this.ee)
 
-    const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = agentRef.init.session_replay
+    const { autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = agentRef.init.session_replay
 
     this.waitForFlags(['srs', 'sr']).then(([srMode, entitled]) => {
       this.entitled = !!entitled
@@ -122,9 +122,6 @@ export class Aggregate extends AggregateBase {
     if (mask_all_inputs !== true) this.reportSupportabilityMetric('Config/SessionReplay/MaskAllInputs/Modified')
     if (block_selector !== '[data-nr-block]') this.reportSupportabilityMetric('Config/SessionReplay/BlockSelector/Modified')
     if (mask_text_selector !== '*') this.reportSupportabilityMetric('Config/SessionReplay/MaskTextSelector/Modified')
-
-    this.reportSupportabilityMetric('Config/SessionReplay/SamplingRate/Value', sampling_rate)
-    this.reportSupportabilityMetric('Config/SessionReplay/ErrorSamplingRate/Value', error_sampling_rate)
   }
 
   replayIsActive () {

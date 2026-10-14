@@ -2,7 +2,7 @@ import {
   testLogsRequest,
   testMFEErrorsRequest,
   testMFEAjaxEventsRequest,
-  testMFEInsRequest
+  testMFETimingRequest
 } from '../../../../tools/testing-server/utils/expect-tests'
 
 describe('Register API - General Behaviors', () => {
@@ -511,7 +511,7 @@ describe('Register API - General Behaviors', () => {
       { test: testMFEErrorsRequest },
       { test: testMFEAjaxEventsRequest },
       { test: testLogsRequest },
-      { test: testMFEInsRequest }
+      { test: testMFETimingRequest }
     ])
 
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {

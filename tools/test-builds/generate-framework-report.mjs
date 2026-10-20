@@ -33,14 +33,31 @@ const cell = (row) => (feature) => {
   return `<td class="${passed ? 'pass' : 'fail'}">${passed ? '✓' : '✗'}</td>`
 }
 
-// Every row comes from the same test run, so the agent version and browser under test are
-// expected to be consistent across rows - fall back to listing distinct values if they aren't.
-const summarize = (values) => {
-  const distinct = [...new Set(values.filter(Boolean))]
-  return distinct.length ? distinct.join(', ') : 'unknown'
-}
-const agentVersion = summarize(rows.map(row => row.agentVersion))
-const browserUnderTest = summarize(rows.map(row => [row.browser, row.browserVersion].filter(Boolean).join(' ')))
+// Rows are one framework in one browser. LambdaTest browsers and local runtimes (electron) are
+// reported in separate tables, each ordered by browser then framework.
+const byBrowserThenFramework = (a, b) => `${a.browser} ${a.browserVersion}`.localeCompare(`${b.browser} ${b.browserVersion}`, undefined, { numeric: true }) ||
+  a.framework.localeCompare(b.framework)
+const agentVersion = [...new Set(rows.map(row => row.agentVersion).filter(Boolean))].join(', ') || 'unknown'
+
+const table = (title, tableRows) => tableRows.length === 0
+  ? ''
+  : `<h2>${title}</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Browser</th>
+        <th>Framework</th>
+        ${FEATURES.map(f => `<th>${f}</th>`).join('\n        ')}
+      </tr>
+    </thead>
+    <tbody>
+      ${tableRows.sort(byBrowserThenFramework).map(row => `<tr>
+        <td class="browser">${[row.browser, row.browserVersion].filter(Boolean).join(' ')}</td>
+        <td class="framework">${row.framework} ${row.version}</td>
+        ${FEATURES.map(cell(row)).join('\n        ')}
+      </tr>`).join('\n      ')}
+    </tbody>
+  </table>`
 
 const html = `<!doctype html>
 <html>
@@ -55,7 +72,8 @@ const html = `<!doctype html>
   th { background: #f5f5f5; }
   td.pass { color: #1a7f37; font-weight: bold; }
   td.fail { color: #cf222e; font-weight: bold; }
-  td.framework { text-align: left; font-weight: 600; }
+  td.framework, td.browser { text-align: left; font-weight: 600; }
+  h2 { font-size: 1.05rem; margin-top: 1.5rem; }
   .timestamp { color: #666; font-size: 0.85rem; margin-bottom: 1rem; }
   .run-info { margin-bottom: 1rem; font-size: 0.9rem; }
 </style>
@@ -65,22 +83,9 @@ const html = `<!doctype html>
   <div class="timestamp">Generated ${new Date().toISOString()}</div>
   <div class="run-info">
     <div><strong>Browser Agent version:</strong> ${agentVersion}</div>
-    <div><strong>Tested on:</strong> ${browserUnderTest}</div>
   </div>
-  <table>
-    <thead>
-      <tr>
-        <th>Framework</th>
-        ${FEATURES.map(f => `<th>${f}</th>`).join('\n        ')}
-      </tr>
-    </thead>
-    <tbody>
-      ${rows.map(row => `<tr>
-        <td class="framework">${row.framework} ${row.version}</td>
-        ${FEATURES.map(cell(row)).join('\n        ')}
-      </tr>`).join('\n      ')}
-    </tbody>
-  </table>
+  ${table('Browsers', rows.filter(row => !row.local))}
+  ${table('Local runtimes', rows.filter(row => row.local))}
 </body>
 </html>
 `

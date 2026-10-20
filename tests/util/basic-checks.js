@@ -1,5 +1,5 @@
 /* eslint-disable */
-import {onlyAndroid, lambdaTestWebdriverFalse, supportsFirstPaint} from "../../tools/browser-matcher/common-matchers.mjs";
+import {onlyAndroid, onlyElectron, lambdaTestWebdriverFalse, supportsFirstPaint} from "../../tools/browser-matcher/common-matchers.mjs";
 
 expect.extend({
   toBeOneOfTypes(received, types) {
@@ -325,7 +325,9 @@ export function checkSpa ({ query, body }, { trigger } = {}) {
   }))
   // *cli Jun'24 - LambdaTest's Android Chrome arbitrarily have paint timing in spa tests checking IPL depending on some race condition.
   // Sometimes they are present (Number) and sometimes not (null). It's too unreliable for tests so their check is excluded.
-  if (!browserMatch(onlyAndroid)) {
+  // Electron has the same race: its window's first paint lands (~100ms) after the initial page load interaction has
+  // already ended (~25ms), so the interaction legitimately records null paint timings.
+  if (!browserMatch(onlyAndroid) && !browserMatch(onlyElectron)) {
     expect(interaction).toEqual(expect.objectContaining({
       firstPaint: browserMatch(supportsFirstPaint) && (!trigger || trigger === 'initialPageLoad') ? expect.any(Number) : null,
       firstContentfulPaint: (!trigger || trigger === 'initialPageLoad') ? expect.any(Number) : null

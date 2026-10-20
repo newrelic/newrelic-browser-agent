@@ -10,7 +10,7 @@ export default class TestLogger {
    * Gets executed testing begins in the worker thread.
    */
   async before (capabilities) {
-    if (capabilities['LT:Options'].deviceName) {
+    if (capabilities['LT:Options']?.deviceName) {
       // Mobile execution
       if (capabilities['appium:platformName'] === 'android') {
         // Android Webview

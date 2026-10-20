@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "1.323.0",
+  "version": "1.324.0",
   "private": false,
   "author": "New Relic Browser Agent Team <browser-agent@newrelic.com>",
   "description": "New Relic Browser Agent",
@@ -208,6 +208,7 @@
     "cdn:webpack": "npx webpack --progress --config ./tools/webpack/index.mjs",
     "cdn:watch": "jung -r ./src -F '.*\\.test\\.js' --run -- npm run cdn:build:local",
     "test-server": "node ./tools/wdio/bin/server",
+    "electron:open": "node tools/local-browsers/electron/open.mjs",
     "lt:update-browsers": "node ./tools/browsers-lists/lt-update-supported.mjs",
     "lt:upload-webview-assets": "node ./tools/lambda-test/upload-webview-assets.mjs",
     "build:frameworks": "npm run build:npm && npm --prefix ./tools/test-builds run build-frameworks",

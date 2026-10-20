@@ -194,10 +194,10 @@ export class Recorder {
       this.clearBuffer()
     }
 
-    // meta event
-    this.hasSeenMeta ||= this.events.hasMeta ||= event.type === RRWEB_EVENT_TYPES.Meta
-    // snapshot event
-    this.hasSeenSnapshot ||= this.events.hasSnapshot ||= event.type === RRWEB_EVENT_TYPES.FullSnapshot
+    this.events.hasMeta ||= event.type === RRWEB_EVENT_TYPES.Meta
+    this.events.hasSnapshot ||= event.type === RRWEB_EVENT_TYPES.FullSnapshot
+    this.hasSeenMeta ||= this.events.hasMeta
+    this.hasSeenSnapshot ||= this.events.hasSnapshot
 
     //* dont let the EventBuffer class double evaluate the event data size, it's a performance burden and we have special reasons to do it outside the event buffer */
     this.events.add(event, eventBytes)

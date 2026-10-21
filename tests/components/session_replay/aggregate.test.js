@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { ERROR_DURING_REPLAY } from '../../../src/features/session_replay/constants'
+import { ERROR_DURING_REPLAY, RRWEB_EVENT_TYPES } from '../../../src/features/session_replay/constants'
 import { IDEAL_PAYLOAD_SIZE, MAX_PAYLOAD_SIZE } from '../../../src/common/constants/agent-constants'
 import { MODE, SESSION_EVENTS } from '../../../src/common/session/constants'
 import { FEATURE_NAMES } from '../../../src/loaders/features/features'
@@ -179,7 +179,7 @@ describe('Session Replay Error Mode Behaviors', () => {
     expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledWith(sessionReplayAggregate)
   })
 
-  test('switchToFull from a non-ERROR mode does not force an extra harvest', async () => {
+  test('switchToFull from a non-ERROR mode triggers early harvest', async () => {
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
 
@@ -192,8 +192,80 @@ describe('Session Replay Error Mode Behaviors', () => {
     // simulate successful retry -- switchToFull() runs here with prevMode === MODE.OFF, not MODE.ERROR
     sessionReplayAggregate.postHarvestCleanup({ sent: true, retry: false })
     expect(sessionReplayAggregate.mode).toEqual(MODE.FULL)
+    // New recording should trigger early harvest mechanism for Snapshot + Meta events
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
+  })
+})
 
-    expect(mainAgent.runtime.harvester.triggerHarvestFor).not.toHaveBeenCalled()
+describe('Session Replay hasMeta/hasSnapshot Flag Behavior', () => {
+  afterEach(() => {
+    jest.unmock('fflate')
+  })
+
+  test('events.hasMeta/hasSnapshot correctly stay true on later checkouts once hasSeenMeta/hasSeenSnapshot flip true', async () => {
+    sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.ERROR }])
+    await new Promise(process.nextTick)
+
+    const recorder = sessionReplayAggregate.recorder
+
+    // real recording already completed its initial checkout by this point (recordAfter: DOMContentLoaded
+    // has already fired in jsdom), so hasSeenMeta/hasSeenSnapshot are already true
+    expect(recorder.hasSeenMeta).toEqual(true)
+    expect(recorder.hasSeenSnapshot).toEqual(true)
+    expect(recorder.events.hasMeta).toEqual(true)
+    expect(recorder.events.hasSnapshot).toEqual(true)
+
+    // a second checkout arrives. The Meta node (isCheckout: true) makes store() call clearBuffer()
+    // internally (isErrorMode && isCheckout && type === Meta), handing us a fresh buffer whose
+    // hasMeta/hasSnapshot default to false.
+    recorder.store({ type: RRWEB_EVENT_TYPES.Meta, timestamp: Date.now() }, true)
+    recorder.store({ type: RRWEB_EVENT_TYPES.FullSnapshot, timestamp: Date.now() }, true)
+
+    expect(recorder.events.events.map(e => e.type)).toEqual([RRWEB_EVENT_TYPES.Meta, RRWEB_EVENT_TYPES.FullSnapshot])
+    expect(recorder.events.hasMeta).toEqual(true)
+    expect(recorder.events.hasSnapshot).toEqual(true)
+  })
+
+  test('a harvest sent after ERROR -> FULL correctly reports hasMeta/hasSnapshot true when its body contains real Meta/FullSnapshot nodes', async () => {
+    // force compression to fail so payload.body stays as the uncompressed node array instead of
+    // being overwritten in place with gzip bytes
+    jest.doMock('fflate', () => ({
+      __esModule: true,
+      gzipSync: jest.fn().mockImplementation(() => { throw new Error() })
+    }))
+
+    jest.spyOn(sessionReplayAggregate, 'getHarvestContents')
+
+    sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.ERROR }])
+    await new Promise(process.nextTick)
+
+    const recorder = sessionReplayAggregate.recorder
+    // cycle 1 is the initial snapshot rrweb takes automatically the moment recording starts
+    // (regardless of mode) -- it already happened by this point, with hasMeta/hasSnapshot legitimately true
+
+    // cycle 2: store()'s internal clearBuffer() (triggered by this Meta node) hands us a fresh buffer;
+    // hasSeenMeta/hasSeenSnapshot are already true, so its own hasMeta/hasSnapshot get stuck false
+    recorder.store({ type: RRWEB_EVENT_TYPES.Meta, timestamp: Date.now() }, true)
+    recorder.store({ type: RRWEB_EVENT_TYPES.FullSnapshot, timestamp: Date.now() }, true)
+    // at this point backloggedEvents still holds cycle 1 (true), so the merged view is still true --
+    // one more cycle is needed to overwrite that backlog with an equally-bugged (false) one
+
+    // cycle 3: same bug again. Now backloggedEvents holds cycle 2 (false) and events holds cycle 3
+    // (false) -- the merged view (what actually gets sent) is false, false
+    recorder.store({ type: RRWEB_EVENT_TYPES.Meta, timestamp: Date.now() }, true)
+    recorder.store({ type: RRWEB_EVENT_TYPES.FullSnapshot, timestamp: Date.now() }, true)
+
+    // customer scenario: an error finally occurs, switching ERROR -> FULL and forcing an immediate harvest
+    ee.get(mainAgent.agentIdentifier).emit(ERROR_DURING_REPLAY, ['test1'], undefined, FEATURE_NAMES.sessionReplay, ee.get(mainAgent.agentIdentifier))
+    expect(sessionReplayAggregate.mode).toEqual(MODE.FULL)
+
+    const harvestContents = jest.mocked(sessionReplayAggregate.getHarvestContents).mock.results[0].value
+    expect(harvestContents.body.filter(e => e.type === RRWEB_EVENT_TYPES.Meta).length).toBeGreaterThan(0)
+    expect(harvestContents.body.filter(e => e.type === RRWEB_EVENT_TYPES.FullSnapshot).length).toBeGreaterThan(0)
+
+    const urlParams = new URLSearchParams(harvestContents.qs.attributes)
+    expect(urlParams.get('hasMeta')).toEqual('true')
+    expect(urlParams.get('hasSnapshot')).toEqual('true')
   })
 })
 
@@ -336,6 +408,9 @@ describe('Session Replay Harvest Behaviors', () => {
     expect(sessionReplayAggregate.blocked).toEqual(false)
     expect(sessionReplayAggregate.mode).toEqual(MODE.OFF)
     expect(sessionReplayAggregate.recorder.retryPayload).not.toBeUndefined()
+
+    // ensure regular harvest logic doesn't trigger an unrelated harvest payload, which sets a retryPayload regardless
+    mainAgent.runtime.harvester.triggerHarvestFor.mockImplementation(() => {})
 
     // simulate successful retry
     sessionReplayAggregate.postHarvestCleanup({ sent: true, retry: false })

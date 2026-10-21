@@ -26,6 +26,7 @@ import { now } from '../../src/common/timing/now'
 import { warnings } from '../../src/loaders/api/register'
 import { single } from '../../src/common/util/invoke'
 import { warn } from '../../src/common/util/console'
+import { trackMFEViews } from '../../src/common/v2/mfe-views'
 
 // Mock script-tracker to avoid PerformanceObserver requirement
 jest.mock('../../src/common/v2/script-tracker', () => {
@@ -33,6 +34,10 @@ jest.mock('../../src/common/v2/script-tracker', () => {
     findScriptTimings: jest.fn(() => ({ registeredAt: performance.now(), reportedAt: undefined, fetchStart: 0, fetchEnd: 0, scriptStart: 0, scriptEnd: 0, asset: undefined, type: 'unknown' }))
   }
 })
+
+jest.mock('../../src/common/v2/mfe-views', () => ({
+  trackMFEViews: jest.fn(() => ({ disconnect: jest.fn() }))
+}))
 
 jest.retryTimes(0)
 
@@ -688,6 +693,41 @@ describe('API tests', () => {
         myApi.noticeError()
         myApi.log()
         expect(console.debug).toHaveBeenCalledTimes(2)
+      })
+
+      describe('MicroFrontEndView', () => {
+        afterEach(() => {
+          trackMFEViews.mockClear()
+        })
+
+        test('should not track views for a blocked (invalid) target', () => {
+          agent.register({ id })
+          expect(trackMFEViews).not.toHaveBeenCalled()
+        })
+
+        test('should track views and record a MicroFrontEndView event per view', () => {
+          const myApi = agent.register({ id, name })
+          expect(trackMFEViews).toHaveBeenCalledTimes(1)
+          expect(trackMFEViews).toHaveBeenCalledWith(myApi.metadata.target, expect.any(Function))
+
+          const onView = trackMFEViews.mock.calls[0][1]
+          onView(document.createElement('div'))
+          onView(document.createElement('div'))
+          const viewEvents = handleModule.handle.mock.calls.filter(call => call[0] === 'api-recordCustomEvent' && call[1][1] === 'MicroFrontEndView')
+          expect(viewEvents).toHaveLength(2)
+          expect(viewEvents[0][1][3]).toBe(myApi.metadata.target)
+        })
+
+        test('should stop tracking views on deregister and not record further views', () => {
+          const myApi = agent.register({ id, name })
+          const tracker = trackMFEViews.mock.results[0].value
+          myApi.deregister()
+          expect(tracker.disconnect).toHaveBeenCalledTimes(1)
+
+          trackMFEViews.mock.calls[0][1](document.createElement('div'))
+          const viewEvents = handleModule.handle.mock.calls.filter(call => call[0] === 'api-recordCustomEvent' && call[1][1] === 'MicroFrontEndView')
+          expect(viewEvents).toHaveLength(0)
+        })
       })
 
       test('should update custom attributes', () => {

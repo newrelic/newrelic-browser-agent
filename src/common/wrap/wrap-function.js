@@ -181,7 +181,7 @@ export function createWrapperWithEmitter (emitter, always, agentRef) {
     try {
       emitter.emit(evt, arr, store, always, bubble)
     } catch (e) {
-      report([e, evt, arr, store], emitter)
+      report([e, 'Wrap-Function', evt, arr, store], emitter)
     }
     inWrapper = prev
   }

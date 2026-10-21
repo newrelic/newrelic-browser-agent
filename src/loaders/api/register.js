@@ -2,12 +2,9 @@
  * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { handle } from '../../common/event-emitter/handle'
 import { warn } from '../../common/util/console'
 import { V2_TYPES } from '../../common/v2/constants'
-import { FEATURE_NAMES } from '../features/features'
 import { now } from '../../common/timing/now'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { setupAPI } from './sharedHandlers'
 import { REGISTER } from './constants'
 import { log } from './log'
@@ -22,6 +19,7 @@ import { trackMFEVitals } from '../../common/v2/mfe-vitals'
 import { generateRandomHexString } from '../../common/ids/unique-id'
 import { parseManifest } from '../../common/v2/manifest'
 import { cleanURL } from '../../common/url/clean-url'
+import { reportSupportabilityMetric } from '../../common/event-emitter/report-supportability-metric'
 
 const TIMING_METHODS = ['entry', 'scripts', 'all']
 
@@ -278,7 +276,7 @@ function register (agentRef, target) {
     const timestamp = api.metadata.events.latestTimestamp ?? now()
     api.metadata.events.latestTimestamp = undefined
     const methodName = METHOD_NAMES.get(methodToCall) || 'unknown'
-    handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodName}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)
+    reportSupportabilityMetric(agentRef.ee, `API/register/${methodName}/called`)
     try {
       return methodToCall(...args, target, timestamp) // always report to target
     } catch (err) {

@@ -11,9 +11,6 @@ import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, SESSION_EVENTS, SESSION_EVENT_
 import { InteractionTimer } from '../timer/interaction-timer'
 import { wrapEvents } from '../wrap/wrap-events'
 import { getModeledObject } from '../config/configurable'
-import { handle } from '../event-emitter/handle'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
-import { FEATURE_NAMES } from '../../loaders/features/features'
 import { windowAddEventListener } from '../event-listener/event-listener-opts'
 
 // this is what can be stored in local storage (enforced during reads)
@@ -105,10 +102,8 @@ export class SessionEntity {
       this.state.expiresAt = initialRead?.expiresAt || this.getFutureTimestamp(expiresMs)
       this.state.numOfResets = initialRead?.numOfResets || numOfResets
       this.expiresTimer = new Timer({
-        // When the inactive timer ends, collect a SM and reset the session
+        // When the timer ends, reset the session
         onEnd: () => {
-          this.collectSM('expired')
-          this.collectSM('duration')
           this.reset()
         }
       }, this.state.expiresAt - Date.now())
@@ -122,10 +117,8 @@ export class SessionEntity {
     if (inactiveMs) {
       this.state.inactiveAt = initialRead?.inactiveAt || this.getFutureTimestamp(inactiveMs)
       this.inactiveTimer = new InteractionTimer({
-        // When the inactive timer ends, collect a SM and reset the session
+        // When the timer ends, reset the session
         onEnd: () => {
-          this.collectSM('inactive')
-          this.collectSM('duration')
           this.reset()
         },
         // When the inactive timer refreshes, it will update the storage values with an update timestamp
@@ -178,17 +171,12 @@ export class SessionEntity {
       // TODO - decompression would need to happen here if we decide to do it
       const obj = typeof val === 'string' ? JSON.parse(val) : val
       if (this.isInvalid(obj)) return {}
-      // if the session expires, collect a SM count before resetting
+      // if the session is expired at "read" time, reset
       if (this.isExpired(obj.expiresAt)) {
-        this.collectSM('expired')
-        this.collectSM('duration', obj, true)
         return this.reset()
       }
       // if "inactive" timer is expired at "read" time -- esp. initial read -- reset
-      // collect a SM count before resetting
       if (this.isExpired(obj.inactiveAt)) {
-        this.collectSM('inactive')
-        this.collectSM('duration', obj, true)
         return this.reset()
       }
 
@@ -278,18 +266,6 @@ export class SessionEntity {
   isInvalid (data) {
     const requiredKeys = Object.keys(model)
     return !requiredKeys.every(x => Object.keys(data).includes(x))
-  }
-
-  collectSM (type, data, useUpdatedAt) {
-    let value, tag
-    if (type === 'duration') {
-      value = this.getDuration(data, useUpdatedAt)
-      tag = 'Session/Duration/Ms'
-    }
-    if (type === 'expired') tag = 'Session/Expired/Seen'
-    if (type === 'inactive') tag = 'Session/Inactive/Seen'
-
-    if (tag) handle(SUPPORTABILITY_METRIC_CHANNEL, [tag, value], undefined, FEATURE_NAMES.metrics, this.ee)
   }
 
   getDuration (data = this.state, useUpdatedAt) {

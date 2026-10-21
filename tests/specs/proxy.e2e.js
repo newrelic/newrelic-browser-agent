@@ -46,7 +46,7 @@ describe('Using proxy servers -', () => {
         request: expect.objectContaining({
           body: expect.objectContaining({
             sm: expect.arrayContaining([
-              { params: { name: 'Config/AssetsUrl/Changed' }, stats: { c: 1 } }
+              { params: { name: 'Config/proxy/assets/Changed' }, stats: { c: 1 } }
             ])
           })
         })
@@ -89,7 +89,7 @@ describe('Using proxy servers -', () => {
         request: expect.objectContaining({
           body: expect.objectContaining({
             sm: expect.arrayContaining([
-              { params: { name: 'Config/BeaconUrl/Changed' }, stats: { c: 1 } }
+              { params: { name: 'Config/proxy/beacon/Changed' }, stats: { c: 1 } }
             ])
           })
         })

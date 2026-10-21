@@ -4,6 +4,7 @@ import * as eventEmitterModule from '../../../../src/common/event-emitter/contex
 
 jest.enableAutomock()
 jest.unmock('../../../../src/common/timing/time-keeper')
+jest.unmock('../../../../src/common/event-emitter/report-supportability-metric')
 jest.mock('../../../../src/common/constants/runtime', () => ({
   __esModule: true,
   originTime: 1706213058000

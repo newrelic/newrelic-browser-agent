@@ -10,8 +10,15 @@ inputs:
     description: "Pull request number to place the comment on."
     required: true
   comment:
-    description: "The comment to place on the pull request."
-    required: true
+    description: "The comment to place on the pull request. Either this or comment_file is required."
+    required: false
+  comment_file:
+    description: "Path to a file holding the comment to place on the pull request. Takes precedence over comment."
+    required: false
+  only_update_existing:
+    description: "When 'true', only update a comment with the given tag that already exists. Never create one."
+    required: false
+    default: 'false'
   comment_tag:
     description: "The tag to place in the comment to support updating of comments."
     required: false
@@ -29,7 +36,9 @@ runs:
       id: action-script
       env:
         COMMENT: ${{ inputs.comment }}
+        COMMENT_FILE: ${{ inputs.comment_file }}
         COMMENT_TAG: ${{ inputs.comment_tag }}
+        ONLY_UPDATE_EXISTING: ${{ inputs.only_update_existing }}
       run: |
         node $GITHUB_ACTION_PATH/index.js \
           --github-token ${{ inputs.token }} \

@@ -34,7 +34,7 @@ export function stringify (val) {
     return JSON.stringify(val, getCircularReplacer()) ?? ''
   } catch (e) {
     try {
-      ee.emit('internal-error', [e])
+      ee.emit('internal-error', [e, 'Stringify'])
     } catch (err) {
       // do nothing
     }

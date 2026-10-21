@@ -154,6 +154,21 @@ test('no uncaught async exception is thrown when an import fails', async () => {
   expect(mockOnError).not.toHaveBeenCalled()
 })
 
+test('reports an internal error, before aborting the feature, when its aggregate fails to load', async () => {
+  const instrument = new InstrumentBase(agentBase, featureName)
+  const calls = []
+  jest.spyOn(instrument.ee, 'emit').mockImplementation((...args) => { calls.push(['emit', args]) })
+  instrument.abortHandler = jest.fn(() => calls.push(['abort']))
+  instrument.importAggregator(agentBase, () => Promise.reject(new Error('ChunkLoadError')))
+
+  await jest.mocked(onWindowLoad).mock.calls[0][0]()
+
+  const reported = calls.findIndex(([type, args]) => type === 'emit' && args[1][1] === 'Feature-Load')
+  expect(calls[reported][1]).toEqual(['internal-error', [expect.objectContaining({ message: 'ChunkLoadError' }), 'Feature-Load']])
+  expect(reported).toBeGreaterThan(-1)
+  expect(reported).toBeLessThan(calls.findIndex(([type]) => type === 'abort'))
+})
+
 test('should not import agent-session when session tracking is disabled', async () => {
   jest.mocked(canEnableSessionTracking).mockReturnValue(false)
 

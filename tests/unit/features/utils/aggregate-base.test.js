@@ -8,6 +8,7 @@ import { EventBuffer } from '../../../../src/features/utils/event-buffer'
 import { EventAggregator } from '../../../../src/common/aggregate/event-aggregator'
 import { Aggregate as PVEAggregate } from '../../../../src/features/page_view_event/aggregate/index'
 import { ee } from '../../../../src/common/event-emitter/contextual-ee'
+import { reportSupportabilityMetric } from '../../../../src/common/event-emitter/report-supportability-metric'
 import { IDEAL_PAYLOAD_SIZE, MIN_EARLY_HARVEST_INTERVAL, EARLY_HARVEST_BYPASS_SIZE } from '../../../../src/common/constants/agent-constants'
 
 jest.enableAutomock()
@@ -19,6 +20,7 @@ jest.unmock('../../../../src/features/utils/event-buffer')
 jest.unmock('../../../../src/common/util/stringify')
 jest.unmock('../../../../src/common/timing/now')
 
+jest.mock('../../../../src/common/event-emitter/report-supportability-metric')
 jest.mock('../../../../src/common/event-emitter/register-handler', () => ({
   __esModule: true,
   registerHandler: jest.fn()
@@ -222,7 +224,6 @@ describe('decideEarlyHarvest', () => {
     mainAgent.runtime.harvester = { triggerHarvestFor: jest.fn() }
     mainAgent.runtime.jsAttributesMetadata = { bytes: 0 }
     aggregate = new AggregateBase(mainAgent, FEATURE_NAMES.logging)
-    jest.spyOn(aggregate, 'reportSupportabilityMetric').mockImplementation(() => {})
   })
 
   afterEach(() => {
@@ -240,7 +241,7 @@ describe('decideEarlyHarvest', () => {
     aggregate.events.add(bigEvent())
     expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
     expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledWith(aggregate)
-    expect(aggregate.reportSupportabilityMetric).toHaveBeenCalledWith(`${FEATURE_NAMES.logging}/Harvest/Early/Seen`, expect.any(Number))
+    expect(reportSupportabilityMetric).toHaveBeenCalledWith(aggregate.ee, `${FEATURE_NAMES.logging}/Harvest/Early/Seen`, expect.any(Number))
   })
 
   test('suppresses further early harvests inside the minimum interval', () => {
@@ -249,7 +250,7 @@ describe('decideEarlyHarvest', () => {
     aggregate.events.add(bigEvent())
     aggregate.events.add(bigEvent())
     expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
-    expect(aggregate.reportSupportabilityMetric).toHaveBeenCalledTimes(1)
+    expect(reportSupportabilityMetric).toHaveBeenCalledTimes(1)
   })
 
   test('never drops suppressed data; it stays buffered for the next harvest', () => {
@@ -317,7 +318,6 @@ describe('decideEarlyHarvest', () => {
 
   test('early harvest tracking is independent per feature instance', () => {
     const other = new AggregateBase(mainAgent, FEATURE_NAMES.genericEvents)
-    jest.spyOn(other, 'reportSupportabilityMetric').mockImplementation(() => {})
     aggregate.events.add(bigEvent())
     other.events.add(bigEvent())
     expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(2)

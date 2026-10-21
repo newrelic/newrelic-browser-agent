@@ -22,6 +22,7 @@ import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/fe
 import { getSubmitMethod } from '../../../common/util/submit-data'
 import { webdriverDetected } from '../../../common/util/webdriver-detection'
 import { EVENT_TYPES } from '../../../common/constants/events'
+import { reportSupportabilityMetric } from '../../../common/event-emitter/report-supportability-metric'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -231,7 +232,7 @@ export class Aggregate extends AggregateBase {
       // If timeKeeper's origin time is ahead of nrServerTime, then the timestamp is invalid. Report a supportability metric.
       const timeDiff = this.agentRef.runtime.timeKeeper.correctedOriginTime - app.nrServerTime
       if (wasReady && timeDiff > 0) {
-        this.reportSupportabilityMetric('Generic/TimeKeeper/InvalidTimestamp/Seen', timeDiff)
+        reportSupportabilityMetric(this.ee, 'Generic/TimeKeeper/InvalidTimestamp/Seen', timeDiff)
       }
     } catch (error) {
       this.ee.abort()

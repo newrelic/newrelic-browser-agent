@@ -29,10 +29,6 @@ describe('metrics', () => {
         params: { name: `Generic/LoaderType/${loaderTypesMapped[loaderType]}/Detected` },
         stats: { c: 1 }
       }]))
-      expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-        params: { name: 'Generic/Runtime/Browser/Detected' },
-        stats: { c: 1 }
-      }]))
     })
   })
 
@@ -93,6 +89,39 @@ describe('metrics', () => {
       params: { name: 'API/addRelease/called' },
       stats: { c: expect.toBeWithin(1, Infinity) }
     }]))
+  })
+
+  it('should create a Seen SM for every feature flag in init', async () => {
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { feature_flags: ['rum_v2', 'register'] } }))
+      .then(() => browser.waitForAgentLoad())
+
+    const [supportabilityMetricsHarvests] = await Promise.all([
+      supportabilityMetricsCapture.waitForResult({ totalCount: 1 }),
+      await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
+    ])
+
+    const supportabilityMetrics = supportabilityMetricsHarvests[0].request.body.sm
+    ;['rum_v2', 'register'].forEach(flag => {
+      expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
+        params: { name: `Feature_Flag/${flag}/Seen` },
+        stats: { c: 1 }
+      }]))
+    })
+  })
+
+  it('should report enabled and changed init settings by their path', async () => {
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { session_replay: { collect_fonts: true }, harvest: { interval: 60 } } }))
+      .then(() => browser.waitForAgentLoad())
+
+    const [supportabilityMetricsHarvests] = await Promise.all([
+      supportabilityMetricsCapture.waitForResult({ totalCount: 1 }),
+      await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
+    ])
+
+    const names = supportabilityMetricsHarvests[0].request.body.sm.map(sm => sm.params.name)
+    expect(names).toContain('Config/session_replay/collect_fonts/Enabled')
+    expect(names).not.toContain('Config/session_replay/inline_images/Enabled')
+    expect(names).toContain('Config/harvest/interval/Changed')
   })
 
   it('should create SMs when obfuscation rules are detected', async () => {

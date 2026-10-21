@@ -2,6 +2,7 @@ import { setupAgent } from '../setup-agent'
 import { Instrument as PageViewEvent } from '../../../src/features/page_view_event/instrument'
 import { setupAgentSession } from '../../../src/features/utils/agent-session'
 import * as sendModule from '../../../src/common/harvest/send'
+import * as handleModule from '../../../src/common/event-emitter/handle'
 import { TextEncoder } from 'util'
 
 let mainAgent, pveAggregate
@@ -29,7 +30,7 @@ test('PageViewEvent does not throw on Harvester driven processes', () => {
 })
 
 test('PageViewEvent reports SM on invalid timestamp', () => {
-  const spy = jest.spyOn(pveAggregate, 'reportSupportabilityMetric')
+  const spy = jest.spyOn(handleModule, 'handle')
   jest.useFakeTimers()
 
   mainAgent.runtime.timeKeeper.processRumRequest(undefined, 0, 2, Date.now() + 20000)
@@ -49,14 +50,14 @@ test('PageViewEvent reports SM on invalid timestamp', () => {
     targetApp: undefined
   })
 
-  expect(spy).toHaveBeenCalledWith('Generic/TimeKeeper/InvalidTimestamp/Seen', 10000)
+  expect(reportedMetrics(spy)).toContainEqual(['Generic/TimeKeeper/InvalidTimestamp/Seen', 10000])
 
   jest.useRealTimers()
   spy.mockRestore()
 })
 
 test('PageViewEvent does not report SM on valid timestamp', () => {
-  const spy = jest.spyOn(pveAggregate, 'reportSupportabilityMetric')
+  const spy = jest.spyOn(handleModule, 'handle')
   jest.useFakeTimers()
 
   mainAgent.runtime.timeKeeper.processRumRequest(undefined, 0, 2, Date.now() + 20000)
@@ -76,7 +77,7 @@ test('PageViewEvent does not report SM on valid timestamp', () => {
     targetApp: undefined
   })
 
-  expect(spy).not.toHaveBeenCalled()
+  expect(reportedMetrics(spy)).toEqual([])
 
   jest.useRealTimers()
   spy.mockRestore()
@@ -646,3 +647,8 @@ describe('RUM call', () => {
     })
   })
 })
+
+/** The supportability metrics (name and optional value) reported through the event emitter, as spied on with `jest.spyOn(handleModule, 'handle')`. */
+function reportedMetrics (handleSpy) {
+  return handleSpy.mock.calls.filter(([channel]) => channel === 'storeSupportabilityMetrics').map(([, args]) => args)
+}

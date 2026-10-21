@@ -9,13 +9,12 @@ import { RecorderEvents } from './recorder-events'
 import { MODE } from '../../../common/session/constants'
 import { stylesheetEvaluator } from './stylesheet-evaluator'
 import { handle } from '../../../common/event-emitter/handle'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
-import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { customMasker } from './utils'
 import { IDEAL_PAYLOAD_SIZE, SESSION_ERROR } from '../../../common/constants/agent-constants'
 import { warn } from '../../../common/util/console'
 import { single } from '../../../common/util/invoke'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
+import { reportSupportabilityMetric } from '../../../common/event-emitter/report-supportability-metric'
 
 const RRWEB_DATA_CHANNEL = 'rrweb-data'
 
@@ -126,7 +125,7 @@ export class Recorder {
         slimDOMOptions: 'all'
       })
     } catch (err) {
-      this.ee.emit('internal-error', [err])
+      this.ee.emit('internal-error', [err, 'SessionReplay-Record'])
     }
 
     this.stopRecording = () => {
@@ -150,7 +149,7 @@ export class Recorder {
       if (incompletes > 0) {
         this.events.inlinedAllStylesheets = false
         this.#warnCSSOnce()
-        handle(SUPPORTABILITY_METRIC_CHANNEL, [missingInlineSMTag + 'Skipped', incompletes], undefined, FEATURE_NAMES.metrics, this.ee)
+        reportSupportabilityMetric(this.ee, missingInlineSMTag + 'Skipped', incompletes)
       }
       return this.store(event, isCheckout)
     }
@@ -163,8 +162,8 @@ export class Recorder {
           this.events.inlinedAllStylesheets = false
           this.shouldFix = false
         }
-        handle(SUPPORTABILITY_METRIC_CHANNEL, [missingInlineSMTag + 'Failed', failedToFix], undefined, FEATURE_NAMES.metrics, this.ee)
-        handle(SUPPORTABILITY_METRIC_CHANNEL, [missingInlineSMTag + 'Fixed', incompletes - failedToFix], undefined, FEATURE_NAMES.metrics, this.ee)
+        reportSupportabilityMetric(this.ee, missingInlineSMTag + 'Failed', failedToFix)
+        reportSupportabilityMetric(this.ee, missingInlineSMTag + 'Fixed', incompletes - failedToFix)
         this.takeFullSnapshot()
       })
       /** Only start ignoring data if got a faulty snapshot */
@@ -184,7 +183,7 @@ export class Recorder {
     const eventBytes = event.__serialized.length
     /** The estimated size of the payload after compression */
     const payloadSize = this.getPayloadSize(eventBytes)
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['rrweb/node/' + event.type + '/bytes', eventBytes], undefined, FEATURE_NAMES.metrics, this.ee)
+    reportSupportabilityMetric(this.ee, 'rrweb/node/' + event.type + '/bytes', eventBytes)
     // Checkout events are flags by the recording lib that indicate a fullsnapshot was taken every n ms. These are important
     // to help reconstruct the replay later and must be included.  While waiting and buffering for errors to come through,
     // each time we see a new checkout, we can drop the old data.

@@ -20,6 +20,7 @@ predictable and reviewable on the first pass.
 | Full build (CDN + npm + test builds) | `npm run build:all` |
 | Serve local test assets/agent | `npm run test-server` |
 | Lint | `npm run lint` (`npm run lint:fix` to auto-fix) |
+| Supportability metric registry check | `npm run supportability-metrics:check` (`npm run supportability-metrics:generate-docs` to regenerate the docs) |
 | Unit tests | `npm run test:unit` |
 | Component tests | `npm run test:component` |
 | Single jest file | `npm run test:unit -- <path>.test.js` |
@@ -65,13 +66,19 @@ CDN bundle. See [testing.md](.claude/rules/testing.md) for the full breakdown.
   [docs/warning-codes.md](docs/warning-codes.md) — the pre-commit hook blocks
   the commit otherwise (`npm run check:warning-codes`).
 - Any new supportability metric (a new string sent via
-  `SUPPORTABILITY_METRIC_CHANNEL`/`handle(..., ['Category/Path/Name', ...])`)
-  needs a matching entry added to
-  [docs/supportability-metrics.md](docs/supportability-metrics.md), grouped
-  under the relevant feature heading with a `<!--- description ---> ` comment
-  above it, following the file's existing format. This is **not**
-  CI-enforced today (no equivalent of `check:warning-codes` exists for it),
-  so it's easy to silently skip — treat it as required anyway.
+  `SUPPORTABILITY_METRIC_CHANNEL`/`reportSupportabilityMetric(ee, name, value)` from `src/common/event-emitter/report-supportability-metric.js` —
+  the one way to report a metric from any feature or shared code — or the metrics feature's own `storeSupportabilityMetrics`) needs an entry in
+  [tools/supportability-metrics/registry.js](tools/supportability-metrics/registry.js).
+  [docs/supportability-metrics.md](docs/supportability-metrics.md) is **generated** from that registry
+  (`npm run supportability-metrics:generate-docs`) — never hand-edit it. `npm run supportability-metrics:check` (run by the pre-commit hook
+  and the "Supportability Metrics Check" CI job) statically scans `src/` and fails if a metric is emitted that the registry doesn't
+  cover, if the registry lists a metric nothing emits, or if the docs are stale. A new literal name or `internal-error` reason must be added to the matching entry's
+  `values`. Names only known at runtime (API names, loader types) are matched by shape and not verified, so keep those `values`
+  lists in sync by hand (frameworks have a unit test). A reporting call whose name the scan can't work out (a variable or an imported constant) also fails the check, unless it is a genuine forwarder marked with an `sm-registry: forwards <where>` block comment on the line above. `npm run supportability-metrics:check -- --fix` appends a stub entry for each new metric and regenerates the docs, so you only write the description. The pre-commit hook runs it for you: it stubs the entry, stages the registry, `pending.js` and docs, and stops the commit until you have filled in the stub's description and committed again. CI runs the check read-only and fails with the file and line to fill in; it never edits anything.
+  Every registered metric also gets a generated jest test (`tests/components/supportability-metrics/coverage.test.js`, run with
+  `npm run supportability-metrics:test` and by the pre-commit hook) that proves the metric is actually reported. Make it pass by adding a
+  *trigger* for the registry entry in `tests/components/supportability-metrics/triggers/`; a metric with no trigger fails unless it is
+  listed in `pending.js`, which only warns (`--fix` adds new metrics there for you). Delete the `pending.js` line once the trigger passes. Step by step, with instructions for Claude: [tests/components/supportability-metrics/README.md](tests/components/supportability-metrics/README.md). Angler's shared `metric_names.txt` is updated by hand on the internal GitHub: when a PR changes the registry, the `sm-check` job comments with the exact names to add (the `Config/*` and feature flag names are derived from the `init` model and the source; every other family lists its known `values` in the registry), and the instruction to open a PR against agents/angler and link it (see [tools/supportability-metrics/README.md](tools/supportability-metrics/README.md)). The registry also drives a generated New Relic dashboard (a preview per PR in staging, staging on merge, US prod with the release); a metric that reports a value needs `value: { unit }` in its entry.
 - Match existing patterns in the file/directory you're editing over
   introducing a new abstraction, especially in `src/common` and `src/features/*`.
 
@@ -150,9 +157,10 @@ or CI to catch them:
    feasible) — see [Testing](#testing).
 3. Any new `warn()` call has a corresponding entry in
    [docs/warning-codes.md](docs/warning-codes.md).
-4. Any new supportability metric has a corresponding entry in
-   [docs/supportability-metrics.md](docs/supportability-metrics.md) — this
-   isn't caught by any hook/CI check, so it's on you to remember.
+4. Any new supportability metric is in
+   [tools/supportability-metrics/registry.js](tools/supportability-metrics/registry.js) and the docs were regenerated with
+   `npm run supportability-metrics:generate-docs` (`npm run supportability-metrics:check` passes), and it has a trigger in
+   `tests/components/supportability-metrics/triggers/` (`npm run supportability-metrics:test` passes).
 5. Any public API change has matching type updates (`npm run test:types`).
 6. New code that could live in either `instrument/` (loader) or `aggregate/`
    was placed in `aggregate/` unless there's a concrete reason it can't be —

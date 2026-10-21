@@ -1,0 +1,51 @@
+# This workflow updates the generated supportability dashboard in staging whenever the registry (or the generator) changes on main.
+# The production dashboard is updated by the Internal Promotion workflow, after the release is approved for production.
+#
+# The dashboard is generated from tools/supportability-metrics/registry.js and replaced whole on every run, so it must not be edited by hand.
+
+name: Supportability Dashboard
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - tools/supportability-metrics/registry.js
+      - tools/supportability-metrics/dashboard/**
+      - .github/workflows/supportability-dashboard.yml
+  workflow_dispatch:
+    inputs:
+      validate_only:
+        description: 'Only run every query against New Relic to check it is valid. Creates and changes nothing.'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supportability-dashboard-staging
+  cancel-in-progress: false
+
+jobs:
+  staging:
+    name: Update the staging dashboard
+    # The assigned IP runner is the one the other jobs that call the staging New Relic stack run on
+    runs-on: Browser-Agent-Assigned-IP-Linux
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Update the staging dashboard
+        env:
+          NR_API_KEY_STAGING: ${{ secrets.NR_API_KEY_STAGING }}
+          VALIDATE_ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.validate_only || 'false' }}
+        run: |
+          flags="--validate"
+          if [ "${VALIDATE_ONLY}" = "true" ]; then flags="--validate --dry-run"; fi
+          node tools/supportability-metrics/dashboard/apply.js --env staging ${flags}

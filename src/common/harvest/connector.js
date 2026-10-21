@@ -11,8 +11,7 @@ import { now } from '../timing/now'
 import { warn } from '../util/console'
 import { VERSION } from '../constants/env'
 import { CONNECT, FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../loaders/features/features'
-import { handle } from '../event-emitter/handle'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
+import { reportSupportabilityMetric } from '../event-emitter/report-supportability-metric'
 
 const MAX_CONNECT_ATTEMPTS = 3
 const CONNECT_RETRY_BASE_MS = 3000 // affects each retry window proportionally (attempt 2: 0-3s, 3: 0-6s, 4: 0-12s, etc)
@@ -72,7 +71,7 @@ export class Connector {
       const cachedResp = session.state.cachedRumResponse
       if (cachedResp) {
         // Report that we've seen a race condition on updating session state
-        handle(SUPPORTABILITY_METRIC_CHANNEL, ['Session/RaceCondition/Seen'], undefined, FEATURE_NAMES.metrics, this.#agentRef.ee)
+        reportSupportabilityMetric(this.#agentRef.ee, 'Session/RaceCondition/Seen')
         // The other tab/agent that wrote this cached response also wrote its own serverTimeDiff to the session around the same time. TimeKeeper was constructed before that happened, so re-check the session now to pick it up.
         this.#agentRef.runtime.timeKeeper.processStoredDiff()
         // `cachedRumResponse` is stored flat (`{ app, ...flags }`, matching the old v1 RUM response), so re-nest it before applying.
@@ -159,7 +158,7 @@ export class Connector {
       // If timeKeeper's origin time is ahead of nrServerTime, then the timestamp is invalid. Report a supportability metric.
       const timeDiff = this.#agentRef.runtime.timeKeeper.correctedOriginTime - resp.app.nrServerTime
       if (wasReady && timeDiff > 0) {
-        handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/TimeKeeper/InvalidTimestamp/Seen', timeDiff], undefined, FEATURE_NAMES.metrics, this.#agentRef.ee)
+        reportSupportabilityMetric(this.#agentRef.ee, 'Generic/TimeKeeper/InvalidTimestamp/Seen', timeDiff)
       }
     } catch (error) {
       warn(17, error)

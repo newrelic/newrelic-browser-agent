@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.324.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.324.0...v1.324.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* correct hasMeta/hasSnapshot flags on session replay harvests ([#1911](https://github.com/newrelic/newrelic-browser-agent/issues/1911)) ([f2129de](https://github.com/newrelic/newrelic-browser-agent/commit/f2129deb18e25a7efc8ffc8993617c7e531141ba))
+
+
+### Security Fixes
+
+* bump fflate to 0.8.3 ([#1909](https://github.com/newrelic/newrelic-browser-agent/issues/1909)) ([fa97b77](https://github.com/newrelic/newrelic-browser-agent/commit/fa97b77fa0c33047b7403e85ef7ea3800d62449a))
+
 ## [1.324.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.323.0...v1.324.0) (2026-10-12)
 
 

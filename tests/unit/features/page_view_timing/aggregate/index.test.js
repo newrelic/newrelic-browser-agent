@@ -174,14 +174,14 @@ describe('PVT aggregate', () => {
       expect(timing.attrs.timestamp).toBeUndefined()
     })
 
-    test('derives the timestamp from the explicit relativeTime param rather than value, when given', () => {
-      // covers 'cls', whose value is a unitless score rather than a usable time offset -- callers pass the
-      // vital's observedAt (captured at the time of the actual layout shift) as relativeTime instead
+    test('derives the timestamp from the explicit relativeTimestamp param rather than value, when given', () => {
+      // covers 'cls' and 'inp', whose value is not a usable time offset -- callers pass the vital's
+      // relativeTimestamp (the time of the actual layout shift / interaction) instead
       pvtAgg.agentRef.runtime.timeKeeper = {
         ready: true,
         correctRelativeTimestamp: (relativeTime) => relativeTime
       }
-      const timing = pvtAgg.addTiming('cls', 111.9, null, 9999)
+      const timing = pvtAgg.addTiming('cls', 111.9, undefined, 9999)
       expect(timing.attrs.timestamp).toEqual(9999)
     })
 

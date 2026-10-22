@@ -23,15 +23,13 @@ export class VitalMetric {
    */
   update ({ value, attrs = {} }) {
     if (value === undefined || value === null || value < 0) return
+    const metricTimestamps = { inp: attrs.interactionTime ?? now(), cls: attrs.largestShiftTime ?? now() }
     const state = {
       value: this.roundingMethod(value),
       name: this.name,
       // optional web-vitals attribution fields are omitted rather than being serialized as null attributes
       attrs: Object.fromEntries(Object.entries(attrs).filter(([, attrValue]) => attrValue !== undefined)),
-      /* Captured here, at the moment the underlying observation actually happens, rather than whenever a
-      (possibly buffered/late) subscriber reads `.current` later. Needed by consumers whose `value` isn't itself
-      a time offset (e.g. CLS's unitless score) and who therefore can't derive an accurate timestamp from `value` alone. */
-      observedAt: now()
+      relativeTimestamp: metricTimestamps[this.name] ?? value
     }
 
     this.history.push(state)

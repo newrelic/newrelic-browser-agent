@@ -31,8 +31,10 @@ follow this structure when drafting a PR title/description; re-read
   before using the `!` form over the plain one. If they don't confirm, use
   the non-`!` title. The same rule applies to a `BREAKING CHANGE:` footer in
   a commit message, which also forces a major bump — don't write one unprompted.
-- **70 characters or fewer.** The title is used verbatim as the squash-merge
-  commit message (via release-please), so anything longer gets truncated.
+- **Description after the `type(scope): ` prefix must be 70 characters or
+  fewer.** The prefix itself (e.g. `enhancement(ajax): `) does not count toward
+  the limit. The title is used verbatim as the squash-merge commit message
+  (via release-please).
 - Strip any `NR-1234`/`NEWRELIC-1234` ticket-style prefixes — they get
   stripped by CI when validating length anyway, so don't rely on them to pad
   or explain the title.

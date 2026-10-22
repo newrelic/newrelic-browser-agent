@@ -18,7 +18,7 @@ If you’re planning on contributing a new feature or an otherwise complex contr
 
 ### Pull Request Titles
 
-PR titles must follow the format `type(scope): description` (scope optional; add `!` after the type/scope, e.g. `feat!: ...`, to flag a breaking change) and be 70 characters or fewer. The type determines which section of the release notes the change appears in:
+PR titles must follow the format `type(scope): description` (scope optional; add `!` after the type/scope, e.g. `feat!: ...`, to flag a breaking change) and have a description of 70 characters or fewer (the `type(scope): ` prefix does not count). The type determines which section of the release notes the change appears in:
 
 | Type | Use when | Release notes section | Version bump |
 | ---- | -------- | --------------------- | ------------ |

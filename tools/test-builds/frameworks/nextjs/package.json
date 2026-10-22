@@ -5,7 +5,7 @@
   "license": "MIT",
   "dependencies": {
     "@newrelic/browser-agent": "file:../../../../temp/newrelic-browser-agent-1.324.0.tgz",
-    "next": "16.4.0",
+    "next": "^16.4.2",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },

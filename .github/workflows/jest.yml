@@ -78,7 +78,7 @@ jobs:
           verbose: true
       - name: Archive code coverage results
         if: ${{ inputs.coverage }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         continue-on-error: true
         with:
           name: jest-code-coverage-report

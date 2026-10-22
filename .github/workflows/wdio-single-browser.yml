@@ -83,7 +83,7 @@ jobs:
           echo "results=${browser/\*/all}${{ contains(inputs.additional-flags, '--webview') && '-webview' || '' }}-wdio-tunnel-logs" >> "$GITHUB_OUTPUT"
       - name: Archive wdio tunnel logs
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.wdio-tunnel-log-archive-name.outputs.results }}
           path: .lambdatest

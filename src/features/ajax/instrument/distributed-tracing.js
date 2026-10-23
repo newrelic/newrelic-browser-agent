@@ -6,6 +6,43 @@ import { generateSpanId, generateTraceId } from '../../../common/ids/unique-id'
 import { parseUrl } from '../../../common/url/parse-url'
 import { globalScope } from '../../../common/constants/runtime'
 import { stringify } from '../../../common/util/stringify'
+import { convertToRegularExpression } from '../../../common/deny-list/deny-list'
+import { warn } from '../../../common/util/console'
+
+/* Splits a wildcard allowed_origins entry into protocol, host, and an optional port. Any path after the host is ignored. */
+const WILDCARD_ORIGIN = /^(https?):\/\/([^/:]+)(?::(\d+))?(?:\/.*)?$/i
+
+/**
+ * Compiles a single `distributed_tracing.allowed_origins` entry into a function that tests a parsed request origin.
+ * Entries without a `*` use an exact hostname, protocol, and port comparison. Entries with a `*` in the hostname are
+ * matched against a regular expression anchored at both ends. A malformed wildcard entry warns and never matches.
+ * @param {string} entry - an `allowed_origins` entry
+ * @returns {function(Object): boolean} true if the parsed origin is allowed by the entry
+ */
+function toMatcher (entry) {
+  // decode first so entries mangled by the UI (`%2A`) are treated as wildcards
+  const value = String(entry).replace(/%2A/gi, '*')
+
+  if (value.indexOf('*') === -1) {
+    const allowed = parseUrl(entry)
+    return (origin) => origin.hostname === allowed.hostname &&
+      origin.protocol === allowed.protocol &&
+      origin.port === allowed.port
+  }
+
+  // wildcard entries are split by hand because browsers disagree on how `new URL()` handles `*` in a host
+  const parts = WILDCARD_ORIGIN.exec(value)
+  // a host made only of wildcards and dots (`*`, `*.*`) would allow every origin
+  if (!parts || !parts[2].replace(/[*.]/g, '')) {
+    warn(83, entry)
+    return () => false
+  }
+
+  const protocol = parts[1].toLowerCase()
+  const port = parts[3] || (protocol === 'http' ? '80' : '443')
+  const hostname = convertToRegularExpression(parts[2].toLowerCase(), true)
+  return (origin) => origin.protocol === protocol && origin.port === port && hostname.test(origin.hostname)
+}
 
 export class DT {
   constructor (agentRef) {
@@ -106,23 +143,26 @@ export class DT {
   }
 
   isAllowedOrigin (parsedOrigin) {
-    var allowed = false
-    const dtConfig = this.agentRef.init?.distributed_tracing
+    if (parsedOrigin.sameOrigin) return true
 
-    if (parsedOrigin.sameOrigin) {
-      allowed = true
-    } else if (dtConfig?.allowed_origins instanceof Array) {
-      for (var i = 0; i < dtConfig.allowed_origins.length; i++) {
-        var allowedOrigin = parseUrl(dtConfig.allowed_origins[i])
-        if (parsedOrigin.hostname === allowedOrigin.hostname &&
-            parsedOrigin.protocol === allowedOrigin.protocol &&
-            parsedOrigin.port === allowedOrigin.port) {
-          allowed = true
-          break
-        }
-      }
+    const list = this.agentRef.init?.distributed_tracing?.allowed_origins
+    if (!(list instanceof Array)) return false
+
+    return this.getMatchers(list).some(matches => matches(parsedOrigin))
+  }
+
+  /**
+   * Returns the compiled matchers for the allowed origins list. They are compiled lazily because `init` is still being
+   * configured when this class is constructed, and are recompiled whenever the list's contents change.
+   * @param {Array<string>} list - the current `distributed_tracing.allowed_origins` value
+   * @returns {Array<function(Object): boolean>}
+   */
+  getMatchers (list) {
+    const cache = this.matcherCache
+    if (!cache || cache.entries.length !== list.length || list.some((entry, i) => entry !== cache.entries[i])) {
+      this.matcherCache = { entries: list.slice(), matchers: list.map(toMatcher) }
     }
-    return allowed
+    return this.matcherCache.matchers
   }
 
   // exclude the newrelic header for same-origin calls

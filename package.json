@@ -170,7 +170,7 @@
     "runtime": {
       "name": "node",
       "onFail": "error",
-      "version": ">=24.14.0"
+      "version": ">=24.22.1"
     },
     "packageManager": {
       "name": "npm",

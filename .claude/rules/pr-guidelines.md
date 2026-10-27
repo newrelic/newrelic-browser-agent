@@ -9,9 +9,32 @@ follow this structure when drafting a PR title/description; re-read
 
 - Format: `type(scope): description`, scope optional — e.g. `feat: add X`,
   `fix(ajax): correct Y`.
-- `type` must be one of `feat`, `fix`, `security`, `chore`.
-- **70 characters or fewer.** The title is used verbatim as the squash-merge
-  commit message (via release-please), so anything longer gets truncated.
+- `type` must be one of the following. The type also decides the release
+  version bump, so choose deliberately:
+  - `feat` (**minor** bump): a brand-new capability that did not previously exist.
+  - `enhancement` (**patch** bump): an improvement or extension to an existing
+    feature (new option, better accuracy/performance) — not a new capability.
+  - `fix` (**patch** bump): corrects a bug.
+  - `security` (**patch** bump): addresses a vulnerability or hardens the agent.
+  - `chore` (no release): no user-facing impact (tests, tooling, CI, docs).
+  - A release's bump is set by its highest-impact change: any `feat` makes it
+    minor; `enhancement`/`fix`/`security` alone make it patch. Don't pick `feat`
+    for something small just because it sounds bigger — it forces a minor release.
+- **Breaking-change `!` — avoid by default.** Appending `!` after the type/scope
+  (e.g. `feat!: ...`, `fix(ajax)!: ...`; not before the scope) makes
+  release-please bump the **major** version for any type. Never add it on your
+  own judgment. Draft the title **without** `!`. If you believe the change is
+  genuinely breaking for consumers (removed/renamed public API, changed
+  default behavior that customers rely on), stop and tell the user: say
+  you think it warrants `!`, explain why, state that it is a critical last
+  resort because it forces a major release, and get explicit confirmation
+  before using the `!` form over the plain one. If they don't confirm, use
+  the non-`!` title. The same rule applies to a `BREAKING CHANGE:` footer in
+  a commit message, which also forces a major bump — don't write one unprompted.
+- **Description after the `type(scope): ` prefix must be 70 characters or
+  fewer.** The prefix itself (e.g. `enhancement(ajax): `) does not count toward
+  the limit. The title is used verbatim as the squash-merge commit message
+  (via release-please).
 - Strip any `NR-1234`/`NEWRELIC-1234` ticket-style prefixes — they get
   stripped by CI when validating length anyway, so don't rely on them to pad
   or explain the title.
@@ -69,3 +92,21 @@ See [create-pr.md](../commands/create-pr.md) for the full steps.
   change is `chore:`, not `feat:`).
 - Confirm the summary paragraph reads sensibly as a release note on its own,
   without needing the rest of the PR body for context.
+
+## Adding a new commit type
+
+A new type must be wired through every one of these, or release notes silently
+drop or miscategorize it (none of this is covered by a single CI check):
+
+1. [validate-pr.yml](../../.github/workflows/validate-pr.yml) — title regex and its error message.
+2. [release-please.yml](../../.github/workflows/release-please.yml) — `changelog-types`
+   entry (listing a type here also makes it open a release PR, at patch level
+   unless it is `feat` or breaking).
+3. [.github/actions/docs-pr/index.js](../../.github/actions/docs-pr/index.js) — `categories`, `frontMatter`, `bodyContent` and the loop/`JSON.stringify` for it.
+4. [.github/actions/docs-pr/utils.js](../../.github/actions/docs-pr/utils.js) — `cleanTitle()` prefix regex.
+5. [release-notes.handlebars](../../.github/actions/docs-pr/templates/release-notes.handlebars) —
+   the frontmatter key and body section. The docs team's template mandates its
+   frontmatter keys (`features`, `enhancements`, `bugs`, `security`) in their CI,
+   so confirm any new key with them first.
+6. Contributor docs — the type table in [CONTRIBUTING.md](../../CONTRIBUTING.md),
+   the [PR template](../../.github/pull_request_template.md) note, and this file.

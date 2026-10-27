@@ -26,10 +26,13 @@ const apps = [...listDirs(FRAMEWORKS_DIR), ...listDirs(LOCAL_BROWSERS_DIR)]
  * tooling supports the newer release.
  */
 const VERSION_CAPS = {
-  // @angular-devkit/build-angular peers on typescript ">=6.0 <6.1"
+  // @angular-devkit/build-angular peers on typescript ">=6.0 <6.1", and the Angular compiler needs the
+  // TypeScript JS API that typescript@7 no longer ships
   'test-builds/frameworks/angular': { typescript: '~6.0' },
-  // svelte-check peers on typescript "^5.0.0 || ^6.0.0"
-  'test-builds/frameworks/svelte': { typescript: '^6' }
+  // svelte-check peers on typescript "^5.0.0 || ^6.0.0" (TS 7 needs a dual typescript@6 + @typescript/native install)
+  'test-builds/frameworks/svelte': { typescript: '^6' },
+  // vue-tsc requires typescript/lib/tsc, which typescript@7 does not export
+  'test-builds/frameworks/vue': { typescript: '^6' }
 }
 
 /**

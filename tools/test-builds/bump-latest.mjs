@@ -18,6 +18,33 @@ const listDirs = (parent) => fs.existsSync(parent)
   : []
 const apps = [...listDirs(FRAMEWORKS_DIR), ...listDirs(LOCAL_BROWSERS_DIR)]
 
+/*
+ * Packages that must not jump to their absolute latest because the app's other tooling has not
+ * caught up yet (an unresolvable peer range fails `npm install` and takes down the whole build).
+ * They still bump to the newest release inside the given range. Keyed by app folder (relative to
+ * tools/, matching the `app` label logged below) then package name. Remove an entry once its
+ * tooling supports the newer release.
+ */
+const VERSION_CAPS = {
+  // @angular-devkit/build-angular peers on typescript ">=6.0 <6.1"
+  'test-builds/frameworks/angular': { typescript: '~6.0' },
+  // svelte-check peers on typescript "^5.0.0 || ^6.0.0"
+  'test-builds/frameworks/svelte': { typescript: '^6' }
+}
+
+/**
+ * Resolves the version a dependency should be bumped to.
+ * @param {string} name The package name.
+ * @param {string} [range] Optional semver range to stay within; defaults to the latest release.
+ * @returns {string} The newest published version, within `range` when one is given.
+ */
+const resolveVersion = (name, range) => {
+  if (!range) return execSync(`npm view ${name} version`, { encoding: 'utf-8' }).trim()
+  // with a range, npm returns an array of every match, or a bare string when only one matches
+  const matches = JSON.parse(execSync(`npm view ${name}@"${range}" version --json`, { encoding: 'utf-8' }))
+  return [matches].flat().at(-1)
+}
+
 for (const appDir of apps) {
   const app = path.relative(path.join(__dirname, '..'), appDir)
   const pkgPath = path.join(appDir, 'package.json')
@@ -28,10 +55,13 @@ for (const appDir of apps) {
       if (name === '@newrelic/browser-agent') continue
 
       const previous = pkg[depField][name]
-      const latest = execSync(`npm view ${name} version`, { encoding: 'utf-8' }).trim()
+      const cap = VERSION_CAPS[app]?.[name]
+      const latest = resolveVersion(name, cap)
       pkg[depField][name] = latest
 
-      console.log(`[bump-latest] ${app}: ${name} ${previous} -> ${latest}`)
+      const capNote = cap ? ` (capped to ${cap})` : ''
+
+      console.log(`[bump-latest] ${app}: ${name} ${previous} -> ${latest}${capNote}`)
     }
   }
 

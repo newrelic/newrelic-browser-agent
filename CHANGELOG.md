@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.325.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.324.1...v1.325.0) (2026-10-28)
+
+
+### Features
+
+* **page_view_timing:** report server-corrected timestamps ([#1881](https://github.com/newrelic/newrelic-browser-agent/issues/1881)) ([bbe4539](https://github.com/newrelic/newrelic-browser-agent/commit/bbe4539a2df5fbdf5671419a237736d684fef82f))
+
 ## [1.324.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.324.0...v1.324.1) (2026-10-26)
 
 

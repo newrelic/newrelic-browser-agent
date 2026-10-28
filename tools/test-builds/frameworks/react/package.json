@@ -5,21 +5,21 @@
   "type": "module",
   "license": "MIT",
   "dependencies": {
-    "@newrelic/browser-agent": "file:../../../../temp/newrelic-browser-agent-1.324.0.tgz",
-    "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "@newrelic/browser-agent": "file:../../../../temp/newrelic-browser-agent-1.324.1.tgz",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "scripts": {
     "start": "vite",
     "build": "tsc && vite build"
   },
   "devDependencies": {
-    "@types/node": "22.19.x",
-    "@types/react": "*",
-    "@types/react-dom": "*",
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react-swc": "4.3.3",
-    "typescript": "5.9.3",
-    "vite": "8.3.3"
+    "typescript": "7.0.2",
+    "vite": "8.3.5"
   },
   "keywords": [],
   "description": ""

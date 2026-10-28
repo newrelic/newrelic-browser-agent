@@ -2,7 +2,7 @@
   "ios": [
     {
       "device_name": "iPhone 17",
-      "version": "26.2",
+      "version": "27.0",
       "platformName": "ios",
       "browserName": "Safari"
     },

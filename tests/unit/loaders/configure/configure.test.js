@@ -93,6 +93,13 @@ describe('configure internal beacon deny-list entries', () => {
     expect(agent.runtime.denyList).toContain('customer-proxy.com/*')
   })
 
+  it('collapses multiple trailing slashes on a proxied beacon path', () => {
+    const agent = buildAgent()
+    configure(agent, buildOpts('customer-proxy.com/known-prefix///'), 'test-loader')
+
+    expect(agent.runtime.denyList).toContain('customer-proxy.com/known-prefix/*')
+  })
+
   it('does not double up the slash when the proxied beacon path ends in a slash', () => {
     const agent = buildAgent()
     configure(agent, buildOpts('customer-proxy.com/known-prefix/'), 'test-loader')

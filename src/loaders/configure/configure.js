@@ -17,6 +17,18 @@ import { handle } from '../../common/event-emitter/handle'
 import { prefix as iframePrefix } from '../../common/constants/iframe-constants'
 
 /**
+ * Removes any trailing slashes from a string. A linear scan is used instead of a regex like `/\/+$/`, which backtracks
+ * polynomially on config values containing many repeated slashes.
+ * @param {string} str
+ * @returns {string}
+ */
+function trimTrailingSlashes (str) {
+  let end = str.length
+  while (end > 0 && str[end - 1] === '/') end--
+  return str.slice(0, end)
+}
+
+/**
  * Sets or re-sets the agent's configuration values from global settings. This also attach those as properties to the agent instance.
  * IMPORTANT: setNREUMInitializedAgent must be called on the agent prior to calling this function.
  */
@@ -77,7 +89,7 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
          */
         return [
           ...(agent.init.ajax.deny_list || []),
-          ...(agent.init.ajax.block_internal ? agent.beacons.map(beacon => beacon.replace(/\/+$/, '') + '/*') : [])
+          ...(agent.init.ajax.block_internal ? agent.beacons.map(beacon => trimTrailingSlashes(beacon) + '/*') : [])
         ]
       }
     })

@@ -294,12 +294,12 @@ This product includes source derived from [@newrelic/rrweb](https://github.com/n
 
 ### fflate
 
-This product includes source derived from [fflate](https://github.com/101arrowz/fflate) ([v0.8.2](https://github.com/101arrowz/fflate/tree/v0.8.2)), distributed under the [MIT License](https://github.com/101arrowz/fflate/blob/v0.8.2/LICENSE):
+This product includes source derived from [fflate](https://github.com/101arrowz/fflate) ([v0.8.3](https://github.com/101arrowz/fflate/tree/v0.8.3)), distributed under the [MIT License](https://github.com/101arrowz/fflate/blob/v0.8.3/LICENSE):
 
 ```
 MIT License
 
-Copyright (c) 2023 Arjun Barrett
+Copyright (c) 2026 Arjun Barrett
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

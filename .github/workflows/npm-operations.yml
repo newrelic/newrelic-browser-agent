@@ -97,7 +97,7 @@ jobs:
           # If, for some odd reason, you need to use an earlier Node.js release,
           # you _must_ add another step subsequent to this one that performs:
           # `npm install -g npm@latest`.
-          node-version: 24.x
+          node-version: 24.22.1
           # This is important. The OIDC exchange requires that the registry
           # URL matches on both ends.
           registry-url: https://registry.npmjs.org

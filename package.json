@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "1.324.0",
+  "version": "1.324.1",
   "private": false,
   "author": "New Relic Browser Agent Team <browser-agent@newrelic.com>",
   "description": "New Relic Browser Agent",
@@ -170,7 +170,7 @@
     "runtime": {
       "name": "node",
       "onFail": "error",
-      "version": ">=24.14.0"
+      "version": ">=24.22.1"
     },
     "packageManager": {
       "name": "npm",
@@ -228,7 +228,7 @@
   },
   "dependencies": {
     "@newrelic/rrweb": "^1.1.2",
-    "fflate": "0.8.2",
+    "fflate": "0.8.3",
     "web-vitals": "6.2.1"
   },
   "devDependencies": {

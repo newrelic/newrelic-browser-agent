@@ -59,3 +59,84 @@ describe('configure iframe bridge message pre-filtering', () => {
     expect(mockHandle).not.toHaveBeenCalled()
   })
 })
+
+describe('configure internal beacon deny-list entries', () => {
+  let configure
+
+  beforeEach(async () => {
+    jest.resetModules()
+    jest.clearAllMocks()
+
+    const module = await import('../../../../src/loaders/configure/configure')
+    configure = module.configure
+  })
+
+  const buildAgent = () => ({ agentIdentifier: `test-agent-${Math.random()}`, exposed: false })
+
+  const buildOpts = (proxyBeacon, ajax = {}) => ({
+    init: { proxy: { beacon: proxyBeacon }, ajax },
+    info: { beacon: 'bam.nr-data.net', errorBeacon: 'bam.nr-data.net' },
+    runtime: {}
+  })
+
+  it('wildcards a proxied beacon with sub-path', () => {
+    const agent = buildAgent()
+    configure(agent, buildOpts('customer-proxy.com/known-prefix'), 'test-loader')
+
+    expect(agent.runtime.denyList).toContain('customer-proxy.com/known-prefix/*')
+  })
+
+  it('wildcards a proxied beacon with no path', () => {
+    const agent = buildAgent()
+    configure(agent, buildOpts('customer-proxy.com'), 'test-loader')
+
+    expect(agent.runtime.denyList).toContain('customer-proxy.com/*')
+  })
+
+  it('does not double up the slash when the proxied beacon path ends in a slash', () => {
+    const agent = buildAgent()
+    configure(agent, buildOpts('customer-proxy.com/known-prefix/'), 'test-loader')
+
+    expect(agent.runtime.denyList).toContain('customer-proxy.com/known-prefix/*')
+    expect(agent.runtime.denyList).not.toContain('customer-proxy.com/known-prefix//*')
+  })
+
+  it('wildcards info beacons', () => {
+    const agent = buildAgent()
+    configure(agent, buildOpts(undefined), 'test-loader')
+
+    expect(agent.runtime.denyList).toEqual(['bam.nr-data.net/*', 'bam.nr-data.net/*'])
+  })
+
+  it('wildcards a proxied assets path', () => {
+    const agent = buildAgent()
+    const opts = buildOpts(undefined)
+    opts.init.proxy.assets = 'cdn.customer.com/assets'
+    configure(agent, opts, 'test-loader')
+
+    expect(agent.runtime.denyList).toContain('cdn.customer.com/assets/*')
+  })
+
+  it('omits the proxied beacon entry when block_internal is false', () => {
+    const agent = buildAgent()
+    configure(agent, buildOpts('customer-proxy.com/known-prefix', { block_internal: false }), 'test-loader')
+
+    expect(agent.runtime.denyList).toEqual([])
+  })
+
+  it('leaves customer deny_list entries exactly as configured', () => {
+    const agent = buildAgent()
+    configure(agent, buildOpts('customer-proxy.com/known-prefix', { deny_list: ['api.example.com/exact', 'other.example.com/*'] }), 'test-loader')
+
+    expect(agent.runtime.denyList).toEqual(expect.arrayContaining(['api.example.com/exact', 'other.example.com/*']))
+    expect(agent.runtime.denyList).not.toContain('api.example.com/exact/*')
+  })
+
+  it('keeps agent.beacons raw, without the wildcard suffix', () => {
+    const agent = buildAgent()
+    configure(agent, buildOpts('customer-proxy.com/known-prefix'), 'test-loader')
+
+    expect(agent.beacons).toContain('customer-proxy.com/known-prefix')
+    expect(agent.beacons).not.toContain('customer-proxy.com/known-prefix/*')
+  })
+})

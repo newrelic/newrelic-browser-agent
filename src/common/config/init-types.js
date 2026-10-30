@@ -21,7 +21,7 @@
  * @property {boolean} [distributed_tracing.exclude_newrelic_header]
  * @property {boolean} [distributed_tracing.cors_use_newrelic_header]
  * @property {boolean} [distributed_tracing.cors_use_tracecontext_headers]
- * @property {Array<string>} [distributed_tracing.allowed_origins]
+ * @property {Array<string>} [distributed_tracing.allowed_origins] - Cross-origin hosts that will receive distributed tracing headers, as `protocol://host[:port]`. The hostname may contain `*` wildcards (e.g. `https://*.example.com`), which match any characters including dots. Wildcard entries must match the entire hostname, and the protocol and port must match exactly and cannot contain wildcards. An entry whose hostname is only wildcards (e.g. `https://*`) is ignored.
  * @property {Array<string>} [feature_flags] - An array of feature flags to enable experimental features.
  * @property {Object} [generic_events]
  * @property {boolean} [generic_events.enabled] - Turn on/off the generic events feature (on by default). This is required for `PageAction`, `UserAction`, and `BrowserPerformance` events.

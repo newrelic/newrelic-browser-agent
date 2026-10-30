@@ -85,14 +85,15 @@ export function setDenyList (denyListConfig) {
 }
 
 /**
- * Converts a deny list filter string into a regular expression object with wildcard support
- * @param {string} filter - deny list filter to convert
- * @param {boolean} [isPathname=false] - indicates if the filter is a pathname
+ * Converts a filter string into a regular expression object with wildcard support. The result is always anchored at
+ * the end (`$`), and is also anchored at the start (`^`) when `anchorStart` is true.
+ * @param {string} filter - filter to convert
+ * @param {boolean} [anchorStart=false] - indicates if the expression should also be anchored at the start of the string
  * @returns {RegExp} - regular expression object built from the input string
  */
-function convertToRegularExpression (filter, isPathname = false) {
+export function convertToRegularExpression (filter, anchorStart = false) {
   const newFilter = filter
     .replace(/[.+?^${}()|[\]\\]/g, (m) => '\\' + m) // use a replacer function to not break apm injection
     .replace(/\*/g, '.*?') // use lazy matching instead of greedy
-  return new RegExp((isPathname ? '^' : '') + newFilter + '\x24') // x24 == $, but using a literal $ causes webpack to to break when building unminified
+  return new RegExp((anchorStart ? '^' : '') + newFilter + '\x24') // x24 == $, but using a literal $ causes webpack to to break when building unminified
 }

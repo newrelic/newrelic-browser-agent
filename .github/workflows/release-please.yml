@@ -4,8 +4,8 @@
 # contents of the changelog.json file and PR headers to generate release notes for the public docs website.
 # See https://github.com/google-github-actions/release-please-action
 #
-# Note: NPM prerelease publishing is now handled automatically by npm-operations.yml when this workflow
-# pushes to the main branch (triggering automatic RC version publishing)
+# Note: NPM publishing is handled by npm-operations.yml when the GitHub release is published. There is no
+# automatic prerelease (RC) publishing from main.
 
 on:
   push:

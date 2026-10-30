@@ -42,11 +42,14 @@ runs:
       env:
         AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
+        INPUT_REGION: ${{ inputs.aws_region }}
+        INPUT_BUCKET: ${{ inputs.aws_bucket_name }}
+        INPUT_ROLE: ${{ inputs.aws_role }}
+        INPUT_DRY_RUN: ${{ inputs.dry_run }}
+        INPUT_BUCKET_DIR: ${{ inputs.bucket_dir }}
       run: |
-        node $GITHUB_ACTION_PATH/index.js \
-          --region ${{ inputs.aws_region }} \
-          --bucket ${{ inputs.aws_bucket_name }} \
-          --role ${{ inputs.aws_role }} \
-          ${{ inputs.dry_run && '--dry' || '' }} \
-          ${{ inputs.bucket_dir && format('--dir {0}', inputs.bucket_dir) || '' }}
+        args=(--region "$INPUT_REGION" --bucket "$INPUT_BUCKET" --role "$INPUT_ROLE")
+        if [[ -n "$INPUT_DRY_RUN" ]]; then args+=(--dry); fi
+        if [[ -n "$INPUT_BUCKET_DIR" ]]; then args+=(--dir "$INPUT_BUCKET_DIR"); fi
+        node "$GITHUB_ACTION_PATH/index.js" "${args[@]}"
       shell: bash

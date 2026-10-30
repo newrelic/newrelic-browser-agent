@@ -19,8 +19,14 @@ runs:
       shell: bash
     - name: Run action script
       id: action-script
+      env:
+        INPUT_ENVIRONMENT: ${{ inputs.environment }}
+        INPUT_LOADER_VERSION: ${{ inputs.loader_version }}
       run: |
-        node $GITHUB_ACTION_PATH/index.js \
-          ${{ inputs.environment && format('--environment {0}', inputs.environment) || '' }} \
-          --loader-version ${{ inputs.loader_version }}
+        # Globbing is off and the environment list is deliberately unquoted so a space separated list splits into separate arguments
+        set -f
+        args=()
+        if [[ -n "$INPUT_ENVIRONMENT" ]]; then args+=(--environment $INPUT_ENVIRONMENT); fi
+        args+=(--loader-version "$INPUT_LOADER_VERSION")
+        node "$GITHUB_ACTION_PATH/index.js" "${args[@]}"
       shell: bash

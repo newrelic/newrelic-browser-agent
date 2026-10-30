@@ -48,16 +48,20 @@ runs:
   steps:
     - name: Build RC assets
       shell: bash
+      env:
+        INPUT_ENVIRONMENT: ${{ inputs.environment }}
+        INPUT_BRANCH_NAME: ${{ inputs.branch_name }}
+        INPUT_BUCKET_DIR: ${{ inputs.bucket_dir }}
       run: |
-        echo "🔨 Building fresh assets from current branch for ${{ inputs.environment }} environment"
+        echo "🔨 Building fresh assets from current branch for ${INPUT_ENVIRONMENT} environment"
         npm ci
-        if [[ -n "${{ inputs.branch_name }}" ]]; then
-          echo "🏷️  Using branch-specific version suffix: ${{ inputs.branch_name }}"
-          npm run cdn:webpack -- --env mode=${{ inputs.environment }} --env branchName=${{ inputs.branch_name }}
+        if [[ -n "${INPUT_BRANCH_NAME}" ]]; then
+          echo "🏷️  Using branch-specific version suffix: ${INPUT_BRANCH_NAME}"
+          npm run cdn:webpack -- --env mode="${INPUT_ENVIRONMENT}" --env branchName="${INPUT_BRANCH_NAME}"
         else
-          npm run cdn:webpack -- --env mode=${{ inputs.environment }}
+          npm run cdn:webpack -- --env mode="${INPUT_ENVIRONMENT}"
         fi
-        echo "📤 Preparing upload to /${{ inputs.bucket_dir }}"
+        echo "📤 Preparing upload to /${INPUT_BUCKET_DIR}"
     
     - name: Upload RC assets to S3
       id: s3-upload-rc
@@ -87,9 +91,13 @@ runs:
     - name: Set output values
       id: set-outputs
       shell: bash
+      env:
+        INPUT_CDN_SERVICE: ${{ inputs.cdn_service }}
+        INPUT_BUCKET_DIR: ${{ inputs.bucket_dir }}
+        INPUT_ENVIRONMENT: ${{ inputs.environment }}
       run: |
-        SCRIPT_URL="https://${{ inputs.cdn_service }}/${{ inputs.bucket_dir }}nr-loader-spa.min.js"
-        VERSION_LABEL="${{ inputs.environment }}-rc-$(date +%Y%m%d-%H%M%S)"
+        SCRIPT_URL="https://${INPUT_CDN_SERVICE}/${INPUT_BUCKET_DIR}nr-loader-spa.min.js"
+        VERSION_LABEL="${INPUT_ENVIRONMENT}-rc-$(date +%Y%m%d-%H%M%S)"
         echo "script_url=$SCRIPT_URL" >> $GITHUB_OUTPUT
         echo "version_label=$VERSION_LABEL" >> $GITHUB_OUTPUT
         echo "✅ Deployed script: $SCRIPT_URL"

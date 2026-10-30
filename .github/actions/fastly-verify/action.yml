@@ -4,8 +4,8 @@ name: 'Fastly Verify'
 
 inputs:
   fastly_key:
-    description: 'Fastly access key used for authentication.'
-    required: true
+    description: 'Unused. Verification is an unauthenticated fetch.'
+    required: false
   fastly_service:
     description: 'Fastly service to perform the purge on.'
     required: true
@@ -22,9 +22,15 @@ runs:
     - name: Run action script
       id: action-script
       env:
-        FASTLY_API_TOKEN: ${{ inputs.fastly_key }}
+        INPUT_SERVICE: ${{ inputs.fastly_service }}
+        INPUT_ASSET_PATH: ${{ inputs.asset_path }}
       run: |
-        node $GITHUB_ACTION_PATH/index.js \
-          --service ${{ inputs.fastly_service }} \
-          --asset-path ${{ inputs.asset_path }}
+        set -f
+        assets=()
+        # The asset list is space separated and callers may format it with trailing line-continuation backslashes
+        for asset in $INPUT_ASSET_PATH; do
+          if [[ "$asset" != '\' ]]; then assets+=("$asset"); fi
+        done
+        args=(--service "$INPUT_SERVICE" --asset-path "${assets[@]}")
+        node "$GITHUB_ACTION_PATH/index.js" "${args[@]}"
       shell: bash

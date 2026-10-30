@@ -22,10 +22,15 @@ runs:
       run: npm ci --silent --no-progress --ignore-scripts --prefix $GITHUB_ACTION_PATH/..
       shell: bash
     - name: Build Agent2Query assets
+      env:
+        INPUT_LATEST_STAGING_KEY: ${{ inputs.latest_staging_license_key }}
+        INPUT_LATEST_US_PROD_KEY: ${{ inputs.latest_us_prod_license_key }}
+        INPUT_RELEASED_STAGING_KEY: ${{ inputs.released_staging_license_key }}
+        INPUT_RELEASED_US_PROD_KEY: ${{ inputs.released_us_prod_license_key }}
       run: |
-        node $GITHUB_ACTION_PATH/index.js \
-          --latest-staging-license-key "${{ inputs.latest_staging_license_key }}" \
-          --latest-us-prod-license-key "${{ inputs.latest_us_prod_license_key }}" \
-          --released-staging-license-key "${{ inputs.released_staging_license_key }}" \
-          --released-us-prod-license-key "${{ inputs.released_us_prod_license_key }}"
+        node "$GITHUB_ACTION_PATH/index.js" \
+          --latest-staging-license-key "$INPUT_LATEST_STAGING_KEY" \
+          --latest-us-prod-license-key "$INPUT_LATEST_US_PROD_KEY" \
+          --released-staging-license-key "$INPUT_RELEASED_STAGING_KEY" \
+          --released-us-prod-license-key "$INPUT_RELEASED_US_PROD_KEY"
       shell: bash

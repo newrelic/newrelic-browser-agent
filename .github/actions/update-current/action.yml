@@ -40,13 +40,15 @@ runs:
     - name: Run action script
       id: action-script
       env:
+        INPUT_REGION: ${{ inputs.aws_region }}
+        INPUT_BUCKET: ${{ inputs.aws_bucket_name }}
+        INPUT_ROLE: ${{ inputs.aws_role }}
+        INPUT_LOADER_VERSION: ${{ inputs.loader_version }}
+        INPUT_DRY_RUN: ${{ inputs.dry_run }}
         AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
       run: |
-        node $GITHUB_ACTION_PATH/index.js \
-          --region ${{ inputs.aws_region }} \
-          --bucket ${{ inputs.aws_bucket_name }} \
-          --role ${{ inputs.aws_role }} \
-          --loader-version ${{ inputs.loader_version }} \
-          ${{ inputs.dry_run && '--dry' || '' }}
+        args=(--region "$INPUT_REGION" --bucket "$INPUT_BUCKET" --role "$INPUT_ROLE" --loader-version "$INPUT_LOADER_VERSION")
+        if [[ -n "$INPUT_DRY_RUN" ]]; then args+=(--dry); fi
+        node "$GITHUB_ACTION_PATH/index.js" "${args[@]}"
       shell: bash

@@ -86,8 +86,10 @@ jobs:
       - name: Set image URL
         id: publish-image
         if: steps.s3-upload-image.outputs.results != ''
+        env:
+          S3_RESULTS: ${{ steps.s3-upload-image.outputs.results }}
         run: |
-          KEY=$(echo '${{ steps.s3-upload-image.outputs.results }}' | jq -r '.[0].Key')
+          KEY=$(printf '%s' "$S3_RESULTS" | jq -r '.[0].Key')
           echo "image_url=https://staging-js-agent.newrelic.com/$KEY" >> "$GITHUB_OUTPUT"
 
   notify:

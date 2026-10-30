@@ -44,7 +44,9 @@ jobs:
           local_dir: $GITHUB_WORKSPACE/build
       - name: Gather cdn purge paths
         id: purge-paths
-        run: echo "results=$(echo '${{ steps.s3-upload.outputs.results }}' | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
+        env:
+          S3_RESULTS: ${{ steps.s3-upload.outputs.results }}
+        run: echo "results=$(printf '%s' "$S3_RESULTS" | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
       - name: Purge production cdn
         uses: ./.github/actions/fastly-purge
         with:
@@ -97,7 +99,9 @@ jobs:
           loader_version: ${{ steps.agent-loader-version.outputs.results }}
       - name: Gather cdn purge paths
         id: purge-paths
-        run: echo "results=$(echo '${{ steps.s3-upload.outputs.results }}' | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
+        env:
+          S3_RESULTS: ${{ steps.s3-upload.outputs.results }}
+        run: echo "results=$(printf '%s' "$S3_RESULTS" | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
       - name: Purge production cdn
         uses: ./.github/actions/fastly-purge
         with:
@@ -169,9 +173,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.event.release.tag_name }}
+          RELEASE_BODY: ${{ github.event.release.body }}
         run: |
           {
-            printf '%s\n' "${{ github.event.release.body }}"
+            printf '%s\n' "${RELEASE_BODY}"
             printf '\n## Asset Size Report\n\n'
             printf 'Built asset sizes for %s:\n\n' "$TAG"
             cat ./build/size_report.md
@@ -429,10 +434,12 @@ jobs:
       - name: Get local stats
         id: get-stats
         shell: bash
+        env:
+          AGENT_VERSION: ${{ steps.agent-loader-version.outputs.results }}
         run: |
-          rum=$(cat ./build/nr-rum-standard-${{ steps.agent-loader-version.outputs.results }}.stats.json); echo "rum=$rum" >> $GITHUB_OUTPUT;
-          full=$(cat ./build/nr-full-standard-${{ steps.agent-loader-version.outputs.results }}.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;
-          spa=$(cat ./build/nr-spa-standard-${{ steps.agent-loader-version.outputs.results }}.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
+          rum=$(cat "./build/nr-rum-standard-${AGENT_VERSION}.stats.json"); echo "rum=$rum" >> $GITHUB_OUTPUT;
+          full=$(cat "./build/nr-full-standard-${AGENT_VERSION}.stats.json"); echo "full=$full" >> $GITHUB_OUTPUT;
+          spa=$(cat "./build/nr-spa-standard-${AGENT_VERSION}.stats.json"); echo "spa=$spa" >> $GITHUB_OUTPUT;
       - name: Report lite size to NR
         continue-on-error: true
         uses: newrelic-apps/capture-build-size@v1.0.1

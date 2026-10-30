@@ -55,24 +55,34 @@ jobs:
       # Determine environment and branch based on trigger type
       - name: Determine experiment configuration
         id: config
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_REF: ${{ github.head_ref }}
+          INPUT_ENVIRONMENT: ${{ inputs.nr_environment }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          if [[ "${EVENT_NAME}" == "pull_request" ]]; then
             echo "environment=dev" >> $GITHUB_OUTPUT
-            echo "branch=${{ github.head_ref }}" >> $GITHUB_OUTPUT
-            echo "🔧 PR build: environment=dev, branch=${{ github.head_ref }}"
+            echo "branch=${HEAD_REF}" >> $GITHUB_OUTPUT
+            echo "🔧 PR build: environment=dev, branch=${HEAD_REF}"
           else
-            echo "environment=${{ inputs.nr_environment }}" >> $GITHUB_OUTPUT
-            echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-            echo "🔧 Manual build: environment=${{ inputs.nr_environment }}, branch=${{ github.ref_name }}"
+            echo "environment=${INPUT_ENVIRONMENT}" >> $GITHUB_OUTPUT
+            echo "branch=${REF_NAME}" >> $GITHUB_OUTPUT
+            echo "🔧 Manual build: environment=${INPUT_ENVIRONMENT}, branch=${REF_NAME}"
           fi
 
       - name: Install project dependencies
         run: npm ci
       - name: Clean branch name
         id: clean-branch-name
-        run: echo "results=$(echo '${{ steps.config.outputs.branch }}' | sed 's/[^[:alnum:].-]/-/g')" >> $GITHUB_OUTPUT
+        env:
+          BRANCH: ${{ steps.config.outputs.branch }}
+        run: echo "results=$(printf '%s' "${BRANCH}" | sed 's/[^[:alnum:].-]/-/g')" >> $GITHUB_OUTPUT
       - name: Build experiment
-        run: npm run cdn:build:experiment -- --env branchName='${{ steps.config.outputs.environment }}/${{ steps.clean-branch-name.outputs.results }}'
+        env:
+          EXPERIMENT_ENVIRONMENT: ${{ steps.config.outputs.environment }}
+          EXPERIMENT_BRANCH: ${{ steps.clean-branch-name.outputs.results }}
+        run: npm run cdn:build:experiment -- --env branchName="${EXPERIMENT_ENVIRONMENT}/${EXPERIMENT_BRANCH}"
 
       # Create comprehensive config.js with A/B account configuration
       - name: Create experiment config file
@@ -147,7 +157,9 @@ jobs:
           bucket_dir: experiments/${{ steps.config.outputs.environment }}/${{ steps.clean-branch-name.outputs.results }}
       - name: Gather purge paths
         id: purge-paths
-        run: echo "results=$(echo '${{ steps.s3-upload.outputs.results }}' | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
+        env:
+          S3_RESULTS: ${{ steps.s3-upload.outputs.results }}
+        run: echo "results=$(printf '%s' "$S3_RESULTS" | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
       - name: Purge production cdn
         uses: ./.github/actions/fastly-purge
         with:

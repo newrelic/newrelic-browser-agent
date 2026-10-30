@@ -48,8 +48,10 @@ jobs:
     steps:
       - name: Determine deployment mode
         id: determine-mode
+        env:
+          DEPLOYMENT_SOURCE: ${{ inputs.deployment_source }}
         run: |
-          CDN_PATH="${{ inputs.deployment_source }}"
+          CDN_PATH="${DEPLOYMENT_SOURCE}"
 
           if [[ -z "$CDN_PATH" ]]; then
             echo "is_rc_mode=true" >> $GITHUB_OUTPUT
@@ -62,11 +64,13 @@ jobs:
       - name: Resolve CDN path for specific version mode
         if: steps.determine-mode.outputs.is_rc_mode == 'false'
         id: resolve-cdn-path
+        env:
+          DEPLOYMENT_SOURCE: ${{ inputs.deployment_source }}
         run: |
-          CDN_PATH="${{ inputs.deployment_source }}"
+          CDN_PATH="${DEPLOYMENT_SOURCE}"
 
-          if [[ "$CDN_PATH" =~ ^https?:// ]]; then
-            # Full URL provided
+          if [[ "$CDN_PATH" =~ ^https://js-agent\.newrelic\.com/[A-Za-z0-9._/-]+\.js$ ]]; then
+            # Full URL provided. Only the production CDN host is accepted.
             SCRIPT_URL="$CDN_PATH"
             VERSION_LABEL="$CDN_PATH"
           elif [[ "$CDN_PATH" =~ ^[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+ ]]; then
@@ -84,7 +88,7 @@ jobs:
             echo "  - (empty) - builds from current branch (default)"
             echo "  - Released version: 1.314.0 (for rollbacks)"
             echo "  - RC version: 1.314.0-rc.1 (for re-promotion of specific RC)"
-            echo "  - Full URL: https://js-agent.newrelic.com/nr-loader-spa-1.314.0.min.js"
+            echo "  - Full URL: https://js-agent.newrelic.com/nr-loader-spa-1.314.0.min.js (js-agent.newrelic.com only)"
             exit 1
           fi
 
@@ -109,11 +113,15 @@ jobs:
       # Determine branch name for webpack version suffix
       - name: Determine branch name for version
         id: branch-name
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_REF: ${{ github.head_ref }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            BRANCH="${{ github.head_ref }}"
+          if [[ "${EVENT_NAME}" == "pull_request" ]]; then
+            BRANCH="${HEAD_REF}"
           else
-            BRANCH="${{ github.ref_name }}"
+            BRANCH="${REF_NAME}"
           fi
 
           # Clean branch name for version suffix (lowercase, replace special chars with hyphens)
@@ -656,12 +664,15 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Verify promotion complete
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          DEPLOY_US_PROD_RESULT: ${{ needs.deploy-us-prod.result }}
         run: |
-          if [[ "${{ github.head_ref }}" =~ ^release-please-- ]]; then
+          if [[ "${HEAD_REF}" =~ ^release-please-- ]]; then
             # For release-please PRs, require successful promotion to production
-            if [[ "${{ needs.deploy-us-prod.result }}" != "success" ]]; then
+            if [[ "${DEPLOY_US_PROD_RESULT}" != "success" ]]; then
               echo "❌ Release-please PR: Production promotion did not complete successfully"
-              echo "Deploy status: ${{ needs.deploy-us-prod.result }}"
+              echo "Deploy status: ${DEPLOY_US_PROD_RESULT}"
               exit 1
             fi
             echo "✅ Release-please PR: Full production promotion completed successfully"

@@ -1,0 +1,63 @@
+# Detects drift between what was released and what is being served. Every release attaches an integrity manifest
+# (see publish-release.yml); this workflow re-checks recent releases against the CDN edge, the S3 origin and the NR
+# loader database on a schedule, using only public endpoints. It needs no credentials and installs no dependencies.
+# Notifications are sent from a separate job so that the checking job needs no secrets.
+
+name: CDN Integrity Monitor
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cdn-integrity-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    name: Verify served assets against release manifests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Verify CDN, S3 origin and NR loader database
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node .github/scripts/cdn-integrity-monitor.mjs --repo "$GITHUB_REPOSITORY" --releases 5
+
+  notify:
+    name: Notify on integrity failure
+    needs: monitor
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Build Slack payload
+        id: payload
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          text=":rotating_light: CDN integrity monitor failed: served assets differ from, or could not be checked against, a release manifest. ${RUN_URL}"
+          echo "payload=$(jq -cn --arg text "$text" '{text: $text}')" >> "$GITHUB_OUTPUT"
+      - name: Send Slack notification
+        uses: ./.github/actions/slack-notification
+        with:
+          browser_agent_dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
+          payload: ${{ steps.payload.outputs.payload }}

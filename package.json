@@ -290,6 +290,9 @@
     "webpack-cli": "^6.0.1",
     "yargs": "^17.7.2"
   },
+  "publishConfig": {
+    "provenance": true
+  },
   "files": [
     "dist",
     "src",

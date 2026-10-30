@@ -1,96 +1,37 @@
 name: NPM Operations
 
+# Publishes the npm package for a GitHub release. Prerelease (rc) publishing from main has been removed, so this
+# workflow only publishes released versions.
+
 permissions:
   id-token: write
   contents: write
 
 on:
-  # 1. Pull request merge - triggers prerelease operation
-  push:
-    branches:
-      - main
-
-  # 2. Release - triggers release operations
+  # Release - publishes the released version
   release:
     types: [published]
 
-  # 3. Scheduled deprecation (keeping existing nightly schedule)
-  #schedule:
-  #  # Runs every day at 4AM
-  #  - cron: '0 4 * * *'
-
-  # 4. Manual trigger for testing/manual/emergency operations
+  # Manual re-publish of the version in package.json, for recovering a failed release-event run.
+  # Limited to main or a release tag by the job condition below. Takes no inputs.
   workflow_dispatch:
-    inputs:
-      operation:
-        description: 'NPM operation to perform'
-        required: true
-        type: choice
-        options:
-          - publish-release
-          - publish-prerelease
-          #- deprecate-old-versions
-      preid:
-        description: '(publish-prerelease) identifier (e.g., rc, alpha, beta)'
-        required: false
-        type: string
-        default: 'rc'
-      version-override:
-        description: '(publish-prerelease) Override version'
-        required: false
-        type: string
-      dry_run:
-        description: '(publish-prerelease) Dry run mode for testing'
-        required: false
-        type: boolean
-        default: false
 
 jobs:
-  # Determine which operations to run based on trigger
-  determine-operations:
-    runs-on: ubuntu-latest
-    outputs:
-      operations: ${{ steps.determine.outputs.operations }}
-    steps:
-      - name: Determine operations based on trigger
-        id: determine
-        run: |
-          case "${{ github.event_name }}" in
-            "push")
-              echo "operations=[\"publish-prerelease\"]" >> $GITHUB_OUTPUT
-              ;;
-            "release")
-              echo "operations=[\"publish-release\"]" >> $GITHUB_OUTPUT
-              ;;
-            "schedule")
-              echo "operations=[\"deprecate-old-versions\"]" >> $GITHUB_OUTPUT
-              ;;
-            "workflow_dispatch")
-              echo "operations=[\"${{ inputs.operation }}\"]" >> $GITHUB_OUTPUT
-              ;;
-            *)
-              echo "operations=[]" >> $GITHUB_OUTPUT
-              ;;
-          esac
-
-  # Execute NPM operations based on determined operations
   npm-operations:
-    needs: determine-operations
-    if: needs.determine-operations.outputs.operations != '[]'
+    # Manual dispatches are limited to main or a release tag
+    if: github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    # Publishing requires approval through the npm-release environment
+    environment: npm-release
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
       run:
         shell: bash
-    env:
-      GITHUB_LOGIN: ${{ secrets.GITHUB_LOGIN || secrets.BROWSER_GITHUB_BOT_NAME }}
-      GITHUB_EMAIL: ${{ secrets.GITHUB_EMAIL || secrets.BROWSER_GITHUB_BOT_EMAIL }}
-      OPERATION: ${{ fromJson(needs.determine-operations.outputs.operations)[0] }}
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           # Trusted Publishing requires `npm@11.5.1` or later. Compatible
           # versions of `npm` started shipping with Node.js v24.5.0.
@@ -102,39 +43,20 @@ jobs:
           # URL matches on both ends.
           registry-url: https://registry.npmjs.org
 
-      # Setup Git for prerelease operations
-      - name: Set up git
-        run: |
-          git config --global user.name "${GITHUB_LOGIN}"
-          git config --global user.email "${GITHUB_EMAIL}"
-
-      # Install dependencies for publish operations
       - name: Install project dependencies
-        if: env.OPERATION == 'publish-release' || env.OPERATION == 'publish-prerelease'
         run: npm ci
 
       # Build NPM package for release
       - name: Build npm package
-        if: env.OPERATION == 'publish-release'
         run: npm run build:npm
 
       # Publish release version
       - name: Publish npm package (release)
-        if: env.OPERATION == 'publish-release'
         run: npm publish
-
-      # Publish prerelease version
-      - name: Publish prerelease version
-        if: env.OPERATION == 'publish-prerelease'
-        uses: ./.github/actions/prerelease-npm-version
-        with:
-          version-override: ${{ inputs.version-override }}
-          preid: ${{ inputs.preid || 'rc' }}
-          dry_run: ${{ inputs.dry_run || false }}
 
       # Deprecate old versions
       #- name: Deprecate old versions
-      #  if: env.OPERATION == 'deprecate-old-versions'
+      #  if: false # re-introduce a trigger before enabling
       #  env:
       #    # Ensure npm uses the registry URL for authentication
       #    NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
@@ -173,7 +95,3 @@ jobs:
       #        break
       #      fi
       #    done
-
-    outputs:
-      operation: ${{ env.OPERATION }}
-      success: ${{ job.status == 'success' }}

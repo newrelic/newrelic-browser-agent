@@ -75,7 +75,6 @@ jobs:
       - name: Verify internal promotion assets
         uses: ./.github/actions/fastly-verify
         with:
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: js-agent.newrelic.com
           asset_path: |
             internal/dev-released.js \

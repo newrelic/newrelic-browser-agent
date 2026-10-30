@@ -23,6 +23,7 @@ permissions:
 jobs:
   delete-experiment-on-s3:
     runs-on: ubuntu-latest
+    environment: nr1-experiments
     timeout-minutes: 5
     defaults:
       run:

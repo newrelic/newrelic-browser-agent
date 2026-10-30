@@ -6,7 +6,7 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { stringify } from '../../../common/util/stringify'
 import { handle } from '../../../common/event-emitter/handle'
 import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
-import { FEATURE_NAME, AJAX_ID } from '../constants'
+import { FEATURE_NAME, AJAX_ID, AJAX_REASONS } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
@@ -17,9 +17,18 @@ import { Obfuscator } from '../../../common/util/obfuscate'
 import { getVersion2Attributes, getVersion2DuplicationAttributes, shouldDuplicate, isMfeTarget } from '../../../common/v2/utils'
 import { EVENT_TYPES } from '../../../common/constants/events'
 import { generateSpanId, generateTraceId, generateUuid } from '../../../common/ids/unique-id'
+import { now } from '../../../common/timing/now'
+import { isBrowserScope } from '../../../common/constants/runtime'
+import { subscribeToPageUnload } from '../../../common/window/page-visibility'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
+
+  /** @type {Map<Object, {type: string, timer: number}>} In-flight requests, keyed by their ajax context, that have not resolved yet. */
+  #pending = new Map()
+  /** @type {number} Milliseconds a request has to resolve before it is reported as timed out; 0 means disabled. */
+  #timeoutMs = 0
+  #unloading = false
 
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
@@ -38,9 +47,20 @@ export class Aggregate extends AggregateBase {
 
     registerHandler('returnAjax', event => this.events.add(event), this.featureName, this.ee)
 
-    registerHandler('xhr', function (params, metrics, startTime, endTime, type, target) { // the EE-drain system not only switches "this" but also passes a new EventContext with info. Should consider platform refactor to another system which passes a mutable context around separately and predictably to avoid problems like this.
-      classThis.storeXhr(params, metrics, startTime, endTime, type, target, this) // this switches the context back to the class instance while passing the NR context as an argument -- see "ctx" in storeXhr
+    const timeoutSeconds = Number(agentRef.init.ajax.timeout)
+    if (timeoutSeconds > 0) this.#timeoutMs = timeoutSeconds * 1000
+
+    registerHandler('xhr-pending', function (type) {
+      classThis.#trackPending(type, this)
     }, this.featureName, this.ee)
+
+    registerHandler('xhr', function (params, metrics, startTime, endTime, type, target) { // the EE-drain system not only switches "this" but also passes a new EventContext with info. Should consider platform refactor to another system which passes a mutable context around separately and predictably to avoid problems like this.
+      classThis.#resolvePending(params, metrics, startTime, endTime, type, target, this) // this switches the context back to the class instance while passing the NR context as an argument -- see "ctx" in storeXhr
+    }, this.featureName, this.ee)
+
+    /* Only a real unload (e.g. navigating away or closing the tab) reports still-pending requests; merely hiding the page does not. Like the
+     * timeout itself, this is only enabled when ajax.timeout is set. */
+    if (isBrowserScope && this.#timeoutMs) subscribeToPageUnload(() => this.#reportPendingOnUnload())
 
     this.ee.on('long-task', (task, originator) => {
       if (originator instanceof gosNREUMOriginals().o.XHR) { // any time a long task from XHR callback is observed, update the end time for soft nav use
@@ -50,6 +70,87 @@ export class Aggregate extends AggregateBase {
     })
 
     this.waitForFlags(([])).then(() => this.drain())
+  }
+
+  /**
+   * Starts tracking a request that has been sent but not yet resolved, and arms its timeout. Nothing is tracked when ajax.timeout is disabled.
+   * @param {string} type - 'xhr' or 'fetch'
+   * @param {Object} ctx - The ajax context of the request
+   */
+  #trackPending (type, ctx) {
+    if (!this.#timeoutMs || this.#pending.has(ctx)) return
+    const timedOutAt = ctx.startTime + this.#timeoutMs
+    /* Requests buffered before this aggregate loaded can already be past their timeout. A 0 delay still runs only after the synchronous
+     * drain of the buffer, so any resolution that was also buffered gets to clear this entry first. */
+    const timer = setTimeout(() => {
+      /* The response may already be in while the instrument is still finishing up, e.g. reading a fetch body for payload capture. If it came
+       * in time, keep waiting for that report (or, failing that, page unload) instead of calling it timed out. */
+      if (ctx.endTime !== undefined && ctx.endTime <= timedOutAt) return
+      this.#reportUnresolved(ctx, AJAX_REASONS.TIMED_OUT, timedOutAt)
+    }, Math.max(0, timedOutAt - now()))
+    this.#pending.set(ctx, { type, timer })
+  }
+
+  /**
+   * Handles a request the instrument has resolved, stopping any tracking of it. One that took longer than ajax.timeout to resolve is reported as
+   * timed out instead of with its real outcome. (Requests this aggregate already reported never get here, see #reportUnresolved.)
+   */
+  #resolvePending (params, metrics, startTime, endTime, type, target, ctx) {
+    clearTimeout(this.#pending.get(ctx)?.timer)
+    this.#pending.delete(ctx)
+
+    if (this.#timeoutMs && endTime - startTime > this.#timeoutMs) this.#storeUnresolved(params, metrics.txSize, startTime, startTime + this.#timeoutMs, type, target, ctx, AJAX_REASONS.TIMED_OUT)
+    else this.storeXhr(params, metrics, startTime, endTime, type, target, ctx)
+  }
+
+  /**
+   * Reports a still-pending request as unresolved, once per target, and stops the instrument from reporting it again later.
+   * @param {Object} ctx - The ajax context of the request
+   * @param {string} reason - An AJAX_REASONS value
+   * @param {number} endTime - The time to treat as the request's end
+   */
+  #reportUnresolved (ctx, reason, endTime) {
+    const entry = this.#pending.get(ctx)
+    if (!entry) return
+    clearTimeout(entry.timer)
+    this.#pending.delete(ctx)
+    /* Marking the shared context as ended makes the instrument skip its own end-of-request processing and reporting, for a late response or a
+     * cancel after unload alike: xhr's end() already returns early on it, and fetch checks it in onFetchDone and before reporting. */
+    ctx.ended = true
+
+    const txSize = ctx.metrics?.txSize ?? ctx.txSize // xhr keeps it on metrics, fetch keeps it on the context
+    ;(ctx.targets || [undefined]).forEach(target => this.#storeUnresolved(ctx.params, txSize, ctx.startTime, endTime, entry.type, target, ctx, reason))
+  }
+
+  /**
+   * Stores a request that has no usable response as status 0 with the given reason. Anything derived from a response is left out.
+   */
+  #storeUnresolved (params, txSize, startTime, endTime, type, target, ctx, reason) {
+    const { cat, ...requestParams } = params || {}
+    this.storeXhr(
+      { ...requestParams, status: 0, reason },
+      { txSize, duration: endTime - startTime, cbTime: 0 },
+      startTime, endTime, type, target,
+      { ...ctx, responseBody: undefined, responseHeaders: undefined }
+    )
+  }
+
+  /**
+   * On page unload, reports every request still in flight as unloaded and sends them straight away in their own final harvest. Browsers fire
+   * pagehide either before the hidden visibility change (navigating away in the same tab) or after it (e.g. a tab hidden first, then closed). In
+   * the latter case the EOL final harvest has already run and soft navigation interactions are already finalized, so these events always skip
+   * soft navigations and are not left waiting for a harvest that may never come.
+   * The harvest runs even with nothing pending: a browser closing a backgrounded tab cancels its in-flight requests just before pagehide, so
+   * those resolve (and are stored) after the EOL final harvest and would otherwise never be sent. An empty buffer sends nothing.
+   * Which requests are still pending here, rather than already cancelled by the browser, varies by browser; see UNLOAD_OUTCOMES in
+   * tests/specs/ajax/unresolved-requests.e2e.js.
+   */
+  #reportPendingOnUnload () {
+    const unloadTime = now()
+    this.#unloading = true
+    Array.from(this.#pending.keys()).forEach(ctx => this.#reportUnresolved(ctx, AJAX_REASONS.PAGE_UNLOADED, unloadTime))
+    this.#unloading = false
+    this.agentRef.runtime.harvester?.triggerHarvestFor(this, { isFinalHarvest: true })
   }
 
   storeXhr (params, metrics, startTime, endTime, type, target, ctx) {
@@ -101,6 +202,7 @@ export class Aggregate extends AggregateBase {
       callbackDuration: metrics.cbTime,
       [AJAX_ID]: generateUuid() // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
     }
+    if (params.reason) event.reason = params.reason // only set when the request did not resolve normally, see AJAX_REASONS
 
     event.gql = parseGQL({
       body: ctx.requestBody,
@@ -160,7 +262,7 @@ export class Aggregate extends AggregateBase {
 
   reportContainerEvent (evt, ctx) {
     const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
-    if (softNavInUse) { // when SN is running, pass the event w/ info to it for evaluation -- either part of an interaction or is given back
+    if (softNavInUse && !this.#unloading) { // when SN is running, pass the event w/ info to it for evaluation -- either part of an interaction or is given back
       handle('ajax', [evt, ctx], undefined, FEATURE_NAMES.softNav, this.ee)
     } else {
       this.events.add(evt)
@@ -213,7 +315,8 @@ export class Aggregate extends AggregateBase {
       }, { addKey: addStringRaw, addVal: addString })
 
       regularAttrs.push(...addCustomAttributes({
-        [AJAX_ID]: event[AJAX_ID] // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
+        [AJAX_ID]: event[AJAX_ID], // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
+        ...(event.reason ? { reason: event.reason } : {})
       }, { addKey: addStringRaw, addVal: addStringRaw }))
 
       // Payload attributes: obfuscate then truncate

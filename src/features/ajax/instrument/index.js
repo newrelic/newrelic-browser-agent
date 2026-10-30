@@ -14,7 +14,7 @@ import { parseUrl } from '../../../common/url/parse-url'
 import { DT } from './distributed-tracing'
 import { responseSizeFromXhr } from './response-size'
 import { InstrumentBase } from '../../utils/instrument-base'
-import { CAPTURE_PAYLOAD_SETTINGS, FEATURE_NAME } from '../constants'
+import { AJAX_REASONS, CAPTURE_PAYLOAD_SETTINGS, FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC } from '../../metrics/constants'
 import { now } from '../../../common/timing/now'
@@ -173,10 +173,15 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
 
     this.requestBody = data
 
+    /* Let the aggregate track this request while it is in flight, so it can still be reported if it never resolves (ajax.timeout or page unload).
+     * Reused XHR objects that already ended, and requests without a hostname, are never reported by end(), so they are not tracked either. */
+    if (!this.ended && !hasUndefinedHostname(this.params)) handler('xhr-pending', ['xhr'], this, FEATURE_NAMES.ajax)
+
     this.listener = function (evt) {
       try {
-        if (evt.type === 'abort' && !(context.loadCaptureCalled)) {
-          context.params.aborted = true
+        if (!context.loadCaptureCalled) {
+          if (evt.type === 'abort') context.params.reason = AJAX_REASONS.ABORTED
+          else if (evt.type === 'timeout') context.params.reason = AJAX_REASONS.TIMED_OUT
         }
         if (evt.type !== 'load' || ((context.called === context.totalCbs) && (context.onloadCalled || typeof (xhr.onload) !== 'function') && typeof context.end === 'function')) context.end(xhr)
       } catch (e) {
@@ -320,15 +325,17 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     }
   }
 
-  function onFetchStart (fetchArguments, dtPayload) {
+  function onFetchStart (fetchArguments, dtPayload, entityTargets) {
     this.params = {}
     this.metrics = {}
     this.startTime = now()
     this.dt = dtPayload
+    this.targets = entityTargets || [agentRef.runtime.v2Target] // registered entities the call came from; defaults to reporting to the container
 
     let [target, opts = {}] = fetchArguments
 
     addUrl(this, extractUrl(target))
+    this.signal = opts.signal || target?.signal // kept to tell apart aborts and timeouts if the fetch rejects
 
     const method = ('' + ((target && target instanceof origRequest && target.method) ||
       opts.method || 'GET')).toUpperCase()
@@ -356,18 +363,26 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     }
 
     this.requestBody = opts.body || (target?.body)
+
+    /* Let the aggregate track this request while it is in flight, so it can still be reported if it never resolves (ajax.timeout or page unload). */
+    if (!hasUndefinedHostname(this.params)) handler('xhr-pending', ['fetch'], this, FEATURE_NAMES.ajax)
   }
 
-  // we capture failed call as status 0, the actual error is ignored
-  // eslint-disable-next-line handle-callback-err
-  function onFetchDone (_, res) {
+  /* A failed call is captured as status 0. Beyond telling apart aborts and timeouts (as the `reason`), the actual error is ignored. */
+  function onFetchDone (err, res) {
+    if (this.ended) return // already reported by the aggregate as timed out or unloaded
     this.endTime = now()
     if (!this.params) this.params = {}
     if (hasUndefinedHostname(this.params)) return // don't bother with fetch to url with no hostname
 
     this.params.status = res ? res.status : 0
+    if (!res) {
+      const reason = getFetchFailureReason(err, this.signal)
+      if (reason) this.params.reason = reason
+    }
 
     const finishAndReport = () => {
+      if (this.ended) return // the aggregate may report it as unloaded while the body is still being read
       // convert rxSize to a number - handle both string (from content-length header) and number (from fallback)
       const num = +this.rxSize
       const responseSize = this.rxSize != null && !isNaN(num) ? num : undefined
@@ -421,7 +436,6 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
       xhr.removeEventListener(handlers[i], this.listener, false)
     }
 
-    if (params.aborted) return
     if (hasUndefinedHostname(params)) return // don't bother with XHR of url with no hostname
 
     metrics.duration = this.endTime - this.startTime
@@ -480,6 +494,19 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
 
     ctx.loadCaptureCalled = true
   }
+}
+
+/**
+ * Determines whether a rejected fetch was caused by an abort or a timeout signal.
+ * @param {*} err - The rejection value of the fetch promise.
+ * @param {AbortSignal} [signal] - The signal the fetch was made with, if any.
+ * @returns {string|undefined} An AJAX_REASONS value, or undefined for any other failure, such as a network error.
+ */
+function getFetchFailureReason (err, signal) {
+  /* controller.abort(customReason) rejects with that custom value, so prefer the signal's own state when it has been aborted. */
+  const cause = signal?.aborted ? signal.reason : err
+  if (cause?.name === 'TimeoutError') return AJAX_REASONS.TIMED_OUT
+  if (signal?.aborted || cause?.name === 'AbortError') return AJAX_REASONS.ABORTED
 }
 
 function parseResponseHeaders (headerStr) {

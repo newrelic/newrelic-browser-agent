@@ -179,8 +179,9 @@ describe('Fetch Ajax', () => {
     const ajaxEvent = ajaxEventsHarvest
       .flatMap(harvest => harvest.request.body)
       .find(event => event.path === '/delayed')
-    // Ajax event should have a 0 status when timed out
+    // Ajax event should have a 0 status when timed out, and an "aborted" reason since the page aborts it via its controller
     expect(ajaxEvent.status).toEqual(0)
+    expect(ajaxEvent.children.find(attr => attr.key === 'reason')?.value).toEqual('aborted')
 
     const ajaxMetric = ajaxMetricsHarvest
       .flatMap(harvest => harvest.request.body.xhr)

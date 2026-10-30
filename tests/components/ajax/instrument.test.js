@@ -2,7 +2,7 @@ import * as handleModule from '../../../src/common/event-emitter/handle'
 import { setupAgent } from '../setup-agent'
 import { Instrument as Ajax } from '../../../src/features/ajax/instrument'
 import { FEATURE_NAMES } from '../../../src/loaders/features/features'
-import { CAPTURE_PAYLOAD_SETTINGS } from '../../../src/features/ajax/constants'
+import { AJAX_REASONS, CAPTURE_PAYLOAD_SETTINGS } from '../../../src/features/ajax/constants'
 
 let mainAgent
 
@@ -221,6 +221,112 @@ describe('fetch with Request object', () => {
     expect(fetchContext.txSize).toEqual(overrideBody.length)
   })
 })
+
+describe('in-flight request tracking', () => {
+  test('XMLHttpRequest is handed to the aggregate as pending when sent', () => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('GET', 'http://example.com/api')
+    xhr.send()
+
+    const xhrContext = getXhrContext(xhr)
+    expect(handleModule.handle).toHaveBeenCalledWith('xhr-pending', ['xhr'], xhrContext, FEATURE_NAMES.ajax, ajaxInstrument.ee)
+    xhr.abort()
+  })
+
+  test('XMLHttpRequest to a data url is not tracked as pending', () => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('GET', 'data:,dataUrl')
+    xhr.send()
+
+    expect(handleModule.handle).not.toHaveBeenCalledWith('xhr-pending', expect.anything(), getXhrContext(xhr), FEATURE_NAMES.ajax, ajaxInstrument.ee)
+  })
+
+  test('fetch is handed to the aggregate as pending when started, along with its targets', async () => {
+    await fetch('http://example.com/api', { signal: AbortSignal.abort() }).catch(() => {})
+
+    const fetchContext = getFetchContext()
+    expect(handleModule.handle).toHaveBeenCalledWith('xhr-pending', ['fetch'], fetchContext, FEATURE_NAMES.ajax, ajaxInstrument.ee)
+    expect(fetchContext.targets).toEqual([mainAgent.runtime.v2Target])
+  })
+})
+
+describe('unresolved request reasons', () => {
+  test('an aborted XMLHttpRequest is reported with status 0 and reason "aborted"', () => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('GET', 'http://example.com/api')
+    xhr.send()
+    xhr.abort()
+
+    expect(getReportedParams(getXhrContext(xhr))).toEqual(expect.objectContaining({ status: 0, reason: AJAX_REASONS.ABORTED }))
+  })
+
+  test('an XMLHttpRequest hitting its own timeout is reported with status 0 and reason "timedOut"', () => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('GET', 'http://example.com/api')
+    xhr.send()
+    xhr.dispatchEvent(new Event('timeout'))
+
+    expect(getReportedParams(getXhrContext(xhr))).toEqual(expect.objectContaining({ status: 0, reason: AJAX_REASONS.TIMED_OUT }))
+    xhr.abort()
+  })
+
+  test('a fetch aborted by its controller is reported with status 0 and reason "aborted"', async () => {
+    await fetch('http://example.com/api', { signal: AbortSignal.abort() }).catch(() => {})
+
+    expect(getReportedParams(getFetchContext())).toEqual(expect.objectContaining({ status: 0, reason: AJAX_REASONS.ABORTED }))
+  })
+
+  test('a fetch aborted with a custom reason value is still reported with reason "aborted"', async () => {
+    await fetch('http://example.com/api', { signal: AbortSignal.abort('user cancelled') }).catch(() => {})
+
+    expect(getReportedParams(getFetchContext())).toEqual(expect.objectContaining({ status: 0, reason: AJAX_REASONS.ABORTED }))
+  })
+
+  test('a fetch whose signal timed out (AbortSignal.timeout) is reported with status 0 and reason "timedOut"', async () => {
+    await fetch('http://example.com/api', { signal: AbortSignal.abort(new DOMException('signal timed out', 'TimeoutError')) }).catch(() => {})
+
+    expect(getReportedParams(getFetchContext())).toEqual(expect.objectContaining({ status: 0, reason: AJAX_REASONS.TIMED_OUT }))
+  })
+})
+
+describe('requests the aggregate already reported (marked ended)', () => {
+  test('XMLHttpRequest skips its end processing and is not reported again', () => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('GET', 'http://example.com/api')
+    xhr.send()
+    const xhrContext = getXhrContext(xhr)
+    xhrContext.ended = true // as the aggregate does on timing out or unloading it
+    xhr.abort()
+
+    expect(getReportedParams(xhrContext)).toBeUndefined()
+  })
+
+  test('fetch skips its done processing and is not reported again', async () => {
+    const markEnded = function () { this.ended = true } // as the aggregate does on timing out or unloading it
+    ajaxInstrument.ee.on('fetch-start', markEnded)
+    await fetch('http://example.com/api', { signal: AbortSignal.abort() }).catch(() => {})
+    ajaxInstrument.ee.removeEventListener('fetch-start', markEnded)
+
+    const fetchContext = getFetchContext()
+    expect(fetchContext.endTime).toBeUndefined()
+    expect(getReportedParams(fetchContext)).toBeUndefined()
+  })
+})
+
+function getXhrContext (xhr) {
+  return jest.mocked(ajaxInstrument.ee.emit).mock.calls
+    .find(call => call[0] === 'new-xhr' && call[1][0] === xhr)[2]
+}
+
+function getFetchContext () {
+  return jest.mocked(ajaxInstrument.ee.emit).mock.calls
+    .find(call => call[0] === 'fetch-done')[2]
+}
+
+function getReportedParams (ctx) {
+  return jest.mocked(handleModule.handle).mock.calls
+    .find(call => call[0] === 'xhr' && call[2] === ctx)?.[1][0]
+}
 
 describe('payload capture configuration', () => {
   // Note: Detailed payload capture behavior is tested in:

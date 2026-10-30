@@ -12,3 +12,12 @@ updates:
     allow:
       - dependency-type: "production"
 
+  # Keep the locked dependencies of the CI actions current.
+  - package-ecosystem: "npm"
+    directory: "/.github/actions"
+    schedule:
+      interval: "weekly"
+    groups:
+      ci-actions-dependencies:
+        patterns:
+          - "*"

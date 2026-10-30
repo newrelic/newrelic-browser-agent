@@ -37,7 +37,7 @@ runs:
   using: "composite"
   steps:
     - name: Install dependencies
-      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      run: npm ci --silent --no-progress --ignore-scripts --prefix $GITHUB_ACTION_PATH/..
       shell: bash
     - name: Generate dashboard snapshot
       id: snapshot

@@ -31,15 +31,18 @@ describe('harvest endpoint cannot be redirected at runtime', () => {
         function () { agent.info.errorBeacon = attacker },
         function () { agent.info.beacon = attacker },
         function () { agent.init.proxy.beacon = attacker },
+        function () { agent.init.proxy.assets = 'http://' + attacker },
         function () { Object.defineProperty(agent.info, 'errorBeacon', { value: attacker }) },
-        function () { Object.defineProperty(agent.init.proxy, 'beacon', { value: attacker }) }
+        function () { Object.defineProperty(agent.init.proxy, 'beacon', { value: attacker }) },
+        function () { Object.defineProperty(agent.init.proxy, 'assets', { value: 'http://' + attacker }) }
       ]
       attempts.forEach(function (attempt) { try { attempt() } catch (err) { /* rejected, which is the expected outcome */ } })
-      return { errorBeacon: agent.info.errorBeacon, proxyBeacon: agent.init.proxy.beacon }
+      return { errorBeacon: agent.info.errorBeacon, proxyBeacon: agent.init.proxy.beacon, proxyAssets: agent.init.proxy.assets }
     }, attackerUrl)
 
     expect(outcome.errorBeacon).not.toContain('attacker')
     expect(outcome.proxyBeacon).toBeUndefined()
+    expect(outcome.proxyAssets).toBeUndefined()
 
     const [errorHarvests] = await Promise.all([
       errorsCapture.waitForResult({ totalCount: 1 }),

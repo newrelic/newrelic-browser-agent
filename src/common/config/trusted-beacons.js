@@ -20,7 +20,9 @@ export function trustBeacons (agent) {
   trustedBeacons.set(agent, new Set([agent.info.errorBeacon, agent.init.proxy.beacon].filter(Boolean)))
 
   ;['beacon', 'errorBeacon'].forEach(key => Object.defineProperty(agent.info, key, { writable: false, configurable: false }))
-  // The model's own `proxy` object can be shared between agents, so freeze a copy rather than the original.
+  /* The model's own `proxy` object can be shared between agents, so freeze a copy rather than the original.
+     This covers `proxy.assets` too. It is only read while configuring (it sets the path lazy chunks load from, which
+     lives inside the bundle), so freezing it is sufficient and there is nothing to check at chunk-load time. */
   agent.init.proxy = Object.freeze({ ...agent.init.proxy })
 }
 

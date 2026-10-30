@@ -28,6 +28,15 @@ describe('trustBeacons', () => {
     expect(agent.init.proxy.beacon).toBe('proxy.example.com/nr')
   })
 
+  test('freezes init.proxy.assets', () => {
+    const agent = buildAgent({ assets: 'https://assets.example.com' })
+    trustBeacons(agent)
+
+    expect(() => { agent.init.proxy.assets = 'https://evil.example.com' }).toThrow(TypeError)
+    expect(() => Object.defineProperty(agent.init.proxy, 'assets', { value: 'https://evil.example.com' })).toThrow(TypeError)
+    expect(agent.init.proxy.assets).toBe('https://assets.example.com')
+  })
+
   test('does not freeze the proxy object that was passed in', () => {
     const proxy = { beacon: 'proxy.example.com/nr' }
     trustBeacons(buildAgent(proxy))

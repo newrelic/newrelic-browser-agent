@@ -84,6 +84,7 @@ describe('configure harvest endpoint lock', () => {
 
     expect(() => { agent.info.errorBeacon = 'evil.example.com' }).toThrow(TypeError)
     expect(() => { agent.init.proxy.beacon = 'evil.example.com' }).toThrow(TypeError)
+    expect(() => { agent.init.proxy.assets = 'https://evil.example.com' }).toThrow(TypeError)
     expect(isTrustedBeacon(agent, 'proxy.example.com/nr')).toBe(true)
     expect(isTrustedBeacon(agent, 'evil.example.com')).toBe(false)
   })

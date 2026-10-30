@@ -40,12 +40,14 @@ jobs:
     environment: change-tracking
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Resolve per-environment dashboard link
         id: resolve
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
         run: |
-          case "${{ inputs.environment }}" in
+          case "${ENVIRONMENT}" in
             dev) DASHBOARD_URL="https://staging.onenr.io/0EjOe0py5w6" ;;
             staging) DASHBOARD_URL="https://staging.onenr.io/0nQxLG5N7QV" ;;
             eu-prod) DASHBOARD_URL="https://staging.onenr.io/0nQxLG5NXQV" ;;

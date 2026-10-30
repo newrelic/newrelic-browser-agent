@@ -44,10 +44,10 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ github.ref }}
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Install dependencies
@@ -77,10 +77,10 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Search for string in changed lines or file changes
@@ -112,7 +112,7 @@ jobs:
     outputs:
       tag: ${{ steps.latest-tag.outputs.tag }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
       - name: Find latest release tag
@@ -150,16 +150,16 @@ jobs:
       # the size-diff action code used below is always the version being
       # introduced by this PR, regardless of which ref is actually built
       # (main/a release tag won't have this PR's action code yet).
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ github.ref }}
       # The ref actually being measured is checked out into ./target so it
       # never overwrites the action code above.
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ matrix.ref }}
           path: target
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Install dependencies
@@ -198,7 +198,7 @@ jobs:
       - name: Report lite size to NR
         if: matrix.label == 'current'
         continue-on-error: true
-        uses: newrelic-apps/capture-build-size@v1.0.1
+        uses: newrelic-apps/capture-build-size@59825bd7e04eb1820084bf15a25687830c46d7c5 # v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
@@ -209,7 +209,7 @@ jobs:
       - name: Report pro size to NR
         if: matrix.label == 'current'
         continue-on-error: true
-        uses: newrelic-apps/capture-build-size@v1.0.1
+        uses: newrelic-apps/capture-build-size@59825bd7e04eb1820084bf15a25687830c46d7c5 # v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
@@ -220,7 +220,7 @@ jobs:
       - name: Report spa size to NR
         if: matrix.label == 'current'
         continue-on-error: true
-        uses: newrelic-apps/capture-build-size@v1.0.1
+        uses: newrelic-apps/capture-build-size@59825bd7e04eb1820084bf15a25687830c46d7c5 # v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
@@ -238,14 +238,14 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ github.ref }}
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Download build size stats
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           pattern: size-stats-*
           path: ./build/stats
@@ -285,7 +285,7 @@ jobs:
     steps:
       - name: Report dev lite size to NR
         continue-on-error: true
-        uses: newrelic-apps/capture-build-size@v1.0.1
+        uses: newrelic-apps/capture-build-size@59825bd7e04eb1820084bf15a25687830c46d7c5 # v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
@@ -296,7 +296,7 @@ jobs:
           version: 'main'
       - name: Report dev pro size to NR
         continue-on-error: true
-        uses: newrelic-apps/capture-build-size@v1.0.1
+        uses: newrelic-apps/capture-build-size@59825bd7e04eb1820084bf15a25687830c46d7c5 # v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
@@ -307,7 +307,7 @@ jobs:
           version: 'main'
       - name: Report dev spa size to NR
         continue-on-error: true
-        uses: newrelic-apps/capture-build-size@v1.0.1
+        uses: newrelic-apps/capture-build-size@59825bd7e04eb1820084bf15a25687830c46d7c5 # v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
@@ -329,8 +329,8 @@ jobs:
     outputs:
       pull-request-target: ${{ steps.pull-request-target.outputs.results }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Find pull request target
@@ -351,10 +351,10 @@ jobs:
     steps:
       - name: Setup runner
         run: sudo apt update && DEBIAN_FRONTEND=noninteractive sudo apt install -y git tzdata
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Get workflow time
@@ -394,10 +394,10 @@ jobs:
     steps:
       - name: Setup container
         run: sudo apt update && DEBIAN_FRONTEND=noninteractive sudo apt install -y git tzdata
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Get workflow time

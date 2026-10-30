@@ -21,17 +21,17 @@ jobs:
     name: Track Build Size
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: main
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Install project dependencies
         run: npm ci
       - name: Report lite size to NR
         continue-on-error: true
-        uses: newrelic-apps/capture-build-size@v1.0.1
+        uses: newrelic-apps/capture-build-size@59825bd7e04eb1820084bf15a25687830c46d7c5 # v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
@@ -41,7 +41,7 @@ jobs:
           trigger: 'nightly'
       - name: Report pro size to NR
         continue-on-error: true
-        uses: newrelic-apps/capture-build-size@v1.0.1
+        uses: newrelic-apps/capture-build-size@59825bd7e04eb1820084bf15a25687830c46d7c5 # v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
@@ -51,7 +51,7 @@ jobs:
           trigger: 'nightly'
       - name: Report spa size to NR
         continue-on-error: true
-        uses: newrelic-apps/capture-build-size@v1.0.1
+        uses: newrelic-apps/capture-build-size@59825bd7e04eb1820084bf15a25687830c46d7c5 # v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
@@ -68,8 +68,8 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Verify internal promotion assets

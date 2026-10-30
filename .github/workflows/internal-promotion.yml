@@ -48,8 +48,10 @@ jobs:
     steps:
       - name: Determine deployment mode
         id: determine-mode
+        env:
+          DEPLOYMENT_SOURCE: ${{ inputs.deployment_source }}
         run: |
-          CDN_PATH="${{ inputs.deployment_source }}"
+          CDN_PATH="${DEPLOYMENT_SOURCE}"
 
           if [[ -z "$CDN_PATH" ]]; then
             echo "is_rc_mode=true" >> $GITHUB_OUTPUT
@@ -62,11 +64,13 @@ jobs:
       - name: Resolve CDN path for specific version mode
         if: steps.determine-mode.outputs.is_rc_mode == 'false'
         id: resolve-cdn-path
+        env:
+          DEPLOYMENT_SOURCE: ${{ inputs.deployment_source }}
         run: |
-          CDN_PATH="${{ inputs.deployment_source }}"
+          CDN_PATH="${DEPLOYMENT_SOURCE}"
 
-          if [[ "$CDN_PATH" =~ ^https?:// ]]; then
-            # Full URL provided
+          if [[ "$CDN_PATH" =~ ^https://js-agent\.newrelic\.com/[A-Za-z0-9._/-]+\.js$ ]]; then
+            # Full URL provided. Only the production CDN host is accepted.
             SCRIPT_URL="$CDN_PATH"
             VERSION_LABEL="$CDN_PATH"
           elif [[ "$CDN_PATH" =~ ^[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+ ]]; then
@@ -84,7 +88,7 @@ jobs:
             echo "  - (empty) - builds from current branch (default)"
             echo "  - Released version: 1.314.0 (for rollbacks)"
             echo "  - RC version: 1.314.0-rc.1 (for re-promotion of specific RC)"
-            echo "  - Full URL: https://js-agent.newrelic.com/nr-loader-spa-1.314.0.min.js"
+            echo "  - Full URL: https://js-agent.newrelic.com/nr-loader-spa-1.314.0.min.js (js-agent.newrelic.com only)"
             exit 1
           fi
 
@@ -100,20 +104,24 @@ jobs:
     environment: nr1-dev
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1
 
       # Determine branch name for webpack version suffix
       - name: Determine branch name for version
         id: branch-name
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_REF: ${{ github.head_ref }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            BRANCH="${{ github.head_ref }}"
+          if [[ "${EVENT_NAME}" == "pull_request" ]]; then
+            BRANCH="${HEAD_REF}"
           else
-            BRANCH="${{ github.ref_name }}"
+            BRANCH="${REF_NAME}"
           fi
 
           # Clean branch name for version suffix (lowercase, replace special chars with hyphens)
@@ -160,7 +168,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Create dev change tracking event (Account 1067061)
         uses: ./.github/actions/change-tracking
         with:
@@ -187,7 +195,7 @@ jobs:
     outputs:
       slack_payload: ${{ steps.health-check.outputs.slack_payload }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Run NRQL health check
         id: health-check
         uses: ./.github/actions/nrql-health-check
@@ -206,7 +214,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
@@ -227,9 +235,9 @@ jobs:
     environment: nr1-staging
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1
 
@@ -271,7 +279,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Create staging change tracking event (Account 1067061)
         uses: ./.github/actions/change-tracking
         with:
@@ -298,7 +306,7 @@ jobs:
     outputs:
       slack_payload: ${{ steps.health-check.outputs.slack_payload }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Run NRQL health check
         id: health-check
         uses: ./.github/actions/nrql-health-check
@@ -317,7 +325,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
@@ -333,9 +341,9 @@ jobs:
     environment: nr1-eu-prod
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1
 
@@ -377,7 +385,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Create EU production change tracking event (Account 1067061)
         uses: ./.github/actions/change-tracking
         with:
@@ -404,7 +412,7 @@ jobs:
     outputs:
       slack_payload: ${{ steps.health-check.outputs.slack_payload }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Run NRQL health check
         id: health-check
         uses: ./.github/actions/nrql-health-check
@@ -423,7 +431,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
@@ -440,9 +448,9 @@ jobs:
     environment: nr1-jp-prod
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1
 
@@ -484,7 +492,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Create JP production change tracking event (Account 1067061)
         uses: ./.github/actions/change-tracking
         with:
@@ -511,7 +519,7 @@ jobs:
     outputs:
       slack_payload: ${{ steps.health-check.outputs.slack_payload }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Run NRQL health check
         id: health-check
         uses: ./.github/actions/nrql-health-check
@@ -530,7 +538,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
@@ -547,9 +555,9 @@ jobs:
     environment: nr1-us-prod
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1
 
@@ -591,7 +599,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Create US production change tracking event (Account 1067061)
         uses: ./.github/actions/change-tracking
         with:
@@ -618,7 +626,7 @@ jobs:
     outputs:
       slack_payload: ${{ steps.health-check.outputs.slack_payload }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Run NRQL health check
         id: health-check
         uses: ./.github/actions/nrql-health-check
@@ -637,7 +645,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
@@ -656,12 +664,15 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Verify promotion complete
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          DEPLOY_US_PROD_RESULT: ${{ needs.deploy-us-prod.result }}
         run: |
-          if [[ "${{ github.head_ref }}" =~ ^release-please-- ]]; then
+          if [[ "${HEAD_REF}" =~ ^release-please-- ]]; then
             # For release-please PRs, require successful promotion to production
-            if [[ "${{ needs.deploy-us-prod.result }}" != "success" ]]; then
+            if [[ "${DEPLOY_US_PROD_RESULT}" != "success" ]]; then
               echo "❌ Release-please PR: Production promotion did not complete successfully"
-              echo "Deploy status: ${{ needs.deploy-us-prod.result }}"
+              echo "Deploy status: ${DEPLOY_US_PROD_RESULT}"
               exit 1
             fi
             echo "✅ Release-please PR: Full production promotion completed successfully"

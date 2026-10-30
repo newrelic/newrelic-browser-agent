@@ -22,11 +22,16 @@ runs:
   steps:
     - name: Notify ${{ inputs.repo_name }}
       id: action-script
+      env:
+        INPUT_TOKEN: ${{ inputs.token }}
+        INPUT_REPO_OWNER: ${{ inputs.repo_owner }}
+        INPUT_REPO_NAME: ${{ inputs.repo_name }}
+        INPUT_EVENT_TYPE: ${{ inputs.event_type }}
       run: |
           curl -L -X POST \
           -H "Accept: application/vnd.github+json" \
-          -H "Authorization: Bearer ${{ inputs.token }}" \
+          -H "Authorization: Bearer ${INPUT_TOKEN}" \
           -H "X-GitHub-Api-Version: 2022-11-28" \
-          https://api.github.com/repos/${{ inputs.repo_owner }}/${{ inputs.repo_name }}/dispatches \
-          -d '{"event_type":"${{ inputs.event_type }}"}'
+          "https://api.github.com/repos/${INPUT_REPO_OWNER}/${INPUT_REPO_NAME}/dispatches" \
+          -d "$(jq -cn --arg event_type "$INPUT_EVENT_TYPE" '{event_type: $event_type}')"
       shell: bash

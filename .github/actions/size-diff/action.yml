@@ -36,26 +36,35 @@ runs:
       shell: bash
     - name: Run capture
       if: inputs.mode == 'capture'
+      env:
+        INPUT_LABEL: ${{ inputs.label }}
+        INPUT_BUILD_DIR: ${{ inputs.build_dir }}
+        INPUT_TARGET_DIR: ${{ inputs.target_dir }}
+        INPUT_DISPLAY_LABEL: ${{ inputs.display_label }}
+        INPUT_NPM_PACK_FILE: ${{ inputs.npm_pack_file }}
+        INPUT_OUTPUT_FILE: ${{ inputs.output_file }}
       run: |
-        node $GITHUB_ACTION_PATH/index.js \
+        node "$GITHUB_ACTION_PATH/index.js" \
           --mode capture \
-          --label ${{ inputs.label }} \
-          --build-dir ${{ inputs.build_dir }} \
-          --target-dir ${{ inputs.target_dir }} \
-          --display-label "${{ inputs.display_label }}" \
-          --npm-pack-file ${{ inputs.npm_pack_file }} \
-          --output-file ${{ inputs.output_file }}
+          --label "$INPUT_LABEL" \
+          --build-dir "$INPUT_BUILD_DIR" \
+          --target-dir "$INPUT_TARGET_DIR" \
+          --display-label "$INPUT_DISPLAY_LABEL" \
+          --npm-pack-file "$INPUT_NPM_PACK_FILE" \
+          --output-file "$INPUT_OUTPUT_FILE"
       shell: bash
     - name: Run compare
       if: inputs.mode == 'compare'
+      env:
+        INPUT_STATS_FILES: ${{ inputs.stats_files }}
       run: |
         STATS_FILE_ARGS=()
         while IFS= read -r line; do
           [ -z "$line" ] && continue
           STATS_FILE_ARGS+=(--stats-file "$line")
-        done <<< "${{ inputs.stats_files }}"
+        done <<< "$INPUT_STATS_FILES"
 
-        node $GITHUB_ACTION_PATH/index.js \
+        node "$GITHUB_ACTION_PATH/index.js" \
           --mode compare \
           "${STATS_FILE_ARGS[@]}" \
           --format terminal json markdown

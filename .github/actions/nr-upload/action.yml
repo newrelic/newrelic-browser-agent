@@ -25,10 +25,18 @@ runs:
       shell: bash
     - name: Run action script
       id: action-script
+      env:
+        INPUT_ENVIRONMENT: ${{ inputs.environment }}
+        INPUT_PROD_API_KEY: ${{ inputs.nr_prod_api_key }}
+        INPUT_STAGE_API_KEY: ${{ inputs.nr_stage_api_key }}
+        INPUT_LOADER_VERSION: ${{ inputs.loader_version }}
       run: |
-        node $GITHUB_ACTION_PATH/index.js \
-          ${{ inputs.environment && format('--environment {0}', inputs.environment) || '' }} \
-          ${{ inputs.nr_prod_api_key && format('--prod-api-key {0}', inputs.nr_prod_api_key) || '' }} \
-          ${{ inputs.nr_stage_api_key && format('--stage-api-key {0}', inputs.nr_stage_api_key) || '' }} \
-          --loader-version ${{ inputs.loader_version }}
+        # Globbing is off and the environment list is deliberately unquoted so a space separated list splits into separate arguments
+        set -f
+        args=()
+        if [[ -n "$INPUT_ENVIRONMENT" ]]; then args+=(--environment $INPUT_ENVIRONMENT); fi
+        if [[ -n "$INPUT_PROD_API_KEY" ]]; then args+=(--prod-api-key "$INPUT_PROD_API_KEY"); fi
+        if [[ -n "$INPUT_STAGE_API_KEY" ]]; then args+=(--stage-api-key "$INPUT_STAGE_API_KEY"); fi
+        args+=(--loader-version "$INPUT_LOADER_VERSION")
+        node "$GITHUB_ACTION_PATH/index.js" "${args[@]}"
       shell: bash

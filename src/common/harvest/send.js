@@ -14,12 +14,14 @@ import { warn } from '../util/console'
 import { stringify } from '../util/stringify'
 import { xhr as xhrMethod, xhrFetch as fetchMethod, getSubmitMethod } from '../util/submit-data'
 import { dispatchGlobalEvent } from '../dispatch/global-event'
+import { isTrustedBeacon } from '../config/trusted-beacons'
 
 /**
  * @typedef {import('./types.js').NetworkSendSpec} NetworkSendSpec
  */
 
 const warnings = {}
+let warnedUntrustedBeacon = false
 
 /**
  * Initiate a harvest call.
@@ -39,6 +41,16 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
 
   const protocol = agentRef.init.ssl === false ? 'http' : 'https'
   const perceivedBeacon = agentRef.init.proxy.beacon || agentRef.info.errorBeacon
+
+  /* Only send to an endpoint the agent was configured with. Checking at send time, in addition to making the config
+     read-only, catches a changed destination however it came about (e.g. the config object being replaced). */
+  if (!isTrustedBeacon(agentRef, perceivedBeacon)) {
+    if (!warnedUntrustedBeacon) warn(83) // warn only once, since harvests are frequent
+    warnedUntrustedBeacon = true
+    if (cbFinished) cbFinished({ sent: false })
+    return false
+  }
+
   const includeEndpointName = endpoint !== RUM || endpointVersion !== 1
   const url = raw
     ? `${protocol}://${perceivedBeacon}/${endpoint}`

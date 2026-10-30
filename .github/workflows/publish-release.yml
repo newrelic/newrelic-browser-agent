@@ -20,7 +20,11 @@ jobs:
   publish-prod-to-s3:
     runs-on: ubuntu-latest
     environment: public-release
-    timeout-minutes: 5
+    timeout-minutes: 10
+    permissions:
+      id-token: write # required to sign the build provenance attestation
+      attestations: write
+      contents: write # required to attach the integrity manifest to the release
     defaults:
       run:
         shell: bash
@@ -33,6 +37,35 @@ jobs:
         run: npm ci
       - name: Build prod
         run: npm run cdn:build:prod
+      # Record a sha384 for every built file before anything is uploaded. The checksums are attested (Sigstore) and
+      # the manifest is attached to the release so later jobs, and customers, can verify what the CDN serves.
+      - name: Generate integrity manifest
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/integrity"
+          node .github/scripts/generate-integrity-manifest.mjs build \
+            "$RUNNER_TEMP/integrity/integrity-manifest.json" \
+            "$RUNNER_TEMP/integrity/checksums.txt" \
+            "$RELEASE_TAG" "$GITHUB_SHA"
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
+        with:
+          subject-checksums: ${{ runner.temp }}/integrity/checksums.txt
+      - name: Attach integrity manifest to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/integrity/integrity-manifest.json" --repo "$GITHUB_REPOSITORY"
+      # Later jobs, including the one on the custom runner, read the manifest from this artifact rather than
+      # depending on the gh CLI being installed there.
+      - name: Share integrity manifest with later jobs
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: integrity-manifest
+          path: ${{ runner.temp }}/integrity/integrity-manifest.json
+          if-no-files-found: error
+          retention-days: 14
       - name: Upload prod
         id: s3-upload
         uses: ./.github/actions/s3-upload
@@ -63,12 +96,14 @@ jobs:
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
+          manifest: ${{ runner.temp }}/integrity/integrity-manifest.json
       - name: Verify staging cdn assets
         uses: ./.github/actions/fastly-verify
         with:
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: staging-js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
+          manifest: ${{ runner.temp }}/integrity/integrity-manifest.json
 
   # Publish the new "current" version to s3 before the prod a/b scripts have been built
   publish-current-to-s3:
@@ -322,17 +357,24 @@ jobs:
       - name: Get version number
         id: agent-loader-version
         run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Download integrity manifest
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: integrity-manifest
+          path: ${{ runner.temp }}/integrity
       - name: Publish loader to nr
         uses: ./.github/actions/nr-upload
         with:
           nr_stage_api_key: ${{ secrets.NR_API_KEY_STAGING }}
           loader_version: ${{ steps.agent-loader-version.outputs.results }}
           environment: stage
+          manifest: ${{ runner.temp }}/integrity/integrity-manifest.json
       - name: Verify loaders in nr
         uses: ./.github/actions/nr-verify
         with:
           loader_version: ${{ steps.agent-loader-version.outputs.results }}
           environment: stage
+          manifest: ${{ runner.temp }}/integrity/integrity-manifest.json
 
   # Publish the loaders to nr prod
   publish-to-nr-prod:
@@ -350,17 +392,24 @@ jobs:
       - name: Get version number
         id: agent-loader-version
         run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Download integrity manifest
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: integrity-manifest
+          path: ${{ runner.temp }}/integrity
       - name: Publish loader to nr
         uses: ./.github/actions/nr-upload
         with:
           nr_prod_api_key: ${{ secrets.NR_API_KEY_PRODUCTION }}
           loader_version: ${{ steps.agent-loader-version.outputs.results }}
           environment: prod
+          manifest: ${{ runner.temp }}/integrity/integrity-manifest.json
       - name: Verify loaders in nr
         uses: ./.github/actions/nr-verify
         with:
           loader_version: ${{ steps.agent-loader-version.outputs.results }}
           environment: prod
+          manifest: ${{ runner.temp }}/integrity/integrity-manifest.json
 
   # Raise the release notes pr on the docs website repo
   raise-release-notes-pr:

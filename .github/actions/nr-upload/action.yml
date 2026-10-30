@@ -16,6 +16,9 @@ inputs:
   loader_version:
     description: "Browser Agent version number"
     required: true
+  manifest:
+    description: 'Optional path to an integrity manifest. When set, each loader fetched from the CDN must match its recorded sha384 before upload.'
+    required: false
 
 runs:
   using: "composite"
@@ -29,6 +32,7 @@ runs:
         INPUT_ENVIRONMENT: ${{ inputs.environment }}
         INPUT_PROD_API_KEY: ${{ inputs.nr_prod_api_key }}
         INPUT_STAGE_API_KEY: ${{ inputs.nr_stage_api_key }}
+        INPUT_MANIFEST: ${{ inputs.manifest }}
         INPUT_LOADER_VERSION: ${{ inputs.loader_version }}
       run: |
         # Globbing is off and the environment list is deliberately unquoted so a space separated list splits into separate arguments
@@ -37,6 +41,7 @@ runs:
         if [[ -n "$INPUT_ENVIRONMENT" ]]; then args+=(--environment $INPUT_ENVIRONMENT); fi
         if [[ -n "$INPUT_PROD_API_KEY" ]]; then args+=(--prod-api-key "$INPUT_PROD_API_KEY"); fi
         if [[ -n "$INPUT_STAGE_API_KEY" ]]; then args+=(--stage-api-key "$INPUT_STAGE_API_KEY"); fi
+        if [[ -n "$INPUT_MANIFEST" ]]; then args+=(--manifest "$INPUT_MANIFEST"); fi
         args+=(--loader-version "$INPUT_LOADER_VERSION")
         node "$GITHUB_ACTION_PATH/index.js" "${args[@]}"
       shell: bash

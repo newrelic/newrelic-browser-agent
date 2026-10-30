@@ -17,6 +17,18 @@ import { handle } from '../../common/event-emitter/handle'
 import { prefix as iframePrefix } from '../../common/constants/iframe-constants'
 
 /**
+ * Removes any trailing slashes from a string. A linear scan is used instead of a regex like `/\/+$/`, which backtracks
+ * polynomially on config values containing many repeated slashes.
+ * @param {string} str
+ * @returns {string}
+ */
+function trimTrailingSlashes (str) {
+  let end = str.length
+  while (end > 0 && str[end - 1] === '/') end--
+  return str.slice(0, end)
+}
+
+/**
  * Sets or re-sets the agent's configuration values from global settings. This also attach those as properties to the agent instance.
  * IMPORTANT: setNREUMInitializedAgent must be called on the agent prior to calling this function.
  */
@@ -70,10 +82,14 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
 
     Object.defineProperty(agent.runtime, 'denyList', {
       get () {
-        // Compute the internal traffic list fresh each time to ensure beacons array is current
+        /*
+         * Computed fresh each time to ensure the beacons array is current. Internal entries (unlike customer deny_list entries,
+         * which are used exactly as configured) are wildcarded so that traffic to any sub-path of an agent endpoint is excluded,
+         * e.g. a proxy.beacon with a subpath.
+         */
         return [
           ...(agent.init.ajax.deny_list || []),
-          ...(agent.init.ajax.block_internal ? agent.beacons : [])
+          ...(agent.init.ajax.block_internal ? agent.beacons.map(beacon => trimTrailingSlashes(beacon) + '/*') : [])
         ]
       }
     })

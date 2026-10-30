@@ -35,7 +35,7 @@ jobs:
       metrics: ${{ steps.dispatch.outputs.metrics }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Build daily dispatch
         id: dispatch
@@ -52,7 +52,7 @@ jobs:
       image_url: ${{ steps.publish-image.outputs.image_url }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Publish metrics to New Relic
         uses: ./.github/actions/newrelic-custom-event
@@ -98,7 +98,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification

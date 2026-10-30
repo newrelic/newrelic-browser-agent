@@ -5,6 +5,18 @@
 
 version: 2
 updates:
+  # Keep SHA-pinned workflow and composite actions current. The version comment next to each SHA is updated too.
+  - package-ecosystem: "github-actions"
+    directories:
+      - "/"
+      - "/.github/actions/*"
+    schedule:
+      interval: "weekly"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
   - package-ecosystem: "npm" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:

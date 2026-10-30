@@ -100,9 +100,9 @@ jobs:
     environment: nr1-dev
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1
 
@@ -160,7 +160,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Create dev change tracking event (Account 1067061)
         uses: ./.github/actions/change-tracking
         with:
@@ -187,7 +187,7 @@ jobs:
     outputs:
       slack_payload: ${{ steps.health-check.outputs.slack_payload }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Run NRQL health check
         id: health-check
         uses: ./.github/actions/nrql-health-check
@@ -206,7 +206,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
@@ -227,9 +227,9 @@ jobs:
     environment: nr1-staging
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1
 
@@ -271,7 +271,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Create staging change tracking event (Account 1067061)
         uses: ./.github/actions/change-tracking
         with:
@@ -298,7 +298,7 @@ jobs:
     outputs:
       slack_payload: ${{ steps.health-check.outputs.slack_payload }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Run NRQL health check
         id: health-check
         uses: ./.github/actions/nrql-health-check
@@ -317,7 +317,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
@@ -333,9 +333,9 @@ jobs:
     environment: nr1-eu-prod
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1
 
@@ -377,7 +377,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Create EU production change tracking event (Account 1067061)
         uses: ./.github/actions/change-tracking
         with:
@@ -404,7 +404,7 @@ jobs:
     outputs:
       slack_payload: ${{ steps.health-check.outputs.slack_payload }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Run NRQL health check
         id: health-check
         uses: ./.github/actions/nrql-health-check
@@ -423,7 +423,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
@@ -440,9 +440,9 @@ jobs:
     environment: nr1-jp-prod
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1
 
@@ -484,7 +484,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Create JP production change tracking event (Account 1067061)
         uses: ./.github/actions/change-tracking
         with:
@@ -511,7 +511,7 @@ jobs:
     outputs:
       slack_payload: ${{ steps.health-check.outputs.slack_payload }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Run NRQL health check
         id: health-check
         uses: ./.github/actions/nrql-health-check
@@ -530,7 +530,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:
@@ -547,9 +547,9 @@ jobs:
     environment: nr1-us-prod
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1
 
@@ -591,7 +591,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Create US production change tracking event (Account 1067061)
         uses: ./.github/actions/change-tracking
         with:
@@ -618,7 +618,7 @@ jobs:
     outputs:
       slack_payload: ${{ steps.health-check.outputs.slack_payload }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Run NRQL health check
         id: health-check
         uses: ./.github/actions/nrql-health-check
@@ -637,7 +637,7 @@ jobs:
     runs-on: Browser-Agent-Assigned-IP-Linux
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Send Slack notification
         uses: ./.github/actions/slack-notification
         with:

@@ -59,3 +59,42 @@ describe('configure iframe bridge message pre-filtering', () => {
     expect(mockHandle).not.toHaveBeenCalled()
   })
 })
+
+describe('configure harvest endpoint lock', () => {
+  let configure
+  let isTrustedBeacon
+
+  beforeEach(async () => {
+    jest.resetModules()
+    jest.doMock('../../../../src/common/event-emitter/handle', () => ({ handle: jest.fn() }))
+    configure = (await import('../../../../src/loaders/configure/configure')).configure
+    isTrustedBeacon = (await import('../../../../src/common/config/trusted-beacons')).isTrustedBeacon
+  })
+
+  const buildAgent = () => ({ agentIdentifier: `test-agent-${Math.random()}`, exposed: false })
+  const buildOpts = (proxy = {}) => ({
+    init: { proxy },
+    info: { beacon: 'bam.nr-data.net', errorBeacon: 'bam.nr-data.net' },
+    runtime: {}
+  })
+
+  it('makes the configured beacons read-only', () => {
+    const agent = buildAgent()
+    configure(agent, buildOpts({ beacon: 'proxy.example.com/nr' }), 'test-loader')
+
+    expect(() => { agent.info.errorBeacon = 'evil.example.com' }).toThrow(TypeError)
+    expect(() => { agent.init.proxy.beacon = 'evil.example.com' }).toThrow(TypeError)
+    expect(isTrustedBeacon(agent, 'proxy.example.com/nr')).toBe(true)
+    expect(isTrustedBeacon(agent, 'evil.example.com')).toBe(false)
+  })
+
+  it('trusts the new proxy beacon when the agent is configured again with a late init', () => {
+    const agent = buildAgent()
+    configure(agent, buildOpts(), 'test-loader')
+    expect(isTrustedBeacon(agent, 'late.example.com')).toBe(false)
+
+    configure(agent, buildOpts({ beacon: 'late.example.com' }), 'test-loader')
+
+    expect(isTrustedBeacon(agent, 'late.example.com')).toBe(true)
+  })
+})

@@ -12,6 +12,9 @@ inputs:
   asset_path:
     description: 'Path(s) to be verified. Separate multiple items by a space'
     required: true
+  manifest:
+    description: 'Optional path to an integrity manifest. When set, served content must match the recorded sha384 for each asset.'
+    required: false
 
 runs:
   using: "composite"
@@ -24,6 +27,7 @@ runs:
       env:
         INPUT_SERVICE: ${{ inputs.fastly_service }}
         INPUT_ASSET_PATH: ${{ inputs.asset_path }}
+        INPUT_MANIFEST: ${{ inputs.manifest }}
       run: |
         set -f
         assets=()
@@ -32,5 +36,6 @@ runs:
           if [[ "$asset" != '\' ]]; then assets+=("$asset"); fi
         done
         args=(--service "$INPUT_SERVICE" --asset-path "${assets[@]}")
+        if [[ -n "$INPUT_MANIFEST" ]]; then args+=(--manifest "$INPUT_MANIFEST"); fi
         node "$GITHUB_ACTION_PATH/index.js" "${args[@]}"
       shell: bash

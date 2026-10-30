@@ -4,6 +4,9 @@ import { join } from 'path'
 import { args } from './args.js'
 import { fetchRetry } from '../shared-utils/fetch-retry.js'
 import { constructLoaderFileNames, constructFuzzyVersions } from '../shared-utils/loaders.js'
+import { loadManifest, matchesManifest } from '../shared-utils/integrity.js'
+
+const manifest = args.manifest ? await loadManifest(args.manifest) : undefined
 
 const loaderFileNames = constructLoaderFileNames(args.loaderVersion)
 const fuzzyVersions = constructFuzzyVersions(args.loaderVersion)
@@ -46,7 +49,13 @@ const loaderFileContents = (await Promise.all(
         throw new Error(`Download for loader ${loaderFileName} failed.`)
       }
 
-      fileContents = await fileContentsRequest.text()
+      const fileBuffer = await fileContentsRequest.arrayBuffer()
+
+      if (manifest && !matchesManifest(manifest, loaderFileName, fileBuffer)) {
+        throw new Error(`Loader ${loaderFileName} downloaded from the CDN does not match the integrity manifest. Refusing to upload.`)
+      }
+
+      fileContents = Buffer.from(fileBuffer).toString('utf-8')
     }
 
     return [loaderFileName, fileContents]

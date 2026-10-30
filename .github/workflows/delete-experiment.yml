@@ -34,7 +34,9 @@ jobs:
           node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Clean branch name
         id: clean-branch-name
-        run: echo "results=$(echo '${{ github.ref }}' | sed 's/refs\/heads\///g' | sed 's/[^[:alnum:].-]/-/g')" >> $GITHUB_OUTPUT
+        env:
+          REF: ${{ github.ref }}
+        run: echo "results=$(printf '%s' "${REF}" | sed 's/refs\/heads\///g' | sed 's/[^[:alnum:].-]/-/g')" >> $GITHUB_OUTPUT
       - name: Delete experiment
         id: s3-delete
         uses: ./.github/actions/s3-delete

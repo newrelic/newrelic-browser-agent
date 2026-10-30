@@ -68,19 +68,37 @@ jobs:
         run: |
           npm run build:all
       - name: Run WDIO Tests
+        env:
+          BROWSER_TARGET: ${{ inputs.browser-target }}
+          CONCURRENCY: ${{ inputs.concurrency }}
+          ADDITIONAL_FLAGS: ${{ inputs.additional-flags }}
+          DEBUG_FLAGS: ${{ runner.debug && '-v -L -D -d' || '' }}
         run: |
+          if ! [[ "${CONCURRENCY}" =~ ^[0-9]+$ ]]; then
+            echo "concurrency must be a whole number"
+            exit 1
+          fi
+          # Globbing is disabled and the flag variables are deliberately left unquoted below so they split into
+          # separate CLI arguments without being evaluated by the shell.
+          set -f
           node --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
             -T \
-            -b '${{ inputs.browser-target }}' \
-            --concurrent ${{ inputs.concurrency }} \
-            ${{ runner.debug && '-v -L -D -d' || '' }} \
-            ${{ inputs.additional-flags || '' }}
+            -b "${BROWSER_TARGET}" \
+            --concurrent "${CONCURRENCY}" \
+            ${DEBUG_FLAGS} \
+            ${ADDITIONAL_FLAGS}
       - name: Generate wdio tunnel log archive name
         if: ${{ always() }}
         id: wdio-tunnel-log-archive-name
+        env:
+          BROWSER_TARGET: ${{ inputs.browser-target }}
+          ADDITIONAL_FLAGS: ${{ inputs.additional-flags }}
         run: |
-          browser=${{ inputs.browser-target }}
-          echo "results=${browser/\*/all}${{ contains(inputs.additional-flags, '--webview') && '-webview' || '' }}-wdio-tunnel-logs" >> "$GITHUB_OUTPUT"
+          # Keep only characters valid in a browser target
+          browser="${BROWSER_TARGET//[^A-Za-z0-9@._,*-]/-}"
+          suffix=''
+          if [[ "${ADDITIONAL_FLAGS}" == *--webview* ]]; then suffix='-webview'; fi
+          echo "results=${browser/\*/all}${suffix}-wdio-tunnel-logs" >> "$GITHUB_OUTPUT"
       - name: Archive wdio tunnel logs
         if: ${{ always() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7

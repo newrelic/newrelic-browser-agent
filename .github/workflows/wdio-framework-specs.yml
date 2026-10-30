@@ -64,22 +64,28 @@ jobs:
       - name: Build npm package and framework test-build apps
         run: npm run build:frameworks
       - name: Run WDIO framework informational tests
+        env:
+          BROWSER_TARGET: ${{ inputs.browser-target || 'chrome@latest,edge@latest,firefox@latest,safari@latest' }}
+          DEBUG_FLAGS: ${{ runner.debug && '-v -L -D -d' || '' }}
         run: |
+          # DEBUG_FLAGS is deliberately unquoted so it splits into separate CLI arguments
           node --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
             -T \
             --concurrent=4 \
-            -b '${{ inputs.browser-target || 'chrome@latest,edge@latest,firefox@latest,safari@latest' }}' \
+            -b "${BROWSER_TARGET}" \
             --framework \
-            ${{ runner.debug && '-v -L -D -d' || '' }}
+            ${DEBUG_FLAGS}
         continue-on-error: true
       - name: Run WDIO framework informational tests against Electron
         # Runs locally (not on LambdaTest) in the packaged Electron browser at tools/local-browsers/electron,
         # which the runner installs and packages on demand. Both security modes run concurrently, each in its
         # own Electron instance, and write their rows to the same .framework-results folder as the step above.
+        env:
+          DEBUG_FLAGS: ${{ runner.debug && '-v -L -d' || '' }}
         run: |
           xvfb-run -a node --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
             --framework -b electron-loose,electron-strict --concurrent=2 \
-            ${{ runner.debug && '-v -L -d' || '' }}
+            ${DEBUG_FLAGS}
         continue-on-error: true
       - name: Generate framework informational report
         run: npm run test-builds:framework-report

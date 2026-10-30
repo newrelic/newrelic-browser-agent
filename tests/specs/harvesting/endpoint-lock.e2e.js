@@ -41,8 +41,9 @@ describe('harvest endpoint cannot be redirected at runtime', () => {
     }, attackerUrl)
 
     expect(outcome.errorBeacon).not.toContain('attacker')
-    expect(outcome.proxyBeacon).toBeUndefined()
-    expect(outcome.proxyAssets).toBeUndefined()
+    // unset values come back from browser.execute as null, so assert they are still empty rather than undefined
+    expect(outcome.proxyBeacon).toBeFalsy()
+    expect(outcome.proxyAssets).toBeFalsy()
 
     const [errorHarvests] = await Promise.all([
       errorsCapture.waitForResult({ totalCount: 1 }),

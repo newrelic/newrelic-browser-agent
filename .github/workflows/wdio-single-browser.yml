@@ -56,10 +56,10 @@ jobs:
       LAMBDA_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
       LAMBDA_ACCESS_KEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ inputs.ref || github.ref }}
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Install dependencies
@@ -83,7 +83,7 @@ jobs:
           echo "results=${browser/\*/all}${{ contains(inputs.additional-flags, '--webview') && '-webview' || '' }}-wdio-tunnel-logs" >> "$GITHUB_OUTPUT"
       - name: Archive wdio tunnel logs
         if: ${{ always() }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: ${{ steps.wdio-tunnel-log-archive-name.outputs.results }}
           path: .lambdatest

@@ -306,6 +306,7 @@ jobs:
   publish-to-nr-stage:
     needs: [ publish-prod-to-s3 ]
     runs-on: Browser-Agent-Assigned-IP-Linux
+    environment: nr-stage
     continue-on-error: true
     timeout-minutes: 30
     defaults:

@@ -13,5 +13,8 @@ export const args = yargs(hideBin(process.argv))
   .string('loader-version')
   .describe('loader-version', 'Browser Agent version number')
 
+  .string('manifest')
+  .describe('manifest', 'Path to an integrity manifest. When provided, the loader content stored in NR must match the sha384 recorded for it, not just exist.')
+
   .demandOption(['environment', 'loader-version'])
   .argv

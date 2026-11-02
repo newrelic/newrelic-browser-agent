@@ -10,6 +10,9 @@ inputs:
   loader_version:
     description: "Browser Agent version number"
     required: true
+  manifest:
+    description: 'Optional path to an integrity manifest. When set, the loader content stored in NR must match the recorded sha384, not just exist.'
+    required: false
 
 runs:
   using: "composite"
@@ -22,11 +25,13 @@ runs:
       env:
         INPUT_ENVIRONMENT: ${{ inputs.environment }}
         INPUT_LOADER_VERSION: ${{ inputs.loader_version }}
+        INPUT_MANIFEST: ${{ inputs.manifest }}
       run: |
         # Globbing is off and the environment list is deliberately unquoted so a space separated list splits into separate arguments
         set -f
         args=()
         if [[ -n "$INPUT_ENVIRONMENT" ]]; then args+=(--environment $INPUT_ENVIRONMENT); fi
+        if [[ -n "$INPUT_MANIFEST" ]]; then args+=(--manifest "$INPUT_MANIFEST"); fi
         args+=(--loader-version "$INPUT_LOADER_VERSION")
         node "$GITHUB_ACTION_PATH/index.js" "${args[@]}"
       shell: bash

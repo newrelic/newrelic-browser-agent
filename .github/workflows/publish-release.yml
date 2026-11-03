@@ -95,14 +95,12 @@ jobs:
       - name: Verify production cdn assets
         uses: ./.github/actions/fastly-verify
         with:
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
           manifest: ${{ runner.temp }}/integrity/integrity-manifest.json
       - name: Verify staging cdn assets
         uses: ./.github/actions/fastly-verify
         with:
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: staging-js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
           manifest: ${{ runner.temp }}/integrity/integrity-manifest.json
@@ -111,6 +109,7 @@ jobs:
   publish-current-to-s3:
     needs: [publish-prod-to-s3]
     runs-on: ubuntu-latest
+    environment: public-release
     timeout-minutes: 30
     defaults:
       run:
@@ -152,13 +151,11 @@ jobs:
       - name: Verify production cdn assets
         uses: ./.github/actions/fastly-verify
         with:
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
       - name: Verify staging cdn assets
         uses: ./.github/actions/fastly-verify
         with:
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: staging-js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
 
@@ -349,6 +346,7 @@ jobs:
   publish-to-nr-stage:
     needs: [ publish-prod-to-s3 ]
     runs-on: Browser-Agent-Assigned-IP-Linux
+    environment: nr-stage
     continue-on-error: true
     timeout-minutes: 30
     defaults:
@@ -385,6 +383,7 @@ jobs:
   publish-to-nr-prod:
     needs: [publish-prod-to-s3]
     runs-on: ubuntu-latest
+    environment: public-release
     timeout-minutes: 30
     defaults:
       run:

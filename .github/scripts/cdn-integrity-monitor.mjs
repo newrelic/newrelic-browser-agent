@@ -7,8 +7,10 @@
  *
  *   1. the CDN edge (js-agent.newrelic.com, staging-js-agent.newrelic.com) serves content matching the manifest
  *   2. the S3 origin (nr-browser-agent) serves content matching the manifest, independent of the CDN cache
- *   3. the loaders stored in the NR loader database match the manifest
- *   4. the mutable `-current` loaders match one of the checked releases (a rollback is legitimate, anything else isn't)
+ *   3. the mutable `-current` loaders match one of the checked releases (a rollback is legitimate, anything else isn't)
+ *
+ * The NR loader database is deliberately not checked here: reading it requires an API key, and this script runs on a
+ * schedule with no credentials. The release workflow verifies the database against the same manifest (nr-verify).
  *
  * Usage: node cdn-integrity-monitor.mjs [--repo owner/name] [--releases 5] [--include <text>] [--manifest <path>...]
  *
@@ -20,7 +22,6 @@ import { sha384, matchesManifest } from '../actions/shared-utils/integrity.js'
 
 const EDGE_HOSTS = ['js-agent.newrelic.com', 'staging-js-agent.newrelic.com']
 const ORIGIN_HOST = 'nr-browser-agent.s3.amazonaws.com'
-const NR_APIS = { stage: 'https://staging-api.newrelic.com', prod: 'https://api.newrelic.com' }
 const LOADER_TYPES = ['rum', 'full', 'spa']
 const MANIFEST_ASSET = 'integrity-manifest.json'
 
@@ -145,47 +146,6 @@ async function checkHost (label, baseUrl, release, include, concurrency) {
 }
 
 /**
- * Checks the loaders stored in the NR loader database against a manifest.
- * @param {{version: string, manifest: object}} release
- * @param {boolean} includeAliases Also check the fuzzy aliases (e.g. 1.324.x), which only the newest release owns.
- * @param {number} concurrency
- * @returns {Promise<{checked: number, findings: Finding[]}>}
- */
-async function checkLoaderDatabase (release, includeAliases, concurrency) {
-  const [major, minor] = release.version.split('.')
-  const jobs = []
-  for (const env of Object.keys(NR_APIS)) {
-    for (const type of LOADER_TYPES) {
-      for (const suffix of ['min.js', 'js']) {
-        const key = `nr-loader-${type}-${release.version}.${suffix}`
-        const names = [key]
-        if (includeAliases) names.push(`nr-loader-${type}-${major}.${minor}.x.${suffix}`, `nr-loader-${type}-${major}.x.x.${suffix}`)
-        for (const name of names) jobs.push({ env, key, name })
-      }
-    }
-  }
-
-  const findings = []
-  await pool(jobs.map(({ env, key, name }) => async () => {
-    const target = `${NR_APIS[env]}/v2/js_agent_loaders/version.json?loader_version=${name}`
-    try {
-      const response = await fetchWithRetry(target)
-      if (!response.ok) {
-        findings.push({ check: `nr-loader-db (${env})`, target, kind: 'unavailable', detail: `HTTP ${response.status}` })
-        return
-      }
-      const loader = (await response.json())?.js_agent_loader?.loader
-      if (typeof loader !== 'string' || !matchesManifest(release.manifest, key, Buffer.from(loader, 'utf-8'))) {
-        findings.push({ check: `nr-loader-db (${env})`, target, kind: 'mismatch', detail: `stored loader ${name} does not match the ${release.version} manifest entry` })
-      }
-    } catch (error) {
-      findings.push({ check: `nr-loader-db (${env})`, target, kind: 'unavailable', detail: String(error.message ?? error) })
-    }
-  }), concurrency)
-  return { checked: jobs.length, findings }
-}
-
-/**
  * The mutable -current loaders may legitimately point at an older release after a rollback, so they only need to
  * match a loader from one of the checked releases.
  * @param {Array<{version: string, manifest: object}>} releases
@@ -239,7 +199,6 @@ for (const [index, release] of releases.entries()) {
   console.log(`\nChecking ${release.version}${index === 0 ? ' (newest)' : ''}`)
   for (const host of EDGE_HOSTS) record(`edge ${host}`, release.version, await checkHost(`edge ${host}`, `https://${host}`, release, options.include, options.concurrency))
   record('s3 origin', release.version, await checkHost('s3 origin', `https://${ORIGIN_HOST}`, release, options.include, options.concurrency))
-  record('nr loader database', release.version, await checkLoaderDatabase(release, index === 0, options.concurrency))
 }
 console.log('\nChecking -current loaders')
 record('-current loaders', 'all', await checkCurrent(releases))

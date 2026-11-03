@@ -28,8 +28,8 @@ import { createStringAdders } from '../../../common/payloads/payloads'
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
 
-  #handleVitalMetric = ({ name, value, attrs }) => {
-    this.addTiming(name, value, attrs)
+  #handleVitalMetric = ({ name, value, attrs, relativeTimestamp }) => {
+    this.addTiming(name, value, attrs, relativeTimestamp)
   }
 
   constructor (agentRef) {
@@ -44,7 +44,7 @@ export class Aggregate extends AggregateBase {
 
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
     // Add the time of _window pagehide event_ firing to the next PVT harvest == NRDB windowUnload attr:
-    registerHandler('winPagehide', msTimestamp => this.addTiming('unload', msTimestamp, null), this.featureName, this.ee)
+    registerHandler('winPagehide', msTimestamp => this.addTiming('unload', msTimestamp), this.featureName, this.ee)
 
     this.waitForFlags(([])).then(() => {
       firstPaint.subscribe(this.#handleVitalMetric)
@@ -56,9 +56,9 @@ export class Aggregate extends AggregateBase {
         /* Downstream, the event consumer interprets all timing node value as ms-unit and converts it to seconds via division by 1000. CLS is unitless so this normally is a problem.
           bel.6 schema also doesn't support decimal values, of which cls within [0,1). However, the two nicely cancels out, and we can multiply cls by 1000 to both negate the division
           and send an integer > 1. We effectively lose some precision down to 3 decimal places for this workaround. E.g. (real) 0.749132... -> 749.132...-> 749 -> 0.749 (final) */
-        const { name, value, attrs } = cumulativeLayoutShift.current
+        const { name, value, attrs, relativeTimestamp } = cumulativeLayoutShift.current
         if (value === undefined) return
-        this.addTiming(name, value * 1000, attrs)
+        this.addTiming(name, value * 1000, attrs, relativeTimestamp)
       }, true, true) // CLS node should only report on vis change rather than on every change.
       /* NOTE: the capture=true is required -- empirically verified against a real browser (Chrome) for CLS
       timing node to reliably be in the same final harvest as the rest, alongside Harvester#startTimer's
@@ -75,13 +75,25 @@ export class Aggregate extends AggregateBase {
    */
   endCurrentSession (timestamp) {
     if (!this.curSessEndRecorded) { // TO DO: stage 2 - we don't want to capture this timing twice on page navigating away, but it should run again if we return to page and away *again*
-      this.addTiming('pageHide', timestamp, null)
+      this.addTiming('pageHide', timestamp)
       this.curSessEndRecorded = true
     }
   }
 
-  addTiming (name, value, attrs) {
-    attrs = attrs || {}
+  /**
+   * Records a page view timing node, decorating it with system attributes (page URL, connection info,
+   * CLS-so-far, webdriver detection, and a server-corrected absolute timestamp) before buffering it for harvest.
+   * @param {string} name The timing node's name (e.g. 'fp', 'fcp', 'lcp', 'cls', 'fi', 'pageHide', 'unload').
+   * @param {number} value The timing node's value; a ms offset from page origin for most nodes, a duration for
+   * 'inp', and a unitless score for 'cls'.
+   * @param {object} [attrs] Additional custom attributes to attach to the node.
+   * @param {number} [relativeTimestamp] The ms offset from page origin at which the underlying event occurred. It is
+   * server-corrected into the node's absolute `timestamp` attribute, which is omitted if the time keeper isn't ready
+   * or this isn't a finite number. Supplied by VitalMetric for nodes whose `value` isn't itself the event's time
+   * (e.g. 'inp' uses the interaction time, 'cls' uses the largest shift time). Defaults to `value`.
+   * @returns {{name: string, value: number, attrs: object}} The recorded timing node.
+   */
+  addTiming (name, value, attrs = {}, relativeTimestamp = value) {
     attrs.pageUrl = cleanURL(getNavigationEntry()?.name || initialLocation)
 
     addConnectionAttributes(attrs) // network conditions may differ from the actual for VitalMetrics when they were captured
@@ -99,6 +111,11 @@ export class Aggregate extends AggregateBase {
     }
 
     attrs.webdriverDetected = webdriverDetected
+
+    const timeKeeper = this.agentRef.runtime.timeKeeper
+    if (timeKeeper?.ready && Number.isFinite(relativeTimestamp)) {
+      attrs.timestamp = Math.floor(timeKeeper.correctRelativeTimestamp(relativeTimestamp))
+    }
 
     const timing = {
       name,
@@ -134,7 +151,7 @@ export class Aggregate extends AggregateBase {
 
   #getGlobalCustomAttributes () {
     const reservedAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elTag', 'elUrl', 'net-type',
-      'net-etype', 'net-rtt', 'net-dlink', 'webdriverDetected']
+      'net-etype', 'net-rtt', 'net-dlink', 'webdriverDetected', 'timestamp']
 
     return Object.fromEntries(
       Object.entries(this.agentRef.info.jsAttributes || {}).filter(([key]) => !reservedAttributes.includes(key))

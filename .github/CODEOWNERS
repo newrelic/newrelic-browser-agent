@@ -1,0 +1,9 @@
+# Changes to anything that builds or publishes the agent are reviewed by the Browser Agent team.
+# Enforced by the branch ruleset's "Require review from Code Owners" setting.
+
+/.github/ @newrelic/br0ws3r
+/tools/webpack/ @newrelic/br0ws3r
+/tools/bundler-tools/ @newrelic/br0ws3r
+/package.json @newrelic/br0ws3r
+/package-lock.json @newrelic/br0ws3r
+/.github/actions/package-lock.json @newrelic/br0ws3r

@@ -5,18 +5,18 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "@newrelic/browser-agent": "file:../../../../temp/newrelic-browser-agent-1.324.0.tgz",
-    "svelte": "5.57.2"
+    "@newrelic/browser-agent": "file:../../../../temp/newrelic-browser-agent-1.324.1.tgz",
+    "svelte": "5.57.3"
   },
   "scripts": {
     "build": "svelte-check && vite build"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "7.3.1",
-    "@types/node": "22.x",
-    "svelte-check": "4.7.6",
-    "typescript": "5.7.3",
-    "vite": "8.3.3"
+    "@types/node": "26.6.5",
+    "svelte-check": "4.7.7",
+    "typescript": "6.0.3",
+    "vite": "8.3.5"
   },
   "keywords": [],
   "description": ""

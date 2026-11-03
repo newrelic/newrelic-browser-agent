@@ -2,6 +2,8 @@
  * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+import { now } from '../timing/now'
+
 export class VitalMetric {
   #subscribers = new Set()
   history = []
@@ -12,13 +14,22 @@ export class VitalMetric {
     this.roundingMethod = typeof roundingMethod === 'function' ? roundingMethod : Math.floor
   }
 
+  /**
+   * Records a new value for this metric and notifies subscribers.
+   * @param {object} params
+   * @param {number} params.value The metric's value. For most metrics this is itself a ms offset from page origin
+   * (i.e. the metric's own real time of occurrence); for score-based metrics like CLS it isn't a time at all.
+   * @param {object} [params.attrs] Metric-specific attribution attrs.
+   */
   update ({ value, attrs = {} }) {
     if (value === undefined || value === null || value < 0) return
+    const metricTimestamps = { inp: attrs.interactionTime ?? now(), cls: attrs.largestShiftTime ?? now() }
     const state = {
       value: this.roundingMethod(value),
       name: this.name,
       // optional web-vitals attribution fields are omitted rather than being serialized as null attributes
-      attrs: Object.fromEntries(Object.entries(attrs).filter(([, attrValue]) => attrValue !== undefined))
+      attrs: Object.fromEntries(Object.entries(attrs).filter(([, attrValue]) => attrValue !== undefined)),
+      relativeTimestamp: metricTimestamps[this.name] ?? value
     }
 
     this.history.push(state)

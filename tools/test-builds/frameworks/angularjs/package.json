@@ -6,7 +6,7 @@
   "type": "module",
   "frameworkPackage": "angular",
   "dependencies": {
-    "@newrelic/browser-agent": "file:../../../../temp/newrelic-browser-agent-1.324.0.tgz",
+    "@newrelic/browser-agent": "file:../../../../temp/newrelic-browser-agent-1.324.1.tgz",
     "angular": "1.8.3"
   },
   "scripts": {
@@ -14,9 +14,9 @@
     "build": "tsc && vite build"
   },
   "devDependencies": {
-    "@types/node": "24.19.x",
+    "@types/node": "26.6.5",
     "typescript": "7.0.2",
-    "vite": "8.3.4",
+    "vite": "8.3.5",
     "vite-plugin-static-copy": "4.1.1"
   },
   "keywords": [],

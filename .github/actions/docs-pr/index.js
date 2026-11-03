@@ -27,6 +27,7 @@ const releaseDate = new Date(versionData.createTime).toLocaleDateString('sv') //
 // Retrieve and categorize each change in the release
 const categories = {
   feat: [],
+  enhancement: [],
   fix: [],
   security: []
 }
@@ -56,6 +57,7 @@ const frontMatter = {
   version: args.tag.substr(1),
   downloadLink: "https://www.npmjs.com/package/@newrelic/browser-agent",
   features: [],
+  enhancements: [],
   bugs: [],
   security: []
 }
@@ -63,6 +65,7 @@ const bodyContent = {
   version: args.tag,
   releaseUrl: `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/releases/tag/${args.tag}`,
   features: [],
+  enhancements: [],
   bugs: [],
   security: [],
   browserVersions: {
@@ -74,6 +77,10 @@ for (const item of categories.feat) {
   frontMatter.features.push(item.title)
   bodyContent.features.push(item)
 }
+for (const item of categories.enhancement) {
+  frontMatter.enhancements.push(item.title)
+  bodyContent.enhancements.push(item)
+}
 for (const item of categories.fix) {
   frontMatter.bugs.push(item.title)
   bodyContent.bugs.push(item)
@@ -84,6 +91,7 @@ for (const item of categories.security) {
 }
 
 frontMatter.features = JSON.stringify(frontMatter.features)
+frontMatter.enhancements = JSON.stringify(frontMatter.enhancements)
 frontMatter.bugs = JSON.stringify(frontMatter.bugs)
 frontMatter.security = JSON.stringify(frontMatter.security)
 

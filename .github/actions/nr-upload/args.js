@@ -22,6 +22,9 @@ export const args = yargs(hideBin(process.argv))
   .string('local-dir')
   .describe('local-dir', 'Local directory to read loader files from instead of fetching from CDN')
 
+  .string('manifest')
+  .describe('manifest', 'Path to an integrity manifest. When provided, each loader must match its recorded sha384 before it is uploaded.')
+
   .demandOption(['environment', 'loader-version'])
   .check((argv) => {
     if (argv.environment.includes('stage') && !argv.stageApiKey) {

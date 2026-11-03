@@ -5,6 +5,31 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "f2129deb18e25a7efc8ffc8993617c7e531141ba",
+          "message": "correct hasMeta/hasSnapshot flags on session replay harvests",
+          "issues": [
+            "1911"
+          ]
+        },
+        {
+          "type": "security",
+          "sha": "fa97b77fa0c33047b7403e85ef7ea3800d62449a",
+          "message": "bump fflate to 0.8.3",
+          "issues": [
+            "1909"
+          ]
+        }
+      ],
+      "version": "1.324.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "ee5dfae1-9f94-4db3-9383-aabe8fb392e2",
+      "createTime": "2026-10-26T16:53:23.552Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "1803e4c1800e12c0486625e26b39e2a00146ab64",
           "message": "prevent runaway log harvests from inflated attribute size",
           "issues": [
@@ -4375,5 +4400,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-10-12T17:08:27.105Z"
+  "updateTime": "2026-10-26T16:53:23.552Z"
 }

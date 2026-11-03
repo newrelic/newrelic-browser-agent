@@ -5,19 +5,19 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "@newrelic/browser-agent": "file:../../../../temp/newrelic-browser-agent-1.324.0.tgz",
-    "vue": "3.5.43"
+    "@newrelic/browser-agent": "file:../../../../temp/newrelic-browser-agent-1.324.1.tgz",
+    "vue": "3.5.44"
   },
   "scripts": {
     "start": "vite",
     "build": "vue-tsc && vite build"
   },
   "devDependencies": {
-    "@types/node": "22.19.x",
-    "@vitejs/plugin-vue": "6.0.9",
-    "typescript": "5.7.3",
-    "vite": "8.3.3",
-    "vue-tsc": "3.3.11"
+    "@types/node": "26.6.5",
+    "@vitejs/plugin-vue": "6.0.10",
+    "typescript": "6.0.3",
+    "vite": "8.3.5",
+    "vue-tsc": "3.3.13"
   },
   "keywords": [],
   "description": ""

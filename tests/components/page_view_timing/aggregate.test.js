@@ -114,6 +114,18 @@ test('LCP event with CLS attribute', () => {
   })
 })
 
+test('LCP and FI timing nodes have distinct, server-corrected timestamps', () => {
+  const lcpNode = findTimingNode(VITAL_NAMES.LARGEST_CONTENTFUL_PAINT)
+  const fiNode = findTimingNode('fi')
+
+  const lcpTimestamp = findTimingAttribute(lcpNode, 'timestamp')
+  const fiTimestamp = findTimingAttribute(fiNode, 'timestamp')
+
+  expect(lcpTimestamp).toEqual(expect.any(Number))
+  expect(fiTimestamp).toEqual(expect.any(Number))
+  expect(lcpTimestamp).not.toEqual(fiTimestamp)
+})
+
 test('sends expected FI *once* with attributes when available', () => {
   const fiNode = findTimingNode('fi')
   expect(fiNode).toBeDefined()

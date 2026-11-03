@@ -20,14 +20,19 @@ runs:
   using: "composite"
   steps:
     - name: Install dependencies
-      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      run: npm ci --silent --no-progress --ignore-scripts --prefix $GITHUB_ACTION_PATH/..
       shell: bash
     - name: Run action script
       id: action-script
+      env:
+        INPUT_TAG: ${{ inputs.tag }}
+        INPUT_GITHUB_LOGIN: ${{ inputs.github_login }}
+        INPUT_GITHUB_EMAIL: ${{ inputs.github_email }}
+        INPUT_DOCS_TOKEN: ${{ inputs.nr_docs_github_token }}
       run: |
-        node $GITHUB_ACTION_PATH/index.js \
-          --tag ${{ inputs.tag }} \
-          --github-login ${{ inputs.github_login }} \
-          --github-email ${{ inputs.github_email }} \
-          --nr-docs-github-token ${{ inputs.nr_docs_github_token }}
+        node "$GITHUB_ACTION_PATH/index.js" \
+          --tag "$INPUT_TAG" \
+          --github-login "$INPUT_GITHUB_LOGIN" \
+          --github-email "$INPUT_GITHUB_EMAIL" \
+          --nr-docs-github-token "$INPUT_DOCS_TOKEN"
       shell: bash

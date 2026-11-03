@@ -11,22 +11,22 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/common": "^20.3.31",
-    "@angular/compiler": "^20.3.31",
-    "@angular/core": "^20.3.31",
-    "@angular/forms": "^20.3.31",
-    "@angular/platform-browser": "^20.3.31",
-    "@angular/router": "^20.3.32",
-    "@newrelic/browser-agent": "file:../../../../temp/newrelic-browser-agent-1.324.0.tgz",
-    "rxjs": "~7.8.0",
-    "tslib": "^2.3.0",
-    "zone.js": "~0.15.1"
+    "@angular/common": "22.2.3",
+    "@angular/compiler": "22.2.3",
+    "@angular/core": "22.2.3",
+    "@angular/forms": "22.2.3",
+    "@angular/platform-browser": "22.2.3",
+    "@angular/router": "22.2.3",
+    "@newrelic/browser-agent": "file:../../../../temp/newrelic-browser-agent-1.324.1.tgz",
+    "rxjs": "7.8.2",
+    "tslib": "2.8.1",
+    "zone.js": "0.16.3"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^20.3.37",
-    "@angular/cli": "~20.3.37",
-    "@angular/compiler-cli": "^20.3.31",
-    "typescript": "~5.8.3"
+    "@angular-devkit/build-angular": "22.2.5",
+    "@angular/cli": "22.2.5",
+    "@angular/compiler-cli": "22.2.3",
+    "typescript": "6.0.3"
   },
   "overrides": {
     "webpack-dev-middleware": "7.4.6",

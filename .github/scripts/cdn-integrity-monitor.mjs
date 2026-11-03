@@ -10,7 +10,7 @@
  *   3. the loaders stored in the NR loader database match the manifest
  *   4. the mutable `-current` loaders match one of the checked releases (a rollback is legitimate, anything else isn't)
  *
- * Usage: node cdn-integrity-monitor.mjs [--repo owner/name] [--releases 5] [--include <regex>] [--manifest <path>...]
+ * Usage: node cdn-integrity-monitor.mjs [--repo owner/name] [--releases 5] [--include <text>] [--manifest <path>...]
  *
  * --manifest bypasses release discovery and checks the given manifest file(s). It exists for testing and manual
  * verification. Exits 1 when any check finds a mismatch or cannot be completed, 0 otherwise.
@@ -27,16 +27,16 @@ const MANIFEST_ASSET = 'integrity-manifest.json'
 /**
  * Parses the small set of supported command line options.
  * @param {string[]} argv Arguments after the script name.
- * @returns {{repo: string, releases: number, include: RegExp, manifests: string[], concurrency: number}}
+ * @returns {{repo: string, releases: number, include: string, manifests: string[], concurrency: number}}
  */
 function parseArgs (argv) {
-  const options = { repo: process.env.GITHUB_REPOSITORY || 'newrelic/newrelic-browser-agent', releases: 5, include: /\.js$/, manifests: [], concurrency: 8 }
+  const options = { repo: process.env.GITHUB_REPOSITORY || 'newrelic/newrelic-browser-agent', releases: 5, include: '', manifests: [], concurrency: 8 }
   for (let i = 0; i < argv.length; i++) {
     const [flag, inline] = argv[i].split('=')
     const value = () => inline ?? argv[++i]
     if (flag === '--repo') options.repo = value()
     else if (flag === '--releases') options.releases = Number(value())
-    else if (flag === '--include') options.include = new RegExp(value())
+    else if (flag === '--include') options.include = value()
     else if (flag === '--manifest') options.manifests.push(value())
     else if (flag === '--concurrency') options.concurrency = Number(value())
     else throw new Error(`Unknown option ${flag}`)
@@ -119,12 +119,12 @@ async function discoverManifests (options) {
  * @param {string} label Name of the check, used in reports.
  * @param {string} baseUrl Origin to fetch from, without a trailing slash.
  * @param {{version: string, manifest: object}} release
- * @param {RegExp} include Only files whose manifest key matches are checked.
+ * @param {string} include Only files whose manifest key contains this text are checked. Matched literally, not as a pattern.
  * @param {number} concurrency
  * @returns {Promise<{checked: number, findings: Finding[]}>}
  */
 async function checkHost (label, baseUrl, release, include, concurrency) {
-  const keys = Object.keys(release.manifest.files).filter(key => include.test(key))
+  const keys = Object.keys(release.manifest.files).filter(key => key.endsWith('.js') && key.includes(include))
   const findings = []
   await pool(keys.map(key => async () => {
     const target = `${baseUrl}/${key}`

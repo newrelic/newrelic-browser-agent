@@ -9,10 +9,12 @@ const loaderFileNames = constructLoaderFileNames(args.loaderVersion)
 const fuzzyVersions = constructFuzzyVersions(args.loaderVersion)
 const envOptions = {
   stage: {
-    url: 'https://staging-api.newrelic.com/v2/js_agent_loaders/version.json'
+    url: 'https://staging-api.newrelic.com/v2/js_agent_loaders/version.json',
+    apiKey: args.stageApiKey
   },
   prod: {
-    url: 'https://api.newrelic.com/v2/js_agent_loaders/version.json'
+    url: 'https://api.newrelic.com/v2/js_agent_loaders/version.json',
+    apiKey: args.prodApiKey
   }
 }
 
@@ -46,7 +48,8 @@ const results = await Promise.allSettled(
         method: 'GET',
         redirect: 'follow',
         headers: {
-          'Accept-Encoding': 'gzip, deflate, br'
+          'Accept-Encoding': 'gzip, deflate, br',
+          'X-Api-Key': envOptions[jobDetails.env].apiKey
         }
       })
 

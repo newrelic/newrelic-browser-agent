@@ -7,6 +7,12 @@ inputs:
   environment:
     description: 'Space delimited list of environments to verify.'
     required: false
+  nr_prod_api_key:
+    description: 'API key to use for talking to production RPM site to read loaders'
+    required: false
+  nr_stage_api_key:
+    description: 'API key to use for talking to staging RPM site to read loaders'
+    required: false
   loader_version:
     description: "Browser Agent version number"
     required: true
@@ -24,6 +30,8 @@ runs:
       id: action-script
       env:
         INPUT_ENVIRONMENT: ${{ inputs.environment }}
+        INPUT_PROD_API_KEY: ${{ inputs.nr_prod_api_key }}
+        INPUT_STAGE_API_KEY: ${{ inputs.nr_stage_api_key }}
         INPUT_LOADER_VERSION: ${{ inputs.loader_version }}
         INPUT_MANIFEST: ${{ inputs.manifest }}
       run: |
@@ -31,6 +39,8 @@ runs:
         set -f
         args=()
         if [[ -n "$INPUT_ENVIRONMENT" ]]; then args+=(--environment $INPUT_ENVIRONMENT); fi
+        if [[ -n "$INPUT_PROD_API_KEY" ]]; then args+=(--prod-api-key "$INPUT_PROD_API_KEY"); fi
+        if [[ -n "$INPUT_STAGE_API_KEY" ]]; then args+=(--stage-api-key "$INPUT_STAGE_API_KEY"); fi
         if [[ -n "$INPUT_MANIFEST" ]]; then args+=(--manifest "$INPUT_MANIFEST"); fi
         args+=(--loader-version "$INPUT_LOADER_VERSION")
         node "$GITHUB_ACTION_PATH/index.js" "${args[@]}"

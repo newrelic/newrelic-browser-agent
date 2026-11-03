@@ -375,6 +375,7 @@ jobs:
       - name: Verify loaders in nr
         uses: ./.github/actions/nr-verify
         with:
+          nr_stage_api_key: ${{ secrets.NR_API_KEY_STAGING }}
           loader_version: ${{ steps.agent-loader-version.outputs.results }}
           environment: stage
           manifest: ${{ runner.temp }}/integrity/integrity-manifest.json
@@ -411,6 +412,7 @@ jobs:
       - name: Verify loaders in nr
         uses: ./.github/actions/nr-verify
         with:
+          nr_prod_api_key: ${{ secrets.NR_API_KEY_PRODUCTION }}
           loader_version: ${{ steps.agent-loader-version.outputs.results }}
           environment: prod
           manifest: ${{ runner.temp }}/integrity/integrity-manifest.json

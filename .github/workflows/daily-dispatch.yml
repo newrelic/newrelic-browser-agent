@@ -47,6 +47,7 @@ jobs:
     name: Publish metrics to New Relic
     needs: [dispatch]
     runs-on: Browser-Agent-Assigned-IP-Linux
+    environment: cdn-maintenance
     timeout-minutes: 5
     outputs:
       image_url: ${{ steps.publish-image.outputs.image_url }}

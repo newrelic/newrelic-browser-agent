@@ -7,6 +7,15 @@ const assetServerTraceTest = function (request) {
   return url.pathname === `/dt/${this.testId}`
 }
 
+/*
+ * Replaces the first label of the testing server hostname with a wildcard (bam-test-1.nr-local.net -> *.nr-local.net).
+ * Hosts that cannot be split into labels (e.g. localhost) have their first character replaced instead, since a
+ * host that is only a wildcard is intentionally rejected by the agent.
+ */
+function wildcardHost (host) {
+  return host.includes('.') ? host.replace(/^[^.]+/, '*') : '*' + host.slice(1)
+}
+
 const testCases = [
   {
     name: 'no headers added when configuration is null',
@@ -100,6 +109,67 @@ const testCases = [
     addRouterToAllowedOrigins: true,
     newrelicHeader: false,
     traceContextHeaders: false
+  },
+  {
+    name: 'default headers on different origin when the origin matches a wildcard entry',
+    configuration: {
+      enabled: true,
+      allowed_origins: []
+    },
+    sameOrigin: false,
+    addRouterToAllowedOrigins: false,
+    buildAllowedOrigins: ({ host, port }) => [`http://${wildcardHost(host)}:${port}/`],
+    newrelicHeader: true,
+    traceContextHeaders: false
+  },
+  {
+    name: 'trace context headers are added on different origin when the origin matches a wildcard entry',
+    configuration: {
+      enabled: true,
+      allowed_origins: [],
+      cors_use_tracecontext_headers: true
+    },
+    sameOrigin: false,
+    addRouterToAllowedOrigins: false,
+    buildAllowedOrigins: ({ host, port }) => [`http://${wildcardHost(host)}:${port}/`],
+    newrelicHeader: true,
+    traceContextHeaders: true
+  },
+  {
+    name: 'no headers are added on different origin when a wildcard entry matches a different domain',
+    configuration: {
+      enabled: true,
+      allowed_origins: []
+    },
+    sameOrigin: false,
+    addRouterToAllowedOrigins: false,
+    buildAllowedOrigins: ({ port }) => [`http://*.not-the-test-host.example:${port}/`],
+    newrelicHeader: false,
+    traceContextHeaders: false
+  },
+  {
+    name: 'no headers are added on different origin when a wildcard entry has a different port',
+    configuration: {
+      enabled: true,
+      allowed_origins: []
+    },
+    sameOrigin: false,
+    addRouterToAllowedOrigins: false,
+    buildAllowedOrigins: ({ host, port }) => [`http://${wildcardHost(host)}:${Number(port) + 1}/`],
+    newrelicHeader: false,
+    traceContextHeaders: false
+  },
+  {
+    name: 'no headers are added on different origin when the only wildcard entry is a whole-host wildcard',
+    configuration: {
+      enabled: true,
+      allowed_origins: []
+    },
+    sameOrigin: false,
+    addRouterToAllowedOrigins: false,
+    buildAllowedOrigins: ({ port }) => [`http://*:${port}/`],
+    newrelicHeader: false,
+    traceContextHeaders: false
   }
 ]
 const fetchScenarios = [
@@ -158,6 +228,9 @@ describe('xhr distributed tracing', () => {
           `http://${browser.testHandle.bamServerConfig.host}:${browser.testHandle.bamServerConfig.port}/`
         )
       }
+      if (testCase.buildAllowedOrigins) {
+        testCase.configuration.allowed_origins.push(...testCase.buildAllowedOrigins(browser.testHandle.bamServerConfig))
+      }
 
       const [ajaxRequest, ajaxEventResults, interactionsResults] = await Promise.all([
         ajaxCapture.waitForResult({ totalCount: 1 }),
@@ -202,6 +275,9 @@ describe('xhr distributed tracing', () => {
             testCase.configuration.allowed_origins.push(
               `http://${browser.testHandle.bamServerConfig.host}:${browser.testHandle.bamServerConfig.port}/`
             )
+          }
+          if (testCase.buildAllowedOrigins) {
+            testCase.configuration.allowed_origins.push(...testCase.buildAllowedOrigins(browser.testHandle.bamServerConfig))
           }
 
           const [ajaxRequest, ajaxEventResults, interactionsResults] = await Promise.all([

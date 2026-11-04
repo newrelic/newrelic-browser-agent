@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { testMFEInsRequest } from '../../../../tools/testing-server/utils/expect-tests'
+import { testMFETimingRequest } from '../../../../tools/testing-server/utils/expect-tests'
 
 /**
  * Helper to get MFE timing events from harvests
@@ -22,7 +22,7 @@ describe('Register API - stale script correlation reuse on MFE remount', () => {
 
   beforeEach(async () => {
     ;[mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-      { test: testMFEInsRequest }
+      { test: testMFETimingRequest }
     ])
   })
 

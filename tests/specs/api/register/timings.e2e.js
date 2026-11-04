@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { testMFEInsRequest } from '../../../../tools/testing-server/utils/expect-tests'
+import { testMFETimingRequest } from '../../../../tools/testing-server/utils/expect-tests'
 import { fullySupportsPreloadResourceTimings } from '../../../../tools/browser-matcher/common-matchers.mjs'
 
 const acceptedAssetTypes = ['script', 'link', 'preload', 'inline', 'fetch', 'unknown']
@@ -90,7 +90,7 @@ function validateMetadataTimingChain (metadata) {
 describe('Register API - Correlation-based Timings', () => {
   beforeEach(async () => {
     [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-      { test: testMFEInsRequest }
+      { test: testMFETimingRequest }
     ])
   })
 

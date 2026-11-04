@@ -13,6 +13,17 @@ export const supportsMultiTabSessions = new SpecMatcher()
   .include('firefox')
 
 /**
+ * Browsers whose webdriver can open, switch between, and close additional tabs. Unlike {@link supportsMultiTabSessions}, this includes safari,
+ * since it only needs the tabs themselves, not shared storage between them. iOS and Android cannot create tabs, and Electron cannot open them.
+ * @type {SpecMatcher}
+ */
+export const supportsOpeningTabs = new SpecMatcher()
+  .include('chrome')
+  .include('edge')
+  .include('firefox')
+  .include('safari')
+
+/**
  * auto-inlining broken stylesheets does not work in safari browsers < 16.3
  * current mitigation strategy is defined as informing customers to add `crossOrigin: anonymous` tags to cross-domain stylesheets
  */
@@ -72,6 +83,9 @@ export const notFirefox = new SpecMatcher()
 
 export const onlyChrome = new SpecMatcher()
   .include('chrome')
+
+export const onlyEdge = new SpecMatcher()
+  .include('edge')
 
 export const onlyIOS = new SpecMatcher()
   .include('ios')

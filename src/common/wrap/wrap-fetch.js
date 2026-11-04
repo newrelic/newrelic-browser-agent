@@ -45,10 +45,8 @@ export function wrapFetch (sharedEE, agentRef) {
   })
   wrapPromiseMethod(globalScope, 'fetch', prefix)
 
-  ee.on(prefix + 'end', function (err, res, targets) {
+  ee.on(prefix + 'end', function (err, res) {
     var ctx = this
-    // default target reports to container
-    ctx.targets = targets || [agentRef.runtime.v2Target]
     if (res) {
       var size = res.headers.get('content-length')
       if (size !== null) {
@@ -77,7 +75,7 @@ export function wrapFetch (sharedEE, agentRef) {
         var args = [...arguments]
 
         const ctx = {}
-        const targets = findTargetsFromStackTrace(agentRef)
+        const entityTargets = findTargetsFromStackTrace(agentRef)
 
         // we are wrapping args in an array so we can preserve the reference
         ee.emit(prefix + 'before-start', [args], ctx)
@@ -86,14 +84,14 @@ export function wrapFetch (sharedEE, agentRef) {
 
         var origPromiseFromFetch = fn.apply(this, args)
 
-        ee.emit(prefix + 'start', [args, dtPayload], origPromiseFromFetch)
+        ee.emit(prefix + 'start', [args, dtPayload, entityTargets], origPromiseFromFetch)
 
         // Note we need to cast the returned (orig) Promise from native APIs into the current global Promise, which may or may not be our WrappedPromise.
         return origPromiseFromFetch.then(function (val) {
-          ee.emit(prefix + 'end', [null, val, targets], origPromiseFromFetch)
+          ee.emit(prefix + 'end', [null, val], origPromiseFromFetch)
           return val
         }, function (err) {
-          ee.emit(prefix + 'end', [err, undefined, targets], origPromiseFromFetch)
+          ee.emit(prefix + 'end', [err, undefined], origPromiseFromFetch)
           throw err
         })
       }

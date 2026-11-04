@@ -58,19 +58,27 @@ module.exports = fp(async function (fastify, testServer) {
   fastify.route({
     method: ['GET', 'PUT', 'POST', 'PATCH'],
     url: '/streamed',
+    compress: false, // compression would hold back the response, headers included, until the whole body is in
     handler: function (request, reply) {
       const count = parseInt(request.query.count || 5, 10)
+      const interval = parseInt(request.query.interval || 0, 10) // ms between chunks, to simulate a slow body
 
       const stream = new PassThrough()
       reply.send(stream)
 
-      let round = 0
-      const interval = setInterval(() => {
+      /* The first chunk goes out right away so the headers do too, with the rest following every interval. */
+      let round = 1
+      stream.write('x'.repeat(8192))
+      if (round >= count) return stream.end()
+      const timer = setInterval(() => {
         round += 1
         stream.write('x'.repeat(8192))
 
-        if (round >= count) clearInterval(interval)
-      })
+        if (round >= count) {
+          clearInterval(timer)
+          stream.end()
+        }
+      }, interval)
     }
   })
   fastify.get('/slowscript', {

@@ -12,6 +12,7 @@
  * @property {boolean} [ajax.enabled] - Turn on/off the ajax feature (on by default).
  * @property {boolean} [ajax.autoStart] - If true, the agent will automatically start the ajax feature. Otherwise, it will be in a deferred state until the `start` API method is called.
  * @property {('none'|'failures'|'all')} [ajax.capture_payloads] - Controls when AJAX request/response payloads are captured. 'none' = never capture, 'failures' = capture only on errors (4xx, 5xx, network errors, GraphQL errors), 'all' = always capture.
+ * @property {number} [ajax.timeout] - Number of seconds an XHR or fetch request has, from when it starts, to return a response before it is reported as an AjaxRequest with status 0 and `reason: 'timedOut'`. Also reports requests still pending when the page unloads with status 0 and `reason: 'pageUnloaded'` (requests the browser itself cancels while unloading are reported as it cancelled them, e.g. `reason: 'aborted'`). 0 (the default) disables both.
  * @property {Object} [api]
  * @property {Object} [api.register]
  * @property {boolean} [api.register.enabled] - If true, the agent will allow registered children to be sent to the server.

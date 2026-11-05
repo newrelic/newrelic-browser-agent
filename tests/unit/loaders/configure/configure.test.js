@@ -74,8 +74,18 @@ describe('configure harvest endpoint lock', () => {
   const buildAgent = () => ({ agentIdentifier: `test-agent-${Math.random()}`, exposed: false })
   const buildOpts = (proxy = {}) => ({
     init: { proxy },
-    info: { beacon: 'bam.nr-data.net', errorBeacon: 'bam.nr-data.net' },
+    info: { beacon: 'bam.nr-data.net', errorBeacon: 'bam.nr-data.net', licenseKey: 'license', applicationID: '123' },
     runtime: {}
+  })
+
+  it('makes the license key and application ID read-only', () => {
+    const agent = buildAgent()
+    configure(agent, buildOpts(), 'test-loader')
+
+    expect(() => { agent.info.licenseKey = 'evil' }).toThrow(TypeError)
+    expect(() => { agent.info.applicationID = '999' }).toThrow(TypeError)
+    expect(agent.info.licenseKey).toBe('license')
+    expect(agent.info.applicationID).toBe('123')
   })
 
   it('makes the configured beacons read-only', () => {

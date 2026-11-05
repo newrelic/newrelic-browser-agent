@@ -20,6 +20,19 @@ describe('trustBeacons', () => {
     expect(agent.info.errorBeacon).toBe('bam.nr-data.net')
   })
 
+  test('makes info.licenseKey and info.applicationID read-only', () => {
+    const agent = buildAgent()
+    agent.info.applicationID = '123'
+    trustBeacons(agent)
+
+    expect(() => { agent.info.licenseKey = 'evil' }).toThrow(TypeError)
+    expect(() => { agent.info.applicationID = '999' }).toThrow(TypeError)
+    expect(() => Object.defineProperty(agent.info, 'licenseKey', { value: 'evil' })).toThrow(TypeError)
+    expect(() => Object.defineProperty(agent.info, 'applicationID', { value: '999' })).toThrow(TypeError)
+    expect(agent.info.licenseKey).toBe('abc')
+    expect(agent.info.applicationID).toBe('123')
+  })
+
   test('freezes init.proxy', () => {
     const agent = buildAgent({ beacon: 'proxy.example.com/nr' })
     trustBeacons(agent)

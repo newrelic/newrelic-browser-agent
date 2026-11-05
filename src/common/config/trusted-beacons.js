@@ -11,7 +11,7 @@
 const trustedBeacons = new WeakMap()
 
 /**
- * Records the harvest endpoints an agent was configured with and makes them read-only on the agent. This is called each
+ * Records the harvest endpoints an agent was configured with and makes them, along with the license key and application ID, read-only on the agent. This is called each
  * time the agent is (re)configured, so an intentional late `init` update becomes the new trusted set, while runtime
  * writes from anywhere else are rejected.
  * @param {object} agent The agent instance, after its `info` and `init` have been set.
@@ -19,7 +19,9 @@ const trustedBeacons = new WeakMap()
 export function trustBeacons (agent) {
   trustedBeacons.set(agent, new Set([agent.info.errorBeacon, agent.init.proxy.beacon].filter(Boolean)))
 
-  ;['beacon', 'errorBeacon'].forEach(key => Object.defineProperty(agent.info, key, { writable: false, configurable: false }))
+  /* licenseKey and applicationID decide which account and entity the data is reported to, so they get the same
+     protection as the endpoints: a late write could otherwise re-route harvests to another account. */
+  ;['beacon', 'errorBeacon', 'licenseKey', 'applicationID'].forEach(key => Object.defineProperty(agent.info, key, { writable: false, configurable: false }))
   /* The model's own `proxy` object can be shared between agents, so freeze a copy rather than the original.
      This covers `proxy.assets` too. It is only read while configuring (it sets the path lazy chunks load from, which
      lives inside the bundle), so freezing it is sufficient and there is nothing to check at chunk-load time. */

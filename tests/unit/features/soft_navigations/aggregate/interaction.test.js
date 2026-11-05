@@ -199,10 +199,12 @@ test('Interaction serialize output is correct', () => {
   ixn.callbackDuration = 12345 - 5678
 
   expect(ixn.nodeId).toEqual(1)
-  expect(ixn.serialize(0, fakeAgent)).toBe("1,3,ya,3fg,,,'submit,'http://localhost/,1,1,'my_custom_name,2,!!'this_route,!'static-id,'1,!!;5,'key1,'value1;5,'key2,'value2;a,'apm_attributes_string;")
+  // count (field[1]) and the extra `8,'softNavApiSupported` attached node below account for the softNavApiSupported
+  // custom attribute the constructor now stamps on every Interaction (soft-nav spike POC) -- see interaction.js constructor.
+  expect(ixn.serialize(0, fakeAgent)).toBe("1,4,ya,3fg,,,'submit,'http://localhost/,1,1,'my_custom_name,2,!!'this_route,!'static-id,'1,!!;5,'key1,'value1;5,'key2,'value2;8,'softNavApiSupported;a,'apm_attributes_string;")
 
   ixn.newURL = 'some_new_url'
   ixn.newRoute = 'some_new_route'
   ixn.addChild({ serialize: () => 'serialized_child_string' })
-  expect(ixn.serialize(0, fakeAgent)).toBe("1,4,ya,3fg,,,'submit,'http://localhost/,1,'some_new_url,'my_custom_name,1,!!'this_route,'some_new_route,'static-id,'1,!!;5,'key1,'value1;5,'key2,'value2;a,'apm_attributes_string;serialized_child_string;")
+  expect(ixn.serialize(0, fakeAgent)).toBe("1,5,ya,3fg,,,'submit,'http://localhost/,1,'some_new_url,'my_custom_name,1,!!'this_route,'some_new_route,'static-id,'1,!!;5,'key1,'value1;5,'key2,'value2;8,'softNavApiSupported;a,'apm_attributes_string;serialized_child_string;")
 })

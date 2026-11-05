@@ -34,6 +34,7 @@ class MockError extends OriginalError {
 }
 
 let originalPerformance = global.performance
+const originalGetEntriesByType = global.performance.getEntriesByType
 let originalPerformanceObserver = global.window.PerformanceObserver
 let originalMutationObserver = global.window.MutationObserver
 
@@ -90,14 +91,22 @@ beforeEach(async () => {
   // Override correlations map access
   global.window.correlations = new Map()
 
+  // The tracker builds its observer from the constructor the agent captured at init (nr.o.MO), so point that at the mock
+  global.window.NREUM = { o: { MO: global.window.MutationObserver } }
+
   // Import module after mocks are set up
   scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
+  scriptTrackerModule.startScriptTracking() // tracking is lazy; tests start it explicitly after mocks are in place
 })
 
 afterEach(() => {
   global.Error = OriginalError
   createdScripts.forEach(script => script.remove())
   createdScripts = []
+  // startup seeding reads performance.getEntriesByType, and tests assign it directly on the shared performance object
+  originalPerformance.getEntriesByType = originalGetEntriesByType
+  // the startup scan reads document.scripts, so nothing may leak between tests
+  document.querySelectorAll('script').forEach(script => script.remove())
 
   global.performance = originalPerformance
   global.window.PerformanceObserver = originalPerformanceObserver
@@ -364,6 +373,7 @@ describe('script-tracker correlations', () => {
   describe('findScriptTimings with correlations', () => {
     beforeEach(async () => {
       scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
+      scriptTrackerModule.startScriptTracking() // tracking is lazy; tests start it explicitly after mocks are in place
       globalThis.performance.getEntriesByType = jest.fn()
     })
 
@@ -1265,5 +1275,137 @@ describe('script-tracker correlations', () => {
       expect(importOnly.performance.start).toBeGreaterThan(0)
       expect(importOnly.performance.value).toBeDefined()
     })
+  })
+})
+
+describe('lazy script tracking', () => {
+  /** loads the module fresh, without the explicit start the shared beforeEach performs */
+  async function freshImport (path = '../../../../src/common/v2/script-tracker') {
+    jest.resetModules()
+    jest.clearAllMocks()
+    return await import(path)
+  }
+
+  test('importing script-tracker observes nothing', async () => {
+    await freshImport()
+    expect(global.window.PerformanceObserver).not.toHaveBeenCalled()
+    expect(global.window.MutationObserver).not.toHaveBeenCalled()
+  })
+
+  test('importing the modules used by every agent (v2 utils, wrap-fetch) observes nothing', async () => {
+    await freshImport('../../../../src/common/v2/utils')
+    await import('../../../../src/common/wrap/wrap-fetch')
+    expect(global.window.PerformanceObserver).not.toHaveBeenCalled()
+    expect(global.window.MutationObserver).not.toHaveBeenCalled()
+  })
+
+  test('startScriptTracking starts the observers once, even when called repeatedly', async () => {
+    const mod = await freshImport()
+    mod.startScriptTracking()
+    mod.startScriptTracking()
+    expect(global.window.PerformanceObserver).toHaveBeenCalledTimes(1)
+    expect(global.window.MutationObserver).toHaveBeenCalledTimes(1)
+  })
+
+  test('findScriptTimings starts tracking', async () => {
+    const mod = await freshImport()
+    mod.findScriptTimings()
+    expect(global.window.PerformanceObserver).toHaveBeenCalledTimes(1)
+    expect(global.window.MutationObserver).toHaveBeenCalledTimes(1)
+  })
+
+  test('createTimings does not start tracking', async () => {
+    const mod = await freshImport()
+    mod.createTimings()
+    expect(global.window.PerformanceObserver).not.toHaveBeenCalled()
+    expect(global.window.MutationObserver).not.toHaveBeenCalled()
+  })
+
+  test('observes only the direct children of the document element, head and body -- never the document subtree', async () => {
+    const observe = jest.fn()
+    global.window.NREUM.o.MO = jest.fn(() => ({ observe, disconnect: jest.fn() }))
+    const mod = await freshImport()
+    mod.startScriptTracking()
+
+    const targets = observe.mock.calls.map(([target]) => target)
+    expect(targets).toEqual(expect.arrayContaining([document.documentElement, document.head, document.body]))
+    expect(targets).not.toContain(document)
+    observe.mock.calls.forEach(([, options]) => expect(options).toEqual({ childList: true }))
+  })
+
+  test('builds the observer from the constructor the agent captured at init, not the current global', async () => {
+    const captured = jest.fn(() => ({ observe: jest.fn(), disconnect: jest.fn() }))
+    global.window.NREUM.o.MO = captured
+    const mod = await freshImport()
+    mod.startScriptTracking()
+    expect(captured).toHaveBeenCalledTimes(1)
+    expect(global.window.MutationObserver).not.toHaveBeenCalled()
+  })
+
+  test('skips the observer, but still tracks resource timing, when no MutationObserver was captured', async () => {
+    global.window.NREUM.o.MO = undefined
+    const mod = await freshImport()
+    mod.startScriptTracking()
+    expect(global.window.MutationObserver).not.toHaveBeenCalled()
+    expect(global.window.PerformanceObserver).toHaveBeenCalledTimes(1)
+  })
+
+  test('seeds correlations synchronously from existing resource entries so the first register sees them', async () => {
+    const scriptUrl = 'https://cdn.example.com/seeded.js'
+    global.performance.getEntriesByType = jest.fn(type => type === 'resource' ? [{ name: scriptUrl, initiatorType: 'script', startTime: 10, responseEnd: 40 }] : [])
+    const mod = await freshImport()
+    mod.startScriptTracking()
+    // no PerformanceObserver callback has been delivered yet
+    expect(mod.findCorrelation(scriptUrl).performance.end).toBe(40)
+  })
+
+  test('picks up script nodes already in the document when tracking starts', async () => {
+    const scriptUrl = 'https://cdn.example.com/existing.js'
+    const node = document.createElement('script')
+    node.src = scriptUrl
+    document.head.appendChild(node)
+    const mod = await freshImport()
+    mod.startScriptTracking()
+    expect(mod.findCorrelation(scriptUrl).dom.value).toBe(node)
+  })
+
+  test('finds the calling script at register time when it was inserted somewhere that is not observed', async () => {
+    const scriptUrl = 'https://cdn.example.com/nested.js'
+    const mod = await freshImport()
+    mod.startScriptTracking()
+    // inserted after start, inside a container the observer does not watch, so no mutation record is ever delivered
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const node = document.createElement('script')
+    node.src = scriptUrl
+    container.appendChild(node)
+    expect(mod.findCorrelation(scriptUrl)).toBeUndefined()
+
+    mockStack = `Error
+    at findScriptTimings (${mod.thisFile}:1:1)
+    at init (${scriptUrl}:10:5)`
+    mockNavigationEntry = { name: 'https://example.com/' }
+    mod.findScriptTimings()
+
+    expect(mod.findCorrelation(scriptUrl).dom.value).toBe(node)
+  })
+
+  test('records dom.start/dom.end for a script inserted into head after tracking started', async () => {
+    const scriptUrl = 'https://cdn.example.com/dynamic.js'
+    let callback
+    global.window.NREUM.o.MO = jest.fn((cb) => { callback = cb; return { observe: jest.fn(), disconnect: jest.fn() } })
+    const mod = await freshImport()
+    mod.startScriptTracking()
+
+    const node = document.createElement('script')
+    node.src = scriptUrl
+    currentTime = 120
+    callback([{ addedNodes: [node] }])
+    currentTime = 180
+    node.dispatchEvent(new Event('load'))
+
+    const correlation = mod.findCorrelation(scriptUrl)
+    expect(correlation.dom.start).toBe(120)
+    expect(correlation.dom.end).toBe(180)
   })
 })

@@ -26,13 +26,23 @@ import { now } from '../../src/common/timing/now'
 import { warnings } from '../../src/loaders/api/register'
 import { single } from '../../src/common/util/invoke'
 import { warn } from '../../src/common/util/console'
+import { findScriptTimings } from '../../src/common/v2/script-tracker'
+import { trackMFEVitals } from '../../src/common/v2/mfe-vitals'
 
-// Mock script-tracker to avoid PerformanceObserver requirement
+// Mock script-tracker so register() tests control timings and can assert when script tracking is (not) engaged
 jest.mock('../../src/common/v2/script-tracker', () => {
+  const emptyTimings = () => ({ registeredAt: performance.now(), reportedAt: undefined, fetchStart: 0, fetchEnd: 0, scriptStart: 0, scriptEnd: 0, asset: undefined, type: 'unknown' })
   return {
-    findScriptTimings: jest.fn(() => ({ registeredAt: performance.now(), reportedAt: undefined, fetchStart: 0, fetchEnd: 0, scriptStart: 0, scriptEnd: 0, asset: undefined, type: 'unknown' }))
+    findScriptTimings: jest.fn(emptyTimings),
+    createTimings: jest.fn(emptyTimings),
+    applyManifestTimings: jest.fn()
   }
 })
+
+jest.mock('../../src/common/v2/mfe-vitals', () => ({
+  ...jest.requireActual('../../src/common/v2/mfe-vitals'),
+  trackMFEVitals: jest.fn(jest.requireActual('../../src/common/v2/mfe-vitals').trackMFEVitals)
+}))
 
 jest.retryTimes(0)
 
@@ -688,6 +698,38 @@ describe('API tests', () => {
         myApi.noticeError()
         myApi.log()
         expect(console.debug).toHaveBeenCalledTimes(2)
+      })
+
+      test('should not start script tracking when disabled', () => {
+        agent.init.api.register.enabled = false
+        findScriptTimings.mockClear()
+        agent.register({ id, name })
+        expect(findScriptTimings).not.toHaveBeenCalled()
+      })
+
+      test('should not track vitals when disabled, and still expose inert vitals', () => {
+        agent.init.api.register.enabled = false
+        trackMFEVitals.mockClear()
+        const myApi = agent.register({ id, name })
+        expect(trackMFEVitals).not.toHaveBeenCalled()
+        expect(myApi.metadata.vitals.fcp.value).toBeUndefined()
+        expect(() => myApi.deregister()).not.toThrow()
+      })
+
+      test('should not start script tracking for an invalid target', () => {
+        findScriptTimings.mockClear()
+        trackMFEVitals.mockClear()
+        agent.register({ id: '', name })
+        expect(findScriptTimings).not.toHaveBeenCalled()
+        expect(trackMFEVitals).not.toHaveBeenCalled()
+      })
+
+      test('should start script tracking for a valid, enabled registration', () => {
+        findScriptTimings.mockClear()
+        trackMFEVitals.mockClear()
+        agent.register({ id, name })
+        expect(findScriptTimings).toHaveBeenCalledTimes(1)
+        expect(trackMFEVitals).toHaveBeenCalledTimes(1)
       })
 
       test('should update custom attributes', () => {

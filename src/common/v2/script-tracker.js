@@ -6,7 +6,8 @@
 import { globalScope } from '../constants/runtime'
 import { now } from '../timing/now'
 import { cleanURL } from '../url/clean-url'
-import { chrome, chromeEval, gecko } from '../util/browser-stack-matchers'
+import { gosNREUMOriginals } from '../window/nreum'
+import { extractUrlsFromStack, getDeepStackTrace } from './stack-utils'
 import { ScriptCorrelation } from './script-correlation'
 import { CORRELATION_STALE_THRESHOLD_MS } from './script-tracker-constants'
 import { timingFactory } from './timing-factory'
@@ -18,13 +19,19 @@ import { timingFactory } from './timing-factory'
  * @typedef {import('./script-tracker-types').TimingsInternals} TimingsInternals
  */
 
-/** export for testing purposes */
+/**
+ * The URL of the file this module is evaluated from, so it can be filtered out of stacks in `findScriptTimings`. Derived
+ * from a stack created here (not via `getDeepStackTrace`) so it reflects this module's file even if the stack helpers
+ * are bundled into a different chunk. Export is for testing purposes.
+ */
 export let thisFile
 try {
-  thisFile = extractUrlsFromStack(getDeepStackTrace())[0]
+  thisFile = extractUrlsFromStack(new Error().stack)[0]
 } catch (err) {
-  thisFile = extractUrlsFromStack(err)[0]
+  // stack unavailable; leaves thisFile undefined
 }
+
+export { extractUrlsFromStack, getDeepStackTrace }
 
 /** @type {(entry: PerformanceEntry) => boolean} - A shared function to determine if a performance entry is a valid script or link resource for evaluation */
 const validEntryCriteria = entry => entry.initiatorType === 'script' || (['link', 'fetch'].includes(entry.initiatorType) && cleanURL(entry.name).endsWith('.js'))
@@ -97,52 +104,115 @@ function getOrCreateCorrelation (url) {
   return correlation
 }
 
-/** Set up a MutationObserver to detect script elements being added to the DOM */
-if (globalScope.MutationObserver && globalScope.document) {
-  const scriptMutationObserver = new MutationObserver((mutations) => {
+/** @type {boolean} whether tracking has been started. Tracking is lazy: nothing observes the page until an MFE registers. */
+let tracking = false
+
+/**
+ * Records the DOM-side data for a `<script src>` node into the correlation registry. The first node per URL wins, same
+ * as the performance entry, so duplicate references don't get redundant listeners.
+ * @param {HTMLScriptElement} node
+ * @param {Object} [opts]
+ * @param {number} [opts.observedAt] when the node was seen being inserted; omitted for nodes found by scanning, whose real insertion time is unknown
+ * @param {boolean} [opts.alwaysListen] attach load/error listeners even if the script's fetch has already completed (it may still be executing)
+ */
+function trackScriptNode (node, { observedAt, alwaysListen = true } = {}) {
+  if (!node?.src) return
+  const correlation = getOrCreateCorrelation(cleanURL(node.src))
+  if (correlation.dom.value) return
+
+  if (observedAt) correlation.dom.start = observedAt
+  correlation.dom.value = node
+
+  // A scanned node whose fetch already finished is usually fully loaded, so a listener would never fire -- except for the
+  // script currently executing, which has not dispatched `load` yet.
+  const mayStillComplete = alwaysListen || node === globalScope.document?.currentScript || !correlation.performance.value
+  if (!mayStillComplete) return
+  const setEnd = () => { correlation.dom.end = now() }
+  ;['load', 'error'].forEach(event => node.addEventListener(event, setEnd, { once: true }))
+}
+
+/**
+ * Scans the document for `<script src>` nodes that were never seen being inserted (added before tracking started, in a
+ * container that is not observed, or already removed by the time of scanning, in which case they are not found).
+ * @param {string} [onlyUrl] cleaned URL; when supplied, only matching nodes are tracked
+ */
+function scanScriptNodes (onlyUrl) {
+  try {
+    for (const node of globalScope.document?.scripts || []) {
+      if (node.src && (!onlyUrl || cleanURL(node.src) === onlyUrl)) trackScriptNode(node, { alwaysListen: false })
+    }
+  } catch (err) {
+    // never let DOM access errors break registration
+  }
+}
+
+/**
+ * Ensures the DOM node for a script URL is tracked, scanning the document if it was never observed. Used at
+ * register time for the calling script and for manifest script assets, covering scripts the narrow observer cannot see.
+ * @param {string} url cleaned script URL
+ */
+function ensureScriptNodeTracked (url) {
+  if (!tracking || findCorrelation(url)?.dom.value) return
+  scanScriptNodes(url)
+}
+
+/**
+ * Observes the places scripts are inserted. Deliberately does NOT observe the whole document subtree: that would run
+ * the callback for every unrelated DOM mutation anywhere in the host application. Loaders (e.g. webpack) append
+ * script tags directly to `<head>`/`<body>`, so those are watched for direct children only; scripts injected elsewhere
+ * are picked up by `ensureScriptNodeTracked` at register time instead.
+ */
+function observeScriptInsertions () {
+  // The constructor the agent captured at init (see nreum.js) rather than the current global, so that a library that
+  // patched MutationObserver after the agent loaded does not end up running our callback.
+  const MO = gosNREUMOriginals().o.MO
+  const doc = globalScope.document
+  if (!MO || !doc) return
+
+  const options = { childList: true }
+  const observer = new MO((mutations) => {
     mutations.forEach((mutation) => {
       mutation.addedNodes.forEach((node) => {
-        if (node.nodeName === 'SCRIPT' && node.src) {
-          const cleanedSrc = cleanURL(node.src)
-          const correlation = getOrCreateCorrelation(cleanedSrc)
-          /* The first node wins, same as the performance entry below. Skipping here also means no load/error listeners
-             are attached for duplicate references. */
-          if (correlation.dom.value) return
-
-          correlation.dom.start = now()
-          correlation.dom.value = node
-
-          const setEnd = () => { correlation.dom.end = now() }
-          ;['load', 'error'].forEach(event => node.addEventListener(event, setEnd, { once: true }))
-        }
+        if (node.nodeName === 'SCRIPT') trackScriptNode(node, { observedAt: now() })
+        // head/body may not have existed yet when tracking started
+        else if (node.nodeName === 'HEAD' || node.nodeName === 'BODY') observer.observe(node, options)
       })
     })
   })
-
-  scriptMutationObserver.observe(globalScope.document, {
-    childList: true,
-    subtree: true
-  })
+  ;[doc.documentElement, doc.head, doc.body].forEach(target => target && observer.observe(target, options))
 }
 
-if (globalScope.PerformanceObserver?.supportedEntryTypes.includes('resource')) {
+/**
+ * Stores a performance entry as the performance half of its script's correlation, if it is script-like.
+ * The first entry wins: a script referenced more than once is typically re-served from the browser cache, so a later
+ * entry for the same URL would overwrite the real network timing with a near-instant one.
+ * @param {PerformanceEntry} entry
+ */
+function recordPerformanceEntry (entry) {
+  // Correlation bookkeeping only makes sense for script-like entries -- gated on validEntryCriteria so
+  // scriptCorrelations doesn't grow for every image/css/font load on the page.
+  if (!validEntryCriteria(entry)) return
+  const correlation = getOrCreateCorrelation(cleanURL(entry.name))
+  if (!correlation.performance.value) {
+    correlation.performance.start = Math.floor(entry.startTime)
+    correlation.performance.end = Math.floor(entry.responseEnd)
+    correlation.performance.value = entry
+  }
+}
+
+/** Observes resource timing for the rest of the page's life, and seeds correlations from entries that already exist. */
+function observeResources () {
+  if (!globalScope.PerformanceObserver?.supportedEntryTypes?.includes('resource')) return
+
+  // Seeded synchronously: the observer's buffered delivery is async, but the first register() reads correlations
+  // immediately. Duplicates from the observer's buffered replay are ignored (first entry wins).
+  globalScope.performance?.getEntriesByType?.('resource')?.forEach(recordPerformanceEntry)
+
   // Tracked via an observer (not a later buffer read) because the performance buffer stops accepting new entries
   // once full, instead of dropping old ones -- a late register() call could otherwise miss timing entirely.
   const scriptObserver = new PerformanceObserver((list) => {
     list.getEntries().forEach((entry) => {
-      // Correlation bookkeeping only makes sense for script-like entries -- gated on validEntryCriteria so
-      // scriptCorrelations doesn't grow for every image/css/font load on the page.
-      if (validEntryCriteria(entry)) {
-        const entryUrl = cleanURL(entry.name)
-        const correlation = getOrCreateCorrelation(entryUrl)
-        /* The first entry wins. A script referenced more than once is typically re-served from the browser cache, so a
-           later entry for the same URL would overwrite the real network timing with a near-instant one. */
-        if (!correlation.performance.value) {
-          correlation.performance.start = Math.floor(entry.startTime)
-          correlation.performance.end = Math.floor(entry.responseEnd)
-          correlation.performance.value = entry
-        }
-      }
+      recordPerformanceEntry(entry)
 
       // Late-resolution subscribers can be for any asset type (not just scripts), so every entry is checked here,
       // unfiltered. Skipped when nothing is pending, the common case.
@@ -159,47 +229,16 @@ if (globalScope.PerformanceObserver?.supportedEntryTypes.includes('resource')) {
 }
 
 /**
- * Extracts URLs from stack traces using the same logic as compute-stack-trace.js
- * @param {string} stack The error stack trace
- * @returns {string[]} Array of cleaned URLs found in the stack trace
+ * Starts script tracking (DOM insertions + resource timing). Idempotent. Intentionally not run at import: it is only
+ * called once an MFE is actually being registered, so agents that never use `register()` never observe the page.
  */
-export function extractUrlsFromStack (stack) {
-  if (!stack || typeof stack !== 'string') return []
-
-  const urls = new Set()
-  const lines = stack.split('\n')
-
-  for (const line of lines) {
-    // Try gecko format first, then chrome
-    const parts = line.match(gecko) || line.match(chrome) || line.match(chromeEval)
-    if (parts && parts[2]) {
-      urls.add(cleanURL(parts[2]))
-    } else {
-      // Fallback: match URLs using a generic .js pattern (non-greedy to handle ports and query params)
-      const fallbackMatch = line.match(/\(([^)]+\.js):\d+:\d+\)/) || line.match(/^\s+at\s+([^\s(]+\.js):\d+:\d+/)
-      if (fallbackMatch && fallbackMatch[1]) {
-        urls.add(cleanURL(fallbackMatch[1]))
-      }
-    }
-  }
-  return [...urls]
-}
-
-/**
- * Returns a deep stack trace by temporarily increasing the stack trace limit.
- * @returns {Error.stack | undefined}
- */
-export function getDeepStackTrace () {
-  let stack
-  try {
-    const originalStackLimit = Error.stackTraceLimit
-    Error.stackTraceLimit = 50
-    stack = new Error().stack
-    Error.stackTraceLimit = originalStackLimit
-  } catch (e) {
-    stack = new Error().stack
-  }
-  return stack
+export function startScriptTracking () {
+  if (tracking) return
+  tracking = true
+  // order matters: performance entries first, so scanned nodes can tell whether their fetch has already completed
+  observeResources()
+  observeScriptInsertions()
+  scanScriptNodes()
 }
 
 /**
@@ -328,6 +367,7 @@ function applyManifestEntry (timings, entry, asset, entryState, timingMethod) {
 
   // Non-script assets never execute, so only script assets widen the execution window or anchor asset/type.
   if (asset.isScript) {
+    ensureScriptNodeTracked(cleanURL(entry.name))
     const correlation = findCorrelation(cleanURL(entry.name))
     if (correlation) {
       // Widens the aggregate scriptStart/scriptEnd window with this asset's current correlation timing. Re-called
@@ -399,6 +439,7 @@ export function applyManifestTimings (timings, target) {
   const parsedManifest = target?.manifest
   if (!parsedManifest || !parsedManifest.assets.length) return
 
+  startScriptTracking()
   const entryState = { resolved: false }
   const { assets } = parsedManifest
 
@@ -414,14 +455,23 @@ export function applyManifestTimings (timings, target) {
 }
 
 /**
+ * Creates an empty timings object with every value at its "not yet known" default, without inspecting the page.
+ * @returns {RegisterAPITimings}
+ */
+export function createTimings () {
+  return { registeredAt: now(), reportedAt: undefined, fetchStart: 0, fetchEnd: 0, scriptStart: 0, scriptEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+}
+
+/**
  * Uses the initiator function's stack to find script timing information via the resource timing API.
  * @param {RegisterAPITarget} [target] - the MFE target being registered; its id scopes stale-correlation
  * detection per-MFE rather than per-script-URL (see isCorrelationStale below)
  * @returns {RegisterAPITimings} Object containing script fetch start and end times, and the asset URL if found
  */
 export function findScriptTimings (target) {
+  startScriptTracking() // lazy: first MFE registration is what turns tracking on
   const mfeId = target?.id
-  const timings = { registeredAt: now(), reportedAt: undefined, fetchStart: 0, fetchEnd: 0, scriptStart: 0, scriptEnd: 0, asset: undefined, type: 'unknown', totalWeight: 0, renderBlocking: undefined }
+  const timings = createTimings()
   const stack = getDeepStackTrace()
   if (!stack) return timings
 
@@ -440,7 +490,8 @@ export function findScriptTimings (target) {
       return timings
     }
 
-    // Get correlation data
+    // Get correlation data. The caller's node may have been inserted somewhere the narrow observer doesn't watch.
+    ensureScriptNodeTracked(mfeScriptUrl)
     timings.correlation = findCorrelation(mfeScriptUrl)
 
     // Use correlation's performance entry if available, otherwise check the live performance API before falling back to the buffered observer.

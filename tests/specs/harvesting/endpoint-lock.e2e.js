@@ -68,7 +68,14 @@ describe('harvest endpoint cannot be redirected at runtime', () => {
       agent.info.errorBeacon = 'attacker.example.com'
     })
 
-    const metricsHarvests = await metricsCapture.waitForResult({ timeout: 30000 })
+    /* The attempts are flagged when they happen and reported by the next harvest, so trigger one first. The metric is
+       then sent with a later metrics harvest. */
+    await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
+      browser.execute(function () { newrelic.noticeError(new Error('endpoint lock')) })
+    ])
+
+    const metricsHarvests = await metricsCapture.waitForResult({ timeout: 60000 })
     const names = metricsHarvests.flatMap(harvest => harvest.request.body.sm || []).map(sm => sm.params.name)
 
     expect(names).toContain('Config/Locked/info.licenseKey/Changed')

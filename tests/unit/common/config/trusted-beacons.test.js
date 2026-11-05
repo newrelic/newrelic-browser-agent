@@ -2,15 +2,9 @@
  * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { trustBeacons, isTrustedBeacon } from '../../../../src/common/config/trusted-beacons'
-import { handle } from '../../../../src/common/event-emitter/handle'
-
-jest.mock('../../../../src/common/event-emitter/handle', () => ({ handle: jest.fn() }))
-
-beforeEach(() => jest.clearAllMocks())
+import { trustBeacons, isTrustedBeacon, takeLockedWrites } from '../../../../src/common/config/trusted-beacons'
 
 const buildAgent = (proxy = {}) => ({
-  ee: { name: 'ee' },
   info: { beacon: 'bam.nr-data.net', errorBeacon: 'bam.nr-data.net', licenseKey: 'abc', jsAttributes: {} },
   init: { proxy }
 })
@@ -74,9 +68,7 @@ describe('trustBeacons', () => {
   })
 })
 
-describe('locked config write reporting', () => {
-  const metricNames = () => handle.mock.calls.map(call => call[1][0])
-
+describe('takeLockedWrites', () => {
   test.each([
     ['info.beacon', agent => { agent.info.beacon = 'evil.example.com' }],
     ['info.errorBeacon', agent => { agent.info.errorBeacon = 'evil.example.com' }],
@@ -84,23 +76,36 @@ describe('locked config write reporting', () => {
     ['info.applicationID', agent => { agent.info.applicationID = '999' }],
     ['proxy.beacon', agent => { agent.init.proxy.beacon = 'evil.example.com' }],
     ['proxy.assets', agent => { agent.init.proxy.assets = 'https://evil.example.com' }]
-  ])('reports a write to %s as a supportability metric', (label, write) => {
+  ])('returns %s after a write to it', (label, write) => {
     const agent = buildAgent({ beacon: 'proxy.example.com/nr', assets: 'https://assets.example.com' })
     agent.info.applicationID = '123'
     trustBeacons(agent)
     write(agent)
 
-    expect(handle).toHaveBeenCalledWith('storeSupportabilityMetrics', [`Config/Locked/${label}/Changed`], undefined, 'metrics', agent.ee)
+    expect(takeLockedWrites(agent)).toEqual([label])
   })
 
-  test('does not report when nothing is written', () => {
+  test('returns each property once and clears them once taken', () => {
+    const agent = buildAgent()
+    trustBeacons(agent)
+    agent.info.licenseKey = 'evil'
+    agent.info.licenseKey = 'evil again'
+
+    expect(takeLockedWrites(agent)).toEqual(['info.licenseKey'])
+    expect(takeLockedWrites(agent)).toEqual([])
+  })
+
+  test('returns nothing when nothing was written, including reads and copies', () => {
     const agent = buildAgent({ beacon: 'proxy.example.com/nr' })
     trustBeacons(agent)
-    const { beacon, errorBeacon, licenseKey } = agent.info
     const copy = { ...agent.info, ...agent.init.proxy }
 
-    expect([beacon, errorBeacon, licenseKey, copy.beacon]).toEqual(['bam.nr-data.net', 'bam.nr-data.net', 'abc', 'proxy.example.com/nr'])
-    expect(metricNames()).toEqual([])
+    expect(copy.errorBeacon).toBe('bam.nr-data.net')
+    expect(takeLockedWrites(agent)).toEqual([])
+  })
+
+  test('returns nothing for an agent that was never configured', () => {
+    expect(takeLockedWrites({})).toEqual([])
   })
 })
 

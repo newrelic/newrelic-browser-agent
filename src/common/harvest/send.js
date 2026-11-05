@@ -14,7 +14,8 @@ import { warn } from '../util/console'
 import { stringify } from '../util/stringify'
 import { xhr as xhrMethod, xhrFetch as fetchMethod, getSubmitMethod } from '../util/submit-data'
 import { dispatchGlobalEvent } from '../dispatch/global-event'
-import { isTrustedBeacon } from '../config/trusted-beacons'
+import { isTrustedBeacon, takeLockedWrites } from '../config/trusted-beacons'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 
 /**
  * @typedef {import('./types.js').NetworkSendSpec} NetworkSendSpec
@@ -41,6 +42,9 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
 
   const protocol = agentRef.init.ssl === false ? 'http' : 'https'
   const perceivedBeacon = agentRef.init.proxy.beacon || agentRef.info.errorBeacon
+
+  /* Report attempts to change locked config. The loader only flags them, so the supportability metric costs nothing there. */
+  takeLockedWrites(agentRef).forEach(label => handle(SUPPORTABILITY_METRIC_CHANNEL, [`Config/Locked/${label}/Changed`], undefined, FEATURE_NAMES.metrics, agentRef.ee))
 
   /* Only send to an endpoint the agent was configured with. Checking at send time, in addition to making the config
      read-only, catches a changed destination however it came about (e.g. the config object being replaced). */

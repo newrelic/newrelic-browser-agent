@@ -1,28 +1,14 @@
 import fs from 'fs'
 import path from 'path'
 import * as core from '@actions/core'
-import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts'
 import { S3Client, HeadObjectCommand, NotFound } from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
 import mime from 'mime-types'
 import { getAssetCacheHeader } from '../shared-utils/asset-cache.js'
 import { args } from './args.js'
 
-const stsClient = new STSClient({ region: args.region })
-const s3Credentials = await stsClient.send(new AssumeRoleCommand({
-  RoleArn: args.role,
-  RoleSessionName: 'uploadToS3Session',
-  DurationSeconds: 900
-}))
-
-const s3Client = new S3Client({
-  region: args.region,
-  credentials: {
-    accessKeyId: s3Credentials.Credentials.AccessKeyId,
-    secretAccessKey: s3Credentials.Credentials.SecretAccessKey,
-    sessionToken: s3Credentials.Credentials.SessionToken
-  }
-})
+/* Credentials come from the default provider chain, populated by the OIDC login step in action.yml */
+const s3Client = new S3Client({ region: args.region })
 
 const uploadCommandParams = (await fs.promises.readdir(args.input, { withFileTypes: true }))
   .filter(file => file.isFile())

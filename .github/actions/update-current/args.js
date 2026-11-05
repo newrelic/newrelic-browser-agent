@@ -5,9 +5,6 @@ import { hideBin } from 'yargs/helpers'
 export const args = yargs(hideBin(process.argv))
   .usage('$0 [options]')
 
-  .string('role')
-  .describe('role', 'S3 role ARN')
-
   .string('bucket')
   .describe('bucket', 'S3 bucket name')
 
@@ -23,5 +20,5 @@ export const args = yargs(hideBin(process.argv))
   .describe('dry', 'Runs the action script without actually uploading files.')
   .alias('dry', 'dry-run')
 
-  .demandOption(['bucket', 'role', 'loader-version'])
+  .demandOption(['bucket', 'loader-version'])
   .argv

@@ -5,9 +5,6 @@ import { hideBin } from 'yargs/helpers'
 export const args = yargs(hideBin(process.argv))
   .usage('$0 [options]')
 
-  .string('role')
-  .describe('role', 'S3 role ARN')
-
   .string('bucket')
   .describe('bucket', 'S3 bucket name')
 
@@ -23,5 +20,5 @@ export const args = yargs(hideBin(process.argv))
   .string('dir')
   .describe('dir', 'Bucket sub-directory name. Leave empty to refer to the root of the bucket.')
 
-  .demandOption(['bucket', 'role'])
+  .demandOption(['bucket'])
   .argv

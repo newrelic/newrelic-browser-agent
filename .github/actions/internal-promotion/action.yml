@@ -14,12 +14,6 @@ inputs:
   nrba_released_script_url:
     description: 'URL for the script to use as the released version NRBA loader.'
     required: true
-  aws_access_key_id:
-    description: 'AWS access key id used for authentication.'
-    required: true
-  aws_secret_access_key:
-    description: 'AWS secret access key used for authentication.'
-    required: true
   aws_region:
     description: "AWS region where S3 bucket is located."
     required: false
@@ -51,9 +45,6 @@ runs:
         INPUT_LICENSE_KEY: ${{ inputs.nrba_license_key }}
         INPUT_REGION: ${{ inputs.aws_region }}
         INPUT_BUCKET: ${{ inputs.aws_bucket_name }}
-        INPUT_ROLE: ${{ inputs.aws_role }}
-        AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
-        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
       run: |
         node "$GITHUB_ACTION_PATH/index.js" \
           --environment "$INPUT_NR_ENVIRONMENT" \
@@ -61,8 +52,7 @@ runs:
           --app-id "$INPUT_APP_ID" \
           --license-key "$INPUT_LICENSE_KEY" \
           --region "$INPUT_REGION" \
-          --bucket "$INPUT_BUCKET" \
-          --role "$INPUT_ROLE"
+          --bucket "$INPUT_BUCKET"
       shell: bash
 
     - run: echo '=========================== Uploading Released Asset ==========================='
@@ -71,8 +61,6 @@ runs:
       id: s3-upload
       uses: ./.github/actions/s3-upload
       with:
-        aws_access_key_id: ${{ inputs.aws_access_key_id }}
-        aws_secret_access_key: ${{ inputs.aws_secret_access_key }}
         aws_role: ${{ inputs.aws_role }}
         aws_bucket_name: ${{ inputs.aws_bucket_name }}
         local_dir: $GITHUB_WORKSPACE/temp/internal-promotion

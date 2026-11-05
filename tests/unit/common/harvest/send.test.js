@@ -82,6 +82,8 @@ describe('send destination', () => {
     const { trustBeacons: freshTrust } = await import('../../../../src/common/config/trusted-beacons')
     const { warn: freshWarn } = await import('../../../../src/common/util/console')
     const agent = buildAgent()
+    agent.info = { ...agent.info }
+    agent.init = { ...agent.init, proxy: { ...agent.init.proxy } }
     freshTrust(agent)
     agent.info = { ...agent.info, errorBeacon: 'evil.example.com' }
 

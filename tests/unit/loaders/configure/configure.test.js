@@ -82,8 +82,8 @@ describe('configure harvest endpoint lock', () => {
     const agent = buildAgent()
     configure(agent, buildOpts(), 'test-loader')
 
-    expect(() => { agent.info.licenseKey = 'evil' }).toThrow(TypeError)
-    expect(() => { agent.info.applicationID = '999' }).toThrow(TypeError)
+    agent.info.licenseKey = 'evil'
+    agent.info.applicationID = '999'
     expect(agent.info.licenseKey).toBe('license')
     expect(agent.info.applicationID).toBe('123')
   })
@@ -92,9 +92,9 @@ describe('configure harvest endpoint lock', () => {
     const agent = buildAgent()
     configure(agent, buildOpts({ beacon: 'proxy.example.com/nr' }), 'test-loader')
 
-    expect(() => { agent.info.errorBeacon = 'evil.example.com' }).toThrow(TypeError)
-    expect(() => { agent.init.proxy.beacon = 'evil.example.com' }).toThrow(TypeError)
-    expect(() => { agent.init.proxy.assets = 'https://evil.example.com' }).toThrow(TypeError)
+    agent.info.errorBeacon = 'evil.example.com'
+    agent.init.proxy.beacon = 'evil.example.com'
+    agent.init.proxy.assets = 'https://evil.example.com'
     expect(isTrustedBeacon(agent, 'proxy.example.com/nr')).toBe(true)
     expect(isTrustedBeacon(agent, 'evil.example.com')).toBe(false)
   })

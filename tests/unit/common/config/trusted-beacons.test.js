@@ -3,8 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { trustBeacons, isTrustedBeacon } from '../../../../src/common/config/trusted-beacons'
+import { handle } from '../../../../src/common/event-emitter/handle'
+
+jest.mock('../../../../src/common/event-emitter/handle', () => ({ handle: jest.fn() }))
+
+beforeEach(() => jest.clearAllMocks())
 
 const buildAgent = (proxy = {}) => ({
+  ee: { name: 'ee' },
   info: { beacon: 'bam.nr-data.net', errorBeacon: 'bam.nr-data.net', licenseKey: 'abc', jsAttributes: {} },
   init: { proxy }
 })
@@ -14,8 +20,8 @@ describe('trustBeacons', () => {
     const agent = buildAgent()
     trustBeacons(agent)
 
-    expect(() => { agent.info.errorBeacon = 'evil.example.com' }).toThrow(TypeError)
-    expect(() => { agent.info.beacon = 'evil.example.com' }).toThrow(TypeError)
+    agent.info.errorBeacon = 'evil.example.com'
+    agent.info.beacon = 'evil.example.com'
     expect(() => Object.defineProperty(agent.info, 'errorBeacon', { value: 'evil.example.com' })).toThrow(TypeError)
     expect(agent.info.errorBeacon).toBe('bam.nr-data.net')
   })
@@ -25,8 +31,8 @@ describe('trustBeacons', () => {
     agent.info.applicationID = '123'
     trustBeacons(agent)
 
-    expect(() => { agent.info.licenseKey = 'evil' }).toThrow(TypeError)
-    expect(() => { agent.info.applicationID = '999' }).toThrow(TypeError)
+    agent.info.licenseKey = 'evil'
+    agent.info.applicationID = '999'
     expect(() => Object.defineProperty(agent.info, 'licenseKey', { value: 'evil' })).toThrow(TypeError)
     expect(() => Object.defineProperty(agent.info, 'applicationID', { value: '999' })).toThrow(TypeError)
     expect(agent.info.licenseKey).toBe('abc')
@@ -37,7 +43,7 @@ describe('trustBeacons', () => {
     const agent = buildAgent({ beacon: 'proxy.example.com/nr' })
     trustBeacons(agent)
 
-    expect(() => { agent.init.proxy.beacon = 'evil.example.com' }).toThrow(TypeError)
+    agent.init.proxy.beacon = 'evil.example.com'
     expect(agent.init.proxy.beacon).toBe('proxy.example.com/nr')
   })
 
@@ -45,7 +51,7 @@ describe('trustBeacons', () => {
     const agent = buildAgent({ assets: 'https://assets.example.com' })
     trustBeacons(agent)
 
-    expect(() => { agent.init.proxy.assets = 'https://evil.example.com' }).toThrow(TypeError)
+    agent.init.proxy.assets = 'https://evil.example.com'
     expect(() => Object.defineProperty(agent.init.proxy, 'assets', { value: 'https://evil.example.com' })).toThrow(TypeError)
     expect(agent.init.proxy.assets).toBe('https://assets.example.com')
   })
@@ -65,6 +71,36 @@ describe('trustBeacons', () => {
     agent.info.userAttributes = 'x'
     expect(agent.info.jsAttributes.foo).toBe('bar')
     expect(agent.info.userAttributes).toBe('x')
+  })
+})
+
+describe('locked config write reporting', () => {
+  const metricNames = () => handle.mock.calls.map(call => call[1][0])
+
+  test.each([
+    ['info.beacon', agent => { agent.info.beacon = 'evil.example.com' }],
+    ['info.errorBeacon', agent => { agent.info.errorBeacon = 'evil.example.com' }],
+    ['info.licenseKey', agent => { agent.info.licenseKey = 'evil' }],
+    ['info.applicationID', agent => { agent.info.applicationID = '999' }],
+    ['proxy.beacon', agent => { agent.init.proxy.beacon = 'evil.example.com' }],
+    ['proxy.assets', agent => { agent.init.proxy.assets = 'https://evil.example.com' }]
+  ])('reports a write to %s as a supportability metric', (label, write) => {
+    const agent = buildAgent({ beacon: 'proxy.example.com/nr', assets: 'https://assets.example.com' })
+    agent.info.applicationID = '123'
+    trustBeacons(agent)
+    write(agent)
+
+    expect(handle).toHaveBeenCalledWith('storeSupportabilityMetrics', [`Config/Locked/${label}/Changed`], undefined, 'metrics', agent.ee)
+  })
+
+  test('does not report when nothing is written', () => {
+    const agent = buildAgent({ beacon: 'proxy.example.com/nr' })
+    trustBeacons(agent)
+    const { beacon, errorBeacon, licenseKey } = agent.info
+    const copy = { ...agent.info, ...agent.init.proxy }
+
+    expect([beacon, errorBeacon, licenseKey, copy.beacon]).toEqual(['bam.nr-data.net', 'bam.nr-data.net', 'abc', 'proxy.example.com/nr'])
+    expect(metricNames()).toEqual([])
   })
 })
 

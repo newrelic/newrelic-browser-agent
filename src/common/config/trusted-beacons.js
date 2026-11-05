@@ -2,6 +2,9 @@
  * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+import { handle } from '../event-emitter/handle'
+import { FEATURE_NAMES } from '../../loaders/features/features'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 
 /*
  * The beacon endpoints each agent was configured with. This is kept in module scope rather than on the agent
@@ -9,6 +12,24 @@
  * @type {WeakMap<object, Set<string>>}
  */
 const trustedBeacons = new WeakMap()
+
+/**
+ * Replaces a property with a read-only accessor. Writes are ignored (rather than thrown) and reported, so a page script
+ * attempting to change locked config is visible in supportability metrics. The property can't be redefined afterwards.
+ * @param {object} target The object holding the property.
+ * @param {string} key The property to lock.
+ * @param {string} label How the property is named in the supportability metric, e.g. `info.licenseKey`.
+ * @param {object} agent The agent instance, used to report write attempts.
+ */
+function lockProperty (target, key, label, agent) {
+  const value = target[key]
+  Object.defineProperty(target, key, {
+    get: () => value,
+    set: () => handle(SUPPORTABILITY_METRIC_CHANNEL, [`Config/Locked/${label}/Changed`], undefined, FEATURE_NAMES.metrics, agent.ee),
+    enumerable: true,
+    configurable: false
+  })
+}
 
 /**
  * Records the harvest endpoints an agent was configured with and makes them, along with the license key and application ID, read-only on the agent. This is called each
@@ -21,11 +42,13 @@ export function trustBeacons (agent) {
 
   /* licenseKey and applicationID decide which account and entity the data is reported to, so they get the same
      protection as the endpoints: a late write could otherwise re-route harvests to another account. */
-  ;['beacon', 'errorBeacon', 'licenseKey', 'applicationID'].forEach(key => Object.defineProperty(agent.info, key, { writable: false, configurable: false }))
+  ;['beacon', 'errorBeacon', 'licenseKey', 'applicationID'].forEach(key => lockProperty(agent.info, key, `info.${key}`, agent))
   /* The model's own `proxy` object can be shared between agents, so freeze a copy rather than the original.
      This covers `proxy.assets` too. It is only read while configuring (it sets the path lazy chunks load from, which
      lives inside the bundle), so freezing it is sufficient and there is nothing to check at chunk-load time. */
-  agent.init.proxy = Object.freeze({ ...agent.init.proxy })
+  const proxy = { ...agent.init.proxy }
+  ;['beacon', 'assets'].forEach(key => lockProperty(proxy, key, `proxy.${key}`, agent))
+  agent.init.proxy = Object.freeze(proxy)
 }
 
 /**

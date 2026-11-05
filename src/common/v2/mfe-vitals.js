@@ -116,6 +116,22 @@ const observePerformance = (observers, config, onEntry) => {
 }
 
 /**
+ * Creates a vitals object with the same shape `trackMFEVitals` returns, but that observes nothing. Used for
+ * registrations that are blocked (register disabled, invalid id/name), which must not start observers or listeners
+ * on the page but whose API still exposes `metadata.vitals` and may still call `deregister()`.
+ * @returns {RegisterAPIVitals} vitals whose values stay `undefined`, with a no-op `disconnect`
+ */
+export function createInertVitals () {
+  return {
+    fcp: { value: undefined },
+    lcp: { value: undefined },
+    cls: { value: undefined },
+    inp: { value: undefined },
+    disconnect: () => {}
+  }
+}
+
+/**
  * Tracks all Core Web Vitals for a specific MFE.
  * @param {RegisterAPITarget} target - The MFE target to track vitals for
  * @param {RegisterAPITimings} timings - The timings object to use for relative time calculations

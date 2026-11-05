@@ -17,8 +17,8 @@ import { single } from '../../common/util/invoke'
 import { measure } from './measure'
 import { recordCustomEvent } from './recordCustomEvent'
 import { subscribeToPageUnload } from '../../common/window/page-visibility'
-import { findScriptTimings, applyManifestTimings } from '../../common/v2/script-tracker'
-import { trackMFEVitals } from '../../common/v2/mfe-vitals'
+import { findScriptTimings, applyManifestTimings, createTimings, startScriptTracking } from '../../common/v2/script-tracker'
+import { trackMFEVitals, createInertVitals } from '../../common/v2/mfe-vitals'
 import { generateRandomHexString } from '../../common/ids/unique-id'
 import { parseManifest } from '../../common/v2/manifest'
 import { cleanURL } from '../../common/url/clean-url'
@@ -63,6 +63,11 @@ export const warnings = {
  * It is not recommended for use in production environments and will not receive support for issues.
  */
 export function setupRegisterAPI (agent) {
+  /* Script tracking records things that can only be observed before an MFE registers (a script's load/error completion, resource
+     entries that the performance buffer may later drop). The register API is opt-in configuration known at init, so tracking starts
+     here for agents that enabled it -- and never for agents that did not. A later enablement still starts tracking from
+     register() itself, just without that earlier history. */
+  if (agent.init.api.register.enabled) startScriptTracking()
   setupAPI(REGISTER, function (target) {
     return register(agent, target)
   }, agent)
@@ -94,14 +99,19 @@ function register (agentRef, target) {
     target.timingMethod = undefined
   }
 
+  /* Script tracking is lazy and only turned on by a registration that can actually work. A call that is going to be
+     blocked (register disabled, or an invalid id/name -- see the `block()` checks below) must not start observing the page. */
+  const canRegister = !!agentRef.init.api.register.enabled && hasValidValue(target.id) && hasValidValue(target.name)
+
   // The script timings for this entity, which will be used to populate part of the MicroFrontEndTiming custom event.
-  const timings = findScriptTimings(target)
+  const timings = canRegister ? findScriptTimings(target) : createTimings()
   // Always applied when a manifest is present -- totalWeight/renderBlocking accumulate from manifest assets
   // regardless of timingMethod; actual timing widening inside stays gated to 'scripts'/'all' (see applyManifestTimings).
-  if (target.manifest) applyManifestTimings(timings, target)
+  if (canRegister && target.manifest) applyManifestTimings(timings, target)
 
   // Track MFE vitals for this entity, which will be used to populate part of the MicroFrontEndTiming custom event.
-  const vitals = trackMFEVitals(target, timings)
+  // A blocked registration gets an inert stand-in instead, so it never starts observers or listeners on the page.
+  const vitals = canRegister ? trackMFEVitals(target, timings) : createInertVitals()
 
   // the URL of the page at the time this entity was registered, which will be used to populate part of the MicroFrontEndTiming custom event.
   const registerUrl = cleanURL('' + location)

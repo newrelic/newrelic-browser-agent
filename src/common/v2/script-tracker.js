@@ -104,7 +104,7 @@ function getOrCreateCorrelation (url) {
   return correlation
 }
 
-/** @type {boolean} whether tracking has been started. Tracking is lazy: nothing observes the page until an MFE registers. */
+/** @type {boolean} whether tracking has been started. Nothing observes the page until the register API is enabled or an MFE registers. */
 let tracking = false
 
 /**
@@ -229,8 +229,10 @@ function observeResources () {
 }
 
 /**
- * Starts script tracking (DOM insertions + resource timing). Idempotent. Intentionally not run at import: it is only
- * called once an MFE is actually being registered, so agents that never use `register()` never observe the page.
+ * Starts script tracking (DOM insertions + resource timing). Idempotent. Intentionally not run at import: it is started
+ * when the register API is enabled for an agent (see `setupRegisterAPI`), or at the latest by the first MFE registration,
+ * so agents that never use `register()` never observe the page. Starting earlier is better for fidelity: a script's
+ * load/error completion and resource entries dropped from a full performance buffer cannot be recovered afterwards.
  */
 export function startScriptTracking () {
   if (tracking) return
@@ -469,7 +471,7 @@ export function createTimings () {
  * @returns {RegisterAPITimings} Object containing script fetch start and end times, and the asset URL if found
  */
 export function findScriptTimings (target) {
-  startScriptTracking() // lazy: first MFE registration is what turns tracking on
+  startScriptTracking() // normally already running (see setupRegisterAPI); this covers the register API being enabled after init
   const mfeId = target?.id
   const timings = createTimings()
   const stack = getDeepStackTrace()

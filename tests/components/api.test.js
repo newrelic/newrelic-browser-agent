@@ -23,10 +23,10 @@ import { setupConsentAPI } from '../../src/loaders/api/consent'
 import { setTopLevelCallers } from '../../src/loaders/api/topLevelCallers'
 import { gosCDN } from '../../src/common/window/nreum'
 import { now } from '../../src/common/timing/now'
-import { warnings } from '../../src/loaders/api/register'
+import { warnings, setupRegisterAPI } from '../../src/loaders/api/register'
 import { single } from '../../src/common/util/invoke'
 import { warn } from '../../src/common/util/console'
-import { findScriptTimings } from '../../src/common/v2/script-tracker'
+import { findScriptTimings, startScriptTracking } from '../../src/common/v2/script-tracker'
 import { trackMFEVitals } from '../../src/common/v2/mfe-vitals'
 
 // Mock script-tracker so register() tests control timings and can assert when script tracking is (not) engaged
@@ -35,7 +35,8 @@ jest.mock('../../src/common/v2/script-tracker', () => {
   return {
     findScriptTimings: jest.fn(emptyTimings),
     createTimings: jest.fn(emptyTimings),
-    applyManifestTimings: jest.fn()
+    applyManifestTimings: jest.fn(),
+    startScriptTracking: jest.fn()
   }
 })
 
@@ -653,6 +654,20 @@ describe('API tests', () => {
         warnings.deregistered = single(() => warn(68))
         warnings.duplicateName = single((target) => warn(81, target))
         warnings.duplicateId = single((target) => warn(82, target))
+      })
+
+      test('should start script tracking when the register API is set up with it enabled', () => {
+        agent.init.api.register.enabled = true
+        startScriptTracking.mockClear()
+        setupRegisterAPI(agent)
+        expect(startScriptTracking).toHaveBeenCalledTimes(1)
+      })
+
+      test('should not start script tracking when the register API is set up with it disabled', () => {
+        agent.init.api.register.enabled = false
+        startScriptTracking.mockClear()
+        setupRegisterAPI(agent)
+        expect(startScriptTracking).not.toHaveBeenCalled()
       })
 
       test('should return api object', () => {

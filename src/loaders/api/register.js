@@ -17,7 +17,7 @@ import { single } from '../../common/util/invoke'
 import { measure } from './measure'
 import { recordCustomEvent } from './recordCustomEvent'
 import { subscribeToPageUnload } from '../../common/window/page-visibility'
-import { findScriptTimings, applyManifestTimings, createTimings } from '../../common/v2/script-tracker'
+import { findScriptTimings, applyManifestTimings, createTimings, startScriptTracking } from '../../common/v2/script-tracker'
 import { trackMFEVitals, createInertVitals } from '../../common/v2/mfe-vitals'
 import { generateRandomHexString } from '../../common/ids/unique-id'
 import { parseManifest } from '../../common/v2/manifest'
@@ -63,6 +63,11 @@ export const warnings = {
  * It is not recommended for use in production environments and will not receive support for issues.
  */
 export function setupRegisterAPI (agent) {
+  /* Script tracking records things that can only be observed before an MFE registers (a script's load/error completion, resource
+     entries that the performance buffer may later drop). The register API is opt-in configuration known at init, so tracking starts
+     here for agents that enabled it -- and never for agents that did not. A later enablement still starts tracking from
+     register() itself, just without that earlier history. */
+  if (agent.init.api.register.enabled) startScriptTracking()
   setupAPI(REGISTER, function (target) {
     return register(agent, target)
   }, agent)

@@ -4,10 +4,11 @@
  */
 
 /*
- * Script tracking (the DOM + resource-timing bookkeeping behind register() timings) must only run once an MFE is
- * registered, and must not watch the whole document subtree. See src/common/v2/script-tracker.js.
+ * Script tracking (the DOM + resource-timing bookkeeping behind register() timings) is opt-in with the register API: it
+ * starts at agent init when the API is enabled, never otherwise, and watches only direct children of html/head/body.
+ * See src/common/v2/script-tracker.js.
  */
-describe('Register API - lazy script tracking', () => {
+describe('Register API - script tracking only runs when the register API is enabled', () => {
   afterEach(async () => {
     await browser.destroyAgentSession()
   })
@@ -17,47 +18,41 @@ describe('Register API - lazy script tracking', () => {
     return window.__observeCalls.filter(call => call.childList && !call.subtree && ['HTML', 'HEAD', 'BODY'].includes(call.nodeName))
   })
 
-  const getDocumentSubtreeObserveCount = () => browser.execute(function () {
-    return window.__observeCalls.filter(call => call.nodeName === '#document' && call.subtree).length
-  })
-
-  it('does not start script tracking for an agent that never registers an MFE', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented-with-observer-spy.html', {
-      init: { feature_flags: ['register'] }
-    }))
+  it('does not start script tracking when the register API is not enabled', async () => {
+    await browser.url(await browser.testHandle.assetURL('instrumented-with-observer-spy.html'))
       .then(() => browser.waitForAgentLoad())
+
+    // even an attempted (blocked) registration must not turn tracking on
+    await browser.execute(function () {
+      newrelic.register({ id: 'blocked-mfe', name: 'blocked-mfe' })
+    })
 
     expect(await getTrackerObserveCalls()).toEqual([])
   })
 
-  it('starts script tracking on the first registration, watching direct children only', async () => {
+  it('starts script tracking at init when the register API is enabled, before any registration', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented-with-observer-spy.html', {
       init: { feature_flags: ['register'] }
     }))
       .then(() => browser.waitForAgentLoad())
-
-    const subtreeObservesBefore = await getDocumentSubtreeObserveCount()
-    await browser.execute(function () {
-      window.mfe = newrelic.register({ id: 'lazy-mfe', name: 'lazy-mfe' })
-    })
 
     const calls = await getTrackerObserveCalls()
     expect(calls.map(call => call.nodeName)).toEqual(expect.arrayContaining(['HTML', 'HEAD', 'BODY']))
-    // registering must not add a document-wide subtree observer
-    expect(await getDocumentSubtreeObserveCount()).toBe(subtreeObservesBefore)
   })
 
-  it('does not start script tracking for a registration that is blocked', async () => {
+  it('does not start script tracking for a blocked registration when the register API is enabled', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented-with-observer-spy.html', {
       init: { feature_flags: ['register'] }
     }))
       .then(() => browser.waitForAgentLoad())
 
+    const before = (await getTrackerObserveCalls()).length
     await browser.execute(function () {
       newrelic.register({ id: '', name: '' }) // invalid id/name -> blocked
     })
 
-    expect(await getTrackerObserveCalls()).toEqual([])
+    // already running from init; a blocked call must not add anything
+    expect((await getTrackerObserveCalls()).length).toBe(before)
   })
 
   it('still correlates the calling script when it was injected into a container that is not observed', async () => {
@@ -66,8 +61,8 @@ describe('Register API - lazy script tracking', () => {
     }))
       .then(() => browser.waitForAgentLoad())
 
-    // Registration is what starts tracking, so the node is inserted before tracking exists and inside a nested
-    // container -- neither the observer nor a mutation record could have caught it; only the register-time scan can.
+    // Inserted inside a nested container, which the head/body direct-child observer does not watch -- no mutation
+    // record is ever delivered for it, so only the register-time scan can find it.
     await browser.execute(function () {
       const container = document.createElement('div')
       document.body.appendChild(container)

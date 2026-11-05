@@ -5,10 +5,8 @@
 import { send } from '../../../../src/common/harvest/send'
 import { trustBeacons } from '../../../../src/common/config/trusted-beacons'
 import { warn } from '../../../../src/common/util/console'
-import { handle } from '../../../../src/common/event-emitter/handle'
 
 jest.mock('../../../../src/common/util/console', () => ({ warn: jest.fn() }))
-jest.mock('../../../../src/common/event-emitter/handle', () => ({ handle: jest.fn() }))
 
 const buildAgent = (proxy = {}) => {
   const agent = {
@@ -31,33 +29,6 @@ const spec = (overrides = {}) => ({
 
 beforeEach(() => {
   jest.clearAllMocks()
-})
-
-describe('send locked config reporting', () => {
-  test('reports a write to locked config as a supportability metric on the next send', () => {
-    const agent = buildAgent()
-    agent.info.licenseKey = 'evil'
-
-    send(agent, spec())
-
-    expect(handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Config/Locked/info.licenseKey/Changed'], undefined, 'metrics', agent.ee)
-  })
-
-  test('reports each write once', () => {
-    const agent = buildAgent()
-    agent.info.licenseKey = 'evil'
-
-    send(agent, spec())
-    send(agent, spec())
-
-    expect(handle).toHaveBeenCalledTimes(1)
-  })
-
-  test('does not report anything when no locked config was written', () => {
-    send(buildAgent(), spec())
-
-    expect(handle).not.toHaveBeenCalled()
-  })
 })
 
 describe('send destination', () => {
@@ -111,8 +82,6 @@ describe('send destination', () => {
     const { trustBeacons: freshTrust } = await import('../../../../src/common/config/trusted-beacons')
     const { warn: freshWarn } = await import('../../../../src/common/util/console')
     const agent = buildAgent()
-    agent.info = { ...agent.info }
-    agent.init = { ...agent.init, proxy: { ...agent.init.proxy } }
     freshTrust(agent)
     agent.info = { ...agent.info, errorBeacon: 'evil.example.com' }
 

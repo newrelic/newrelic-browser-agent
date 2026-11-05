@@ -2,7 +2,7 @@
  * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { trustBeacons, isTrustedBeacon, takeLockedWrites } from '../../../../src/common/config/trusted-beacons'
+import { trustBeacons, isTrustedBeacon } from '../../../../src/common/config/trusted-beacons'
 
 const buildAgent = (proxy = {}) => ({
   info: { beacon: 'bam.nr-data.net', errorBeacon: 'bam.nr-data.net', licenseKey: 'abc', jsAttributes: {} },
@@ -14,8 +14,8 @@ describe('trustBeacons', () => {
     const agent = buildAgent()
     trustBeacons(agent)
 
-    agent.info.errorBeacon = 'evil.example.com'
-    agent.info.beacon = 'evil.example.com'
+    expect(() => { agent.info.errorBeacon = 'evil.example.com' }).toThrow(TypeError)
+    expect(() => { agent.info.beacon = 'evil.example.com' }).toThrow(TypeError)
     expect(() => Object.defineProperty(agent.info, 'errorBeacon', { value: 'evil.example.com' })).toThrow(TypeError)
     expect(agent.info.errorBeacon).toBe('bam.nr-data.net')
   })
@@ -25,8 +25,8 @@ describe('trustBeacons', () => {
     agent.info.applicationID = '123'
     trustBeacons(agent)
 
-    agent.info.licenseKey = 'evil'
-    agent.info.applicationID = '999'
+    expect(() => { agent.info.licenseKey = 'evil' }).toThrow(TypeError)
+    expect(() => { agent.info.applicationID = '999' }).toThrow(TypeError)
     expect(() => Object.defineProperty(agent.info, 'licenseKey', { value: 'evil' })).toThrow(TypeError)
     expect(() => Object.defineProperty(agent.info, 'applicationID', { value: '999' })).toThrow(TypeError)
     expect(agent.info.licenseKey).toBe('abc')
@@ -37,7 +37,7 @@ describe('trustBeacons', () => {
     const agent = buildAgent({ beacon: 'proxy.example.com/nr' })
     trustBeacons(agent)
 
-    agent.init.proxy.beacon = 'evil.example.com'
+    expect(() => { agent.init.proxy.beacon = 'evil.example.com' }).toThrow(TypeError)
     expect(agent.init.proxy.beacon).toBe('proxy.example.com/nr')
   })
 
@@ -45,7 +45,7 @@ describe('trustBeacons', () => {
     const agent = buildAgent({ assets: 'https://assets.example.com' })
     trustBeacons(agent)
 
-    agent.init.proxy.assets = 'https://evil.example.com'
+    expect(() => { agent.init.proxy.assets = 'https://evil.example.com' }).toThrow(TypeError)
     expect(() => Object.defineProperty(agent.init.proxy, 'assets', { value: 'https://evil.example.com' })).toThrow(TypeError)
     expect(agent.init.proxy.assets).toBe('https://assets.example.com')
   })
@@ -65,47 +65,6 @@ describe('trustBeacons', () => {
     agent.info.userAttributes = 'x'
     expect(agent.info.jsAttributes.foo).toBe('bar')
     expect(agent.info.userAttributes).toBe('x')
-  })
-})
-
-describe('takeLockedWrites', () => {
-  test.each([
-    ['info.beacon', agent => { agent.info.beacon = 'evil.example.com' }],
-    ['info.errorBeacon', agent => { agent.info.errorBeacon = 'evil.example.com' }],
-    ['info.licenseKey', agent => { agent.info.licenseKey = 'evil' }],
-    ['info.applicationID', agent => { agent.info.applicationID = '999' }],
-    ['proxy.beacon', agent => { agent.init.proxy.beacon = 'evil.example.com' }],
-    ['proxy.assets', agent => { agent.init.proxy.assets = 'https://evil.example.com' }]
-  ])('returns %s after a write to it', (label, write) => {
-    const agent = buildAgent({ beacon: 'proxy.example.com/nr', assets: 'https://assets.example.com' })
-    agent.info.applicationID = '123'
-    trustBeacons(agent)
-    write(agent)
-
-    expect(takeLockedWrites(agent)).toEqual([label])
-  })
-
-  test('returns each property once and clears them once taken', () => {
-    const agent = buildAgent()
-    trustBeacons(agent)
-    agent.info.licenseKey = 'evil'
-    agent.info.licenseKey = 'evil again'
-
-    expect(takeLockedWrites(agent)).toEqual(['info.licenseKey'])
-    expect(takeLockedWrites(agent)).toEqual([])
-  })
-
-  test('returns nothing when nothing was written, including reads and copies', () => {
-    const agent = buildAgent({ beacon: 'proxy.example.com/nr' })
-    trustBeacons(agent)
-    const copy = { ...agent.info, ...agent.init.proxy }
-
-    expect(copy.errorBeacon).toBe('bam.nr-data.net')
-    expect(takeLockedWrites(agent)).toEqual([])
-  })
-
-  test('returns nothing for an agent that was never configured', () => {
-    expect(takeLockedWrites({})).toEqual([])
   })
 })
 

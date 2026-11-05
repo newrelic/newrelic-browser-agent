@@ -1,14 +1,13 @@
-import { testErrorsRequest, testRumRequest, testMetricsRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testErrorsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { rumFlags } from '../../../tools/testing-server/constants'
 import { LOGGING_MODE } from '../../../src/features/logging/constants'
 
 describe('harvest endpoint cannot be redirected at runtime', () => {
   let errorsCapture
-  let metricsCapture
   let attackerUrl
 
   beforeEach(async () => {
-    [errorsCapture, metricsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [{ test: testErrorsRequest }, { test: testMetricsRequest }])
+    [errorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [{ test: testErrorsRequest }])
     // Pin auto-captured logging so the harvest under test is not affected by the cycling sample rate
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
@@ -59,27 +58,6 @@ describe('harvest endpoint cannot be redirected at runtime', () => {
 
     expect(errorHarvests.length).toBeGreaterThanOrEqual(1)
     expect(await attackerRequests()).toEqual(0)
-  })
-
-  it('reports attempts to change locked config as supportability metrics', async () => {
-    await browser.execute(function () {
-      const agent = Object.values(NREUM.initializedAgents)[0]
-      agent.info.licenseKey = 'attacker-license'
-      agent.info.errorBeacon = 'attacker.example.com'
-    })
-
-    /* The attempts are flagged when they happen and reported by the next harvest, so trigger one first. The metric is
-       then sent with a later metrics harvest. */
-    await Promise.all([
-      errorsCapture.waitForResult({ totalCount: 1 }),
-      browser.execute(function () { newrelic.noticeError(new Error('endpoint lock')) })
-    ])
-
-    const metricsHarvests = await metricsCapture.waitForResult({ timeout: 60000 })
-    const names = metricsHarvests.flatMap(harvest => harvest.request.body.sm || []).map(sm => sm.params.name)
-
-    expect(names).toContain('Config/Locked/info.licenseKey/Changed')
-    expect(names).toContain('Config/Locked/info.errorBeacon/Changed')
   })
 
   it('does not harvest at all if the config objects are replaced', async () => {

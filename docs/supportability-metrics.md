@@ -193,8 +193,6 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Framework/Flutter/Detected
 
 ### Configuration
-<!--- A script on the page tried to write to config that is locked after the agent is configured. {label} is one of info.beacon, info.errorBeacon, info.licenseKey, info.applicationID, proxy.beacon or proxy.assets. The write is ignored. --->
-* Config/Locked/{label}/Changed
 <!--- init.privacy.cookies_Enabled was Disabled --->
 * Config/SessionTracking/Disabled
 <!--- init.long_task was Disabled --->

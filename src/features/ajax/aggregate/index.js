@@ -73,7 +73,7 @@ export class Aggregate extends AggregateBase {
     }
 
     if (!shouldCollect) {
-      if (params.hostname === this.agentRef.info.errorBeacon || (this.agentRef.init.proxy?.beacon && params.hostname === this.agentRef.init.proxy.beacon)) {
+      if (params.hostname && (params.hostname === this.agentRef.info.errorBeacon || params.hostname === this.agentRef.init.proxy?.beacon?.split('/')[0])) {
         // This doesn't make a distinction if the same-domain request is going to a different port or path...
         this.reportSupportabilityMetric('Ajax/Events/Excluded/Agent')
 

@@ -4,6 +4,7 @@
  */
 import { Aggregate } from '../../../../../src/features/ajax/aggregate'
 import { V2_TYPES } from '../../../../../src/common/v2/constants'
+import { setDenyList } from '../../../../../src/common/deny-list/deny-list'
 
 /**
  * Builds a minimal object that inherits from `Aggregate.prototype` -- letting `storeXhr`/`reportContainerEvent` run
@@ -138,4 +139,31 @@ test('container-only target is unaffected -- event shape is unchanged from today
   expect(event.spanId).toEqual('container-span-id')
   expect(event.traceId).toEqual('container-trace-id')
   expect(event.targetAttributes).toBeUndefined()
+})
+
+describe('excluded agent traffic supportability metric', () => {
+  afterEach(() => {
+    setDenyList([]) // the deny list is module-level state shared across tests
+  })
+
+  test('counts a request to a proxy beacon with a subpath as excluded Agent traffic', () => {
+    setDenyList(['customer-proxy.com/known-prefix/*'])
+    const aggregate = buildAggregate()
+    aggregate.agentRef.init.proxy = { beacon: 'customer-proxy.com/known-prefix' }
+    aggregate.agentRef.info.errorBeacon = 'bam.nr-data.net'
+
+    aggregate.storeXhr(
+      { method: 'POST', status: 200, hostname: 'customer-proxy.com', host: 'customer-proxy.com', pathname: '/known-prefix/events/1/key' },
+      { txSize: 0, rxSize: 0, cbTime: 0 },
+      100,
+      200,
+      'xhr',
+      undefined,
+      {}
+    )
+
+    expect(aggregate.reportSupportabilityMetric).toHaveBeenCalledWith('Ajax/Events/Excluded/Agent')
+    expect(aggregate.reportSupportabilityMetric).not.toHaveBeenCalledWith('Ajax/Events/Excluded/App')
+    expect(aggregate.events.add).not.toHaveBeenCalled()
+  })
 })

@@ -15,6 +15,7 @@ import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 import { mergeLoaderConfig } from '../../common/config/loader-config'
 import { handle } from '../../common/event-emitter/handle'
 import { prefix as iframePrefix } from '../../common/constants/iframe-constants'
+import { trustBeacons } from '../../common/config/trusted-beacons'
 
 /**
  * Sets or re-sets the agent's configuration values from global settings. This also attach those as properties to the agent instance.
@@ -40,6 +41,7 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
     info.jsAttributes.isWorker = true
   }
   agent.info = mergeInfo(info)
+  trustBeacons(agent)
 
   const updatedInit = agent.init
 

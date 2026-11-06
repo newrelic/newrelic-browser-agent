@@ -153,3 +153,24 @@ describe('lcp', () => {
     })
   })
 })
+
+describe('without Array.prototype.findLast', () => {
+  let descriptor
+
+  beforeEach(() => {
+    descriptor = Object.getOwnPropertyDescriptor(Array.prototype, 'findLast')
+    delete Array.prototype.findLast
+  })
+
+  afterEach(() => {
+    // eslint-disable-next-line no-extend-native
+    Object.defineProperty(Array.prototype, 'findLast', descriptor)
+  })
+
+  test('does NOT register lcp with web-vitals', async () => {
+    const onLCP = jest.fn()
+    jest.doMock('web-vitals/attribution', () => ({ onLCP }))
+    await import('../../../../src/common/vitals/largest-contentful-paint')
+    expect(onLCP).not.toHaveBeenCalled()
+  })
+})

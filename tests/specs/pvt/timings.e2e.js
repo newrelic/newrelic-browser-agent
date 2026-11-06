@@ -250,6 +250,22 @@ describe('pvt timings tests', () => {
     })
   })
 
+  it('sends timings without an uncaught error when Array.prototype.at and findLast are missing', async () => {
+    await browser.url(await browser.testHandle.assetURL('no-array-at-findlast.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    const errorCount = await browser.execute(function () { return window.errorCount })
+    const [timingsHarvests] = await Promise.all([
+      timingsCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('/'))
+    ])
+    const timings = timingsHarvests.flatMap(harvest => harvest.request.body)
+
+    expect(errorCount).toEqual(0)
+    expect(timings.find(t => t.name === 'load')?.value).toBeGreaterThan(0)
+    expect(timings.find(t => t.name === 'fcp')).toBeUndefined()
+  })
+
   describe('custom attribution timings', () => {
     loadersToTest.forEach(loader => {
       it(`window load timing for ${loader} agent includes custom attributes`, async () => {

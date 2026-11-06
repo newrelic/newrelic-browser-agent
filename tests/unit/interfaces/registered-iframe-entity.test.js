@@ -126,6 +126,39 @@ describe('RegisteredIframeEntity blocked state', () => {
     expect(onINP).toHaveBeenCalledTimes(1)
   })
 
+  describe('without Array.prototype.at', () => {
+    let descriptor
+
+    beforeEach(() => {
+      descriptor = Object.getOwnPropertyDescriptor(Array.prototype, 'at')
+      delete Array.prototype.at
+    })
+
+    afterEach(() => {
+      // eslint-disable-next-line no-extend-native
+      Object.defineProperty(Array.prototype, 'at', descriptor)
+    })
+
+    it('registers only the vitals whose web-vitals code does not call it', async () => {
+      jest.resetModules()
+      const onCLS = jest.fn()
+      const onLCP = jest.fn()
+      const onFCP = jest.fn()
+      const onINP = jest.fn()
+      jest.doMock('web-vitals', () => ({ onCLS, onFCP, onINP, onLCP }))
+      const { RegisteredIframeEntity: Entity } = await import('../../../src/interfaces/registered-iframe-entity')
+
+      const entity = new Entity({ id: 'my-id', name: 'my-name' })
+      await flushMicrotasks()
+
+      expect(entity).toBeInstanceOf(Entity)
+      expect(onCLS).not.toHaveBeenCalled()
+      expect(onINP).not.toHaveBeenCalled()
+      expect(onLCP).toHaveBeenCalledTimes(1)
+      expect(onFCP).toHaveBeenCalledTimes(1)
+    })
+  })
+
   /** Re-imports the entity with web-vitals mocks that capture each registered callback, then completes registration */
   const registerWithCapturedVitals = async () => {
     jest.resetModules()

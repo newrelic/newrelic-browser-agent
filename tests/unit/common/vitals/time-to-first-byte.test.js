@@ -366,3 +366,37 @@ describe('ttfb', () => {
     })
   })
 })
+
+describe('without Array.prototype.at and findLast', () => {
+  const descriptors = {}
+
+  beforeEach(() => {
+    ['at', 'findLast'].forEach(method => {
+      descriptors[method] = Object.getOwnPropertyDescriptor(Array.prototype, method)
+      delete Array.prototype[method]
+    })
+  })
+
+  afterEach(() => {
+    // eslint-disable-next-line no-extend-native
+    Object.entries(descriptors).forEach(([method, descriptor]) => Object.defineProperty(Array.prototype, method, descriptor))
+  })
+
+  test('reports ttfb from web-vitals', async () => {
+    const mockPerformance = {
+      getEntriesByType: jest.fn().mockReturnValue([{ responseStart: 100 }])
+    }
+    global.PerformanceNavigationTiming = jest.fn()
+    jest.doMock('../../../../src/common/constants/runtime', () => ({
+      __esModule: true,
+      isiOS: false,
+      isBrowserScope: true,
+      getNavigationEntry: () => mockPerformance?.getEntriesByType('navigation')?.[0],
+      globalScope: {
+        performance: mockPerformance
+      }
+    }))
+
+    await getFreshTTFBImport(metric => expect(metric.current.value).toEqual(1))
+  })
+})

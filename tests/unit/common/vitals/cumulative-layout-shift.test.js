@@ -113,3 +113,24 @@ describe('cls', () => {
     })
   })
 })
+
+describe('without Array.prototype.findLast', () => {
+  let descriptor
+
+  beforeEach(() => {
+    descriptor = Object.getOwnPropertyDescriptor(Array.prototype, 'findLast')
+    delete Array.prototype.findLast
+  })
+
+  afterEach(() => {
+    // eslint-disable-next-line no-extend-native
+    Object.defineProperty(Array.prototype, 'findLast', descriptor)
+  })
+
+  test('still registers cls with web-vitals', async () => {
+    const onCLS = jest.fn()
+    jest.doMock('web-vitals/attribution', () => ({ onCLS }))
+    await import('../../../../src/common/vitals/cumulative-layout-shift')
+    expect(onCLS).toHaveBeenCalledTimes(1)
+  })
+})

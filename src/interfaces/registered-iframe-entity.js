@@ -18,7 +18,7 @@ import { IFRAME_TIMING_UPDATE, IFRAME_API, IFRAME_API_RESPONSE, IFRAME_VITALS_UP
 import { castErrorEvent, castError, castPromiseRejectionEvent } from '../features/jserrors/shared/cast-error'
 
 const REGISTER = 'register' // define it here to prevent importing the full list of constants for build size.
-const VITALS = [[onCLS, 'cls'], [onLCP, 'lcp'], [onFCP, 'fcp'], [onINP, 'inp']]
+const VITALS = [[onCLS, 'cls', ['at']], [onLCP, 'lcp'], [onFCP, 'fcp'], [onINP, 'inp', ['at']]]
 const AJAX_INITIATOR_TYPES = { xmlhttprequest: 'xhr', fetch: 'fetch', beacon: 'beacon' }
 
 /**
@@ -182,7 +182,7 @@ export class RegisteredIframeEntity {
    * @private
    */
   #setupVitalsListeners () {
-    VITALS.forEach(([vitalFn, property]) => {
+    VITALS.forEach(([vitalFn, property, requires]) => {
       registerVital(() => vitalFn(({ value, entries: vitalEntries }) => {
         /* web-vitals v6 reports a synthetic INP (value 8, no entries) after bfcache restores when
           every interaction stayed below the duration threshold; skip those so only measured
@@ -192,7 +192,7 @@ export class RegisteredIframeEntity {
         this.#postMessageToParent(IFRAME_VITALS_UPDATE, {
           entries: [{ property, value }]
         })
-      }, { reportAllChanges: property === 'cls' || property === 'inp' }))
+      }, { reportAllChanges: property === 'cls' || property === 'inp' }), requires)
     })
   }
 

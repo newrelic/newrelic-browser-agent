@@ -75,3 +75,22 @@ test('instrument detects heuristic steps', async () => {
   expect(newDomEventCalls.length).toBe(1) // similary, dom change RAF callback should only be fired once instead of thrice
   expect(handleModule.handle).toHaveBeenLastCalledWith('newDom', [expect.any(Number)], undefined, FEATURE_NAME, expect.any(Object))
 })
+
+test('instrument does not throw or observe a null node when document.body is missing', () => {
+  const bodySpy = jest.spyOn(document, 'body', 'get').mockReturnValue(null)
+  const observeSpy = jest.spyOn(MutationObserver.prototype, 'observe')
+  const onError = jest.fn()
+  window.addEventListener('error', onError)
+
+  try {
+    window.dispatchEvent(new Event('popstate'))
+
+    expect(handleModule.handle).toHaveBeenCalledWith('newUIEvent', [expect.any(Event)], undefined, FEATURE_NAME, expect.any(Object))
+    expect(observeSpy).not.toHaveBeenCalledWith(null, expect.anything())
+    expect(onError).not.toHaveBeenCalled()
+  } finally {
+    window.removeEventListener('error', onError)
+    bodySpy.mockRestore()
+    observeSpy.mockRestore()
+  }
+})

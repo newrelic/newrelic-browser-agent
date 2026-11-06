@@ -17,4 +17,16 @@ describe('MutationObserver', () => {
     const errorResult = await errorsCapture.waitForResult({ timeout: 10000 })
     expect(errorResult.length).toBe(0)
   })
+
+  it('should not throw an error when a UI event is triggered after the body is removed', async () => {
+    await browser.url(await browser.testHandle.assetURL('no-body.html', { loader: 'spa' }))
+      .then(() => browser.waitForAgentLoad())
+
+    const errorCount = await browser.execute(function () {
+      document.addEventListener('click', function () {})
+      document.dispatchEvent(new Event('click'))
+      return window.errorCount
+    })
+    expect(errorCount).toBe(0)
+  })
 })

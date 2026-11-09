@@ -1,13 +1,15 @@
 # Detects drift between what was released and what is being served. Every release attaches an integrity manifest
-# (see publish-release.yml); this workflow re-checks recent releases against the CDN edge and the S3 origin on a
-# schedule, using only public endpoints. It needs no credentials and installs no dependencies.
+# (see publish-release.yml); this workflow re-checks every release that has one against the CDN edge and the S3
+# origin every 15 minutes, using only public endpoints. It needs no credentials and installs no dependencies.
+# The 5 newest releases are checked in full; older releases are checked for their minified loaders only, which keeps
+# each run to a few thousand small requests (see .github/scripts/cdn-integrity-monitor.mjs).
 # Notifications are sent from a separate job so that the checking job needs no secrets.
 
 name: CDN Integrity Monitor
 
 on:
   schedule:
-    - cron: '17 */6 * * *'
+    - cron: '7,22,37,52 * * * *'
   workflow_dispatch:
 
 permissions:

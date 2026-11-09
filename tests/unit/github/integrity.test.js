@@ -1,4 +1,4 @@
-import { isMinifiedLoader, planChecks, planAliases, summarizeFindings } from '../../../.github/actions/shared-utils/integrity'
+import { isMinifiedLoader, planChecks, planAliases, summarizeFindings, kindForStatus, isUrgent } from '../../../.github/actions/shared-utils/integrity'
 
 /**
  * Builds a release as the monitor sees it: a version and the keys of its integrity manifest.
@@ -173,17 +173,37 @@ describe('planAliases', () => {
   })
 })
 
+describe('kindForStatus', () => {
+  test.each([403, 404, 410])('treats HTTP %i as a missing file', status => {
+    expect(kindForStatus(status)).toBe('missing')
+  })
+
+  test.each([429, 500, 502, 503, 504])('treats HTTP %i as a failure to check', status => {
+    expect(kindForStatus(status)).toBe('unavailable')
+  })
+})
+
+describe('isUrgent', () => {
+  test.each(['mismatch', 'missing'])('is urgent for a %s finding', kind => {
+    expect(isUrgent({ kind })).toBe(true)
+  })
+
+  test('is not urgent when the check could not complete', () => {
+    expect(isUrgent({ kind: 'unavailable' })).toBe(false)
+  })
+})
+
 describe('summarizeFindings', () => {
   test('counts findings by kind and names the failing releases newest first', () => {
     const summary = summarizeFindings([
       { kind: 'mismatch', version: '1.9.0' },
       { kind: 'mismatch', version: '1.10.0' },
-      { kind: 'unavailable', version: '1.10.0' }
+      { kind: 'missing', version: '1.10.0' }
     ])
 
-    expect(summary.failure_count).toBe('3')
-    expect(summary.failing_versions).toBe('1.10.0, 1.9.0')
-    expect(summary.failure_summary).toBe('2 mismatch(es), 1 unavailable; releases: 1.10.0, 1.9.0')
+    expect(summary.count).toBe('3')
+    expect(summary.versions).toBe('1.10.0, 1.9.0')
+    expect(summary.summary).toBe('2 mismatch, 1 missing, 0 unavailable; releases: 1.10.0, 1.9.0')
   })
 
   test('names failing aliases separately from releases', () => {
@@ -192,17 +212,17 @@ describe('summarizeFindings', () => {
       { kind: 'mismatch', alias: 'nr-loader-rum-current.min.js' }
     ])
 
-    expect(summary.failing_aliases).toBe('nr-loader-rum-current.min.js')
-    expect(summary.failing_versions).toBe('')
-    expect(summary.failure_summary).toBe('2 mismatch(es), 0 unavailable; aliases: nr-loader-rum-current.min.js')
+    expect(summary.aliases).toBe('nr-loader-rum-current.min.js')
+    expect(summary.versions).toBe('')
+    expect(summary.summary).toBe('2 mismatch, 0 missing, 0 unavailable; aliases: nr-loader-rum-current.min.js')
   })
 
   test('limits a long list of releases and says how many were left out', () => {
     const findings = Array.from({ length: 25 }, (_, i) => ({ kind: 'mismatch', version: `1.${i}.0` }))
     const summary = summarizeFindings(findings)
 
-    expect(summary.failing_versions.endsWith('(+5 more)')).toBe(true)
-    expect(summary.failing_versions.split(',').length).toBe(20)
+    expect(summary.versions.endsWith('(+5 more)')).toBe(true)
+    expect(summary.versions.split(',').length).toBe(20)
   })
 
   test('returns single-line strings', () => {

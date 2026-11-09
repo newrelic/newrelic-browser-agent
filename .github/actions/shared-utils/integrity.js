@@ -153,25 +153,45 @@ function listLimited (values, limit) {
 }
 
 /**
- * Describes a monitor run's findings in a few short single-line strings, safe to write as step outputs and to publish as
+ * Classifies a non-OK HTTP status for a file the manifest says should be served. A file that is gone (404, 403 or 410, which
+ * S3 uses for a key it will not serve) is a real integrity problem; anything else, such as a 5xx, is treated as a transient
+ * failure to check that may clear on its own.
+ * @param {number} status HTTP status of the response.
+ * @returns {'missing'|'unavailable'}
+ */
+export function kindForStatus (status) {
+  return [403, 404, 410].includes(status) ? 'missing' : 'unavailable'
+}
+
+/**
+ * Whether a finding should page someone straight away. Mismatches and missing files are integrity problems; `unavailable`
+ * means the check itself could not complete, which only matters if it keeps happening.
+ * @param {{kind: string}} finding
+ * @returns {boolean}
+ */
+export function isUrgent (finding) {
+  return finding.kind === 'mismatch' || finding.kind === 'missing'
+}
+
+/**
+ * Describes some of a monitor run's findings in short single-line strings, safe to write as step outputs and to publish as
  * New Relic event attributes. Each string stays well under the 4,096 character limit on an event attribute value.
  * @param {Array<{kind: string, version?: string, alias?: string}>} findings
- * @returns {{failure_count: string, failing_versions: string, failing_aliases: string, failure_summary: string}}
+ * @returns {{count: string, versions: string, aliases: string, summary: string}}
  */
 export function summarizeFindings (findings) {
   /* Whitespace is collapsed so a value can never span lines, which would let it inject extra step outputs. */
   const clean = value => String(value).replace(/\s+/g, ' ').trim()
   const versions = [...new Set(findings.map(f => f.version).filter(Boolean).map(clean))].sort(newestFirst)
   const aliases = [...new Set(findings.map(f => f.alias).filter(Boolean).map(clean))].sort()
-  const mismatches = findings.filter(f => f.kind === 'mismatch').length
-  const unavailable = findings.filter(f => f.kind === 'unavailable').length
-  const parts = [`${mismatches} mismatch(es), ${unavailable} unavailable`]
+  const counts = ['mismatch', 'missing', 'unavailable'].map(kind => `${findings.filter(f => f.kind === kind).length} ${kind}`)
+  const parts = [counts.join(', ')]
   if (versions.length) parts.push(`releases: ${listLimited(versions, 10)}`)
   if (aliases.length) parts.push(`aliases: ${listLimited(aliases, 6)}`)
   return {
-    failure_count: String(findings.length),
-    failing_versions: listLimited(versions, 20),
-    failing_aliases: listLimited(aliases, 12),
-    failure_summary: parts.join('; ')
+    count: String(findings.length),
+    versions: listLimited(versions, 20),
+    aliases: listLimited(aliases, 12),
+    summary: parts.join('; ')
   }
 }

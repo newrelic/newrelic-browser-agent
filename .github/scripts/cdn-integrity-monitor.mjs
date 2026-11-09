@@ -28,7 +28,7 @@
  * verification. Exits 1 when any check finds a mismatch or cannot be completed, 0 otherwise.
  */
 import { readFile, appendFile } from 'node:fs/promises'
-import { sha384, matchesManifest, planChecks, planAliases, summarizeFindings } from '../actions/shared-utils/integrity.js'
+import { sha384, matchesManifest, planChecks, planAliases, summarizeFindings, kindForStatus, isUrgent } from '../actions/shared-utils/integrity.js'
 
 const EDGE_HOSTS = ['js-agent.newrelic.com', 'staging-js-agent.newrelic.com']
 const ORIGIN_HOST = 'nr-browser-agent.s3.amazonaws.com'
@@ -139,8 +139,9 @@ async function discoverManifests (options) {
 }
 
 /**
- * @typedef {{check: string, target: string, kind: 'mismatch'|'unavailable', detail: string, version?: string, alias?: string}} Finding
+ * @typedef {{check: string, target: string, kind: 'mismatch'|'missing'|'unavailable', detail: string, version?: string, alias?: string}} Finding
  * version is the release the finding belongs to; alias is the alias file name for findings about a mutable alias.
+ * mismatch: served content differs from the manifest. missing: the file is not served. unavailable: the check could not complete.
  */
 
 /**
@@ -159,7 +160,7 @@ async function checkHost (label, baseUrl, release, concurrency) {
     try {
       const response = await fetchWithRetry(target)
       if (!response.ok) {
-        findings.push({ check: label, target, kind: 'unavailable', detail: `HTTP ${response.status}`, version: release.version })
+        findings.push({ check: label, target, kind: kindForStatus(response.status), detail: `HTTP ${response.status}`, version: release.version })
         return
       }
       if (!matchesManifest(release.manifest, key, await response.arrayBuffer())) {
@@ -191,7 +192,7 @@ async function checkAliases (releases, concurrency) {
           const response = await fetchWithRetry(target)
           if (response.status === 404 && !alias.required) return
           checked++
-          if (!response.ok) { findings.push({ check: 'aliases', target, kind: 'unavailable', detail: `HTTP ${response.status}`, alias: alias.key }); return }
+          if (!response.ok) { findings.push({ check: 'aliases', target, kind: kindForStatus(response.status), detail: `HTTP ${response.status}`, alias: alias.key }); return }
           if (!alias.digests.includes(sha384(await response.arrayBuffer()))) {
             findings.push({ check: 'aliases', target, kind: 'mismatch', detail: 'content matches none of the releases this alias may point at', alias: alias.key })
           }
@@ -245,7 +246,7 @@ console.log('\nChecking alias loaders')
 record('aliases', 'alias loaders', await checkAliases(releases, options.concurrency))
 record('manifests', 'release manifests', {
   checked: releases.length + skipped.length,
-  findings: skipped.map(tag => ({ check: 'manifests', target: tag, kind: 'unavailable', detail: 'published release has no integrity-manifest.json, so its files cannot be verified', version: tag.replace(/^v/, '') }))
+  findings: skipped.map(tag => ({ check: 'manifests', target: tag, kind: 'missing', detail: 'published release has no integrity-manifest.json, so its files cannot be verified', version: tag.replace(/^v/, '') }))
 })
 
 for (const tier of ['full', 'loaders']) {
@@ -255,6 +256,7 @@ for (const tier of ['full', 'loaders']) {
 const emptyPlans = planned.filter(r => !r.keys.length).map(r => r.version)
 
 const mismatches = findings.filter(f => f.kind === 'mismatch')
+const missing = findings.filter(f => f.kind === 'missing')
 const unavailable = findings.filter(f => f.kind === 'unavailable')
 const report = [
   `## CDN integrity monitor: ${findings.length ? 'FAILED' : 'passed'}`,
@@ -269,17 +271,27 @@ const report = [
   '| --- | --- | --- | --- |',
   ...[...totals.values()].map(t => `| ${t.tier} | ${t.label} | ${t.checked} | ${t.problems} |`),
   ...(findings.length
-    ? ['', `**${mismatches.length} mismatch(es), ${unavailable.length} unavailable.** A mismatch means served content differs from what was released; unavailable means the check could not complete.`, '', ...findings.slice(0, 50).map(f => `- **${f.kind}** \`${f.check}\` ${f.target}: ${f.detail}`)]
+    ? ['', `**${mismatches.length} mismatch(es), ${missing.length} missing, ${unavailable.length} unavailable.** A mismatch means served content differs from what was released; missing means a released file is not being served; unavailable means the check could not complete.`, '', ...findings.slice(0, 50).map(f => `- **${f.kind}** \`${f.check}\` ${f.target}: ${f.detail}`)]
     : [])
 ].join('\n')
 
 console.log(`\n${report}`)
 if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, report + '\n')
 for (const f of mismatches.slice(0, 20)) console.log(`::error title=Integrity mismatch::${f.check}: ${f.target} ${f.detail}`)
+for (const f of missing.slice(0, 20)) console.log(`::error title=Released file not served::${f.check}: ${f.target} ${f.detail}`)
 for (const f of unavailable.slice(0, 20)) console.log(`::warning title=Integrity check incomplete::${f.check}: ${f.target} ${f.detail}`)
-/* Exposed as step outputs so the notify job can describe the failure in the New Relic event without re-running the check. */
+/*
+ * Exposed as step outputs so the notify job can describe the failure in a New Relic event without re-running the check.
+ * Mismatches and missing files are urgent and published as failure_*; checks that could not complete are published as
+ * error_*, which only pages if they keep happening. Each set is written only when it has findings.
+ */
 if (findings.length && process.env.GITHUB_OUTPUT) {
-  const outputs = summarizeFindings(findings)
-  await appendFile(process.env.GITHUB_OUTPUT, Object.entries(outputs).map(([name, value]) => `${name}=${value}\n`).join(''))
+  const lines = []
+  for (const [prefix, group] of [['failure', findings.filter(isUrgent)], ['error', findings.filter(f => !isUrgent(f))]]) {
+    if (!group.length) continue
+    const summary = summarizeFindings(group)
+    lines.push(`${prefix}_count=${summary.count}`, `${prefix}_versions=${summary.versions}`, `${prefix}_aliases=${summary.aliases}`, `${prefix}_summary=${summary.summary}`)
+  }
+  await appendFile(process.env.GITHUB_OUTPUT, lines.join('\n') + '\n')
 }
 process.exit(findings.length ? 1 : 0)

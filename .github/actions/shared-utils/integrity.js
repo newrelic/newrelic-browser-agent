@@ -124,3 +124,54 @@ export function planAliases (releases) {
   }
   return plans
 }
+
+/**
+ * Compares two dotted version strings numerically, newest first. Versions that are not dotted numbers sort last.
+ * @param {string} a
+ * @param {string} b
+ * @returns {number}
+ */
+function newestFirst (a, b) {
+  const parts = v => v.split('.').map(Number)
+  const [pa, pb] = [parts(a), parts(b)]
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const [x, y] = [pa[i] ?? 0, pb[i] ?? 0]
+    if (Number.isNaN(x) !== Number.isNaN(y)) return Number.isNaN(x) ? 1 : -1
+    if (x !== y) return y - x
+  }
+  return 0
+}
+
+/**
+ * Joins values into one line, listing at most `limit` of them and saying how many were left out.
+ * @param {string[]} values
+ * @param {number} limit
+ * @returns {string}
+ */
+function listLimited (values, limit) {
+  return values.slice(0, limit).join(', ') + (values.length > limit ? ` (+${values.length - limit} more)` : '')
+}
+
+/**
+ * Describes a monitor run's findings in a few short single-line strings, safe to write as step outputs and to publish as
+ * New Relic event attributes. Each string stays well under the 4,096 character limit on an event attribute value.
+ * @param {Array<{kind: string, version?: string, alias?: string}>} findings
+ * @returns {{failure_count: string, failing_versions: string, failing_aliases: string, failure_summary: string}}
+ */
+export function summarizeFindings (findings) {
+  /* Whitespace is collapsed so a value can never span lines, which would let it inject extra step outputs. */
+  const clean = value => String(value).replace(/\s+/g, ' ').trim()
+  const versions = [...new Set(findings.map(f => f.version).filter(Boolean).map(clean))].sort(newestFirst)
+  const aliases = [...new Set(findings.map(f => f.alias).filter(Boolean).map(clean))].sort()
+  const mismatches = findings.filter(f => f.kind === 'mismatch').length
+  const unavailable = findings.filter(f => f.kind === 'unavailable').length
+  const parts = [`${mismatches} mismatch(es), ${unavailable} unavailable`]
+  if (versions.length) parts.push(`releases: ${listLimited(versions, 10)}`)
+  if (aliases.length) parts.push(`aliases: ${listLimited(aliases, 6)}`)
+  return {
+    failure_count: String(findings.length),
+    failing_versions: listLimited(versions, 20),
+    failing_aliases: listLimited(aliases, 12),
+    failure_summary: parts.join('; ')
+  }
+}

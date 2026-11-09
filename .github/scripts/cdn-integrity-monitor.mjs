@@ -28,7 +28,7 @@
  * verification. Exits 1 when any check finds a mismatch or cannot be completed, 0 otherwise.
  */
 import { readFile, appendFile } from 'node:fs/promises'
-import { sha384, matchesManifest, planChecks, planAliases } from '../actions/shared-utils/integrity.js'
+import { sha384, matchesManifest, planChecks, planAliases, summarizeFindings } from '../actions/shared-utils/integrity.js'
 
 const EDGE_HOSTS = ['js-agent.newrelic.com', 'staging-js-agent.newrelic.com']
 const ORIGIN_HOST = 'nr-browser-agent.s3.amazonaws.com'
@@ -139,7 +139,8 @@ async function discoverManifests (options) {
 }
 
 /**
- * @typedef {{check: string, target: string, kind: 'mismatch'|'unavailable', detail: string}} Finding
+ * @typedef {{check: string, target: string, kind: 'mismatch'|'unavailable', detail: string, version?: string, alias?: string}} Finding
+ * version is the release the finding belongs to; alias is the alias file name for findings about a mutable alias.
  */
 
 /**
@@ -158,14 +159,14 @@ async function checkHost (label, baseUrl, release, concurrency) {
     try {
       const response = await fetchWithRetry(target)
       if (!response.ok) {
-        findings.push({ check: label, target, kind: 'unavailable', detail: `HTTP ${response.status}` })
+        findings.push({ check: label, target, kind: 'unavailable', detail: `HTTP ${response.status}`, version: release.version })
         return
       }
       if (!matchesManifest(release.manifest, key, await response.arrayBuffer())) {
-        findings.push({ check: label, target, kind: 'mismatch', detail: `content does not match the ${release.version} manifest` })
+        findings.push({ check: label, target, kind: 'mismatch', detail: `content does not match the ${release.version} manifest`, version: release.version })
       }
     } catch (error) {
-      findings.push({ check: label, target, kind: 'unavailable', detail: String(error.message ?? error) })
+      findings.push({ check: label, target, kind: 'unavailable', detail: String(error.message ?? error), version: release.version })
     }
   }), concurrency)
   return { checked: keys.length, findings }
@@ -190,13 +191,13 @@ async function checkAliases (releases, concurrency) {
           const response = await fetchWithRetry(target)
           if (response.status === 404 && !alias.required) return
           checked++
-          if (!response.ok) { findings.push({ check: 'aliases', target, kind: 'unavailable', detail: `HTTP ${response.status}` }); return }
+          if (!response.ok) { findings.push({ check: 'aliases', target, kind: 'unavailable', detail: `HTTP ${response.status}`, alias: alias.key }); return }
           if (!alias.digests.includes(sha384(await response.arrayBuffer()))) {
-            findings.push({ check: 'aliases', target, kind: 'mismatch', detail: 'content matches none of the releases this alias may point at' })
+            findings.push({ check: 'aliases', target, kind: 'mismatch', detail: 'content matches none of the releases this alias may point at', alias: alias.key })
           }
         } catch (error) {
           checked++
-          findings.push({ check: 'aliases', target, kind: 'unavailable', detail: String(error.message ?? error) })
+          findings.push({ check: 'aliases', target, kind: 'unavailable', detail: String(error.message ?? error), alias: alias.key })
         }
       })
     }
@@ -244,7 +245,7 @@ console.log('\nChecking alias loaders')
 record('aliases', 'alias loaders', await checkAliases(releases, options.concurrency))
 record('manifests', 'release manifests', {
   checked: releases.length + skipped.length,
-  findings: skipped.map(tag => ({ check: 'manifests', target: tag, kind: 'unavailable', detail: 'published release has no integrity-manifest.json, so its files cannot be verified' }))
+  findings: skipped.map(tag => ({ check: 'manifests', target: tag, kind: 'unavailable', detail: 'published release has no integrity-manifest.json, so its files cannot be verified', version: tag.replace(/^v/, '') }))
 })
 
 for (const tier of ['full', 'loaders']) {
@@ -276,4 +277,9 @@ console.log(`\n${report}`)
 if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, report + '\n')
 for (const f of mismatches.slice(0, 20)) console.log(`::error title=Integrity mismatch::${f.check}: ${f.target} ${f.detail}`)
 for (const f of unavailable.slice(0, 20)) console.log(`::warning title=Integrity check incomplete::${f.check}: ${f.target} ${f.detail}`)
+/* Exposed as step outputs so the notify job can describe the failure in the New Relic event without re-running the check. */
+if (findings.length && process.env.GITHUB_OUTPUT) {
+  const outputs = summarizeFindings(findings)
+  await appendFile(process.env.GITHUB_OUTPUT, Object.entries(outputs).map(([name, value]) => `${name}=${value}\n`).join(''))
+}
 process.exit(findings.length ? 1 : 0)

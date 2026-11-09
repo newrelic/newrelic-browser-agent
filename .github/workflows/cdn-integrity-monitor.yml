@@ -30,6 +30,12 @@ jobs:
     name: Verify served assets against release manifests
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Written by the script only when something failed; used by the notify job to describe the failure.
+    outputs:
+      failure_count: ${{ steps.verify.outputs.failure_count }}
+      failing_versions: ${{ steps.verify.outputs.failing_versions }}
+      failing_aliases: ${{ steps.verify.outputs.failing_aliases }}
+      failure_summary: ${{ steps.verify.outputs.failure_summary }}
     defaults:
       run:
         shell: bash
@@ -39,6 +45,7 @@ jobs:
         with:
           node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Verify CDN and S3 origin
+        id: verify
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: node .github/scripts/cdn-integrity-monitor.mjs --repo "$GITHUB_REPOSITORY" --releases 5
@@ -76,8 +83,22 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           REPOSITORY: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
+          FAILURE_COUNT: ${{ needs.monitor.outputs.failure_count }}
+          FAILING_VERSIONS: ${{ needs.monitor.outputs.failing_versions }}
+          FAILING_ALIASES: ${{ needs.monitor.outputs.failing_aliases }}
+          FAILURE_SUMMARY: ${{ needs.monitor.outputs.failure_summary }}
+        # The failure details come from release tag names and served URLs, so they are passed through the environment and jq
+        # rather than interpolated into the script. They are empty when the monitor failed before it could produce them.
         run: |
-          echo "attributes=$(jq -cn --arg url "$RUN_URL" --arg repo "$REPOSITORY" --arg id "$RUN_ID" '{runUrl: $url, repository: $repo, runId: $id, monitor: "cdn-integrity-monitor"}')" >> "$GITHUB_OUTPUT"
+          attributes=$(jq -cn \
+            --arg url "$RUN_URL" --arg repo "$REPOSITORY" --arg id "$RUN_ID" \
+            --arg count "$FAILURE_COUNT" --arg versions "$FAILING_VERSIONS" --arg aliases "$FAILING_ALIASES" --arg summary "$FAILURE_SUMMARY" '
+            {
+              runUrl: $url, repository: $repo, runId: $id, monitor: "cdn-integrity-monitor",
+              failureCount: (if $count == "" then null else ($count | tonumber) end),
+              failingVersions: $versions, failingAliases: $aliases, failureSummary: $summary
+            } | with_entries(select(.value != null and .value != ""))')
+          echo "attributes=$attributes" >> "$GITHUB_OUTPUT"
       - name: Publish failure event to New Relic
         if: ${{ !cancelled() }}
         uses: ./.github/actions/newrelic-custom-event

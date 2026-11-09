@@ -1,4 +1,4 @@
-import { isMinifiedLoader, planChecks, planAliases } from '../../../.github/actions/shared-utils/integrity'
+import { isMinifiedLoader, planChecks, planAliases, summarizeFindings } from '../../../.github/actions/shared-utils/integrity'
 
 /**
  * Builds a release as the monitor sees it: a version and the keys of its integrity manifest.
@@ -170,5 +170,44 @@ describe('planAliases', () => {
 
     expect(find(plans, 'nr-loader-rum-current.min.js').digests).toEqual(['sha384-a'])
     expect(find(plans, 'nr-loader-rum-1.x.x.min.js').digests).toEqual(['sha384-a'])
+  })
+})
+
+describe('summarizeFindings', () => {
+  test('counts findings by kind and names the failing releases newest first', () => {
+    const summary = summarizeFindings([
+      { kind: 'mismatch', version: '1.9.0' },
+      { kind: 'mismatch', version: '1.10.0' },
+      { kind: 'unavailable', version: '1.10.0' }
+    ])
+
+    expect(summary.failure_count).toBe('3')
+    expect(summary.failing_versions).toBe('1.10.0, 1.9.0')
+    expect(summary.failure_summary).toBe('2 mismatch(es), 1 unavailable; releases: 1.10.0, 1.9.0')
+  })
+
+  test('names failing aliases separately from releases', () => {
+    const summary = summarizeFindings([
+      { kind: 'mismatch', alias: 'nr-loader-rum-current.min.js' },
+      { kind: 'mismatch', alias: 'nr-loader-rum-current.min.js' }
+    ])
+
+    expect(summary.failing_aliases).toBe('nr-loader-rum-current.min.js')
+    expect(summary.failing_versions).toBe('')
+    expect(summary.failure_summary).toBe('2 mismatch(es), 0 unavailable; aliases: nr-loader-rum-current.min.js')
+  })
+
+  test('limits a long list of releases and says how many were left out', () => {
+    const findings = Array.from({ length: 25 }, (_, i) => ({ kind: 'mismatch', version: `1.${i}.0` }))
+    const summary = summarizeFindings(findings)
+
+    expect(summary.failing_versions.endsWith('(+5 more)')).toBe(true)
+    expect(summary.failing_versions.split(',').length).toBe(20)
+  })
+
+  test('returns single-line strings', () => {
+    const summary = summarizeFindings([{ kind: 'mismatch', version: '1.0.0\n2.0.0' }])
+
+    expect(Object.values(summary).some(v => v.includes('\n'))).toBe(false)
   })
 })

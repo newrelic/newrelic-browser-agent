@@ -72,7 +72,7 @@ jobs:
           fi
 
       - name: Install project dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
       - name: Clean branch name
         id: clean-branch-name
         env:

@@ -44,7 +44,7 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Install project dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       # Build NPM package for release
       - name: Build npm package

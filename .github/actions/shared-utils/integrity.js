@@ -72,3 +72,55 @@ export function planChecks (releases, fullCount, include = '') {
     return { ...release, tier, keys }
   })
 }
+
+/**
+ * @typedef {Object} PlannedAlias
+ * @property {string} key Alias file name, e.g. `nr-loader-spa-1.230.x.min.js`.
+ * @property {boolean} required Whether the alias is expected to exist. A missing optional alias is skipped, not reported.
+ * @property {string[]} digests Digests the alias may legitimately serve: the same loader from each release it can point at.
+ */
+
+/*
+ * Mutable aliases customers can load instead of a pinned version: `-current`, `1.x.x` (latest 1.x) and `1.NNN.x` (latest
+ * patch of that minor line). Only the minified loaders are covered, matching the rest of the monitor.
+ */
+const ALIAS_LOADERS = ['rum', 'full', 'spa'].flatMap(type => [`nr-loader-${type}`, `nr-loader-${type}-polyfills`])
+const SEMVER = /^(\d+)\.(\d+)\.\d+$/
+
+/**
+ * Plans the checks for mutable alias files. An alias has no hash of its own, so the check is that it serves the same bytes
+ * as the loader of a release it may point at. A rollback to an older release in range is legitimate; content that matches
+ * none of them is not. `-current` may point at any release, `1.x.x` at any 1.x release, `1.NNN.x` at any release of that line.
+ * @param {Array<{version: string, manifest: {files: Record<string, {sha384: string}>}}>} releases
+ * @returns {PlannedAlias[]}
+ */
+export function planAliases (releases) {
+  const groups = new Map([['current', []], ['1.x.x', []]])
+  for (const release of releases) {
+    const match = SEMVER.exec(release.version)
+    if (!match) continue
+    groups.get('current').push(release)
+    if (match[1] === '1') {
+      groups.get('1.x.x').push(release)
+      const line = `1.${match[2]}.x`
+      if (!groups.has(line)) groups.set(line, [])
+      groups.get(line).push(release)
+    }
+  }
+  const plans = []
+  for (const [name, members] of groups) {
+    for (const base of ALIAS_LOADERS) {
+      const key = `${base}-${name}.min.js`
+      /*
+       * A release may also record, under `unverified.aliases`, the digest an alias legitimately serves when that is a different
+       * build variant than its versioned file (1.230.0 was published more than once, with different chunk filename hashes).
+       */
+      const digests = members.flatMap(r => [r.manifest.files?.[`${base}-${r.version}.min.js`]?.sha384, r.manifest.unverified?.aliases?.[key]]).filter(Boolean)
+      if (!digests.length) continue
+      /* Only the unsuffixed loaders are guaranteed to have current and 1.x.x aliases; every other alias may legitimately not exist. */
+      const required = (name === 'current' || name === '1.x.x') && !base.endsWith('-polyfills')
+      plans.push({ key, required, digests: [...new Set(digests)] })
+    }
+  }
+  return plans
+}

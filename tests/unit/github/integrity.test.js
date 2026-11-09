@@ -1,4 +1,4 @@
-import { isMinifiedLoader, planChecks } from '../../../.github/actions/shared-utils/integrity'
+import { isMinifiedLoader, planChecks, planAliases } from '../../../.github/actions/shared-utils/integrity'
 
 /**
  * Builds a release as the monitor sees it: a version and the keys of its integrity manifest.
@@ -94,5 +94,81 @@ describe('planChecks', () => {
 
     expect(plan.version).toBe('1.0.0')
     expect(plan.manifest).toBe(input.manifest)
+  })
+})
+
+describe('planAliases', () => {
+  /**
+   * Builds a release whose manifest holds the minified rum loader with a digest derived from the given label.
+   * @param {string} version
+   * @param {string} label
+   * @returns {{version: string, manifest: object}}
+   */
+  const withLoader = (version, label) => ({
+    version,
+    manifest: { files: { [`nr-loader-rum-${version}.min.js`]: { sha384: `sha384-${label}` } } }
+  })
+  const find = (plans, key) => plans.find(p => p.key === key)
+
+  test('allows -current to match any release', () => {
+    const plans = planAliases([withLoader('1.2.1', 'b'), withLoader('1.1.0', 'a')])
+
+    expect(find(plans, 'nr-loader-rum-current.min.js').digests.sort()).toEqual(['sha384-a', 'sha384-b'])
+  })
+
+  test('allows a minor-line alias to match only releases of that line', () => {
+    const plans = planAliases([withLoader('1.2.1', 'b'), withLoader('1.2.0', 'a'), withLoader('1.1.0', 'c')])
+
+    expect(find(plans, 'nr-loader-rum-1.2.x.min.js').digests.sort()).toEqual(['sha384-a', 'sha384-b'])
+    expect(find(plans, 'nr-loader-rum-1.1.x.min.js').digests).toEqual(['sha384-c'])
+  })
+
+  test('allows 1.x.x to match any 1.x release', () => {
+    const plans = planAliases([withLoader('1.2.1', 'b'), withLoader('1.1.0', 'a')])
+
+    expect(find(plans, 'nr-loader-rum-1.x.x.min.js').digests.sort()).toEqual(['sha384-a', 'sha384-b'])
+  })
+
+  test('requires only -current and 1.x.x of the unsuffixed loaders', () => {
+    const plans = planAliases([withLoader('1.2.0', 'a')])
+
+    expect(find(plans, 'nr-loader-rum-current.min.js').required).toBe(true)
+    expect(find(plans, 'nr-loader-rum-1.x.x.min.js').required).toBe(true)
+    expect(find(plans, 'nr-loader-rum-1.2.x.min.js').required).toBe(false)
+  })
+
+  test('ignores releases whose version is not major.minor.patch', () => {
+    const plans = planAliases([withLoader('1216', 'a')])
+
+    expect(plans).toEqual([])
+  })
+
+  test('omits aliases for loaders no release has', () => {
+    const plans = planAliases([withLoader('1.2.0', 'a')])
+
+    expect(find(plans, 'nr-loader-spa-current.min.js')).toBeUndefined()
+  })
+
+  test('does not deduplicate across lines, and deduplicates identical digests within one', () => {
+    const plans = planAliases([withLoader('1.2.1', 'a'), withLoader('1.2.0', 'a')])
+
+    expect(find(plans, 'nr-loader-rum-1.2.x.min.js').digests).toEqual(['sha384-a'])
+  })
+
+  test('accepts an alias digest a release records under unverified.aliases', () => {
+    const release = withLoader('1.2.0', 'a')
+    release.manifest.unverified = { aliases: { 'nr-loader-rum-1.2.x.min.js': 'sha384-variant' } }
+    const plans = planAliases([release])
+
+    expect(find(plans, 'nr-loader-rum-1.2.x.min.js').digests.sort()).toEqual(['sha384-a', 'sha384-variant'])
+  })
+
+  test('does not apply a recorded alias digest to a different alias', () => {
+    const release = withLoader('1.2.0', 'a')
+    release.manifest.unverified = { aliases: { 'nr-loader-rum-1.2.x.min.js': 'sha384-variant' } }
+    const plans = planAliases([release])
+
+    expect(find(plans, 'nr-loader-rum-current.min.js').digests).toEqual(['sha384-a'])
+    expect(find(plans, 'nr-loader-rum-1.x.x.min.js').digests).toEqual(['sha384-a'])
   })
 })

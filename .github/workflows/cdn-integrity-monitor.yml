@@ -4,6 +4,12 @@
 # The 5 newest releases are checked in full; older releases are checked for their minified loaders only, which keeps
 # each run to a few thousand small requests (see .github/scripts/cdn-integrity-monitor.mjs).
 # Notifications are sent from a separate job so that the checking job needs no secrets.
+# A failure posts to Slack and publishes a BrowserCDNIntegrityFailure event to New Relic. A New Relic alert condition on
+# that event pages the browser team through PagerDuty, so no PagerDuty credentials live in this repository. Every passing
+# run publishes a BrowserCDNIntegrityHeartbeat event, and a second alert pages when those stop arriving.
+#
+# Out of scope here: detecting S3 writes made outside the release pipeline (CloudTrail). That is an AWS-side control, not
+# something a GitHub workflow can observe, and it must be owned and tested by the infrastructure or security team.
 
 name: CDN Integrity Monitor
 
@@ -63,3 +69,52 @@ jobs:
         with:
           browser_agent_dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
           payload: ${{ steps.payload.outputs.payload }}
+      - name: Build New Relic event attributes
+        id: event
+        if: ${{ !cancelled() }}
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          echo "attributes=$(jq -cn --arg url "$RUN_URL" --arg repo "$REPOSITORY" --arg id "$RUN_ID" '{runUrl: $url, repository: $repo, runId: $id, monitor: "cdn-integrity-monitor"}')" >> "$GITHUB_OUTPUT"
+      - name: Publish failure event to New Relic
+        if: ${{ !cancelled() }}
+        uses: ./.github/actions/newrelic-custom-event
+        with:
+          insert_key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          account_id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          event_type: BrowserCDNIntegrityFailure
+          attributes: ${{ steps.event.outputs.attributes }}
+
+  # Proves the monitor itself is still running. A New Relic alert fires when these events stop arriving, which catches a
+  # disabled schedule or a broken workflow that would otherwise look the same as "nothing is wrong".
+  heartbeat:
+    name: Report that the monitor ran
+    needs: monitor
+    if: success() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Build New Relic event attributes
+        id: event
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          echo "attributes=$(jq -cn --arg url "$RUN_URL" --arg repo "$REPOSITORY" --arg id "$RUN_ID" '{runUrl: $url, repository: $repo, runId: $id, monitor: "cdn-integrity-monitor"}')" >> "$GITHUB_OUTPUT"
+      - name: Publish heartbeat event to New Relic
+        uses: ./.github/actions/newrelic-custom-event
+        with:
+          insert_key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          account_id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          event_type: BrowserCDNIntegrityHeartbeat
+          attributes: ${{ steps.event.outputs.attributes }}

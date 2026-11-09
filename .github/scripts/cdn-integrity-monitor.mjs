@@ -7,14 +7,16 @@
  *
  *   1. the CDN edge (js-agent.newrelic.com, staging-js-agent.newrelic.com) serves content matching the manifest
  *   2. the S3 origin (nr-browser-agent) serves content matching the manifest, independent of the CDN cache
- *   3. the mutable `-current` loaders match one of the manifested releases (a rollback is legitimate, anything else isn't)
+ *   3. the mutable alias loaders (`-current`, `1.x.x`, `1.NNN.x`) match a release they may point at (a rollback within
+ *      range is legitimate, anything else isn't)
+ *   4. every published release carries a manifest, so a release published without one fails the run
  *
  * Releases are checked in two tiers so that the whole release history can be swept every few minutes:
  *
  *   - full: the newest `--releases` releases, every .js file in the manifest (loaders and aggregate chunks)
  *   - loaders: every older release, only the minified entry-point loaders customers load (see isMinifiedLoader)
  *
- * A release without a manifest cannot be checked. It is counted and reported, never silently treated as passing.
+ * A release without a manifest cannot be checked, so it fails the run instead of being silently treated as passing.
  *
  * The NR loader database is deliberately not checked here: reading it requires an API key, and this script runs on a
  * schedule with no credentials. The release workflow verifies the database against the same manifest (nr-verify).
@@ -26,11 +28,10 @@
  * verification. Exits 1 when any check finds a mismatch or cannot be completed, 0 otherwise.
  */
 import { readFile, appendFile } from 'node:fs/promises'
-import { sha384, matchesManifest, planChecks } from '../actions/shared-utils/integrity.js'
+import { sha384, matchesManifest, planChecks, planAliases } from '../actions/shared-utils/integrity.js'
 
 const EDGE_HOSTS = ['js-agent.newrelic.com', 'staging-js-agent.newrelic.com']
 const ORIGIN_HOST = 'nr-browser-agent.s3.amazonaws.com'
-const LOADER_TYPES = ['rum', 'full', 'spa']
 const MANIFEST_ASSET = 'integrity-manifest.json'
 
 /**
@@ -117,23 +118,23 @@ async function listReleases (repo) {
 /**
  * Finds every release that carries an integrity manifest and downloads them.
  * @param {ReturnType<typeof parseArgs>} options
- * @returns {Promise<{found: Array<{version: string, manifest: {files: Record<string, {sha384: string}>}}>, skipped: number}>} found is newest first; skipped counts releases without a manifest.
+ * @returns {Promise<{found: Array<{version: string, manifest: {files: Record<string, {sha384: string}>}}>, skipped: string[]}>} found is newest first; skipped lists the tags of releases without a manifest.
  */
 async function discoverManifests (options) {
   const withManifest = []
-  let skipped = 0
+  const skipped = []
   for (const release of await listReleases(options.repo)) {
     if (release.draft || release.prerelease) continue
     const asset = release.assets?.find(a => a.name === MANIFEST_ASSET)
     if (asset) withManifest.push({ release, asset })
-    else skipped++
+    else skipped.push(release.tag_name)
   }
   const found = await pool(withManifest.map(({ release, asset }) => async () => {
     const download = await fetchWithRetry(asset.browser_download_url)
     if (!download.ok) throw new Error(`Could not download ${MANIFEST_ASSET} for ${release.tag_name}: HTTP ${download.status}`)
     return { version: release.tag_name.replace(/^v/, ''), manifest: await download.json() }
   }), options.concurrency)
-  console.log(`Found ${found.length} release manifest(s); ${skipped} release(s) without one cannot be checked.`)
+  console.log(`Found ${found.length} release manifest(s); ${skipped.length} release(s) without one cannot be checked.`)
   return { found, skipped }
 }
 
@@ -171,37 +172,41 @@ async function checkHost (label, baseUrl, release, concurrency) {
 }
 
 /**
- * The mutable -current loaders may legitimately point at an older release after a rollback, so they only need to
- * match a loader from one of the checked releases.
+ * Checks the mutable alias loaders (`-current`, `1.x.x`, `1.NNN.x`) on every host. An alias must serve the same bytes as
+ * the loader of a release it may point at, so a rollback within range passes and anything else is a mismatch.
  * @param {Array<{version: string, manifest: object}>} releases
+ * @param {number} concurrency
  * @returns {Promise<{checked: number, findings: Finding[]}>}
  */
-async function checkCurrent (releases) {
+async function checkAliases (releases, concurrency) {
   const findings = []
   let checked = 0
+  const tasks = []
   for (const host of [...EDGE_HOSTS, ORIGIN_HOST]) {
-    for (const type of LOADER_TYPES) {
-      for (const suffix of ['min.js']) {
-        const target = `https://${host}/nr-loader-${type}-current.${suffix}`
-        checked++
+    for (const alias of planAliases(releases)) {
+      tasks.push(async () => {
+        const target = `https://${host}/${alias.key}`
         try {
           const response = await fetchWithRetry(target)
-          if (!response.ok) { findings.push({ check: 'current-loaders', target, kind: 'unavailable', detail: `HTTP ${response.status}` }); continue }
-          const digest = sha384(await response.arrayBuffer())
-          const match = releases.find(r => r.manifest.files?.[`nr-loader-${type}-${r.version}.${suffix}`]?.sha384 === digest)
-          if (!match) findings.push({ check: 'current-loaders', target, kind: 'mismatch', detail: 'content matches none of the checked releases' })
-          else console.log(`  ${target} -> ${match.version}`)
+          if (response.status === 404 && !alias.required) return
+          checked++
+          if (!response.ok) { findings.push({ check: 'aliases', target, kind: 'unavailable', detail: `HTTP ${response.status}` }); return }
+          if (!alias.digests.includes(sha384(await response.arrayBuffer()))) {
+            findings.push({ check: 'aliases', target, kind: 'mismatch', detail: 'content matches none of the releases this alias may point at' })
+          }
         } catch (error) {
-          findings.push({ check: 'current-loaders', target, kind: 'unavailable', detail: String(error.message ?? error) })
+          checked++
+          findings.push({ check: 'aliases', target, kind: 'unavailable', detail: String(error.message ?? error) })
         }
-      }
+      })
     }
   }
+  await pool(tasks, concurrency)
   return { checked, findings }
 }
 
 const options = parseArgs(process.argv.slice(2))
-let skipped = 0
+let skipped = []
 let releases
 if (options.manifests.length) {
   releases = await Promise.all(options.manifests.map(async path => {
@@ -212,7 +217,7 @@ if (options.manifests.length) {
   ({ found: releases, skipped } = await discoverManifests(options))
 }
 
-if (!releases.length) {
+if (!releases.length && !skipped.length) {
   console.log('::warning::No release with an integrity manifest was found, so nothing was monitored. Expected until the first release that publishes one.')
   process.exit(0)
 }
@@ -235,8 +240,12 @@ for (const release of planned) {
   for (const host of EDGE_HOSTS) record(release.tier, `edge ${host}`, await checkHost(`edge ${host}`, `https://${host}`, release, options.concurrency))
   record(release.tier, 's3 origin', await checkHost('s3 origin', `https://${ORIGIN_HOST}`, release, options.concurrency))
 }
-console.log('\nChecking -current loaders')
-record('current', '-current loaders', await checkCurrent(releases))
+console.log('\nChecking alias loaders')
+record('aliases', 'alias loaders', await checkAliases(releases, options.concurrency))
+record('manifests', 'release manifests', {
+  checked: releases.length + skipped.length,
+  findings: skipped.map(tag => ({ check: 'manifests', target: tag, kind: 'unavailable', detail: 'published release has no integrity-manifest.json, so its files cannot be verified' }))
+})
 
 for (const tier of ['full', 'loaders']) {
   const inTier = planned.filter(r => r.tier === tier)
@@ -253,7 +262,7 @@ const report = [
   '| --- | --- | --- |',
   ...summary,
   '',
-  `${skipped} release(s) have no integrity manifest and were not checked.` + (emptyPlans.length ? ` ${emptyPlans.length} manifested release(s) had no files to check: ${emptyPlans.slice(0, 20).join(', ')}.` : ''),
+  `${skipped.length} release(s) have no integrity manifest and were not checked.` + (emptyPlans.length ? ` ${emptyPlans.length} manifested release(s) had no files to check: ${emptyPlans.slice(0, 20).join(', ')}.` : ''),
   '',
   '| Tier | Check | Files checked | Problems |',
   '| --- | --- | --- | --- |',

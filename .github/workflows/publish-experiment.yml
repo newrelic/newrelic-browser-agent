@@ -8,6 +8,10 @@ name: Publish Experiment
 permissions:
   contents: read
 
+env:
+  NPM_CONFIG_IGNORE_SCRIPTS: 'true'
+  HUSKY: 0
+
 on:
   workflow_dispatch:
     inputs:
@@ -72,7 +76,7 @@ jobs:
           fi
 
       - name: Install project dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
       - name: Clean branch name
         id: clean-branch-name
         env:

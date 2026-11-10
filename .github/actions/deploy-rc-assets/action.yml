@@ -54,7 +54,7 @@ runs:
         INPUT_BUCKET_DIR: ${{ inputs.bucket_dir }}
       run: |
         echo "🔨 Building fresh assets from current branch for ${INPUT_ENVIRONMENT} environment"
-        npm ci
+        npm ci --ignore-scripts
         if [[ -n "${INPUT_BRANCH_NAME}" ]]; then
           echo "🏷️  Using branch-specific version suffix: ${INPUT_BRANCH_NAME}"
           npm run cdn:webpack -- --env mode="${INPUT_ENVIRONMENT}" --env branchName="${INPUT_BRANCH_NAME}"

@@ -15,6 +15,9 @@ permissions:
   id-token: write
   contents: write
 
+env:
+  NPM_CONFIG_IGNORE_SCRIPTS: 'true'
+
 jobs:
   # Build and publish the github release to S3
   publish-prod-to-s3:

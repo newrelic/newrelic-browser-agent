@@ -7,6 +7,9 @@ permissions:
   id-token: write
   contents: write
 
+env:
+  NPM_CONFIG_IGNORE_SCRIPTS: 'true'
+
 on:
   # Release - publishes the released version
   release:
@@ -52,7 +55,7 @@ jobs:
 
       # Publish release version
       - name: Publish npm package (release)
-        run: npm publish
+        run: npm publish --ignore-scripts
 
       # Deprecate old versions
       #- name: Deprecate old versions

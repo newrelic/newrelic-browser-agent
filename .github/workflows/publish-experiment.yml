@@ -8,6 +8,9 @@ name: Publish Experiment
 permissions:
   contents: read
 
+env:
+  NPM_CONFIG_IGNORE_SCRIPTS: 'true'
+
 on:
   workflow_dispatch:
     inputs:

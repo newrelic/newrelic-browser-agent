@@ -17,6 +17,7 @@ permissions:
 
 env:
   NPM_CONFIG_IGNORE_SCRIPTS: 'true'
+  HUSKY: 0
 
 jobs:
   # Build and publish the github release to S3

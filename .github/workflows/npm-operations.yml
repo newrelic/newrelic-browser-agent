@@ -9,6 +9,7 @@ permissions:
 
 env:
   NPM_CONFIG_IGNORE_SCRIPTS: 'true'
+  HUSKY: 0
 
 on:
   # Release - publishes the released version

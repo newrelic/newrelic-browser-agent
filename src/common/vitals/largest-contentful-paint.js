@@ -34,5 +34,5 @@ if (isBrowserScope) {
 
     largestContentfulPaint.update({ value, attrs })
   }
-  registerVital(() => onLCP(handleLCP))
+  registerVital(() => onLCP(handleLCP), ['at', 'findLast'])
 }

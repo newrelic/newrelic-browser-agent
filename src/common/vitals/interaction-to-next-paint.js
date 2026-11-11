@@ -31,5 +31,5 @@ if (isBrowserScope) {
     }
     interactionToNextPaint.update({ value, attrs })
   }
-  registerVital(() => onINP(handleINP))
+  registerVital(() => onINP(handleINP), ['at'])
 }

@@ -140,3 +140,24 @@ describe('inp', () => {
     })
   })
 })
+
+describe('without Array.prototype.findLast', () => {
+  let descriptor
+
+  beforeEach(() => {
+    descriptor = Object.getOwnPropertyDescriptor(Array.prototype, 'findLast')
+    delete Array.prototype.findLast
+  })
+
+  afterEach(() => {
+    // eslint-disable-next-line no-extend-native
+    Object.defineProperty(Array.prototype, 'findLast', descriptor)
+  })
+
+  test('still registers inp with web-vitals', async () => {
+    const onINP = jest.fn()
+    jest.doMock('web-vitals/attribution', () => ({ onINP }))
+    await import('../../../../src/common/vitals/interaction-to-next-paint')
+    expect(onINP).toHaveBeenCalledTimes(1)
+  })
+})

@@ -32,12 +32,19 @@ runs:
       shell: bash
     - name: Run action script
       id: action-script
+      env:
+        INPUT_LICENSE_KEY: ${{ inputs.license-key }}
+        INPUT_APP_ID: ${{ inputs.app-id }}
+        INPUT_ENTITY_GUID: ${{ inputs.entity-guid }}
+        INPUT_PAGE_VIEW: ${{ inputs.page-view }}
+        INPUT_SESSION_REPLAY: ${{ inputs.session-replay }}
+        INPUT_MINUTES: ${{ inputs.minutes }}
       run: |
-        node $GITHUB_ACTION_PATH/index.cjs \
-          --license-key ${{ inputs.license-key }} \
-          --app-id ${{ inputs.app-id }} \
-          --entity-guid ${{ inputs.entity-guid }} \
-          --page-view ${{ inputs.page-view }} \
-          --session-replay ${{ inputs.session-replay }}
-          --minutes ${{ inputs.minutes }}
+        node "$GITHUB_ACTION_PATH/index.cjs" \
+          --license-key "$INPUT_LICENSE_KEY" \
+          --app-id "$INPUT_APP_ID" \
+          --entity-guid "$INPUT_ENTITY_GUID" \
+          --page-view "$INPUT_PAGE_VIEW" \
+          --session-replay "$INPUT_SESSION_REPLAY" \
+          --minutes "$INPUT_MINUTES"
       shell: bash

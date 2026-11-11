@@ -23,10 +23,14 @@ runs:
       shell: bash
     - name: Run action script
       id: action-script
+      env:
+        INPUT_GITHUB_LOGIN: ${{ inputs.github_login }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
+        INPUT_GITHUB_EMAIL: ${{ inputs.github_email }}
       run: |
-        node $GITHUB_ACTION_PATH/index.js \
+        node "$GITHUB_ACTION_PATH/index.js" \
           --open-pull-request \
-          --github-login ${{ inputs.github_login }} \
-          --github-token ${{ inputs.github_token }} \
-          --github-email ${{ inputs.github_email }}
+          --github-login "$INPUT_GITHUB_LOGIN" \
+          --github-token "$INPUT_GITHUB_TOKEN" \
+          --github-email "$INPUT_GITHUB_EMAIL"
       shell: bash

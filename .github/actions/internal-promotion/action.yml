@@ -45,17 +45,24 @@ runs:
     - name: Build released asset
       id: build-released
       env:
+        INPUT_NR_ENVIRONMENT: ${{ inputs.nr_environment }}
+        INPUT_RELEASED_URL: ${{ inputs.nrba_released_script_url }}
+        INPUT_APP_ID: ${{ inputs.nrba_app_id }}
+        INPUT_LICENSE_KEY: ${{ inputs.nrba_license_key }}
+        INPUT_REGION: ${{ inputs.aws_region }}
+        INPUT_BUCKET: ${{ inputs.aws_bucket_name }}
+        INPUT_ROLE: ${{ inputs.aws_role }}
         AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
       run: |
-        node $GITHUB_ACTION_PATH/index.js \
-          --environment ${{ inputs.nr_environment }} \
-          --released ${{ inputs.nrba_released_script_url }} \
-          --app-id ${{ inputs.nrba_app_id }} \
-          --license-key ${{ inputs.nrba_license_key }} \
-          --region ${{ inputs.aws_region }} \
-          --bucket ${{ inputs.aws_bucket_name }} \
-          --role ${{ inputs.aws_role }}
+        node "$GITHUB_ACTION_PATH/index.js" \
+          --environment "$INPUT_NR_ENVIRONMENT" \
+          --released "$INPUT_RELEASED_URL" \
+          --app-id "$INPUT_APP_ID" \
+          --license-key "$INPUT_LICENSE_KEY" \
+          --region "$INPUT_REGION" \
+          --bucket "$INPUT_BUCKET" \
+          --role "$INPUT_ROLE"
       shell: bash
 
     - run: echo '=========================== Uploading Released Asset ==========================='
@@ -73,7 +80,9 @@ runs:
 
     - name: Gather purge paths
       id: purge-paths
-      run: echo "results=$(echo '${{ steps.s3-upload.outputs.results }}' | jq -j '.[].Key | select(. | test(".*?\\.js$")) + " "')" >> $GITHUB_OUTPUT
+      env:
+        S3_RESULTS: ${{ steps.s3-upload.outputs.results }}
+      run: echo "results=$(printf '%s' "$S3_RESULTS" | jq -j '.[].Key | select(. | test(".*?\\.js$")) + " "')" >> $GITHUB_OUTPUT
       shell: bash
 
     - run: echo '=========================== Purging Fastly Cache ==========================='

@@ -22,9 +22,13 @@ runs:
     - name: Run action script
       id: action-script
       env:
+        INPUT_SERVICE: ${{ inputs.fastly_service }}
+        INPUT_PURGE_PATH: ${{ inputs.purge_path }}
         FASTLY_API_TOKEN: ${{ inputs.fastly_key }}
       run: |
-        node $GITHUB_ACTION_PATH/index.js \
-          --service ${{ inputs.fastly_service }} \
-          --purge-path ${{ inputs.purge_path }}
+        # Globbing is off and the list variable below is deliberately unquoted so a space separated list splits into separate arguments
+        set -f
+        node "$GITHUB_ACTION_PATH/index.js" \
+          --service "$INPUT_SERVICE" \
+          --purge-path $INPUT_PURGE_PATH
       shell: bash

@@ -15,12 +15,20 @@ permissions:
   id-token: write
   contents: write
 
+env:
+  NPM_CONFIG_IGNORE_SCRIPTS: 'true'
+  HUSKY: 0
+
 jobs:
   # Build and publish the github release to S3
   publish-prod-to-s3:
     runs-on: ubuntu-latest
     environment: public-release
-    timeout-minutes: 5
+    timeout-minutes: 10
+    permissions:
+      id-token: write # required to sign the build provenance attestation
+      attestations: write
+      contents: write # required to attach the integrity manifest to the release
     defaults:
       run:
         shell: bash
@@ -30,9 +38,38 @@ jobs:
         with:
           node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Install project dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
       - name: Build prod
         run: npm run cdn:build:prod
+      # Record a sha384 for every built file before anything is uploaded. The checksums are attested (Sigstore) and
+      # the manifest is attached to the release so later jobs, and customers, can verify what the CDN serves.
+      - name: Generate integrity manifest
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/integrity"
+          node .github/scripts/generate-integrity-manifest.mjs build \
+            "$RUNNER_TEMP/integrity/integrity-manifest.json" \
+            "$RUNNER_TEMP/integrity/checksums.txt" \
+            "$RELEASE_TAG" "$GITHUB_SHA"
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
+        with:
+          subject-checksums: ${{ runner.temp }}/integrity/checksums.txt
+      - name: Attach integrity manifest to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/integrity/integrity-manifest.json" --repo "$GITHUB_REPOSITORY"
+      # Later jobs, including the one on the custom runner, read the manifest from this artifact rather than
+      # depending on the gh CLI being installed there.
+      - name: Share integrity manifest with later jobs
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: integrity-manifest
+          path: ${{ runner.temp }}/integrity/integrity-manifest.json
+          if-no-files-found: error
+          retention-days: 14
       - name: Upload prod
         id: s3-upload
         uses: ./.github/actions/s3-upload
@@ -44,7 +81,9 @@ jobs:
           local_dir: $GITHUB_WORKSPACE/build
       - name: Gather cdn purge paths
         id: purge-paths
-        run: echo "results=$(echo '${{ steps.s3-upload.outputs.results }}' | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
+        env:
+          S3_RESULTS: ${{ steps.s3-upload.outputs.results }}
+        run: echo "results=$(printf '%s' "$S3_RESULTS" | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
       - name: Purge production cdn
         uses: ./.github/actions/fastly-purge
         with:
@@ -60,20 +99,21 @@ jobs:
       - name: Verify production cdn assets
         uses: ./.github/actions/fastly-verify
         with:
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
+          manifest: ${{ runner.temp }}/integrity/integrity-manifest.json
       - name: Verify staging cdn assets
         uses: ./.github/actions/fastly-verify
         with:
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: staging-js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
+          manifest: ${{ runner.temp }}/integrity/integrity-manifest.json
 
   # Publish the new "current" version to s3 before the prod a/b scripts have been built
   publish-current-to-s3:
     needs: [publish-prod-to-s3]
     runs-on: ubuntu-latest
+    environment: public-release
     timeout-minutes: 30
     defaults:
       run:
@@ -97,7 +137,9 @@ jobs:
           loader_version: ${{ steps.agent-loader-version.outputs.results }}
       - name: Gather cdn purge paths
         id: purge-paths
-        run: echo "results=$(echo '${{ steps.s3-upload.outputs.results }}' | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
+        env:
+          S3_RESULTS: ${{ steps.s3-upload.outputs.results }}
+        run: echo "results=$(printf '%s' "$S3_RESULTS" | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
       - name: Purge production cdn
         uses: ./.github/actions/fastly-purge
         with:
@@ -113,13 +155,11 @@ jobs:
       - name: Verify production cdn assets
         uses: ./.github/actions/fastly-verify
         with:
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
       - name: Verify staging cdn assets
         uses: ./.github/actions/fastly-verify
         with:
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: staging-js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
 
@@ -139,7 +179,7 @@ jobs:
         with:
           node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
       - name: Running cdn build
         run: npm run cdn:build:prod
       - name: Running npm build
@@ -169,9 +209,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.event.release.tag_name }}
+          RELEASE_BODY: ${{ github.event.release.body }}
         run: |
           {
-            printf '%s\n' "${{ github.event.release.body }}"
+            printf '%s\n' "${RELEASE_BODY}"
             printf '\n## Asset Size Report\n\n'
             printf 'Built asset sizes for %s:\n\n' "$TAG"
             cat ./build/size_report.md
@@ -309,6 +350,7 @@ jobs:
   publish-to-nr-stage:
     needs: [ publish-prod-to-s3 ]
     runs-on: Browser-Agent-Assigned-IP-Linux
+    environment: nr-stage
     continue-on-error: true
     timeout-minutes: 30
     defaults:
@@ -322,22 +364,31 @@ jobs:
       - name: Get version number
         id: agent-loader-version
         run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Download integrity manifest
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: integrity-manifest
+          path: ${{ runner.temp }}/integrity
       - name: Publish loader to nr
         uses: ./.github/actions/nr-upload
         with:
           nr_stage_api_key: ${{ secrets.NR_API_KEY_STAGING }}
           loader_version: ${{ steps.agent-loader-version.outputs.results }}
           environment: stage
+          manifest: ${{ runner.temp }}/integrity/integrity-manifest.json
       - name: Verify loaders in nr
         uses: ./.github/actions/nr-verify
         with:
+          nr_stage_api_key: ${{ secrets.NR_API_KEY_STAGING }}
           loader_version: ${{ steps.agent-loader-version.outputs.results }}
           environment: stage
+          manifest: ${{ runner.temp }}/integrity/integrity-manifest.json
 
   # Publish the loaders to nr prod
   publish-to-nr-prod:
     needs: [publish-prod-to-s3]
     runs-on: ubuntu-latest
+    environment: public-release
     timeout-minutes: 30
     defaults:
       run:
@@ -350,17 +401,25 @@ jobs:
       - name: Get version number
         id: agent-loader-version
         run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Download integrity manifest
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: integrity-manifest
+          path: ${{ runner.temp }}/integrity
       - name: Publish loader to nr
         uses: ./.github/actions/nr-upload
         with:
           nr_prod_api_key: ${{ secrets.NR_API_KEY_PRODUCTION }}
           loader_version: ${{ steps.agent-loader-version.outputs.results }}
           environment: prod
+          manifest: ${{ runner.temp }}/integrity/integrity-manifest.json
       - name: Verify loaders in nr
         uses: ./.github/actions/nr-verify
         with:
+          nr_prod_api_key: ${{ secrets.NR_API_KEY_PRODUCTION }}
           loader_version: ${{ steps.agent-loader-version.outputs.results }}
           environment: prod
+          manifest: ${{ runner.temp }}/integrity/integrity-manifest.json
 
   # Raise the release notes pr on the docs website repo
   raise-release-notes-pr:
@@ -420,7 +479,7 @@ jobs:
         with:
           node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Install project dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
       - name: Build prod
         run: npm run cdn:build:prod
       - name: Get version number
@@ -429,10 +488,12 @@ jobs:
       - name: Get local stats
         id: get-stats
         shell: bash
+        env:
+          AGENT_VERSION: ${{ steps.agent-loader-version.outputs.results }}
         run: |
-          rum=$(cat ./build/nr-rum-standard-${{ steps.agent-loader-version.outputs.results }}.stats.json); echo "rum=$rum" >> $GITHUB_OUTPUT;
-          full=$(cat ./build/nr-full-standard-${{ steps.agent-loader-version.outputs.results }}.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;
-          spa=$(cat ./build/nr-spa-standard-${{ steps.agent-loader-version.outputs.results }}.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
+          rum=$(cat "./build/nr-rum-standard-${AGENT_VERSION}.stats.json"); echo "rum=$rum" >> $GITHUB_OUTPUT;
+          full=$(cat "./build/nr-full-standard-${AGENT_VERSION}.stats.json"); echo "full=$full" >> $GITHUB_OUTPUT;
+          spa=$(cat "./build/nr-spa-standard-${AGENT_VERSION}.stats.json"); echo "spa=$spa" >> $GITHUB_OUTPUT;
       - name: Report lite size to NR
         continue-on-error: true
         uses: newrelic-apps/capture-build-size@59825bd7e04eb1820084bf15a25687830c46d7c5 # v1.0.1

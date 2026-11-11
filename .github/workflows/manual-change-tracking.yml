@@ -84,9 +84,10 @@ jobs:
 
       - name: Determine Entity GUID and API Key
         id: entity-config
+        env:
+          ACCOUNT_ID: ${{ inputs.accountId }}
+          APPLICATION: ${{ inputs.application }}
         run: |
-          ACCOUNT_ID="${{ inputs.accountId }}"
-          APPLICATION="${{ inputs.application }}"
 
           # Note: All API calls go to staging-api.newrelic.com
           # The application parameter determines which entity GUID to use
@@ -157,19 +158,29 @@ jobs:
           groupId: ${{ inputs.groupId }}
 
       - name: Summary
+        env:
+          CATEGORY: ${{ inputs.category }}
+          EVENT_TYPE: ${{ inputs.type }}
+          ACCOUNT_ID: ${{ inputs.accountId }}
+          APPLICATION: ${{ inputs.application }}
+          VERSION: ${{ inputs.version }}
+          FEATURE_FLAG_ID: ${{ inputs.featureFlagId }}
+          DESCRIPTION: ${{ inputs.description }}
+          COMMIT_SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
         run: |
           echo "## Change Tracking Event Created! :rocket:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Category:** ${{ inputs.category }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Type:** ${{ inputs.type }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Account ID:** ${{ inputs.accountId }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Application:** ${{ inputs.application }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** ${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
-          if [ -n "${{ inputs.featureFlagId }}" ]; then
-            echo "**Feature Flag ID:** ${{ inputs.featureFlagId }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Category:** ${CATEGORY}" >> $GITHUB_STEP_SUMMARY
+          echo "**Type:** ${EVENT_TYPE}" >> $GITHUB_STEP_SUMMARY
+          echo "**Account ID:** ${ACCOUNT_ID}" >> $GITHUB_STEP_SUMMARY
+          echo "**Application:** ${APPLICATION}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${VERSION}" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${FEATURE_FLAG_ID}" ]; then
+            echo "**Feature Flag ID:** ${FEATURE_FLAG_ID}" >> $GITHUB_STEP_SUMMARY
           fi
-          if [ -n "${{ inputs.description }}" ]; then
-            echo "**Description:** ${{ inputs.description }}" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${DESCRIPTION}" ]; then
+            echo "**Description:** ${DESCRIPTION}" >> $GITHUB_STEP_SUMMARY
           fi
-          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "**User:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${COMMIT_SHA}" >> $GITHUB_STEP_SUMMARY
+          echo "**User:** ${ACTOR}" >> $GITHUB_STEP_SUMMARY

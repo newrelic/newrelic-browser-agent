@@ -30,12 +30,15 @@ runs:
       shell: bash
     - name: Send Slack notification
       env:
+        INPUT_NOTIFICATIONS_CHANNEL_URL: ${{ inputs.notifications_channel_url }}
+        INPUT_DEM_PLATFORM_OPS_CHANNEL_URL: ${{ inputs.dem_platform_ops_channel_url }}
+        INPUT_BROWSER_AGENT_DEV_CHANNEL_URL: ${{ inputs.browser_agent_dev_channel_url }}
         SLACK_PAYLOAD: ${{ inputs.payload }}
         SLACK_IMAGE_URL: ${{ inputs.image_url }}
         SLACK_DASHBOARD_URL: ${{ inputs.dashboard_url }}
       run: |
-        node $GITHUB_ACTION_PATH/index.js \
-          --notifications-channel-url "${{ inputs.notifications_channel_url }}" \
-          --dem-platform-ops-channel-url "${{ inputs.dem_platform_ops_channel_url }}" \
-          --browser-agent-dev-channel-url "${{ inputs.browser_agent_dev_channel_url }}"
+        node "$GITHUB_ACTION_PATH/index.js" \
+          --notifications-channel-url "$INPUT_NOTIFICATIONS_CHANNEL_URL" \
+          --dem-platform-ops-channel-url "$INPUT_DEM_PLATFORM_OPS_CHANNEL_URL" \
+          --browser-agent-dev-channel-url "$INPUT_BROWSER_AGENT_DEV_CHANNEL_URL"
       shell: bash

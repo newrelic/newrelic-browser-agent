@@ -527,3 +527,21 @@ jobs:
           file-name-filter: '.min.js'
           trigger: 'publish-release'
           version: v${{ steps.agent-loader-version.outputs.results }}
+
+  notify-failure:
+    name: Notify Slack on failure
+    needs: [publish-prod-to-s3, publish-current-to-s3, publish-asset-size-report, create-us-prod-change-tracking, create-eu-prod-change-tracking, create-jp-prod-change-tracking, create-staging-release-change-tracking, publish-to-nr-stage, publish-to-nr-prod, raise-release-notes-pr, notify-release-repo, track-build-size]
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Notify Slack
+        uses: ./.github/actions/notify-failure
+        with:
+          slack_webhook_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}

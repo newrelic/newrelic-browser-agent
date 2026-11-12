@@ -243,7 +243,7 @@ export class Aggregate extends AggregateBase {
             // <script> we're tracking that hasn't finished loading yet, retry resolution once it has -- reporting
             // a second (deliberately duplicate) copy under the real target if one shows up by then. One-shot,
             // self-cleans via `once: true`, so there's nothing to leak if the script never registers.
-            const correlation = findCorrelation(cleanURL(name))
+            const correlation = this.agentRef.init.api.register.enabled ? findCorrelation(cleanURL(name)) : undefined
             if (correlation?.dom.value && !correlation.dom.end) {
               const retryAttribution = () => {
                 getRegisteredTargetsFromResourceUrl(name, this.agentRef).forEach(target => this.addEvent({ ...event }, target))

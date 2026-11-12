@@ -86,6 +86,7 @@ describe('script-tracker', () => {
   describe('findScriptTimings', () => {
     beforeEach(async () => {
       scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
+      scriptTrackerModule.startScriptTracking() // tracking is lazy; tests start it explicitly after mocks are in place
     })
 
     test('returns default timings when no stack available', () => {
@@ -268,6 +269,7 @@ describe('script-tracker', () => {
 
       // Import module to activate PerformanceObserver
       scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
+      scriptTrackerModule.startScriptTracking() // tracking is lazy; tests start it explicitly after mocks are in place
 
       // Simulate PerformanceObserver detecting the script load
       if (performanceObserverCallback) {
@@ -308,6 +310,8 @@ describe('script-tracker', () => {
     at setup (https://cdn.example.com/preload.js:10:5)`
 
       scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
+
+      scriptTrackerModule.startScriptTracking() // tracking is lazy; tests start it explicitly after mocks are in place
 
       // Trigger observer with link entry (.js files from link tags are tracked)
       if (performanceObserverCallback) {
@@ -353,6 +357,8 @@ describe('script-tracker', () => {
 
       scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
 
+      scriptTrackerModule.startScriptTracking() // tracking is lazy; tests start it explicitly after mocks are in place
+
       const result = scriptTrackerModule.findScriptTimings()
 
       // Verify marked as preload type (no timing info initially)
@@ -391,6 +397,8 @@ describe('script-tracker', () => {
     at main (https://cdn.example.com/late-preload.js:50:10)`
 
       scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
+
+      scriptTrackerModule.startScriptTracking() // tracking is lazy; tests start it explicitly after mocks are in place
 
       const result = scriptTrackerModule.findScriptTimings()
 
@@ -443,6 +451,8 @@ describe('script-tracker', () => {
 
       scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
 
+      scriptTrackerModule.startScriptTracking() // tracking is lazy; tests start it explicitly after mocks are in place
+
       // Create a late observer subscription
       scriptTrackerModule.findScriptTimings()
 
@@ -468,6 +478,8 @@ describe('script-tracker', () => {
       jest.resetModules()
 
       scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
+
+      scriptTrackerModule.startScriptTracking() // tracking is lazy; tests start it explicitly after mocks are in place
 
       // Generate 300 entries to exceed the limit
       const entries = []
@@ -724,6 +736,8 @@ init@https://cdn.example.com/gecko-app.js:20:10`
 
       scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
 
+      scriptTrackerModule.startScriptTracking() // tracking is lazy; tests start it explicitly after mocks are in place
+
       // Feed non-script resources to observer
       if (performanceObserverCallback) {
         performanceObserverCallback({
@@ -754,6 +768,8 @@ init@https://cdn.example.com/gecko-app.js:20:10`
       }
 
       scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
+
+      scriptTrackerModule.startScriptTracking() // tracking is lazy; tests start it explicitly after mocks are in place
 
       if (performanceObserverCallback) {
         performanceObserverCallback({
@@ -874,6 +890,7 @@ init@https://cdn.example.com/gecko-app.js:20:10`
   describe('applyManifestTimings', () => {
     beforeEach(async () => {
       scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
+      scriptTrackerModule.startScriptTracking() // tracking is lazy; tests start it explicitly after mocks are in place
     })
 
     test('is a no-op when target has no manifest', () => {
@@ -1633,6 +1650,8 @@ init@https://cdn.example.com/gecko-app.js:20:10`
 
       scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
 
+      scriptTrackerModule.startScriptTracking() // tracking is lazy; tests start it explicitly after mocks are in place
+
       const result = scriptTrackerModule.findScriptTimings()
 
       // Works without PerformanceObserver, falls back to other methods
@@ -1649,6 +1668,8 @@ init@https://cdn.example.com/gecko-app.js:20:10`
       global.PerformanceObserver.supportedEntryTypes = ['paint', 'navigation']
 
       scriptTrackerModule = await import('../../../../src/common/v2/script-tracker')
+
+      scriptTrackerModule.startScriptTracking() // tracking is lazy; tests start it explicitly after mocks are in place
 
       global.performance = {
         now: jest.fn(() => Date.now()),

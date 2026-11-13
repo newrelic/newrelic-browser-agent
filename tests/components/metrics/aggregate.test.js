@@ -127,6 +127,19 @@ test('Metrics does not harvest on interval, only on EoL', () => {
   expect(mainAgent.runtime.harvester.triggerHarvestFor(metricsAggregate, { isFinalHarvest: true }).ranSend).toEqual(true) // mimics what the harveseter does on EoL
 })
 
+test('singleChecks does not throw or observe a null node when document.body is missing', () => {
+  const bodySpy = jest.spyOn(document, 'body', 'get').mockReturnValue(null)
+  const observeSpy = jest.spyOn(MutationObserver.prototype, 'observe')
+
+  try {
+    expect(() => metricsAggregate.singleChecks()).not.toThrow()
+    expect(observeSpy).not.toHaveBeenCalledWith(null, expect.anything())
+  } finally {
+    bodySpy.mockRestore()
+    observeSpy.mockRestore()
+  }
+})
+
 function createAndStoreMetric (value, isSupportability) {
   const method = isSupportability ? (...args) => metricsAggregate.storeSupportabilityMetrics(...args) : (...args) => metricsAggregate.storeEventMetrics(...args)
   method(metricName, value)

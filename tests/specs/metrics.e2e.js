@@ -110,4 +110,21 @@ describe('metrics', () => {
       stats: { c: 1 }
     }]))
   })
+
+  it('should still send SMs without an uncaught error when document.body is removed before the RUM response', async () => {
+    await browser.url(await browser.testHandle.assetURL('no-body.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    const errorCount = await browser.execute(function () { return window.errorCount })
+    const [supportabilityMetricsHarvests] = await Promise.all([
+      supportabilityMetricsCapture.waitForResult({ totalCount: 1 }),
+      await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
+    ])
+
+    expect(errorCount).toEqual(0)
+    expect(supportabilityMetricsHarvests[0].request.body.sm).toEqual(expect.arrayContaining([{
+      params: { name: 'Generic/Runtime/Browser/Detected' },
+      stats: { c: 1 }
+    }]))
+  })
 })

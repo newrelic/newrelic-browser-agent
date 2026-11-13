@@ -74,8 +74,6 @@ jobs:
         id: s3-upload
         uses: ./.github/actions/s3-upload
         with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           local_dir: $GITHUB_WORKSPACE/build
@@ -130,8 +128,6 @@ jobs:
         id: s3-upload
         uses: ./.github/actions/update-current
         with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           loader_version: ${{ steps.agent-loader-version.outputs.results }}

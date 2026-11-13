@@ -5,6 +5,7 @@ name: NPM Operations
 
 permissions:
   id-token: write
+  attestations: write # required to sign the npm tarball provenance attestation
   contents: write
 
 on:
@@ -50,9 +51,42 @@ jobs:
       - name: Build npm package
         run: npm run build:npm
 
-      # Publish release version
+      # Hash the exact tarball that will be published, so the attestation and the published manifest describe
+      # the same bytes the registry receives.
+      - name: Generate npm integrity record
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          shopt -s nullglob
+          tarballs=(temp/*.tgz)
+          if [[ ${#tarballs[@]} -ne 1 ]]; then
+            echo "Expected exactly one tarball in temp/, found ${#tarballs[@]}"
+            exit 1
+          fi
+          echo "NPM_TARBALL=${tarballs[0]}" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/npm-integrity"
+          node .github/scripts/generate-npm-integrity.mjs "${tarballs[0]}" \
+            "$RUNNER_TEMP/npm-integrity/npm-integrity-manifest.json" \
+            "$RUNNER_TEMP/npm-integrity/checksums.txt" \
+            "$RELEASE_TAG" "$GITHUB_SHA"
+
+      - name: Attest npm tarball provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
+        with:
+          subject-checksums: ${{ runner.temp }}/npm-integrity/checksums.txt
+
+      # Publish release version. Publishes the tarball that was hashed and attested above, not a fresh pack.
       - name: Publish npm package (release)
-        run: npm publish
+        run: npm publish "$NPM_TARBALL"
+
+      # Separate asset from publish-release.yml's integrity-manifest.json, since both workflows run on the
+      # same release event and would otherwise race to upload the same file name.
+      - name: Attach npm integrity record to release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/npm-integrity/npm-integrity-manifest.json" --repo "$GITHUB_REPOSITORY"
 
       # Deprecate old versions
       #- name: Deprecate old versions

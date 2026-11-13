@@ -295,6 +295,7 @@
   },
   "files": [
     "dist",
+    "!dist/tsconfig.tsbuildinfo",
     "src",
     "tools/bundler-tools",
     "LICENSE",

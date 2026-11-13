@@ -1,0 +1,189 @@
+# Independently rebuilds a published release and checks the result against what was published: the CDN files
+# against the release's integrity manifest, and the npm tarball against the registry. It also verifies the Sigstore
+# attestations over the rebuilt files. This runs once per release (and on demand for a tag), not on a schedule;
+# cdn-integrity-monitor.yml covers ongoing drift of what is served.
+#
+# The verification jobs deliberately have no secrets, no environment and read-only permissions, so they share no
+# credentials or state with the publishing workflows. Notification is a separate job.
+
+name: Verify Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to verify, e.g. v1.324.1'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-release-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  verify-cdn:
+    name: Rebuild CDN files and compare to the release manifest
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    env:
+      RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.22.1 # Keep in sync with publish-release.yml so the rebuild uses the same toolchain.
+
+      # publish-release.yml attaches the manifest after it builds, so it may not exist yet when this starts.
+      - name: Wait for the release integrity manifest
+        run: |
+          for attempt in $(seq 1 40); do
+            if gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern integrity-manifest.json --dir "$RUNNER_TEMP/published" --clobber 2>/dev/null; then
+              exit 0
+            fi
+            echo "integrity-manifest.json not attached yet (attempt $attempt/40)"
+            sleep 30
+          done
+          echo "::error::integrity-manifest.json was never attached to release $RELEASE_TAG"
+          exit 1
+
+      - name: Install project dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Rebuild CDN files
+        run: npm run cdn:build:prod
+
+      - name: Compare rebuild to the published manifest
+        run: node .github/scripts/verify-release-build.mjs cdn "$RUNNER_TEMP/published/integrity-manifest.json" build
+
+      # The rebuilt bytes are identical to the published ones (checked above), so verifying the rebuilt files
+      # proves the published attestation covers exactly these contents.
+      - name: Verify attestations for the rebuilt files
+        run: |
+          failed=0
+          while IFS= read -r file; do
+            if ! gh attestation verify "build/$file" --repo "$GITHUB_REPOSITORY" \
+              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/publish-release.yml" >/dev/null 2>&1; then
+              echo "::error::No valid attestation for $file"
+              failed=1
+            fi
+          done < <(jq -r '.files | keys[]' "$RUNNER_TEMP/published/integrity-manifest.json")
+          exit $failed
+
+  verify-npm:
+    name: Rebuild npm package and compare to the registry
+    runs-on: ubuntu-latest
+    # Publishing waits on approval in the npm-release environment, so allow time for the package to appear.
+    timeout-minutes: 150
+    defaults:
+      run:
+        shell: bash
+    env:
+      RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.22.1 # Keep in sync with npm-operations.yml so the rebuild uses the same toolchain.
+          registry-url: https://registry.npmjs.org
+
+      - name: Wait for the package on the npm registry
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          echo "PKG_VERSION=$version" >> "$GITHUB_ENV"
+          for attempt in $(seq 1 120); do
+            integrity="$(npm view "@newrelic/browser-agent@$version" dist.integrity 2>/dev/null || true)"
+            if [[ -n "$integrity" ]]; then
+              echo "REGISTRY_INTEGRITY=$integrity" >> "$GITHUB_ENV"
+              exit 0
+            fi
+            echo "@newrelic/browser-agent@$version is not on the registry yet (attempt $attempt/120)"
+            sleep 60
+          done
+          echo "::error::@newrelic/browser-agent@$version was not published within the wait window. Re-run with workflow_dispatch once it is."
+          exit 1
+
+      - name: Confirm the registry package has provenance
+        run: |
+          predicate="$(npm view "@newrelic/browser-agent@$PKG_VERSION" dist.attestations.provenance.predicateType 2>/dev/null || true)"
+          if [[ -z "$predicate" ]]; then
+            echo "::error::@newrelic/browser-agent@$PKG_VERSION has no provenance attestation on the registry"
+            exit 1
+          fi
+          echo "Provenance predicate: $predicate"
+
+      - name: Install project dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Rebuild npm package
+        run: npm run build:npm
+
+      # Releases made before npm-integrity-manifest.json existed have no such asset or tarball attestation, so
+      # those checks only apply when it is present.
+      - name: Fetch the release npm integrity record, if any
+        run: |
+          if gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern npm-integrity-manifest.json --dir "$RUNNER_TEMP/published" --clobber 2>/dev/null; then
+            echo "NPM_RECORD=$RUNNER_TEMP/published/npm-integrity-manifest.json" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Release $RELEASE_TAG has no npm-integrity-manifest.json; comparing to the registry only"
+          fi
+
+      - name: Compare rebuild to the registry
+        run: |
+          shopt -s nullglob
+          tarballs=(temp/*.tgz)
+          if [[ ${#tarballs[@]} -ne 1 ]]; then
+            echo "::error::Expected exactly one tarball in temp/, found ${#tarballs[@]}"
+            exit 1
+          fi
+          echo "TARBALL=${tarballs[0]}" >> "$GITHUB_ENV"
+          node .github/scripts/verify-release-build.mjs npm "${tarballs[0]}" "$REGISTRY_INTEGRITY" ${NPM_RECORD:+"$NPM_RECORD"}
+
+      - name: Verify the attestation for the rebuilt tarball
+        if: env.NPM_RECORD != ''
+        run: |
+          gh attestation verify "$TARBALL" --repo "$GITHUB_REPOSITORY" \
+            --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/npm-operations.yml"
+
+  notify:
+    name: Notify on verification failure
+    needs: [verify-cdn, verify-npm]
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.22.1
+      - name: Build Slack payload
+        id: payload
+        env:
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          text=":rotating_light: Release verification failed for ${TAG}: the independent rebuild did not match what was published. ${RUN_URL}"
+          echo "payload=$(jq -cn --arg text "$text" '{text: $text}')" >> "$GITHUB_OUTPUT"
+      - name: Send Slack notification
+        uses: ./.github/actions/slack-notification
+        with:
+          browser_agent_dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
+          payload: ${{ steps.payload.outputs.payload }}

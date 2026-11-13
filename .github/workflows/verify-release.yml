@@ -59,7 +59,7 @@ jobs:
           exit 1
 
       - name: Install project dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Rebuild CDN files
         run: npm run cdn:build:prod
@@ -128,7 +128,7 @@ jobs:
           echo "Provenance predicate: $predicate"
 
       - name: Install project dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Rebuild npm package
         run: npm run build:npm

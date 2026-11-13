@@ -8,6 +8,10 @@ permissions:
   attestations: write # required to sign the npm tarball provenance attestation
   contents: write
 
+env:
+  NPM_CONFIG_IGNORE_SCRIPTS: 'true'
+  HUSKY: 0
+
 on:
   # Release - publishes the released version
   release:
@@ -45,7 +49,7 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Install project dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       # Build NPM package for release
       - name: Build npm package
@@ -77,7 +81,7 @@ jobs:
 
       # Publish release version. Publishes the tarball that was hashed and attested above, not a fresh pack.
       - name: Publish npm package (release)
-        run: npm publish "$NPM_TARBALL"
+        run: npm publish "$NPM_TARBALL" --ignore-scripts
 
       # Separate asset from publish-release.yml's integrity-manifest.json, since both workflows run on the
       # same release event and would otherwise race to upload the same file name.

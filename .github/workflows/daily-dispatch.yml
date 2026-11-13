@@ -78,3 +78,21 @@ jobs:
           browser_agent_dev_channel_url: ${{ (inputs.slack_channel || 'browser_agent_dev') == 'browser_agent_dev' && secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL || '' }}
           payload: ${{ needs.dispatch.outputs.payload }}
           dashboard_url: 'https://staging.onenr.io/08wp2gMXZjO'
+
+  notify-failure:
+    name: Notify Slack on failure
+    needs: [dispatch, publish-metrics]
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Notify Slack
+        uses: ./.github/actions/notify-failure
+        with:
+          slack_webhook_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}

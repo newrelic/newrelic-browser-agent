@@ -659,3 +659,21 @@ jobs:
           else
             echo "✅ Normal PR: No promotion required"
           fi
+
+  notify-failure:
+    name: Notify Slack on failure
+    needs: [resolve-version, deploy-dev, create-dev-change-tracking, health-check-dev, notify-dev, deploy-staging, create-staging-change-tracking, health-check-staging, notify-staging, deploy-eu-prod, create-eu-prod-change-tracking, health-check-eu-prod, notify-eu-prod, deploy-jp-prod, create-jp-prod-change-tracking, health-check-jp-prod, notify-jp-prod, deploy-us-prod, create-us-prod-change-tracking, health-check-us-prod, notify-us-prod, verify-promotion]
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Notify Slack
+        uses: ./.github/actions/notify-failure
+        with:
+          slack_webhook_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}

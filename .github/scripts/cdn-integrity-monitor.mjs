@@ -2,27 +2,36 @@
  * Detects drift between what was released and what is currently being served.
  *
  * Each release attaches an integrity manifest (see generate-integrity-manifest.mjs) recording the sha384 of every
- * published file. This script downloads the manifests of the most recent releases and checks, using only public
+ * published file. This script downloads the manifests of every release that has one and checks, using only public
  * endpoints and node built-ins (no credentials, no dependencies), that:
  *
  *   1. the CDN edge (js-agent.newrelic.com, staging-js-agent.newrelic.com) serves content matching the manifest
  *   2. the S3 origin (nr-browser-agent) serves content matching the manifest, independent of the CDN cache
- *   3. the mutable `-current` loaders match one of the checked releases (a rollback is legitimate, anything else isn't)
+ *   3. the mutable alias loaders (`-current`, `1.x.x`, `1.NNN.x`) match a release they may point at (a rollback within
+ *      range is legitimate, anything else isn't)
+ *   4. every published release carries a manifest, so a release published without one fails the run
+ *
+ * Releases are checked in two tiers so that the whole release history can be swept every few minutes:
+ *
+ *   - full: the newest `--releases` releases, every .js file in the manifest (loaders and aggregate chunks)
+ *   - loaders: every older release, only the minified entry-point loaders customers load (see isMinifiedLoader)
+ *
+ * A release without a manifest cannot be checked, so it fails the run instead of being silently treated as passing.
  *
  * The NR loader database is deliberately not checked here: reading it requires an API key, and this script runs on a
  * schedule with no credentials. The release workflow verifies the database against the same manifest (nr-verify).
  *
  * Usage: node cdn-integrity-monitor.mjs [--repo owner/name] [--releases 5] [--include <text>] [--manifest <path>...]
  *
+ * --releases is the number of newest releases that get the full check; all older releases get the loaders check.
  * --manifest bypasses release discovery and checks the given manifest file(s). It exists for testing and manual
  * verification. Exits 1 when any check finds a mismatch or cannot be completed, 0 otherwise.
  */
 import { readFile, appendFile } from 'node:fs/promises'
-import { sha384, matchesManifest } from '../actions/shared-utils/integrity.js'
+import { sha384, matchesManifest, planChecks, planAliases, summarizeFindings, kindForStatus, isUrgent } from '../actions/shared-utils/integrity.js'
 
 const EDGE_HOSTS = ['js-agent.newrelic.com', 'staging-js-agent.newrelic.com']
 const ORIGIN_HOST = 'nr-browser-agent.s3.amazonaws.com'
-const LOADER_TYPES = ['rum', 'full', 'spa']
 const MANIFEST_ASSET = 'integrity-manifest.json'
 
 /**
@@ -31,7 +40,7 @@ const MANIFEST_ASSET = 'integrity-manifest.json'
  * @returns {{repo: string, releases: number, include: string, manifests: string[], concurrency: number}}
  */
 function parseArgs (argv) {
-  const options = { repo: process.env.GITHUB_REPOSITORY || 'newrelic/newrelic-browser-agent', releases: 5, include: '', manifests: [], concurrency: 8 }
+  const options = { repo: process.env.GITHUB_REPOSITORY || 'newrelic/newrelic-browser-agent', releases: 5, include: '', manifests: [], concurrency: 16 }
   for (let i = 0; i < argv.length; i++) {
     const [flag, inline] = argv[i].split('=')
     const value = () => inline ?? argv[++i]
@@ -86,138 +95,203 @@ async function pool (tasks, limit) {
 }
 
 /**
- * Finds the most recent releases that carry an integrity manifest and downloads them.
- * @param {ReturnType<typeof parseArgs>} options
- * @returns {Promise<Array<{version: string, manifest: {files: Record<string, {sha384: string}>}}>>} Newest first.
+ * Lists every published release, following pagination, newest first.
+ * @param {string} repo `owner/name`
+ * @returns {Promise<Array<{tag_name: string, draft: boolean, prerelease: boolean, assets?: Array<{name: string, browser_download_url: string}>}>>}
  */
-async function discoverManifests (options) {
+async function listReleases (repo) {
   const headers = { Accept: 'application/vnd.github+json' }
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`
-  const response = await fetchWithRetry(`https://api.github.com/repos/${options.repo}/releases?per_page=30`, { headers })
-  if (!response.ok) throw new Error(`Could not list releases: HTTP ${response.status}`)
-
-  const found = []
-  let skipped = 0
-  for (const release of await response.json()) {
-    if (release.draft || release.prerelease) continue
-    const asset = release.assets?.find(a => a.name === MANIFEST_ASSET)
-    if (!asset) { skipped++; continue }
-    const download = await fetchWithRetry(asset.browser_download_url)
-    if (!download.ok) throw new Error(`Could not download ${MANIFEST_ASSET} for ${release.tag_name}: HTTP ${download.status}`)
-    found.push({ version: release.tag_name.replace(/^v/, ''), manifest: await download.json() })
-    if (found.length >= options.releases) break
+  const perPage = 100
+  const releases = []
+  /* The page cap is a backstop against a runaway loop, not an expected limit: 50 pages is 5,000 releases. */
+  for (let page = 1; page <= 50; page++) {
+    const response = await fetchWithRetry(`https://api.github.com/repos/${repo}/releases?per_page=${perPage}&page=${page}`, { headers })
+    if (!response.ok) throw new Error(`Could not list releases (page ${page}): HTTP ${response.status}`)
+    const batch = await response.json()
+    releases.push(...batch)
+    if (batch.length < perPage) break
   }
-  console.log(`Found ${found.length} release manifest(s); ${skipped} newer-or-older release(s) without one were skipped.`)
-  return found
+  return releases
 }
 
 /**
- * @typedef {{check: string, target: string, kind: 'mismatch'|'unavailable', detail: string}} Finding
+ * Finds every release that carries an integrity manifest and downloads them.
+ * @param {ReturnType<typeof parseArgs>} options
+ * @returns {Promise<{found: Array<{version: string, manifest: {files: Record<string, {sha384: string}>}}>, skipped: string[]}>} found is newest first; skipped lists the tags of releases without a manifest.
+ */
+async function discoverManifests (options) {
+  const withManifest = []
+  const skipped = []
+  for (const release of await listReleases(options.repo)) {
+    if (release.draft || release.prerelease) continue
+    const asset = release.assets?.find(a => a.name === MANIFEST_ASSET)
+    if (asset) withManifest.push({ release, asset })
+    else skipped.push(release.tag_name)
+  }
+  const found = await pool(withManifest.map(({ release, asset }) => async () => {
+    const download = await fetchWithRetry(asset.browser_download_url)
+    if (!download.ok) throw new Error(`Could not download ${MANIFEST_ASSET} for ${release.tag_name}: HTTP ${download.status}`)
+    return { version: release.tag_name.replace(/^v/, ''), manifest: await download.json() }
+  }), options.concurrency)
+  console.log(`Found ${found.length} release manifest(s); ${skipped.length} release(s) without one cannot be checked.`)
+  return { found, skipped }
+}
+
+/**
+ * @typedef {{check: string, target: string, kind: 'mismatch'|'missing'|'unavailable', detail: string, version?: string, alias?: string}} Finding
+ * version is the release the finding belongs to; alias is the alias file name for findings about a mutable alias.
+ * mismatch: served content differs from the manifest. missing: the file is not served. unavailable: the check could not complete.
  */
 
 /**
  * Downloads each manifested file from a host and compares its digest with the manifest.
  * @param {string} label Name of the check, used in reports.
  * @param {string} baseUrl Origin to fetch from, without a trailing slash.
- * @param {{version: string, manifest: object}} release
- * @param {string} include Only files whose manifest key contains this text are checked. Matched literally, not as a pattern.
+ * @param {import('../actions/shared-utils/integrity.js').PlannedRelease} release The release and the keys chosen for it by planChecks.
  * @param {number} concurrency
  * @returns {Promise<{checked: number, findings: Finding[]}>}
  */
-async function checkHost (label, baseUrl, release, include, concurrency) {
-  const keys = Object.keys(release.manifest.files).filter(key => key.endsWith('.js') && key.includes(include))
+async function checkHost (label, baseUrl, release, concurrency) {
+  const { keys } = release
   const findings = []
   await pool(keys.map(key => async () => {
     const target = `${baseUrl}/${key}`
     try {
       const response = await fetchWithRetry(target)
       if (!response.ok) {
-        findings.push({ check: label, target, kind: 'unavailable', detail: `HTTP ${response.status}` })
+        findings.push({ check: label, target, kind: kindForStatus(response.status), detail: `HTTP ${response.status}`, version: release.version })
         return
       }
       if (!matchesManifest(release.manifest, key, await response.arrayBuffer())) {
-        findings.push({ check: label, target, kind: 'mismatch', detail: `content does not match the ${release.version} manifest` })
+        findings.push({ check: label, target, kind: 'mismatch', detail: `content does not match the ${release.version} manifest`, version: release.version })
       }
     } catch (error) {
-      findings.push({ check: label, target, kind: 'unavailable', detail: String(error.message ?? error) })
+      findings.push({ check: label, target, kind: 'unavailable', detail: String(error.message ?? error), version: release.version })
     }
   }), concurrency)
   return { checked: keys.length, findings }
 }
 
 /**
- * The mutable -current loaders may legitimately point at an older release after a rollback, so they only need to
- * match a loader from one of the checked releases.
+ * Checks the mutable alias loaders (`-current`, `1.x.x`, `1.NNN.x`) on every host. An alias must serve the same bytes as
+ * the loader of a release it may point at, so a rollback within range passes and anything else is a mismatch.
  * @param {Array<{version: string, manifest: object}>} releases
+ * @param {number} concurrency
  * @returns {Promise<{checked: number, findings: Finding[]}>}
  */
-async function checkCurrent (releases) {
+async function checkAliases (releases, concurrency) {
   const findings = []
   let checked = 0
+  const tasks = []
   for (const host of [...EDGE_HOSTS, ORIGIN_HOST]) {
-    for (const type of LOADER_TYPES) {
-      for (const suffix of ['min.js']) {
-        const target = `https://${host}/nr-loader-${type}-current.${suffix}`
-        checked++
+    for (const alias of planAliases(releases)) {
+      tasks.push(async () => {
+        const target = `https://${host}/${alias.key}`
         try {
           const response = await fetchWithRetry(target)
-          if (!response.ok) { findings.push({ check: 'current-loaders', target, kind: 'unavailable', detail: `HTTP ${response.status}` }); continue }
-          const digest = sha384(await response.arrayBuffer())
-          const match = releases.find(r => r.manifest.files?.[`nr-loader-${type}-${r.version}.${suffix}`]?.sha384 === digest)
-          if (!match) findings.push({ check: 'current-loaders', target, kind: 'mismatch', detail: 'content matches none of the checked releases' })
-          else console.log(`  ${target} -> ${match.version}`)
+          if (response.status === 404 && !alias.required) return
+          checked++
+          if (!response.ok) { findings.push({ check: 'aliases', target, kind: kindForStatus(response.status), detail: `HTTP ${response.status}`, alias: alias.key }); return }
+          if (!alias.digests.includes(sha384(await response.arrayBuffer()))) {
+            findings.push({ check: 'aliases', target, kind: 'mismatch', detail: 'content matches none of the releases this alias may point at', alias: alias.key })
+          }
         } catch (error) {
-          findings.push({ check: 'current-loaders', target, kind: 'unavailable', detail: String(error.message ?? error) })
+          checked++
+          findings.push({ check: 'aliases', target, kind: 'unavailable', detail: String(error.message ?? error), alias: alias.key })
         }
-      }
+      })
     }
   }
+  await pool(tasks, concurrency)
   return { checked, findings }
 }
 
 const options = parseArgs(process.argv.slice(2))
-const releases = options.manifests.length
-  ? await Promise.all(options.manifests.map(async path => {
+let skipped = []
+let releases
+if (options.manifests.length) {
+  releases = await Promise.all(options.manifests.map(async path => {
     const manifest = JSON.parse(await readFile(path, 'utf-8'))
     return { version: String(manifest.version).replace(/^v/, ''), manifest }
   }))
-  : await discoverManifests(options)
+} else {
+  ({ found: releases, skipped } = await discoverManifests(options))
+}
 
-if (!releases.length) {
+if (!releases.length && !skipped.length) {
   console.log('::warning::No release with an integrity manifest was found, so nothing was monitored. Expected until the first release that publishes one.')
   process.exit(0)
 }
 
+const planned = planChecks(releases, options.releases, options.include)
 const summary = []
 const findings = []
-const record = (label, version, result) => {
-  summary.push(`| ${version} | ${label} | ${result.checked} | ${result.findings.length} |`)
+/* Totals per tier and check, so the report stays readable when hundreds of releases are covered. */
+const totals = new Map()
+const record = (tier, label, result) => {
+  const total = totals.get(`${tier}|${label}`) ?? { tier, label, checked: 0, problems: 0 }
+  total.checked += result.checked
+  total.problems += result.findings.length
+  totals.set(`${tier}|${label}`, total)
   findings.push(...result.findings)
 }
 
-for (const [index, release] of releases.entries()) {
-  console.log(`\nChecking ${release.version}${index === 0 ? ' (newest)' : ''}`)
-  for (const host of EDGE_HOSTS) record(`edge ${host}`, release.version, await checkHost(`edge ${host}`, `https://${host}`, release, options.include, options.concurrency))
-  record('s3 origin', release.version, await checkHost('s3 origin', `https://${ORIGIN_HOST}`, release, options.include, options.concurrency))
+for (const release of planned) {
+  console.log(`\nChecking ${release.version} (${release.tier}, ${release.keys.length} file(s))`)
+  for (const host of EDGE_HOSTS) record(release.tier, `edge ${host}`, await checkHost(`edge ${host}`, `https://${host}`, release, options.concurrency))
+  record(release.tier, 's3 origin', await checkHost('s3 origin', `https://${ORIGIN_HOST}`, release, options.concurrency))
 }
-console.log('\nChecking -current loaders')
-record('-current loaders', 'all', await checkCurrent(releases))
+console.log('\nChecking alias loaders')
+record('aliases', 'alias loaders', await checkAliases(releases, options.concurrency))
+record('manifests', 'release manifests', {
+  checked: releases.length + skipped.length,
+  findings: skipped.map(tag => ({ check: 'manifests', target: tag, kind: 'missing', detail: 'published release has no integrity-manifest.json, so its files cannot be verified', version: tag.replace(/^v/, '') }))
+})
+
+for (const tier of ['full', 'loaders']) {
+  const inTier = planned.filter(r => r.tier === tier)
+  if (inTier.length) summary.push(`| ${tier} | ${inTier.length} release(s) | ${inTier.reduce((n, r) => n + r.keys.length, 0)} file(s) per host |`)
+}
+const emptyPlans = planned.filter(r => !r.keys.length).map(r => r.version)
 
 const mismatches = findings.filter(f => f.kind === 'mismatch')
+const missing = findings.filter(f => f.kind === 'missing')
 const unavailable = findings.filter(f => f.kind === 'unavailable')
 const report = [
   `## CDN integrity monitor: ${findings.length ? 'FAILED' : 'passed'}`,
   '',
-  '| Release | Check | Files checked | Problems |',
-  '| --- | --- | --- | --- |',
+  '| Tier | Releases | Scope |',
+  '| --- | --- | --- |',
   ...summary,
+  '',
+  `${skipped.length} release(s) have no integrity manifest and were not checked.` + (emptyPlans.length ? ` ${emptyPlans.length} manifested release(s) had no files to check: ${emptyPlans.slice(0, 20).join(', ')}.` : ''),
+  '',
+  '| Tier | Check | Files checked | Problems |',
+  '| --- | --- | --- | --- |',
+  ...[...totals.values()].map(t => `| ${t.tier} | ${t.label} | ${t.checked} | ${t.problems} |`),
   ...(findings.length
-    ? ['', `**${mismatches.length} mismatch(es), ${unavailable.length} unavailable.** A mismatch means served content differs from what was released; unavailable means the check could not complete.`, '', ...findings.slice(0, 50).map(f => `- **${f.kind}** \`${f.check}\` ${f.target}: ${f.detail}`)]
+    ? ['', `**${mismatches.length} mismatch(es), ${missing.length} missing, ${unavailable.length} unavailable.** A mismatch means served content differs from what was released; missing means a released file is not being served; unavailable means the check could not complete.`, '', ...findings.slice(0, 50).map(f => `- **${f.kind}** \`${f.check}\` ${f.target}: ${f.detail}`)]
     : [])
 ].join('\n')
 
 console.log(`\n${report}`)
 if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, report + '\n')
 for (const f of mismatches.slice(0, 20)) console.log(`::error title=Integrity mismatch::${f.check}: ${f.target} ${f.detail}`)
+for (const f of missing.slice(0, 20)) console.log(`::error title=Released file not served::${f.check}: ${f.target} ${f.detail}`)
 for (const f of unavailable.slice(0, 20)) console.log(`::warning title=Integrity check incomplete::${f.check}: ${f.target} ${f.detail}`)
+/*
+ * Exposed as step outputs so the notify job can describe the failure in a New Relic event without re-running the check.
+ * Mismatches and missing files are urgent and published as failure_*; checks that could not complete are published as
+ * error_*, which only pages if they keep happening. Each set is written only when it has findings.
+ */
+if (findings.length && process.env.GITHUB_OUTPUT) {
+  const lines = []
+  for (const [prefix, group] of [['failure', findings.filter(isUrgent)], ['error', findings.filter(f => !isUrgent(f))]]) {
+    if (!group.length) continue
+    const summary = summarizeFindings(group)
+    lines.push(`${prefix}_count=${summary.count}`, `${prefix}_versions=${summary.versions}`, `${prefix}_aliases=${summary.aliases}`, `${prefix}_summary=${summary.summary}`)
+  }
+  await appendFile(process.env.GITHUB_OUTPUT, lines.join('\n') + '\n')
+}
 process.exit(findings.length ? 1 : 0)

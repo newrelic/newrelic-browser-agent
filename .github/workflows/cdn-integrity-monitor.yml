@@ -1,13 +1,25 @@
 # Detects drift between what was released and what is being served. Every release attaches an integrity manifest
-# (see publish-release.yml); this workflow re-checks recent releases against the CDN edge and the S3 origin on a
-# schedule, using only public endpoints. It needs no credentials and installs no dependencies.
+# (see publish-release.yml); this workflow re-checks every release that has one against the CDN edge and the S3
+# origin every 15 minutes, using only public endpoints. It needs no credentials and installs no dependencies.
+# The 5 newest releases are checked in full; older releases are checked for their minified loaders only, which keeps
+# each run to a few thousand small requests (see .github/scripts/cdn-integrity-monitor.mjs).
 # Notifications are sent from a separate job so that the checking job needs no secrets.
+# A failure posts to Slack and publishes events to New Relic, where alert conditions page the browser team through
+# PagerDuty, so no PagerDuty credentials live in this repository:
+#   - BrowserCDNIntegrityFailure: a mismatch, a released file that is no longer served, or a release with no manifest.
+#     Pages immediately.
+#   - BrowserCDNIntegrityCheckError: a check could not complete (timeout, 5xx, or the monitor failed before reporting).
+#     Pages only if it keeps happening across several runs, so one flaky run does not wake anyone.
+#   - BrowserCDNIntegrityHeartbeat: published by every passing run; an alert pages when these stop arriving.
+#
+# Out of scope here: detecting S3 writes made outside the release pipeline (CloudTrail). That is an AWS-side control, not
+# something a GitHub workflow can observe, and it must be owned and tested by the infrastructure or security team.
 
 name: CDN Integrity Monitor
 
 on:
   schedule:
-    - cron: '17 */6 * * *'
+    - cron: '7,22,37,52 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -22,6 +34,17 @@ jobs:
     name: Verify served assets against release manifests
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Written by the script only for the kinds of finding that occurred; used by the notify job to describe the failure.
+    # failure_* covers mismatches and missing files; error_* covers checks that could not complete.
+    outputs:
+      failure_count: ${{ steps.verify.outputs.failure_count }}
+      failure_versions: ${{ steps.verify.outputs.failure_versions }}
+      failure_aliases: ${{ steps.verify.outputs.failure_aliases }}
+      failure_summary: ${{ steps.verify.outputs.failure_summary }}
+      error_count: ${{ steps.verify.outputs.error_count }}
+      error_versions: ${{ steps.verify.outputs.error_versions }}
+      error_aliases: ${{ steps.verify.outputs.error_aliases }}
+      error_summary: ${{ steps.verify.outputs.error_summary }}
     defaults:
       run:
         shell: bash
@@ -31,6 +54,7 @@ jobs:
         with:
           node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Verify CDN and S3 origin
+        id: verify
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: node .github/scripts/cdn-integrity-monitor.mjs --repo "$GITHUB_REPOSITORY" --releases 5
@@ -61,3 +85,87 @@ jobs:
         with:
           browser_agent_dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
           payload: ${{ steps.payload.outputs.payload }}
+      - name: Build New Relic event attributes
+        id: event
+        if: ${{ !cancelled() }}
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          FAILURE_COUNT: ${{ needs.monitor.outputs.failure_count }}
+          FAILURE_VERSIONS: ${{ needs.monitor.outputs.failure_versions }}
+          FAILURE_ALIASES: ${{ needs.monitor.outputs.failure_aliases }}
+          FAILURE_SUMMARY: ${{ needs.monitor.outputs.failure_summary }}
+          ERROR_COUNT: ${{ needs.monitor.outputs.error_count }}
+          ERROR_VERSIONS: ${{ needs.monitor.outputs.error_versions }}
+          ERROR_ALIASES: ${{ needs.monitor.outputs.error_aliases }}
+          ERROR_SUMMARY: ${{ needs.monitor.outputs.error_summary }}
+        # The details come from release tag names and served URLs, so they are passed through the environment and jq rather
+        # than interpolated into the script. They are empty when that kind of finding did not occur, or when the monitor
+        # failed before it could report anything. The facet attributes always get a value, because an alert that facets on
+        # them would not evaluate events where they are missing.
+        run: |
+          build() {
+            jq -cn \
+              --arg url "$RUN_URL" --arg repo "$REPOSITORY" --arg id "$RUN_ID" \
+              --arg count "$1" --arg versions "$2" --arg aliases "$3" --arg summary "$4" --arg fallback "$5" '
+              {
+                runUrl: $url, repository: $repo, runId: $id, monitor: "cdn-integrity-monitor",
+                failureCount: (if $count == "" then null else ($count | tonumber) end),
+                failingVersions: (if $versions == "" then "none" else $versions end),
+                failingAliases: (if $aliases == "" then "none" else $aliases end),
+                failureSummary: (if $summary == "" then $fallback else $summary end)
+              } | with_entries(select(.value != null))'
+          }
+          echo "failure=$(build "$FAILURE_COUNT" "$FAILURE_VERSIONS" "$FAILURE_ALIASES" "$FAILURE_SUMMARY" "")" >> "$GITHUB_OUTPUT"
+          echo "error=$(build "$ERROR_COUNT" "$ERROR_VERSIONS" "$ERROR_ALIASES" "$ERROR_SUMMARY" "monitor failed before reporting details")" >> "$GITHUB_OUTPUT"
+      - name: Publish failure event to New Relic
+        if: ${{ !cancelled() && needs.monitor.outputs.failure_count != '' }}
+        uses: ./.github/actions/newrelic-custom-event
+        with:
+          insert_key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          account_id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          event_type: BrowserCDNIntegrityFailure
+          attributes: ${{ steps.event.outputs.failure }}
+      # Also published when the monitor failed without reporting anything (for example the GitHub API was unreachable), so
+      # that case is never silent.
+      - name: Publish check error event to New Relic
+        if: ${{ !cancelled() && (needs.monitor.outputs.error_count != '' || needs.monitor.outputs.failure_count == '') }}
+        uses: ./.github/actions/newrelic-custom-event
+        with:
+          insert_key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          account_id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          event_type: BrowserCDNIntegrityCheckError
+          attributes: ${{ steps.event.outputs.error }}
+
+  # Proves the monitor itself is still running. A New Relic alert fires when these events stop arriving, which catches a
+  # disabled schedule or a broken workflow that would otherwise look the same as "nothing is wrong".
+  heartbeat:
+    name: Report that the monitor ran
+    needs: monitor
+    if: success() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.22.1 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Build New Relic event attributes
+        id: event
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          echo "attributes=$(jq -cn --arg url "$RUN_URL" --arg repo "$REPOSITORY" --arg id "$RUN_ID" '{runUrl: $url, repository: $repo, runId: $id, monitor: "cdn-integrity-monitor"}')" >> "$GITHUB_OUTPUT"
+      - name: Publish heartbeat event to New Relic
+        uses: ./.github/actions/newrelic-custom-event
+        with:
+          insert_key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          account_id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          event_type: BrowserCDNIntegrityHeartbeat
+          attributes: ${{ steps.event.outputs.attributes }}

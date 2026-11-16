@@ -4,6 +4,24 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "bbe4539a2df5fbdf5671419a237736d684fef82f",
+          "message": "report server-corrected timestamps",
+          "issues": [
+            "1881"
+          ],
+          "scope": "page_view_timing"
+        }
+      ],
+      "version": "1.325.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "033b437f-a5f3-47f8-80e0-dc4c3a90db8f",
+      "createTime": "2026-10-28T15:26:47.344Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "f2129deb18e25a7efc8ffc8993617c7e531141ba",
           "message": "correct hasMeta/hasSnapshot flags on session replay harvests",
@@ -4400,5 +4418,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2026-10-26T16:53:23.552Z"
+  "updateTime": "2026-10-28T15:26:47.344Z"
 }

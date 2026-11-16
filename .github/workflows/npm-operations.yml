@@ -59,8 +59,11 @@ jobs:
       # the same bytes the registry receives.
       - name: Generate npm integrity record
         env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          EVENT_TAG: ${{ github.event.release.tag_name }}
         run: |
+          # A manual recovery run has no release event, so fall back to the tag implied by package.json.
+          RELEASE_TAG="${EVENT_TAG:-v$(node -p "require('./package.json').version")}"
+          echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
           shopt -s nullglob
           tarballs=(temp/*.tgz)
           if [[ ${#tarballs[@]} -ne 1 ]]; then
@@ -79,18 +82,26 @@ jobs:
         with:
           subject-checksums: ${{ runner.temp }}/npm-integrity/checksums.txt
 
-      # Publish release version. Publishes the tarball that was hashed and attested above, not a fresh pack.
-      - name: Publish npm package (release)
-        run: npm publish "$NPM_TARBALL" --ignore-scripts
-
-      # Separate asset from publish-release.yml's integrity-manifest.json, since both workflows run on the
-      # same release event and would otherwise race to upload the same file name.
+      # Attach the record before publishing: publishing can't be undone, so a failed upload must stop the job
+      # while the package is still unpublished, and verify-release.yml can rely on the record existing by the
+      # time the package appears on the registry. This is a separate asset from publish-release.yml's
+      # integrity-manifest.json, since both workflows run on the same release event and would otherwise race to
+      # upload the same file name. --clobber lets a re-run replace the asset.
       - name: Attach npm integrity record to release
-        if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
-        run: gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/npm-integrity/npm-integrity-manifest.json" --repo "$GITHUB_REPOSITORY"
+        run: |
+          record="$RUNNER_TEMP/npm-integrity/npm-integrity-manifest.json"
+          if [[ "$GITHUB_EVENT_NAME" == "release" ]] || gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$record" --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            echo "::warning::No release exists for $RELEASE_TAG; not attaching the npm integrity record"
+          fi
+
+      # Publish release version. Publishes the tarball that was hashed and attested above, not a fresh pack. The
+      # ./ prefix stops npm from parsing a bare temp/<name>.tgz as a GitHub user/repo shorthand.
+      - name: Publish npm package (release)
+        run: npm publish "./$NPM_TARBALL" --ignore-scripts
 
       # Deprecate old versions
       #- name: Deprecate old versions

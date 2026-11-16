@@ -1,8 +1,9 @@
 # Verifying a browser agent release
 
-Every release publishes two kinds of artifacts, each with a Sigstore build provenance attestation and a
-published hash record. Use the steps below to confirm what you received was built by this repository's
-release workflows from the tagged commit and has not been altered.
+Every release after v1.324.1 publishes two kinds of artifacts, each with a Sigstore build provenance attestation
+and a published hash record. Use the steps below to confirm what you received was built by this repository's
+release workflows from the tagged commit and has not been altered. See [Older releases](#older-releases) for what
+is available for v1.324.1 and earlier.
 
 | Artifact | Built by | Hash record (release asset) |
 | -------- | -------- | --------------------------- |
@@ -67,7 +68,16 @@ echo "sha384-$(openssl dgst -sha384 -binary <file> | openssl base64 -A)"
 ```
 
 The `CDN Integrity Monitor` workflow also compares the served files for recent releases against these manifests
-every six hours.
+on a schedule.
+
+## Older releases
+
+v1.324.1 and earlier were published before the attestation and npm record steps existed:
+
+- CDN files have no GitHub attestation. `integrity-manifest.json` is attached to these releases, so the hash
+  comparison above still works.
+- The npm tarball has no GitHub attestation or `npm-integrity-manifest.json`. Recent earlier versions do carry the
+  npm registry's own provenance, so `npm audit signatures` works for them.
 
 ## What this does and does not prove
 
@@ -78,8 +88,10 @@ every six hours.
 - Each release is independently rebuilt by the `Verify Release` workflow (`verify-release.yml`), which runs on
   a separate runner with no secrets. It compares the rebuilt CDN files to `integrity-manifest.json` and the
   rebuilt npm tarball to the registry's `dist.integrity`, and verifies the attestations over the rebuilt files.
-  You can run the same comparison yourself: check out the release tag, use the Node version in
-  `publish-release.yml`, run `npm ci && npm run cdn:build:prod`, then
-  `node .github/scripts/verify-release-build.mjs cdn integrity-manifest.json build`. Build on Linux. Packages
+  The verifier script is taken from the default branch, not from the tag being verified, so it also works on
+  older tags. You can run the same comparison yourself: check out the release tag, use the Node version in
+  `publish-release.yml`, run `npm ci --ignore-scripts && npm run cdn:build:prod`, then, using
+  `.github/scripts/verify-release-build.mjs` from the default branch,
+  `node verify-release-build.mjs cdn integrity-manifest.json build`. Build on Linux. Packages
   published before `dist/tsconfig.tsbuildinfo` was excluded contain that file, and building on a
   case-insensitive filesystem (macOS, Windows) changes its contents.

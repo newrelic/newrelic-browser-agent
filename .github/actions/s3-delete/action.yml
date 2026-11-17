@@ -3,12 +3,6 @@
 name: 'S3 File Deletion'
 
 inputs:
-  aws_access_key_id:
-    description: 'AWS access key id used for authentication.'
-    required: true
-  aws_secret_access_key:
-    description: 'AWS secret access key used for authentication.'
-    required: true
   aws_region:
     description: "AWS region where S3 bucket is located."
     required: false
@@ -34,21 +28,24 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Configure AWS credentials via GitHub OIDC
+      uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+      with:
+        role-to-assume: ${{ inputs.aws_role }}
+        aws-region: ${{ inputs.aws_region }}
+        role-session-name: browser-agent-s3-delete
     - name: Install dependencies
       run: npm ci --silent --no-progress --ignore-scripts --prefix $GITHUB_ACTION_PATH/..
       shell: bash
     - name: Run action script
       id: action-script
       env:
-        AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
-        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
         INPUT_REGION: ${{ inputs.aws_region }}
         INPUT_BUCKET: ${{ inputs.aws_bucket_name }}
-        INPUT_ROLE: ${{ inputs.aws_role }}
         INPUT_DRY_RUN: ${{ inputs.dry_run }}
         INPUT_BUCKET_DIR: ${{ inputs.bucket_dir }}
       run: |
-        args=(--region "$INPUT_REGION" --bucket "$INPUT_BUCKET" --role "$INPUT_ROLE")
+        args=(--region "$INPUT_REGION" --bucket "$INPUT_BUCKET")
         if [[ -n "$INPUT_DRY_RUN" ]]; then args+=(--dry); fi
         if [[ -n "$INPUT_BUCKET_DIR" ]]; then args+=(--dir "$INPUT_BUCKET_DIR"); fi
         node "$GITHUB_ACTION_PATH/index.js" "${args[@]}"

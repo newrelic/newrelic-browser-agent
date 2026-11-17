@@ -17,9 +17,6 @@ export const args = yargs(hideBin(process.argv))
   .string('license-key')
   .describe('license-key', 'License key to use in the NRBA configuration.')
 
-  .string('role')
-  .describe('role', 'S3 role ARN for AWS authentication.')
-
   .string('bucket')
   .describe('bucket', 'S3 bucket name for asset upload.')
 
@@ -27,5 +24,5 @@ export const args = yargs(hideBin(process.argv))
   .describe('region', 'AWS region location of S3 bucket.')
   .default('region', 'us-east-1')
 
-  .demandOption(['environment', 'released', 'app-id', 'license-key', 'role', 'bucket'])
+  .demandOption(['environment', 'released', 'app-id', 'license-key', 'bucket'])
   .argv

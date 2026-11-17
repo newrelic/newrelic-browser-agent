@@ -1,0 +1,31 @@
+# This composite action posts a "workflow failed" message to the browser-agent-dev Slack channel.
+# Use it from a final job that has `needs: [<all other jobs>]` and `if: failure()`.
+
+name: 'Notify Failure'
+description: 'Posts a workflow failure message, with a link to the run, to the browser-agent-dev Slack channel.'
+
+inputs:
+  slack_webhook_url:
+    description: 'Slack incoming webhook URL for the browser-agent-dev channel'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Build Slack payload
+      id: payload
+      env:
+        WORKFLOW_NAME: ${{ github.workflow }}
+        EVENT_NAME: ${{ github.event_name }}
+        REF_NAME: ${{ github.ref_name }}
+        ACTOR: ${{ github.actor }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        text=":rotating_light: *${WORKFLOW_NAME}* failed (${EVENT_NAME} on \`${REF_NAME}\`, started by ${ACTOR}). ${RUN_URL}"
+        echo "payload=$(jq -cn --arg text "$text" '{text: $text}')" >> "$GITHUB_OUTPUT"
+      shell: bash
+    - name: Send Slack notification
+      uses: ./.github/actions/slack-notification
+      with:
+        browser_agent_dev_channel_url: ${{ inputs.slack_webhook_url }}
+        payload: ${{ steps.payload.outputs.payload }}

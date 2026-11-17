@@ -1,23 +1,9 @@
 import * as core from '@actions/core'
-import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts'
 import { S3Client, S3ServiceException, paginateListObjectsV2, DeleteObjectsCommand, waitUntilObjectNotExists } from '@aws-sdk/client-s3'
 import { args } from './args.js'
 
-const stsClient = new STSClient({ region: args.region })
-const s3Credentials = await stsClient.send(new AssumeRoleCommand({
-  RoleArn: args.role,
-  RoleSessionName: 'deleteExperimentFromS3Session',
-  DurationSeconds: 900
-}))
-
-const s3Client = new S3Client({
-  region: args.region,
-  credentials: {
-    accessKeyId: s3Credentials.Credentials.AccessKeyId,
-    secretAccessKey: s3Credentials.Credentials.SecretAccessKey,
-    sessionToken: s3Credentials.Credentials.SessionToken
-  }
-})
+/* Credentials come from the default provider chain, populated by the OIDC login step in action.yml */
+const s3Client = new S3Client({ region: args.region })
 
 async function collectKeysToDelete(bucketName, bucketDir) {
   const keys = []

@@ -3,12 +3,6 @@
 name: 'S3 File Upload'
 
 inputs:
-  aws_access_key_id:
-    description: 'AWS access key id used for authentication.'
-    required: true
-  aws_secret_access_key:
-    description: 'AWS secret access key used for authentication.'
-    required: true
   aws_region:
     description: "AWS region where S3 bucket is located."
     required: false
@@ -37,6 +31,12 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Configure AWS credentials via GitHub OIDC
+      uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+      with:
+        role-to-assume: ${{ inputs.aws_role }}
+        aws-region: ${{ inputs.aws_region }}
+        role-session-name: browser-agent-s3-upload
     - name: Install dependencies
       run: npm ci --silent --no-progress --ignore-scripts --prefix $GITHUB_ACTION_PATH/..
       shell: bash
@@ -45,16 +45,13 @@ runs:
       env:
         INPUT_REGION: ${{ inputs.aws_region }}
         INPUT_BUCKET: ${{ inputs.aws_bucket_name }}
-        INPUT_ROLE: ${{ inputs.aws_role }}
         INPUT_LOCAL_DIR: ${{ inputs.local_dir }}
         INPUT_DRY_RUN: ${{ inputs.dry_run }}
         INPUT_BUCKET_DIR: ${{ inputs.bucket_dir }}
-        AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
-        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
       run: |
         # Some callers pass a literal $GITHUB_WORKSPACE prefix, which the shell used to expand when the value was pasted into the script
         input_dir="${INPUT_LOCAL_DIR//\$GITHUB_WORKSPACE/$GITHUB_WORKSPACE}"
-        args=(--region "$INPUT_REGION" --bucket "$INPUT_BUCKET" --role "$INPUT_ROLE" --input "$input_dir")
+        args=(--region "$INPUT_REGION" --bucket "$INPUT_BUCKET" --input "$input_dir")
         if [[ -n "$INPUT_DRY_RUN" ]]; then args+=(--dry); fi
         if [[ -n "$INPUT_BUCKET_DIR" ]]; then args+=(--dir "$INPUT_BUCKET_DIR"); fi
         node "$GITHUB_ACTION_PATH/index.js" "${args[@]}"

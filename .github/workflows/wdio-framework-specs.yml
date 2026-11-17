@@ -98,6 +98,9 @@ jobs:
     runs-on: ubuntu-latest
     # Restricted to the default branch and release tags.
     environment: cdn-maintenance
+    permissions:
+      contents: read
+      id-token: write # required to assume the AWS role via GitHub OIDC
     defaults:
       run:
         shell: bash
@@ -117,8 +120,6 @@ jobs:
         id: s3-upload-report
         uses: ./.github/actions/s3-upload
         with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           local_dir: .framework-results

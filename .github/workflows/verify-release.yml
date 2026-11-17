@@ -4,7 +4,7 @@
 # cdn-integrity-monitor.yml covers ongoing drift of what is served.
 #
 # The verification jobs deliberately have no secrets, no environment and read-only permissions, so they share no
-# credentials or state with the publishing workflows. Notification is a separate job.
+# credentials or state with the publishing workflows. Failure notification is a separate job.
 #
 # The verifier scripts are checked out from the default branch into `verifier/`, and the release tag into
 # `release/`. The scripts must not come from the tag being verified: they don't exist in older tags, and a
@@ -214,30 +214,20 @@ jobs:
           gh attestation verify "$TARBALL" --repo "$GITHUB_REPOSITORY" \
             --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/npm-operations.yml"
 
-  notify:
-    name: Notify on verification failure
+  notify-failure:
+    name: Notify Slack on failure
     needs: [verify-cdn, verify-npm]
-    if: failure()
+    if: ${{ failure() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    defaults:
-      run:
-        shell: bash
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.22.1
-      - name: Build Slack payload
-        id: payload
-        env:
-          TAG: ${{ github.event.release.tag_name || inputs.tag }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          text=":rotating_light: Release verification failed for ${TAG}: the independent rebuild did not match what was published. ${RUN_URL}"
-          echo "payload=$(jq -cn --arg text "$text" '{text: $text}')" >> "$GITHUB_OUTPUT"
-      - name: Send Slack notification
-        uses: ./.github/actions/slack-notification
+      - name: Notify Slack
+        uses: ./.github/actions/notify-failure
         with:
-          browser_agent_dev_channel_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}
-          payload: ${{ steps.payload.outputs.payload }}
+          slack_webhook_url: ${{ secrets.SLACK_BROWSER_AGENT_DEV_WEBHOOK_URL }}

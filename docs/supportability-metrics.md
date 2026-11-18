@@ -267,6 +267,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * SoftNav/Interaction/RouteChange/Duration/Ms
 <!--- Soft nav Custom Interaction Duration in Ms --->
 * SoftNav/Interaction/Custom/Duration/Ms
+<!--- A soft nav interaction trigger was skipped (or its DOM observer not started) because document.body was missing. Event types include: click, keydown, submit, popstate --->
+* SoftNav/Interaction/NoBody/\<eventType>
 <!--- Spa initial page load Interaction Duration in Ms --->
 * Spa/Interaction/InitialPageLoad/Duration/Ms
 <!--- Spa route change Interaction Duration in Ms --->

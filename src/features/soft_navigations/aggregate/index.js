@@ -249,7 +249,7 @@ export class Aggregate extends AggregateBase {
           /*
             document.body can be momentarily null (e.g. a router that replaces it asynchronously). Only the observer is skipped:
             the interaction above is already assigned and the other api handlers dereference it, so it must still be created.
-            Without a DOM observer it can still end via .end(), a URL change, or the cancellation timer.
+            Without a DOM observer no DOM change is detected, so it can only end via .end() (api interactions have no cancellation timer).
           */
           if (document.body instanceof Node) {
             thisClass.domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true }) // start observing for DOM changes like a regular UI-driven interaction

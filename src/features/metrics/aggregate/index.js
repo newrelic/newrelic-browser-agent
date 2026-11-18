@@ -129,7 +129,7 @@ export class Aggregate extends AggregateBase {
           })
         })
       })
-      mo.observe(window.document.body, { childList: true, subtree: true })
+      if (window.document.body) mo.observe(window.document.body, { childList: true, subtree: true })
     }
 
     // webdriver detection

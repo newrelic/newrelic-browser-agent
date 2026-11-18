@@ -388,6 +388,20 @@ test('multiple finished ixns with ajax have correct start/end timestamps (in aja
   expect(softNavAggregate.makeHarvestPayload().body).toEqual("bel.7;1,2,1,3,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;2,1,1,3,,,,,,,,,,'2,!!!;5,'ajaxRequest.id,'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa;2,1,2,3,,,,,,,,,,'3,!!!;5,'ajaxRequest.id,'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb;;1,2,9,4,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'4,!!;2,1,a,1,,,,,,,,,,'5,!!!;5,'ajaxRequest.id,'cccccccc-cccc-cccc-cccc-cccccccccccc;2,1,b,1,,,,,,,,,,'6,!!!;5,'ajaxRequest.id,'dddddddd-dddd-dddd-dddd-dddddddddddd;")
 })
 
+test('.interaction does not throw or observe a null node when document.body is missing', () => {
+  const bodySpy = jest.spyOn(document, 'body', 'get').mockReturnValue(null)
+  const observeSpy = jest.spyOn(MutationObserver.prototype, 'observe')
+
+  try {
+    expect(() => mainAgent.interaction()).not.toThrow()
+    expect(softNavAggregate.interactionInProgress.trigger).toEqual('api')
+    expect(observeSpy).not.toHaveBeenCalledWith(null, expect.anything())
+  } finally {
+    bodySpy.mockRestore()
+    observeSpy.mockRestore()
+  }
+})
+
 function getIxnContext (ixn) {
   const contextId = Object.getOwnPropertyNames(ixn)
     .find((key) => key.startsWith('nr@context:'))

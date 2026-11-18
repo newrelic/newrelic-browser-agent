@@ -11,6 +11,9 @@
       window.onerror = function(evt) {
         window.errorCount++
       }
+      window.addEventListener('unhandledrejection', function () {
+        window.errorCount++
+      })
     </script>
     <script>
       window.onload = function () {

@@ -245,7 +245,7 @@ export class Aggregate extends AggregateBase {
         if (!this.associatedInteraction) {
         // This new api-driven interaction will be the target of any subsequent .interaction() call, until it is closed by EITHER .end() OR the regular url>dom change process.
           this.associatedInteraction = thisClass.interactionInProgress = new Interaction(API_TRIGGER_NAME, Math.floor(time), thisClass.latestRouteSetByApi)
-          thisClass.domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true }) // start observing for DOM changes like a regular UI-driven interaction
+          if (document.body) thisClass.domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true }) // start observing for DOM changes like a regular UI-driven interaction
           thisClass.setClosureHandlers()
         }
       }

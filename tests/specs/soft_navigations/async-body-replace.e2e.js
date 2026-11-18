@@ -84,4 +84,51 @@ describe('async document.body replacement', () => {
       }]))
     }
   })
+
+  /*
+    Unlike the UI-event path, no click starts an interaction here, so newrelic.interaction() has to create a brand new
+    api-driven one and attach the DOM observer itself. That is the aggregate-side document.body access.
+  */
+  it('does not throw when newrelic.interaction() is called while document.body is missing', async () => {
+    await browser.execute(function () {
+      window.holdBody = true
+      window.replaceBody(true) // open the gap directly, with no UI event or soft nav in flight
+    })
+    expect(await browser.execute(function () { return document.body === null })).toBe(true)
+
+    const apiResult = await browser.execute(function () {
+      try {
+        var ixn = window.newrelic.interaction()
+        ixn.setName('no-body-api-ixn')
+        ixn.end() // the interaction must still be fully usable without a DOM observer
+        return { threw: false }
+      } catch (err) {
+        return { threw: true, message: err.message }
+      }
+    })
+    expect(apiResult).toEqual({ threw: false })
+
+    // the api call is handled asynchronously by the aggregate, so wait for its warning rather than assume it
+    await browser.waitUntil(() => browser.execute(function () { return window.warnings.length > 0 }), {
+      timeoutMsg: 'no document.body warning was emitted for the api-driven interaction'
+    })
+
+    await browser.execute(function () { window.finishReplace() })
+
+    const { errorCount, errors, warnings } = await browser.execute(function () {
+      return { errorCount: window.errorCount, errors: window.errors, warnings: window.warnings }
+    })
+    expect({ errorCount, errors }).toEqual({ errorCount: 0, errors: [] })
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]).toMatch(/warning-codes\.md#83$/)
+
+    const [supportabilityMetricsHarvests] = await Promise.all([
+      supportabilityMetricsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('/'))
+    ])
+    expect(supportabilityMetricsHarvests[0].request.body.sm).toEqual(expect.arrayContaining([{
+      params: { name: 'SoftNav/Interaction/NoBody/api' },
+      stats: { c: 1 }
+    }]))
+  })
 })

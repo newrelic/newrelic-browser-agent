@@ -23,6 +23,7 @@ beforeAll(() => {
 })
 
 let softNavAggregate
+let bodySpy
 
 beforeEach(async () => {
   // to prevent xmlhttprequest errors in jest
@@ -47,6 +48,8 @@ beforeEach(async () => {
 })
 
 afterEach(() => {
+  bodySpy?.mockRestore()
+  bodySpy = undefined
   resetAgent(mainAgent)
   jest.clearAllMocks()
 })
@@ -393,3 +396,20 @@ function getIxnContext (ixn) {
     .find((key) => key.startsWith('nr@context:'))
   return ixn[contextId]
 }
+
+test('.interaction without a document.body still creates the api ixn, but skips the dom observer', () => {
+  bodySpy = jest.spyOn(document, 'body', 'get').mockReturnValue(null)
+  jest.spyOn(softNavAggregate.domObserver, 'observe')
+  jest.spyOn(softNavAggregate, 'reportSupportabilityMetric')
+
+  const ixn = mainAgent.interaction()
+
+  expect(softNavAggregate.domObserver.observe).not.toHaveBeenCalled()
+  expect(softNavAggregate.reportSupportabilityMetric).toHaveBeenCalledWith('SoftNav/Interaction/NoBody/api')
+  expect(ixn).toBeDefined() // the api wrapper returns undefined if the handler threw
+  expect(softNavAggregate.interactionInProgress.trigger).toEqual('api')
+  expect(getIxnContext(ixn).associatedInteraction).toBe(softNavAggregate.interactionInProgress)
+
+  ixn.end()
+  expect(softNavAggregate.interactionInProgress).toBeNull() // the api ixn must not be left stuck open, which would block UI soft navs
+})

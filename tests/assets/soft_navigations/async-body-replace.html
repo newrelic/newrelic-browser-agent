@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    <script>
+      /*
+        Counts uncaught errors so a spec can assert the agent's own capture-phase listeners did not throw
+        (e.g. "Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'").
+      */
+      window.errorCount = 0
+      window.errors = []
+      window.addEventListener('error', function (evt) {
+        window.errorCount++
+        window.errors.push(evt.message)
+      })
+    </script>
+    {init}
+    {config}
+    {loader}
+  </head>
+  <body>
+    <div id="view">Route 0</div>
+    <a id="go" href="#">go</a>
+    <script type="text/javascript">
+      /*
+        Imitates a router that updates the URL synchronously but replaces document.body ASYNCHRONOUSLY,
+        leaving a window in which document.body is null while readyState is already 'complete'.
+
+        Controls (all on window so a spec can drive them via browser.execute):
+          - holdBody:     when true, the gap stays open until finishReplace() is called (deterministic, no timers).
+                          when false/unset, the gap closes on its own after gapMs.
+          - gapMs:        how long an un-held gap lasts. Default 50.
+          - replaceBody:  tears the current body down; schedules/awaits its replacement.
+          - finishReplace: mounts a fresh body, closing the gap.
+          - eventLog:     one entry per click/keydown/submit/popstate seen AFTER the agent's own capture listeners
+                          (the agent's loader script registers first), recording whether body was null at that moment.
+                          Lets a spec confirm that it really did hit the gap rather than assume it.
+      */
+      var routeCount = 0
+      var gapOpen = false
+      window.gapMs = 50
+      window.eventLog = []
+
+      function renderBody () {
+        var newBody = document.createElement('body')
+        newBody.innerHTML = '<div id="view">Route ' + routeCount + '</div><a id="go" href="#">go</a>'
+        return newBody
+      }
+
+      window.replaceBody = function (hold) {
+        if (!document.body) return // gap already open
+        document.documentElement.removeChild(document.body)
+        gapOpen = true
+        if (!hold) setTimeout(window.finishReplace, window.gapMs)
+      }
+
+      window.finishReplace = function () {
+        if (!gapOpen) return
+        gapOpen = false
+        document.documentElement.appendChild(renderBody())
+      }
+
+      // delegated at the document level so the handler survives body replacement
+      document.addEventListener('click', function (evt) {
+        if (!evt.target.closest || !evt.target.closest('#go')) return
+        evt.preventDefault()
+        history.pushState({}, '', '#/route-' + (++routeCount)) // URL changes synchronously...
+        window.replaceBody(window.holdBody) // ...but the view is swapped out asynchronously
+      })
+
+      // back/forward re-renders asynchronously too, like the click path above
+      window.addEventListener('popstate', function () {
+        window.replaceBody(window.holdBody)
+      })
+
+      ;['click', 'keydown', 'submit', 'popstate'].forEach(function (type) {
+        window.addEventListener(type, function () {
+          window.eventLog.push({ type: type, bodyIsNull: document.body === null })
+        }, true)
+      })
+    </script>
+  </body>
+</html>

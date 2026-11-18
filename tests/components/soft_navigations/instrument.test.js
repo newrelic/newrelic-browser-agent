@@ -3,9 +3,12 @@ import { FEATURE_NAME } from '../../../src/features/soft_navigations/constants'
 import * as handleModule from '../../../src/common/event-emitter/handle'
 import { resetAgent, setupAgent } from '../setup-agent'
 import { faker } from '@faker-js/faker'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../../src/features/metrics/constants'
+import { FEATURE_NAMES } from '../../../src/loaders/features/features'
 
 let mainAgent
 let softNavInstrument
+let bodySpy
 
 beforeAll(() => {
   mainAgent = setupAgent({
@@ -21,6 +24,8 @@ beforeEach(async () => {
 })
 
 afterEach(() => {
+  bodySpy?.mockRestore()
+  bodySpy = undefined
   softNavInstrument?.abortHandler?.()
   softNavInstrument = undefined
 
@@ -74,4 +79,16 @@ test('instrument detects heuristic steps', async () => {
   const newDomEventCalls = handleModule.handle.mock.calls.filter((call) => call[0] === 'newDom')
   expect(newDomEventCalls.length).toBe(1) // similary, dom change RAF callback should only be fired once instead of thrice
   expect(handleModule.handle).toHaveBeenLastCalledWith('newDom', [expect.any(Number)], undefined, FEATURE_NAME, expect.any(Object))
+})
+
+test('UI event without a document.body is skipped and tracked instead of throwing', async () => {
+  bodySpy = jest.spyOn(document, 'body', 'get').mockReturnValue(null)
+  document.addEventListener('click', function () {}) // feature only listens for UI events that has addEventListener callbacks tied to it
+  handleModule.handle.mockClear()
+
+  expect(() => document.dispatchEvent(new Event('click'))).not.toThrow()
+  await new Promise((resolve) => setTimeout(resolve, 100)) // wait for the debounce to clear
+
+  expect(handleModule.handle.mock.calls.filter((call) => call[0] === 'newUIEvent')).toHaveLength(0)
+  expect(handleModule.handle).toHaveBeenCalledWith(SUPPORTABILITY_METRIC_CHANNEL, ['SoftNav/Interaction/NoBody/click'], undefined, FEATURE_NAMES.metrics, expect.any(Object))
 })

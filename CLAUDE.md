@@ -134,6 +134,18 @@ See [.claude/rules/known-issues.md](.claude/rules/known-issues.md).
 
 Confirmed-but-unfixed bugs, tracked by GitHub issue number.
 
+## Publish security
+
+See [.claude/rules/publish-security.md](.claude/rules/publish-security.md)
+(always loaded: guards that apply regardless of which file is open) and
+[.claude/rules/publish-security-build-path.md](.claude/rules/publish-security-build-path.md)
+(loads when touching workflows, actions, build tooling, or `package.json`).
+
+Controls that keep what we publish (npm, S3/Fastly CDN, NR1 loaders) safe:
+SHA-pinned actions, OIDC and deployment environments instead of stored
+credentials, `--ignore-scripts`, and the integrity manifest and its
+verification. Read before touching workflows, actions, or the release path.
+
 ## Formatting
 
 See [.claude/rules/formatting.md](.claude/rules/formatting.md).
@@ -182,7 +194,10 @@ persistent, team-wide rule:
 1. Put the detailed content in a new `.claude/rules/<topic>.md` file. Every
    `.md` file under `.claude/rules/` is loaded automatically every session —
    no import line needed, so this file doesn't need hand-maintaining as
-   `.claude/rules/` grows.
+   `.claude/rules/` grows. The exception is a rule with `paths:` frontmatter:
+   it loads only when Claude reads or edits a matching file (and isn't
+   re-injected after compaction until it does again), so keep guards that
+   must always apply in an unscoped rule.
 2. Add a short section here (like the ones above) linking to it with a
    one-sentence summary of when it matters, purely for human skimmability —
    the content itself is already loaded regardless of whether this file

@@ -1,4 +1,4 @@
-import { isMinifiedLoader, planChecks, planAliases, summarizeFindings, kindForStatus, isUrgent, sortReleasesNewestFirst, isWithinGrace, describeError, isAbsentStatus, RELEASE_GRACE_MS } from '../../../.github/actions/shared-utils/integrity'
+import { isMinifiedLoader, planChecks, planAliases, summarizeFindings, kindForStatus, isUrgent, sortReleasesNewestFirst, isWithinGrace, isPipelineActive, describeError, isAbsentStatus, RELEASE_GRACE_MS } from '../../../.github/actions/shared-utils/integrity'
 
 /**
  * Builds a release as the monitor sees it: a version and the keys of its integrity manifest.
@@ -277,5 +277,19 @@ describe('isAbsentStatus', () => {
   test('does not treat other statuses as absent', () => {
     expect(isAbsentStatus(200)).toBe(false)
     expect(isAbsentStatus(500)).toBe(false)
+  })
+})
+
+describe('isPipelineActive', () => {
+  test.each(['queued', 'in_progress', 'waiting', 'pending'])('is true while the run is %s', status => {
+    expect(isPipelineActive({ status })).toBe(true)
+  })
+
+  test('is false once the run has completed, whatever its conclusion', () => {
+    expect(isPipelineActive({ status: 'completed', conclusion: 'failure' })).toBe(false)
+  })
+
+  test('is false when there is no run', () => {
+    expect(isPipelineActive(undefined)).toBe(false)
   })
 })

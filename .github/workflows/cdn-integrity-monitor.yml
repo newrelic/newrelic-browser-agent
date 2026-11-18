@@ -24,6 +24,7 @@ on:
 
 permissions:
   contents: read
+  actions: read # list Publish Release runs, so a release still awaiting approval is not reported as broken
 
 concurrency:
   group: cdn-integrity-monitor

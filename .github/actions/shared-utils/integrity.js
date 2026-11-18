@@ -153,11 +153,25 @@ export function sortReleasesNewestFirst (releases) {
   return [...releases].sort((a, b) => newestFirst(a.version, b.version))
 }
 
-/** How long after publishing a release may legitimately lack its manifest or files, while the release pipeline runs. */
+/**
+ * Whether a release pipeline run is still going, including while it waits for an environment approval. A run that has
+ * completed (successfully or not) is not pending, so a release it left without a manifest is a real problem.
+ * @param {{status?: string}|undefined} run A workflow run from the GitHub API.
+ * @returns {boolean}
+ */
+export function isPipelineActive (run) {
+  return Boolean(run) && run.status !== 'completed'
+}
+
+/**
+ * Fallback for when the pipeline run cannot be looked up: how long after publishing a release may legitimately lack its
+ * manifest or files. Deliberately generous, since the pipeline waits on a manual approval.
+ */
 export const RELEASE_GRACE_MS = 2 * 60 * 60 * 1000
 
 /**
- * Whether a release was published recently enough that its manifest and files may still be on their way. The release is
+ * Whether a release was published recently enough that its manifest and files may still be on their way. Only a fallback for
+ * isPipelineActive. The release is
  * public as soon as it is published, but the manifest is only attached after approval, the build and attestation, and the
  * files only land once the S3 upload job has run.
  * @param {string|number|Date|undefined} publishedAt When the release was published. Unknown means no grace.

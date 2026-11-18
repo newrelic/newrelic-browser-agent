@@ -10,7 +10,7 @@
  *   3. the mutable alias loaders (`-current`, `1.x.x`, `1.NNN.x`) match a release they may point at (a rollback within
  *      range is legitimate, anything else isn't)
  *   4. every published release carries a manifest, so a release published without one fails the run, unless it was
- *      published within RELEASE_GRACE_MS, while the release pipeline is still attaching the manifest and uploading files
+ *      its publish-release run is still going (it waits on a manual approval before attaching the manifest and uploading files)
  *
  * Releases are checked in two tiers so that the whole release history can be swept every few minutes:
  *
@@ -29,7 +29,7 @@
  * verification. Exits 1 when any check finds a mismatch or cannot be completed, 0 otherwise.
  */
 import { readFile, appendFile } from 'node:fs/promises'
-import { sha384, matchesManifest, planChecks, planAliases, summarizeFindings, kindForStatus, isUrgent, sortReleasesNewestFirst, isWithinGrace, describeError, isAbsentStatus } from '../actions/shared-utils/integrity.js'
+import { sha384, matchesManifest, planChecks, planAliases, summarizeFindings, kindForStatus, isUrgent, sortReleasesNewestFirst, isWithinGrace, isPipelineActive, describeError, isAbsentStatus } from '../actions/shared-utils/integrity.js'
 
 const EDGE_HOSTS = ['js-agent.newrelic.com', 'staging-js-agent.newrelic.com']
 const ORIGIN_HOST = 'nr-browser-agent.s3.amazonaws.com'
@@ -117,40 +117,66 @@ async function listReleases (repo) {
 }
 
 /**
+ * Looks up the Publish Release workflow runs, by release tag, so a release whose pipeline is still running (for example
+ * waiting on approval) is not reported as broken for lacking a manifest or files yet.
+ * @param {string} repo `owner/name`
+ * @returns {Promise<Map<string, {status: string}>|null>} Null when the runs could not be listed; callers then fall back to a time window.
+ */
+async function listPublishRuns (repo) {
+  try {
+    const headers = { Accept: 'application/vnd.github+json' }
+    if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`
+    const response = await fetchWithRetry(`https://api.github.com/repos/${repo}/actions/workflows/publish-release.yml/runs?event=release&per_page=100`, { headers })
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    const { workflow_runs: runs = [] } = await response.json()
+    /* For a release event the run's head_branch is the release tag. The newest run per tag wins. */
+    const byTag = new Map()
+    for (const run of runs) if (!byTag.has(run.head_branch)) byTag.set(run.head_branch, run)
+    return byTag
+  } catch (error) {
+    console.log(`::warning::Could not list Publish Release runs (${describeError(error)}); using a time window to tell new releases from broken ones.`)
+    return null
+  }
+}
+
+/**
  * Finds every release that carries an integrity manifest and downloads them.
  * A release without a manifest, or whose manifest cannot be downloaded, does not stop the run: it is reported as a finding
- * and the rest are still checked. A release inside its grace window is reported as unavailable instead of missing, because
- * the manifest is attached late in the release pipeline.
+ * and the rest are still checked. A release whose publish pipeline is still running is reported as unavailable instead of missing, because
+ * the manifest is attached late in that pipeline, after a manual approval.
  * @param {ReturnType<typeof parseArgs>} options
- * @returns {Promise<{found: Array<{version: string, publishedAt?: string, manifest: {files: Record<string, {sha384: string}>}}>, skipped: string[], findings: Finding[]}>} found is sorted newest version first; skipped lists the tags of releases that could not be checked.
+ * @returns {Promise<{found: Array<{version: string, pending?: boolean, manifest: {files: Record<string, {sha384: string}>}}>, skipped: string[], findings: Finding[]}>} found is sorted newest version first; skipped lists the tags of releases that could not be checked.
  */
 async function discoverManifests (options) {
   const withManifest = []
   const skipped = []
   const findings = []
+  const runs = await listPublishRuns(options.repo)
+  /* With the runs listed, a release is pending while its run is going; a tag with no run yet is just-published if it is recent. */
+  const isPending = release => runs?.has(release.tag_name) ? isPipelineActive(runs.get(release.tag_name)) : isWithinGrace(release.published_at)
   for (const release of await listReleases(options.repo)) {
     if (release.draft || release.prerelease) continue
     const asset = release.assets?.find(a => a.name === MANIFEST_ASSET)
     if (asset) {
-      withManifest.push({ release, asset })
+      withManifest.push({ release, asset, pending: isPending(release) })
       continue
     }
     skipped.push(release.tag_name)
-    const pending = isWithinGrace(release.published_at)
+    const pending = isPending(release)
     findings.push({
       check: 'manifests',
       target: release.tag_name,
       kind: pending ? 'unavailable' : 'missing',
-      detail: pending ? 'release was published recently and its integrity-manifest.json has not been attached yet' : 'published release has no integrity-manifest.json, so its files cannot be verified',
+      detail: pending ? 'its publish pipeline is still running and has not attached integrity-manifest.json yet' : 'published release has no integrity-manifest.json, so its files cannot be verified',
       version: release.tag_name.replace(/^v/, '')
     })
   }
-  const downloaded = await pool(withManifest.map(({ release, asset }) => async () => {
+  const downloaded = await pool(withManifest.map(({ release, asset, pending }) => async () => {
     const version = release.tag_name.replace(/^v/, '')
     try {
       const download = await fetchWithRetry(asset.browser_download_url)
       if (!download.ok) throw new Error(`HTTP ${download.status}`)
-      return { version, publishedAt: release.published_at, manifest: await download.json() }
+      return { version, pending, manifest: await download.json() }
     } catch (error) {
       skipped.push(release.tag_name)
       findings.push({ check: 'manifests', target: release.tag_name, kind: 'unavailable', detail: `could not download ${MANIFEST_ASSET}: ${describeError(error)}`, version })
@@ -180,8 +206,8 @@ async function discoverManifests (options) {
 function planHostTasks (planned, hosts, record) {
   const tasks = []
   for (const release of planned) {
-    /* Inside the grace window a file may not be uploaded yet, so a missing file is only an incomplete check. */
-    const pending = isWithinGrace(release.publishedAt)
+    /* While the release pipeline is still running a file may not be uploaded yet, so a missing file is only an incomplete check. */
+    const pending = Boolean(release.pending)
     for (const { label, baseUrl } of hosts) {
       for (const key of release.keys) {
         tasks.push(async () => {

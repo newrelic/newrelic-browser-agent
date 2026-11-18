@@ -110,12 +110,10 @@ export default (env) => {
       },
       plugins: [
         ...entryGroup.plugins,
-        new BundleAnalyzerPlugin({
-          analyzerMode: 'static',
-          openAnalyzer: false,
-          defaultSizes: 'stat',
-          reportFilename: `${entryGroup.asyncChunkName}-standard${env.PATH_VERSION}.stats.html`
-        }),
+        /*
+         * Only the JSON report is consumed (size-diff and the nightly/PR size checks). The static HTML report is not
+         * emitted: its <title> embeds the build time, so it is not reproducible and breaks release verification.
+         */
         new BundleAnalyzerPlugin({
           analyzerMode: 'json',
           openAnalyzer: false,

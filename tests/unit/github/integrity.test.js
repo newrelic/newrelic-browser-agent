@@ -1,4 +1,4 @@
-import { isMinifiedLoader, planChecks, planAliases, summarizeFindings, kindForStatus, isUrgent } from '../../../.github/actions/shared-utils/integrity'
+import { isMinifiedLoader, planChecks, planAliases, summarizeFindings, kindForStatus, isUrgent, sortReleasesNewestFirst, isWithinGrace, describeError, isAbsentStatus, RELEASE_GRACE_MS } from '../../../.github/actions/shared-utils/integrity'
 
 /**
  * Builds a release as the monitor sees it: a version and the keys of its integrity manifest.
@@ -229,5 +229,53 @@ describe('summarizeFindings', () => {
     const summary = summarizeFindings([{ kind: 'mismatch', version: '1.0.0\n2.0.0' }])
 
     expect(Object.values(summary).some(v => v.includes('\n'))).toBe(false)
+  })
+})
+
+describe('sortReleasesNewestFirst', () => {
+  test('orders by version rather than input order, without mutating the input', () => {
+    const input = [{ version: '1.230.1' }, { version: '1.231.0' }, { version: '1.99.0' }]
+    expect(sortReleasesNewestFirst(input).map(r => r.version)).toEqual(['1.231.0', '1.230.1', '1.99.0'])
+    expect(input[0].version).toBe('1.230.1')
+  })
+})
+
+describe('isWithinGrace', () => {
+  const now = Date.parse('2026-01-01T12:00:00Z')
+
+  test('is true shortly after publishing', () => {
+    expect(isWithinGrace('2026-01-01T11:30:00Z', now)).toBe(true)
+  })
+
+  test('is false once the grace period has passed', () => {
+    expect(isWithinGrace(new Date(now - RELEASE_GRACE_MS - 1), now)).toBe(false)
+  })
+
+  test('is false when the publish time is unknown or invalid', () => {
+    expect(isWithinGrace(undefined, now)).toBe(false)
+    expect(isWithinGrace('not a date', now)).toBe(false)
+  })
+})
+
+describe('describeError', () => {
+  test('appends the cause code when there is one', () => {
+    const error = new Error('fetch failed', { cause: { code: 'CERT_HAS_EXPIRED' } })
+    expect(describeError(error)).toBe('fetch failed (CERT_HAS_EXPIRED)')
+  })
+
+  test('returns just the message without a cause', () => {
+    expect(describeError(new Error('boom'))).toBe('boom')
+  })
+})
+
+describe('isAbsentStatus', () => {
+  test('treats 404 and the 403 S3 returns for absent keys as absent', () => {
+    expect(isAbsentStatus(404)).toBe(true)
+    expect(isAbsentStatus(403)).toBe(true)
+  })
+
+  test('does not treat other statuses as absent', () => {
+    expect(isAbsentStatus(200)).toBe(false)
+    expect(isAbsentStatus(500)).toBe(false)
   })
 })

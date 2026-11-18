@@ -9,7 +9,8 @@
  *   2. the S3 origin (nr-browser-agent) serves content matching the manifest, independent of the CDN cache
  *   3. the mutable alias loaders (`-current`, `1.x.x`, `1.NNN.x`) match a release they may point at (a rollback within
  *      range is legitimate, anything else isn't)
- *   4. every published release carries a manifest, so a release published without one fails the run
+ *   4. every published release carries a manifest, so a release published without one fails the run, unless it was
+ *      published within RELEASE_GRACE_MS, while the release pipeline is still attaching the manifest and uploading files
  *
  * Releases are checked in two tiers so that the whole release history can be swept every few minutes:
  *
@@ -28,7 +29,7 @@
  * verification. Exits 1 when any check finds a mismatch or cannot be completed, 0 otherwise.
  */
 import { readFile, appendFile } from 'node:fs/promises'
-import { sha384, matchesManifest, planChecks, planAliases, summarizeFindings, kindForStatus, isUrgent } from '../actions/shared-utils/integrity.js'
+import { sha384, matchesManifest, planChecks, planAliases, summarizeFindings, kindForStatus, isUrgent, sortReleasesNewestFirst, isWithinGrace, describeError, isAbsentStatus } from '../actions/shared-utils/integrity.js'
 
 const EDGE_HOSTS = ['js-agent.newrelic.com', 'staging-js-agent.newrelic.com']
 const ORIGIN_HOST = 'nr-browser-agent.s3.amazonaws.com'
@@ -117,25 +118,49 @@ async function listReleases (repo) {
 
 /**
  * Finds every release that carries an integrity manifest and downloads them.
+ * A release without a manifest, or whose manifest cannot be downloaded, does not stop the run: it is reported as a finding
+ * and the rest are still checked. A release inside its grace window is reported as unavailable instead of missing, because
+ * the manifest is attached late in the release pipeline.
  * @param {ReturnType<typeof parseArgs>} options
- * @returns {Promise<{found: Array<{version: string, manifest: {files: Record<string, {sha384: string}>}}>, skipped: string[]}>} found is newest first; skipped lists the tags of releases without a manifest.
+ * @returns {Promise<{found: Array<{version: string, publishedAt?: string, manifest: {files: Record<string, {sha384: string}>}}>, skipped: string[], findings: Finding[]}>} found is sorted newest version first; skipped lists the tags of releases that could not be checked.
  */
 async function discoverManifests (options) {
   const withManifest = []
   const skipped = []
+  const findings = []
   for (const release of await listReleases(options.repo)) {
     if (release.draft || release.prerelease) continue
     const asset = release.assets?.find(a => a.name === MANIFEST_ASSET)
-    if (asset) withManifest.push({ release, asset })
-    else skipped.push(release.tag_name)
+    if (asset) {
+      withManifest.push({ release, asset })
+      continue
+    }
+    skipped.push(release.tag_name)
+    const pending = isWithinGrace(release.published_at)
+    findings.push({
+      check: 'manifests',
+      target: release.tag_name,
+      kind: pending ? 'unavailable' : 'missing',
+      detail: pending ? 'release was published recently and its integrity-manifest.json has not been attached yet' : 'published release has no integrity-manifest.json, so its files cannot be verified',
+      version: release.tag_name.replace(/^v/, '')
+    })
   }
-  const found = await pool(withManifest.map(({ release, asset }) => async () => {
-    const download = await fetchWithRetry(asset.browser_download_url)
-    if (!download.ok) throw new Error(`Could not download ${MANIFEST_ASSET} for ${release.tag_name}: HTTP ${download.status}`)
-    return { version: release.tag_name.replace(/^v/, ''), manifest: await download.json() }
+  const downloaded = await pool(withManifest.map(({ release, asset }) => async () => {
+    const version = release.tag_name.replace(/^v/, '')
+    try {
+      const download = await fetchWithRetry(asset.browser_download_url)
+      if (!download.ok) throw new Error(`HTTP ${download.status}`)
+      return { version, publishedAt: release.published_at, manifest: await download.json() }
+    } catch (error) {
+      skipped.push(release.tag_name)
+      findings.push({ check: 'manifests', target: release.tag_name, kind: 'unavailable', detail: `could not download ${MANIFEST_ASSET}: ${describeError(error)}`, version })
+      return null
+    }
   }), options.concurrency)
-  console.log(`Found ${found.length} release manifest(s); ${skipped.length} release(s) without one cannot be checked.`)
-  return { found, skipped }
+  /* Releases come back in GitHub's creation order, but the tiers are assigned by version, so sort by it. */
+  const found = sortReleasesNewestFirst(downloaded.filter(Boolean))
+  console.log(`Found ${found.length} release manifest(s); ${skipped.length} release(s) could not be checked.`)
+  return { found, skipped, findings }
 }
 
 /**
@@ -145,32 +170,41 @@ async function discoverManifests (options) {
  */
 
 /**
- * Downloads each manifested file from a host and compares its digest with the manifest.
- * @param {string} label Name of the check, used in reports.
- * @param {string} baseUrl Origin to fetch from, without a trailing slash.
- * @param {import('../actions/shared-utils/integrity.js').PlannedRelease} release The release and the keys chosen for it by planChecks.
- * @param {number} concurrency
- * @returns {Promise<{checked: number, findings: Finding[]}>}
+ * Builds one task per file, host and release, so the whole sweep shares a single pool and is not limited by how many files
+ * one release has. Each task records its own findings.
+ * @param {import('../actions/shared-utils/integrity.js').PlannedRelease[]} planned
+ * @param {Array<{label: string, baseUrl: string}>} hosts
+ * @param {(tier: string, label: string, result: {checked: number, findings: Finding[]}) => void} record
+ * @returns {Array<() => Promise<void>>}
  */
-async function checkHost (label, baseUrl, release, concurrency) {
-  const { keys } = release
-  const findings = []
-  await pool(keys.map(key => async () => {
-    const target = `${baseUrl}/${key}`
-    try {
-      const response = await fetchWithRetry(target)
-      if (!response.ok) {
-        findings.push({ check: label, target, kind: kindForStatus(response.status), detail: `HTTP ${response.status}`, version: release.version })
-        return
+function planHostTasks (planned, hosts, record) {
+  const tasks = []
+  for (const release of planned) {
+    /* Inside the grace window a file may not be uploaded yet, so a missing file is only an incomplete check. */
+    const pending = isWithinGrace(release.publishedAt)
+    for (const { label, baseUrl } of hosts) {
+      for (const key of release.keys) {
+        tasks.push(async () => {
+          const target = `${baseUrl}/${key}`
+          const finding = (kind, detail) => ({ check: label, target, kind, detail, version: release.version })
+          try {
+            const response = await fetchWithRetry(target)
+            if (!response.ok) {
+              const kind = kindForStatus(response.status)
+              record(release.tier, label, { checked: 1, findings: [finding(kind === 'missing' && pending ? 'unavailable' : kind, `HTTP ${response.status}`)] })
+            } else if (!matchesManifest(release.manifest, key, await response.arrayBuffer())) {
+              record(release.tier, label, { checked: 1, findings: [finding('mismatch', `content does not match the ${release.version} manifest`)] })
+            } else {
+              record(release.tier, label, { checked: 1, findings: [] })
+            }
+          } catch (error) {
+            record(release.tier, label, { checked: 1, findings: [finding('unavailable', describeError(error))] })
+          }
+        })
       }
-      if (!matchesManifest(release.manifest, key, await response.arrayBuffer())) {
-        findings.push({ check: label, target, kind: 'mismatch', detail: `content does not match the ${release.version} manifest`, version: release.version })
-      }
-    } catch (error) {
-      findings.push({ check: label, target, kind: 'unavailable', detail: String(error.message ?? error), version: release.version })
     }
-  }), concurrency)
-  return { checked: keys.length, findings }
+  }
+  return tasks
 }
 
 /**
@@ -190,7 +224,7 @@ async function checkAliases (releases, concurrency) {
         const target = `https://${host}/${alias.key}`
         try {
           const response = await fetchWithRetry(target)
-          if (response.status === 404 && !alias.required) return
+          if (isAbsentStatus(response.status) && !alias.required) return
           checked++
           if (!response.ok) { findings.push({ check: 'aliases', target, kind: kindForStatus(response.status), detail: `HTTP ${response.status}`, alias: alias.key }); return }
           if (!alias.digests.includes(sha384(await response.arrayBuffer()))) {
@@ -198,7 +232,7 @@ async function checkAliases (releases, concurrency) {
           }
         } catch (error) {
           checked++
-          findings.push({ check: 'aliases', target, kind: 'unavailable', detail: String(error.message ?? error), alias: alias.key })
+          findings.push({ check: 'aliases', target, kind: 'unavailable', detail: describeError(error), alias: alias.key })
         }
       })
     }
@@ -209,6 +243,7 @@ async function checkAliases (releases, concurrency) {
 
 const options = parseArgs(process.argv.slice(2))
 let skipped = []
+let discoveryFindings = []
 let releases
 if (options.manifests.length) {
   releases = await Promise.all(options.manifests.map(async path => {
@@ -216,10 +251,10 @@ if (options.manifests.length) {
     return { version: String(manifest.version).replace(/^v/, ''), manifest }
   }))
 } else {
-  ({ found: releases, skipped } = await discoverManifests(options))
+  ({ found: releases, skipped, findings: discoveryFindings } = await discoverManifests(options))
 }
 
-if (!releases.length && !skipped.length) {
+if (!releases.length && !skipped.length && !discoveryFindings.length) {
   console.log('::warning::No release with an integrity manifest was found, so nothing was monitored. Expected until the first release that publishes one.')
   process.exit(0)
 }
@@ -237,23 +272,28 @@ const record = (tier, label, result) => {
   findings.push(...result.findings)
 }
 
-for (const release of planned) {
-  console.log(`\nChecking ${release.version} (${release.tier}, ${release.keys.length} file(s))`)
-  for (const host of EDGE_HOSTS) record(release.tier, `edge ${host}`, await checkHost(`edge ${host}`, `https://${host}`, release, options.concurrency))
-  record(release.tier, 's3 origin', await checkHost('s3 origin', `https://${ORIGIN_HOST}`, release, options.concurrency))
-}
+console.log(`\nChecking ${planned.length} release(s) on ${EDGE_HOSTS.length + 1} host(s)`)
+const hosts = [...EDGE_HOSTS.map(host => ({ label: `edge ${host}`, baseUrl: `https://${host}` })), { label: 's3 origin', baseUrl: `https://${ORIGIN_HOST}` }]
+await pool(planHostTasks(planned, hosts, record), options.concurrency)
 console.log('\nChecking alias loaders')
 record('aliases', 'alias loaders', await checkAliases(releases, options.concurrency))
+/*
+ * A manifested release with nothing to check (for example the loader pattern stopped matching its file names) would
+ * otherwise go unmonitored without anyone noticing, so it is reported as a finding.
+ */
+const emptyPlans = planned.filter(r => !r.keys.length && !options.include)
 record('manifests', 'release manifests', {
   checked: releases.length + skipped.length,
-  findings: skipped.map(tag => ({ check: 'manifests', target: tag, kind: 'missing', detail: 'published release has no integrity-manifest.json, so its files cannot be verified', version: tag.replace(/^v/, '') }))
+  findings: [
+    ...discoveryFindings,
+    ...emptyPlans.map(r => ({ check: 'manifests', target: `v${r.version}`, kind: 'unavailable', detail: `no ${r.tier === 'full' ? '.js' : 'minified loader'} files in the manifest to check`, version: r.version }))
+  ]
 })
 
 for (const tier of ['full', 'loaders']) {
   const inTier = planned.filter(r => r.tier === tier)
   if (inTier.length) summary.push(`| ${tier} | ${inTier.length} release(s) | ${inTier.reduce((n, r) => n + r.keys.length, 0)} file(s) per host |`)
 }
-const emptyPlans = planned.filter(r => !r.keys.length).map(r => r.version)
 
 const mismatches = findings.filter(f => f.kind === 'mismatch')
 const missing = findings.filter(f => f.kind === 'missing')
@@ -265,7 +305,7 @@ const report = [
   '| --- | --- | --- |',
   ...summary,
   '',
-  `${skipped.length} release(s) have no integrity manifest and were not checked.` + (emptyPlans.length ? ` ${emptyPlans.length} manifested release(s) had no files to check: ${emptyPlans.slice(0, 20).join(', ')}.` : ''),
+  `${skipped.length} release(s) could not be checked (no manifest, or it could not be downloaded).` + (emptyPlans.length ? ` ${emptyPlans.length} manifested release(s) had no files to check: ${emptyPlans.slice(0, 20).map(r => r.version).join(', ')}.` : ''),
   '',
   '| Tier | Check | Files checked | Problems |',
   '| --- | --- | --- | --- |',

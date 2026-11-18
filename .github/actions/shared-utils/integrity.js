@@ -143,6 +143,55 @@ function newestFirst (a, b) {
 }
 
 /**
+ * Sorts releases by semantic version, newest first, so the "full" tier always holds the newest versions even when GitHub's
+ * creation order differs (e.g. a backport published after a newer release). Does not mutate the input.
+ * @template {{version: string}} T
+ * @param {T[]} releases
+ * @returns {T[]}
+ */
+export function sortReleasesNewestFirst (releases) {
+  return [...releases].sort((a, b) => newestFirst(a.version, b.version))
+}
+
+/** How long after publishing a release may legitimately lack its manifest or files, while the release pipeline runs. */
+export const RELEASE_GRACE_MS = 2 * 60 * 60 * 1000
+
+/**
+ * Whether a release was published recently enough that its manifest and files may still be on their way. The release is
+ * public as soon as it is published, but the manifest is only attached after approval, the build and attestation, and the
+ * files only land once the S3 upload job has run.
+ * @param {string|number|Date|undefined} publishedAt When the release was published. Unknown means no grace.
+ * @param {number} [now] Current time in epoch milliseconds.
+ * @returns {boolean}
+ */
+export function isWithinGrace (publishedAt, now = Date.now()) {
+  if (!publishedAt) return false
+  const published = new Date(publishedAt).getTime()
+  return Number.isFinite(published) && now - published < RELEASE_GRACE_MS
+}
+
+/**
+ * Describes a failed request, including the underlying cause code that Node's fetch hides under `error.cause`, so a
+ * transient network error (ECONNRESET, ETIMEDOUT) can be told apart from a certificate error (e.g. CERT_HAS_EXPIRED).
+ * @param {Error & {cause?: {code?: string, message?: string}}} error
+ * @returns {string}
+ */
+export function describeError (error) {
+  const message = String(error?.message ?? error)
+  const code = error?.cause?.code
+  return code ? `${message} (${code})` : message
+}
+
+/**
+ * Whether a status means an object does not exist. S3 answers 403 rather than 404 for a key that is not there, so both count.
+ * @param {number} status
+ * @returns {boolean}
+ */
+export function isAbsentStatus (status) {
+  return status === 404 || status === 403
+}
+
+/**
  * Joins values into one line, listing at most `limit` of them and saying how many were left out.
  * @param {string[]} values
  * @param {number} limit

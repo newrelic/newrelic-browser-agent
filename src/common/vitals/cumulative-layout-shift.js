@@ -21,5 +21,5 @@ if (isBrowserScope) {
     }
     cumulativeLayoutShift.update({ value, attrs })
   }
-  registerVital(() => onCLS(handleCLS, { reportAllChanges: true }))
+  registerVital(() => onCLS(handleCLS, { reportAllChanges: true }), ['at'])
 }

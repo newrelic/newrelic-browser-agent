@@ -37,6 +37,6 @@ if (isBrowserScope) {
       }
       firstContentfulPaint.update({ value, attrs })
     }
-    registerVital(() => onFCP(handleFCP))
+    registerVital(() => onFCP(handleFCP), ['at'])
   }
 }

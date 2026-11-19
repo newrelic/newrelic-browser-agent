@@ -177,3 +177,24 @@ describe('fcp', () => {
     })
   })
 })
+
+describe('without Array.prototype.findLast', () => {
+  let descriptor
+
+  beforeEach(() => {
+    descriptor = Object.getOwnPropertyDescriptor(Array.prototype, 'findLast')
+    delete Array.prototype.findLast
+  })
+
+  afterEach(() => {
+    // eslint-disable-next-line no-extend-native
+    Object.defineProperty(Array.prototype, 'findLast', descriptor)
+  })
+
+  test('still registers fcp with web-vitals', async () => {
+    const onFCP = jest.fn()
+    jest.doMock('web-vitals/attribution', () => ({ onFCP }))
+    await import('../../../../src/common/vitals/first-contentful-paint')
+    expect(onFCP).toHaveBeenCalledTimes(1)
+  })
+})

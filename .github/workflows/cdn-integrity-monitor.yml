@@ -24,7 +24,6 @@ on:
 
 permissions:
   contents: read
-  actions: read # list Publish Release runs, so a release still awaiting approval is not reported as broken
 
 concurrency:
   group: cdn-integrity-monitor
@@ -35,6 +34,9 @@ jobs:
     name: Verify served assets against release manifests
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read # list Publish Release runs, so a release still awaiting approval is not reported as broken
     # Written by the script only for the kinds of finding that occurred; used by the notify job to describe the failure.
     # failure_* covers mismatches and missing files; error_* covers checks that could not complete.
     outputs:

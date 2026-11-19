@@ -166,7 +166,7 @@ async function discoverManifests (options) {
     findings.push({
       check: 'manifests',
       target: release.tag_name,
-      kind: pending ? 'unavailable' : 'missing',
+      kind: pending ? 'pending' : 'missing',
       detail: pending ? 'its publish pipeline is still running and has not attached integrity-manifest.json yet' : 'published release has no integrity-manifest.json, so its files cannot be verified',
       version: release.tag_name.replace(/^v/, '')
     })
@@ -190,9 +190,9 @@ async function discoverManifests (options) {
 }
 
 /**
- * @typedef {{check: string, target: string, kind: 'mismatch'|'missing'|'unavailable', detail: string, version?: string, alias?: string}} Finding
+ * @typedef {{check: string, target: string, kind: 'mismatch'|'missing'|'unavailable'|'pending', detail: string, version?: string, alias?: string}} Finding
  * version is the release the finding belongs to; alias is the alias file name for findings about a mutable alias.
- * mismatch: served content differs from the manifest. missing: the file is not served. unavailable: the check could not complete.
+ * mismatch: served content differs from the manifest. missing: the file is not served. unavailable: the check could not complete. pending: expected while the release's publish pipeline is still running; never fails the run.
  */
 
 /**
@@ -217,7 +217,7 @@ function planHostTasks (planned, hosts, record) {
             const response = await fetchWithRetry(target)
             if (!response.ok) {
               const kind = kindForStatus(response.status)
-              record(release.tier, label, { checked: 1, findings: [finding(kind === 'missing' && pending ? 'unavailable' : kind, `HTTP ${response.status}`)] })
+              record(release.tier, label, { checked: 1, findings: [finding(kind === 'missing' && pending ? 'pending' : kind, `HTTP ${response.status}`)] })
             } else if (!matchesManifest(release.manifest, key, await response.arrayBuffer())) {
               record(release.tier, label, { checked: 1, findings: [finding('mismatch', `content does not match the ${release.version} manifest`)] })
             } else {
@@ -290,12 +290,20 @@ const summary = []
 const findings = []
 /* Totals per tier and check, so the report stays readable when hundreds of releases are covered. */
 const totals = new Map()
+/*
+ * Findings about a release whose publish pipeline is still running (for example waiting on approval) are expected, not
+ * failures: they are reported but kept out of `findings`, so they do not fail the run, post to Slack, publish a check error
+ * event or stop the heartbeat. Once the pipeline finishes, anything still wrong is reported as missing or mismatch.
+ */
+const pendingFindings = []
 const record = (tier, label, result) => {
   const total = totals.get(`${tier}|${label}`) ?? { tier, label, checked: 0, problems: 0 }
   total.checked += result.checked
-  total.problems += result.findings.length
+  const [pending, real] = [result.findings.filter(f => f.kind === 'pending'), result.findings.filter(f => f.kind !== 'pending')]
+  total.problems += real.length
   totals.set(`${tier}|${label}`, total)
-  findings.push(...result.findings)
+  findings.push(...real)
+  pendingFindings.push(...pending)
 }
 
 console.log(`\nChecking ${planned.length} release(s) on ${EDGE_HOSTS.length + 1} host(s)`)
@@ -338,6 +346,9 @@ const report = [
   ...[...totals.values()].map(t => `| ${t.tier} | ${t.label} | ${t.checked} | ${t.problems} |`),
   ...(findings.length
     ? ['', `**${mismatches.length} mismatch(es), ${missing.length} missing, ${unavailable.length} unavailable.** A mismatch means served content differs from what was released; missing means a released file is not being served; unavailable means the check could not complete.`, '', ...findings.slice(0, 50).map(f => `- **${f.kind}** \`${f.check}\` ${f.target}: ${f.detail}`)]
+    : []),
+  ...(pendingFindings.length
+    ? ['', `${pendingFindings.length} check(s) are waiting on a release whose publish pipeline is still running and do not count as failures: ${[...new Set(pendingFindings.map(f => f.version))].join(', ')}.`]
     : [])
 ].join('\n')
 
@@ -345,6 +356,7 @@ console.log(`\n${report}`)
 if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, report + '\n')
 for (const f of mismatches.slice(0, 20)) console.log(`::error title=Integrity mismatch::${f.check}: ${f.target} ${f.detail}`)
 for (const f of missing.slice(0, 20)) console.log(`::error title=Released file not served::${f.check}: ${f.target} ${f.detail}`)
+for (const f of pendingFindings.slice(0, 20)) console.log(`::notice title=Release still publishing::${f.check}: ${f.target} ${f.detail}`)
 for (const f of unavailable.slice(0, 20)) console.log(`::warning title=Integrity check incomplete::${f.check}: ${f.target} ${f.detail}`)
 /*
  * Exposed as step outputs so the notify job can describe the failure in a New Relic event without re-running the check.

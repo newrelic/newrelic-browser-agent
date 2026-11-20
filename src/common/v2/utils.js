@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { extractUrlsFromStack, getDeepStackTrace } from './script-tracker'
+import { extractUrlsFromStack, getDeepStackTrace } from './stack-utils'
 import { matchManifestAsset } from './manifest'
 import { cleanURL } from '../url/clean-url'
 import { V2_TYPES } from './constants'

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { testMFEErrorsRequest, testErrorsRequest, testMFEInsRequest, testMFEAjaxEventsRequest, testLogsRequest, testRumRequest } from '../../../../tools/testing-server/utils/expect-tests'
+import { testMFEErrorsRequest, testErrorsRequest, testMFEInsRequest, testMFEAjaxEventsRequest, testLogsRequest, testRumRequest, testMFETimingRequest } from '../../../../tools/testing-server/utils/expect-tests'
 import { rumFlags } from '../../../../tools/testing-server/constants'
 import { LOGGING_MODE } from '../../../../src/features/logging/constants'
 
@@ -154,7 +154,7 @@ describe('Register API - Manifest', () => {
 
   it('widens MicroFrontEndTiming fetch window across manifest script assets when timingMethod is "scripts"', async () => {
     const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-      { test: testMFEInsRequest }
+      { test: testMFETimingRequest }
     ])
 
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
@@ -188,7 +188,7 @@ describe('Register API - Manifest', () => {
 
   it('widens MicroFrontEndTiming execution window across manifest script assets when timingMethod is "scripts"', async () => {
     const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-      { test: testMFEInsRequest }
+      { test: testMFETimingRequest }
     ])
 
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
@@ -223,7 +223,7 @@ describe('Register API - Manifest', () => {
 
   it('anchors MicroFrontEndTiming assetUrl on the first-resolving manifest script asset instead of the caller script', async () => {
     const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-      { test: testMFEInsRequest }
+      { test: testMFETimingRequest }
     ])
 
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
@@ -256,7 +256,7 @@ describe('Register API - Manifest', () => {
 
   it('accumulates MicroFrontEndTiming totalWeight from the manifest script asset when timingMethod is "scripts"', async () => {
     const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-      { test: testMFEInsRequest }
+      { test: testMFETimingRequest }
     ])
 
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
@@ -289,7 +289,7 @@ describe('Register API - Manifest', () => {
 
   it('accumulates MicroFrontEndTiming totalWeight from a manifest asset even when timingMethod is left unset (weight is not gated behind timingMethod)', async () => {
     const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-      { test: testMFEInsRequest }
+      { test: testMFETimingRequest }
     ])
 
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
@@ -326,7 +326,7 @@ describe('Register API - Manifest', () => {
 
   it('reports MicroFrontEndTiming renderBlocking as a boolean when the browser supports renderBlockingStatus, omitted otherwise', async () => {
     const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-      { test: testMFEInsRequest }
+      { test: testMFETimingRequest }
     ])
 
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
@@ -362,7 +362,7 @@ describe('Register API - Manifest', () => {
 
   it('accumulates totalWeight from a non-script manifest asset lazy-loaded well after register() (late-resolution path, not the synchronous buffer pass)', async () => {
     const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-      { test: testMFEInsRequest }
+      { test: testMFETimingRequest }
     ])
 
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
@@ -403,7 +403,7 @@ describe('Register API - Manifest', () => {
 
   it('counts every resource a broad RegExp matcher matches toward totalWeight, not just the first', async () => {
     const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-      { test: testMFEInsRequest }
+      { test: testMFETimingRequest }
     ])
 
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
@@ -777,7 +777,7 @@ describe('Register API - Manifest', () => {
 
   it('is a silent no-op to set timingMethod with no manifest supplied at all', async () => {
     const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-      { test: testMFEInsRequest }
+      { test: testMFETimingRequest }
     ])
 
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {
@@ -838,7 +838,7 @@ describe('Register API - Manifest', () => {
 
   it('reports a normal MicroFrontEndTiming baseline, with no hang or error, when a supplied manifest asset never appears on the page', async () => {
     const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-      { test: testMFEInsRequest }
+      { test: testMFETimingRequest }
     ])
 
     await browser.url(await browser.testHandle.assetURL('instrumented.html', {

@@ -4,19 +4,22 @@ import * as core from '@actions/core'
 import { S3Client, HeadObjectCommand, PutObjectCommand, NotFound } from '@aws-sdk/client-s3'
 import mime from 'mime-types'
 import { getAssetCacheHeader } from '../shared-utils/asset-cache.js'
-import { isCreateOnly, compareWithExisting, isPreconditionFailed } from '../shared-utils/s3-create-only.js'
+import { isCreateOnly, compareWithExisting, isPreconditionFailed, isConditionalConflict } from '../shared-utils/s3-create-only.js'
 import { args } from './args.js'
+
+/* How many times a create-only write is tried when it collides with another in-flight write to the same key (HTTP 409). */
+const MAX_CONFLICT_ATTEMPTS = 4
 
 /* Credentials come from the default provider chain, populated by the OIDC login step in action.yml */
 const s3Client = new S3Client({ region: args.region })
 
+/* Each entry keeps the local file path apart from the params, since only the params are sent to S3. */
 const uploadCommandParams = (await fs.promises.readdir(args.input, { withFileTypes: true }))
   .filter(file => file.isFile())
   .map(file => {
     const params = {
       Bucket: args.bucket,
       Key: file.name,
-      localPath: path.resolve(args.input, file.name),
       ContentType: mime.lookup(file.name) || 'application/javascript',
       CacheControl: getAssetCacheHeader(args.dir, file.name)
     }
@@ -31,12 +34,12 @@ const uploadCommandParams = (await fs.promises.readdir(args.input, { withFileTyp
       params.Key = `${dirPath}/${params.Key}`
     }
 
-    return params
+    return { localPath: path.resolve(args.input, file.name), params }
   })
 
 /**
  * Looks at what is already in the bucket for a key.
- * @param {typeof uploadCommandParams[number]} params
+ * @param {typeof uploadCommandParams[number]['params']} params
  * @param {Buffer} contents The local file.
  * @returns {Promise<'missing'|'identical'|'different'>}
  */
@@ -51,8 +54,8 @@ async function checkExisting (params, contents) {
 }
 
 /* Each file is read once: its bytes are uploaded and compared against anything already in the bucket. */
-const files = await Promise.all(uploadCommandParams.map(async params => {
-  const contents = await fs.promises.readFile(params.localPath)
+const files = await Promise.all(uploadCommandParams.map(async ({ localPath, params }) => {
+  const contents = await fs.promises.readFile(localPath)
   const createOnly = isCreateOnly(params.CacheControl)
   return { params, contents, createOnly, state: createOnly ? await checkExisting(params, contents) : 'missing' }
 }))
@@ -84,19 +87,30 @@ const uploads = await Promise.all(files.map(async ({ params, contents, createOnl
   /*
    * Versioned files are written with If-None-Match: *, which the bucket policy requires and which makes S3 refuse to overwrite.
    * They are uploaded with a single PutObject because the multipart upload helper does not send the condition when it
-   * completes the upload. If S3 refuses because the file appeared in the meantime, it is accepted only if identical.
+   * completes the upload. If S3 refuses because the file appeared in the meantime, it is
+   * accepted only if identical. A 409 means another write to the key was still in flight; S3 says to retry those.
    */
-  const { localPath, ...putParams } = params
-  try {
-    const response = await s3Client.send(new PutObjectCommand({ ...putParams, Body: contents, ...(createOnly ? { IfNoneMatch: '*' } : {}) }))
-    return { ...result, ETag: response.ETag }
-  } catch (error) {
-    if (!createOnly || !isPreconditionFailed(error)) throw error
-    if (await checkExisting(params, contents) === 'identical') {
-      console.log(`File ${params.Key} was created by another run with identical content, skipping.`)
-      return { ...result, skipped: true }
+  const putCommand = new PutObjectCommand({
+    ...params,
+    Body: contents,
+    ...(createOnly ? { IfNoneMatch: '*' } : {})
+  })
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const response = await s3Client.send(putCommand)
+      return { ...result, ETag: response.ETag }
+    } catch (error) {
+      if (createOnly && isConditionalConflict(error) && attempt < MAX_CONFLICT_ATTEMPTS) {
+        await new Promise(resolve => setTimeout(resolve, attempt * 500))
+        continue
+      }
+      if (!createOnly || !(isPreconditionFailed(error) || isConditionalConflict(error))) throw error
+      if (await checkExisting(params, contents) === 'identical') {
+        console.log(`File ${params.Key} was created by another run with identical content, skipping.`)
+        return { ...result, skipped: true }
+      }
+      throw new Error(`File ${params.Key} could not be created: it already exists in the bucket with different content, or a concurrent write to it did not settle.`, { cause: error })
     }
-    throw new Error(`File ${params.Key} already exists in the bucket with different content.`, { cause: error })
   }
 }))
 

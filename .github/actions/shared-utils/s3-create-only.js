@@ -16,7 +16,7 @@ export function isCreateOnly (cacheControl) {
 }
 
 /**
- * The ETag S3 reports for a single-part, non-KMS upload of this content: the hex MD5 of the bytes, in quotes.
+ * The ETag S3 reports for a single-part, non-KMS upload of this content: the hex MD5 of the bytes, in quotes (bucket is SSE-S3).
  * @param {Buffer|Uint8Array} contents
  * @returns {string}
  */
@@ -25,8 +25,9 @@ export function localEtag (contents) {
 }
 
 /**
- * Compares the object already in the bucket with the file about to be uploaded. An ETag that is not a plain MD5 (multipart
- * or KMS-encrypted) cannot be compared, so it counts as different and the upload stops rather than assuming it is the same.
+ * Compares the object already in the bucket with the file about to be uploaded. The bucket uses SSE-S3, so the ETag of a
+ * single-part upload is the MD5 of the content. An ETag that is not a plain MD5 (multipart or KMS-encrypted) cannot be
+ * compared, so it counts as different and the upload stops rather than assuming it is the same.
  * @param {string|undefined} existingEtag ETag of the object in the bucket.
  * @param {Buffer|Uint8Array} contents The local file.
  * @returns {'identical'|'different'}
@@ -42,4 +43,15 @@ export function compareWithExisting (existingEtag, contents) {
  */
 export function isPreconditionFailed (error) {
   return error?.name === 'PreconditionFailed' || error?.$metadata?.httpStatusCode === 412
+}
+
+/**
+ * Whether an S3 error means a conditional write collided with another write to the same key that was still in flight
+ * (ConditionalRequestConflict). S3 documents this as retryable: once the other write settles, the retry either succeeds or
+ * is refused with a precondition failure.
+ * @param {{name?: string, $metadata?: {httpStatusCode?: number}}} error
+ * @returns {boolean}
+ */
+export function isConditionalConflict (error) {
+  return error?.name === 'ConditionalRequestConflict' || error?.$metadata?.httpStatusCode === 409
 }

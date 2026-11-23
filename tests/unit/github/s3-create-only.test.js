@@ -1,4 +1,4 @@
-import { isCreateOnly, localEtag, compareWithExisting, isPreconditionFailed } from '../../../.github/actions/shared-utils/s3-create-only'
+import { isCreateOnly, localEtag, compareWithExisting, isPreconditionFailed, isConditionalConflict } from '../../../.github/actions/shared-utils/s3-create-only'
 import { getAssetCacheHeader } from '../../../.github/actions/shared-utils/asset-cache'
 
 describe('isCreateOnly', () => {
@@ -51,5 +51,20 @@ describe('isPreconditionFailed', () => {
   test('does not treat other errors as a refused conditional write', () => {
     expect(isPreconditionFailed({ name: 'AccessDenied', $metadata: { httpStatusCode: 403 } })).toBe(false)
     expect(isPreconditionFailed(undefined)).toBe(false)
+  })
+})
+
+describe('isConditionalConflict', () => {
+  test('recognises the error by name', () => {
+    expect(isConditionalConflict({ name: 'ConditionalRequestConflict' })).toBe(true)
+  })
+
+  test('recognises the error by HTTP status', () => {
+    expect(isConditionalConflict({ name: 'Other', $metadata: { httpStatusCode: 409 } })).toBe(true)
+  })
+
+  test('does not treat other errors as a write conflict', () => {
+    expect(isConditionalConflict({ name: 'PreconditionFailed', $metadata: { httpStatusCode: 412 } })).toBe(false)
+    expect(isConditionalConflict(undefined)).toBe(false)
   })
 })

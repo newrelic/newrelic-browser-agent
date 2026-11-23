@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -29,7 +29,7 @@ export function eventOrigin (t, target, ee) {
     if (typeof target === 'string') origin = target
     else if (target === document) origin = 'document'
     else if (target === window) origin = 'window'
-    else if (target instanceof FileReader) origin = 'FileReader'
+    else if (typeof FileReader === 'function' && target instanceof FileReader) origin = 'FileReader'
   }
 
   return origin

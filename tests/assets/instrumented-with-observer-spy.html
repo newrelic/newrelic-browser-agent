@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    <script>
+      /* Runs before the agent so every MutationObserver#observe call made by the page and the agent is recorded. */
+      window.__observeCalls = []
+      var originalObserve = MutationObserver.prototype.observe
+      MutationObserver.prototype.observe = function (target, options) {
+        window.__observeCalls.push({ nodeName: target && target.nodeName, subtree: !!(options && options.subtree), childList: !!(options && options.childList) })
+        return originalObserve.apply(this, arguments)
+      }
+    </script>
+    {init} {config} {loader}
+  </head>
+  <body>Instrumented</body>
+</html>

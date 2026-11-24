@@ -5,6 +5,7 @@
 
 describe('trackMFEVitals', () => {
   let trackMFEVitals
+  let createInertVitals
   let mockDocument
   let mockMutationObserver
   let mockPerformanceObserver
@@ -126,12 +127,39 @@ describe('trackMFEVitals', () => {
     // Import after mocking
     const module = await import('../../../../src/common/v2/mfe-vitals')
     trackMFEVitals = module.trackMFEVitals
+    createInertVitals = module.createInertVitals
 
     mfeTarget = {
       id: 'test-mfe',
       name: 'Test MFE',
       instance: 'abcdefg'
     }
+  })
+
+  describe('createInertVitals', () => {
+    it('should expose the same shape as trackMFEVitals', () => {
+      const inert = createInertVitals()
+
+      expect(Object.keys(inert).sort()).toEqual(Object.keys(trackMFEVitals(mfeTarget, timings)).sort())
+      ;['fcp', 'lcp', 'cls', 'inp'].forEach(vital => expect(inert[vital].value).toBeUndefined())
+      expect(() => inert.disconnect()).not.toThrow()
+    })
+
+    it('should not create observers or listeners', () => {
+      mockMutationObserver.mockClear()
+      mockPerformanceObserver.mockClear()
+
+      createInertVitals()
+
+      expect(mockMutationObserver).not.toHaveBeenCalled()
+      expect(mockPerformanceObserver).not.toHaveBeenCalled()
+    })
+
+    it('should accept values written by the iframe handler', () => {
+      const inert = createInertVitals()
+      inert.fcp.value = 12
+      expect(inert.fcp.value).toBe(12)
+    })
   })
 
   describe('FCP tracking', () => {

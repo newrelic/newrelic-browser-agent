@@ -234,4 +234,33 @@ describe('abort()', () => {
     expect(it.ee).toBeUndefined()
     expect(it.refreshHandler).toBeUndefined()
   })
+
+  test('should stop responding to visibility changes', () => {
+    const storage = new LocalMemory({ [`${SESSION_STORAGE_KEY_PREFIX}${key}`]: { ...model, value, expiresAt: now + 5000, inactiveAt: now + 5000, updatedAt: now } })
+    const ee = { on: jest.fn(), removeEventListener: jest.fn() }
+    const it = new InteractionTimer({ onEnd: jest.fn(), onPause: jest.fn(), onResume: jest.fn(), ee, readStorage: () => storage.get(`${SESSION_STORAGE_KEY_PREFIX}${key}`) }, 100)
+    const visibilityState = jest.spyOn(document, 'visibilityState', 'get')
+    const changeVisibility = (state) => {
+      visibilityState.mockReturnValue(state)
+      document.dispatchEvent(new Event('visibilitychange'))
+    }
+
+    changeVisibility('hidden')
+    changeVisibility('visible')
+    expect(it.onPause).toHaveBeenCalledTimes(1)
+    expect(it.onResume).toHaveBeenCalledTimes(1)
+
+    it.abort()
+
+    changeVisibility('hidden')
+    changeVisibility('visible')
+    expect(it.onPause).toHaveBeenCalledTimes(1)
+    expect(it.onResume).toHaveBeenCalledTimes(1)
+
+    // an aborted timer must not be restarted by a later visibility change
+    jest.advanceTimersByTime(150)
+    expect(it.onEnd).not.toHaveBeenCalled()
+
+    visibilityState.mockRestore()
+  })
 })

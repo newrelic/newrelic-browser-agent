@@ -189,6 +189,28 @@ describe('reset()', () => {
 
     spy.mockRestore()
   })
+
+  test('should not be reset again by the previous inactivity timer after a visibility change', () => {
+    const session = new SessionEntity({ agentRef, key, storage, inactiveMs: 100 })
+    session.reset()
+    const sessionVal = session.state.value
+
+    const visibilityState = jest.spyOn(document, 'visibilityState', 'get')
+    visibilityState.mockReturnValue('hidden')
+    document.dispatchEvent(new Event('visibilitychange'))
+    visibilityState.mockReturnValue('visible')
+    document.dispatchEvent(new Event('visibilitychange'))
+
+    // keep the current session active past the inactivity window of the timer that reset() aborted
+    jest.advanceTimersByTime(60)
+    session.inactiveTimer.refresh()
+    jest.advanceTimersByTime(60)
+
+    expect(session.state.value).toEqual(sessionVal)
+    expect(session.state.numOfResets).toEqual(1)
+
+    visibilityState.mockRestore()
+  })
 })
 
 describe('isNew', () => {

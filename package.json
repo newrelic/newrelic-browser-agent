@@ -229,7 +229,7 @@
   "dependencies": {
     "@newrelic/rrweb": "^1.1.2",
     "fflate": "0.8.3",
-    "web-vitals": "6.2.1"
+    "web-vitals": "6.2.3"
   },
   "devDependencies": {
     "@babel/cli": "^7.23.4",

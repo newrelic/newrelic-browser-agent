@@ -7,7 +7,8 @@ import {
   testMFEErrorsRequest,
   testMFEInsRequest,
   testMFEAjaxEventsRequest,
-  testLogsRequest
+  testLogsRequest,
+  testMFETimingRequest
 } from '../../../../tools/testing-server/utils/expect-tests'
 import { supportsLargestContentfulPaint, supportsCumulativeLayoutShift, supportsInteractionToNextPaint } from '../../../../tools/browser-matcher/common-matchers.mjs'
 
@@ -189,7 +190,7 @@ describe('Register API - Iframe Entity', () => {
 
   it('should capture a MicroFrontEndTiming event with page view timing data when the iframe entity deregisters', async () => {
     const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-      { test: testMFEInsRequest }
+      { test: testMFETimingRequest }
     ])
 
     await loadIframePage()
@@ -242,7 +243,7 @@ describe('Register API - Iframe Entity', () => {
 
   it.withBrowsersMatching(supportsLargestContentfulPaint)('should have positive FCP and LCP vital values from the iframe in supporting browsers', async () => {
     const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-      { test: testMFEInsRequest }
+      { test: testMFETimingRequest }
     ])
 
     await loadIframePage()
@@ -269,7 +270,7 @@ describe('Register API - Iframe Entity', () => {
 
   it.withBrowsersMatching(supportsCumulativeLayoutShift)('should have a positive CLS score from the iframe layout shift in supporting browsers', async () => {
     const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-      { test: testMFEInsRequest }
+      { test: testMFETimingRequest }
     ])
 
     await loadIframePage()
@@ -294,7 +295,7 @@ describe('Register API - Iframe Entity', () => {
 
   it.withBrowsersMatching(supportsInteractionToNextPaint)('should have a positive INP score from real interactions in the iframe in supporting browsers', async () => {
     const [mfeInsightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-      { test: testMFEInsRequest }
+      { test: testMFETimingRequest }
     ])
 
     await loadIframePage()

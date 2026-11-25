@@ -27,7 +27,8 @@ const validOptions: AgentOptions = {
       deny_list: ['https://denylist.example.com'],
       block_internal: true,
       enabled: true,
-      autoStart: false
+      autoStart: false,
+      timeout: 30
     },
     distributed_tracing: {
       enabled: true,
@@ -170,6 +171,14 @@ expectError<AgentOptions>({
   init: {
     ajax: {
       deny_list: 'https://deny.example.com' // should be an array of strings
+    }
+  }
+})
+
+expectError<AgentOptions>({
+  init: {
+    ajax: {
+      timeout: '30' // should be a number of seconds
     }
   }
 })

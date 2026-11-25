@@ -158,8 +158,9 @@ describe('XHR Ajax', () => {
       .find(event => event.path === '/delayed')
     // Ajax event should have a 0 callbackDuration when not picked up by the SPA feature
     expect(ajaxEvent.callbackDuration).toEqual(0)
-    // Ajax event should have a 0 status when timed out
+    // Ajax event should have a 0 status and a "timedOut" reason when timed out
     expect(ajaxEvent.status).toEqual(0)
+    expect(ajaxEvent.children.find(attr => attr.key === 'reason')?.value).toEqual('timedOut')
 
     const ajaxMetric = ajaxMetricsHarvest
       .flatMap(harvest => harvest.request.body.xhr)
@@ -531,7 +532,7 @@ describe('XHR Ajax', () => {
     })).resolves.toEqual(true)
   })
 
-  it('produces no event and metric data when xhr is aborted', async () => {
+  it('produces event and metric data with status 0 and reason "aborted" when xhr is aborted', async () => {
     await browser.url(await browser.testHandle.assetURL('ajax/xhr-abort.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
       .then(() => browser.execute(function () {
@@ -544,14 +545,16 @@ describe('XHR Ajax', () => {
       $('#sendAjax').click()
     ])
 
-    const ajaxEvent = ajaxEventsHarvest
+    const ajaxEvents = ajaxEventsHarvest
       .flatMap(harvest => harvest.request.body)
-      .find(event => event.path === '/delayed')
-    expect(ajaxEvent).toBeUndefined()
+      .filter(event => event.path === '/delayed')
+    expect(ajaxEvents.length).toEqual(1)
+    expect(ajaxEvents[0].status).toEqual(0)
+    expect(ajaxEvents[0].children.find(attr => attr.key === 'reason')?.value).toEqual('aborted')
 
     const ajaxMetric = ajaxMetricsHarvest
       .flatMap(harvest => harvest.request.body.xhr)
       .find(metric => metric.params.pathname === '/delayed')
-    expect(ajaxMetric).toBeUndefined()
+    expect(ajaxMetric.params.status).toEqual(0)
   })
 })

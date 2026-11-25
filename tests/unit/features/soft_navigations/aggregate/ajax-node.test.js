@@ -90,6 +90,12 @@ test('Ajax serialize output is correct', () => {
   expect(ajn.serialize(512, someAgent)).toEqual("2,4,e8,sg,,,'POST,5p,'google.com,'/,3f,co,1,'1,'some_span_id,'some_trace_id,lx;5,'operationName,'Anonymous;5,'operationType,'QUERY;5,'operationFramework,'GraphQL;5,'ajaxRequest.id,'1234")
 })
 
+test('Ajax serialize output includes the reason attribute for an unresolved request', () => {
+  const ajn = new AjaxNode({ ...someAjaxEvent, status: 0, reason: 'timedOut' })
+
+  expect(ajn.serialize(0, someAgent)).toEqual("2,5,sg,sg,,,'POST,,'google.com,'/,3f,co,1,'1,'some_span_id,'some_trace_id,lx;5,'operationName,'Anonymous;5,'operationType,'QUERY;5,'operationFramework,'GraphQL;5,'ajaxRequest.id,'1234;5,'reason,'timedOut")
+})
+
 test('serialize does not report Ajax/Events/Payload/Bytes-Added SM when there are no payload attributes', () => {
   const { handle } = require('../../../../../src/common/event-emitter/handle')
   const ajn = new AjaxNode(someAjaxEvent)

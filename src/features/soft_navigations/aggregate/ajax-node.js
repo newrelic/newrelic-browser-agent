@@ -28,6 +28,7 @@ export class AjaxNode extends BelNode {
     this.gql = ajaxEvent.gql
     this.targetAttributes = ajaxEvent.targetAttributes
     this[AJAX_ID] = ajaxEvent[AJAX_ID] // all AjaxRequest events should have a unique identifier to allow for easier grouping and analysis in the UI
+    this.reason = ajaxEvent.reason // only set when the request did not resolve normally, e.g. timed out or aborted
 
     // optional payload metadata attributes
     this.requestBody = ajaxEvent.requestBody
@@ -74,7 +75,8 @@ export class AjaxNode extends BelNode {
     }, { addKey: addStringRaw, addVal: addString })
 
     regularAttrs.push(...addCustomAttributes({
-      [AJAX_ID]: this[AJAX_ID]
+      [AJAX_ID]: this[AJAX_ID],
+      ...(this.reason ? { reason: this.reason } : {})
     }, { addKey: addStringRaw, addVal: addStringRaw }))
 
     // Payload attributes: obfuscate then truncate

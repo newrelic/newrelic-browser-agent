@@ -192,6 +192,47 @@ describe('newrelic session ID', () => {
       expect(resetAgentSessionInfo.localStorage.value).not.toEqual(agentSessionInfo.localStorage.value)
       expect(resetAgentSessionInfo.localStorage.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
     })
+
+    it('should not start a new session for an active page that was hidden and shown after a reset', async () => {
+      const sessionInactivityMs = 5000
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+        init: {
+          privacy: { cookies_enabled: true },
+          session: {
+            inactiveMs: sessionInactivityMs
+          }
+        }
+      }))
+        .then(() => browser.waitForAgentLoad())
+
+      // keep the page active for the rest of the test, more often than the session inactivity time
+      await browser.execute(function () {
+        document.addEventListener('click', function () {})
+        setInterval(function () {
+          document.querySelector('body').click()
+        }, 1000)
+      })
+
+      // the reset aborts the inactivity timer that was created on page load
+      await browser.resetAgentSession()
+      const agentSessionInfo = await browser.getAgentSessionInfo()
+
+      // simulate the page being hidden and shown again by dispatching the events manually
+      await browser.execute(function () {
+        Object.defineProperty(document, 'visibilityState', { value: 'visible', writable: true })
+        document.visibilityState = 'hidden'
+        document.dispatchEvent(new Event('visibilitychange'))
+        document.visibilityState = 'visible'
+        document.dispatchEvent(new Event('visibilitychange'))
+      })
+
+      // wait longer than the session inactivity time, the aborted timer must not end the active session
+      await browser.pause(sessionInactivityMs + 2000)
+      const activeAgentSessionInfo = await browser.getAgentSessionInfo()
+
+      expect(activeAgentSessionInfo.localStorage.value).toEqual(agentSessionInfo.localStorage.value)
+      expect(activeAgentSessionInfo.localStorage.numOfResets).toEqual(agentSessionInfo.localStorage.numOfResets)
+    })
   })
 
   describe('Interactivity behavior', () => {

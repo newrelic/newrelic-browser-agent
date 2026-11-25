@@ -53,7 +53,7 @@ export class InteractionTimer extends Timer {
         if (state === 'hidden') this.pause()
         // vis change --> visible is treated like a new interaction with the page
         else this.resume()
-      }, false, this.abortController?.signal)
+      }, false, false, this.abortController?.signal)
     }
   }
 

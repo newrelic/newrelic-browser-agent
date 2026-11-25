@@ -2,7 +2,9 @@
 # called `chore(main): release <semver>`, which keeps the CHANGELOG.md up to date along with a changelog.json file.
 # When the release PR is merged, this action will create a Github release. Our docs-site PR workflow will use the
 # contents of the changelog.json file and PR headers to generate release notes for the public docs website.
-# See https://github.com/google-github-actions/release-please-action
+# Release Please v4+ reads its settings (PR header, changelog sections, tag format) from release-please-config.json and
+# the last released version from .release-please-manifest.json; action inputs for those are silently ignored.
+# See https://github.com/googleapis/release-please-action
 #
 # Note: NPM publishing is handled by npm-operations.yml when the GitHub release is published. There is no
 # automatic prerelease (RC) publishing from main.
@@ -26,16 +28,9 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
-          release-type: node
           token: ${{ secrets.BROWSER_GITHUB_BOT_INTERNAL_PAT }}
-          pull-request-header: "When this PR is merged, a new tagged release will be created with the notes below."
-          changelog-types: |
-            [
-              {"type":"feat","section":"Features"},
-              {"type":"enhancement","section":"Enhancements"},
-              {"type":"fix","section":"Bug Fixes"},
-              {"type":"security","section":"Security Fixes"}
-            ]
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
 
   notify-failure:
     name: Notify Slack on failure

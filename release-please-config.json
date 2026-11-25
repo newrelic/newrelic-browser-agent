@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "node",
+  "include-component-in-tag": false,
+  "pull-request-header": "When this PR is merged, a new tagged release will be created with the notes below.",
+  "changelog-sections": [
+    { "type": "feat", "section": "Features" },
+    { "type": "enhancement", "section": "Enhancements" },
+    { "type": "fix", "section": "Bug Fixes" },
+    { "type": "security", "section": "Security Fixes" }
+  ],
+  "packages": {
+    ".": {}
+  }
+}

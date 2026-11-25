@@ -6,6 +6,7 @@ import { CONNECT } from '../../../src/loaders/features/features'
 describe('PageViewEvent aggregate v2', () => {
   test('uses harvest endpoint version 2', async () => {
     const agent = setupAgent({
+      info: { errorBeacon: 'fake-beacon' },
       init: { feature_flags: ['rum_v2'] },
       runtime: {
         activatedFeatures: {}
@@ -22,6 +23,7 @@ describe('PageViewEvent aggregate v2', () => {
     const sendSpy = jest.spyOn(sendModule, 'send').mockImplementation(() => true)
 
     const agent = setupAgent({
+      info: { errorBeacon: 'fake-beacon' },
       init: {
         feature_flags: ['rum_v2'],
         browser_consent_mode: { enabled: true }
@@ -31,7 +33,6 @@ describe('PageViewEvent aggregate v2', () => {
         consented: false
       }
     })
-    agent.info.errorBeacon = 'fake-beacon'
 
     const pveInst = new PageViewEvent(agent)
     await new Promise(process.nextTick)
@@ -58,13 +59,13 @@ describe('PageViewEvent aggregate v2', () => {
     const sendSpy = jest.spyOn(sendModule, 'send').mockImplementation(() => true)
 
     const agent = setupAgent({
+      info: { errorBeacon: 'fake-beacon' },
       init: { feature_flags: ['rum_v2'] },
       runtime: {
         activatedFeatures: {},
         appMetadata: {} // clear setupAgent's default so Connector's guard actually applies the connect response below
       }
     })
-    agent.info.errorBeacon = 'fake-beacon'
 
     const pveInst = new PageViewEvent(agent)
     await new Promise(process.nextTick)
@@ -95,13 +96,13 @@ describe('PageViewEvent aggregate v2', () => {
     const sendSpy = jest.spyOn(sendModule, 'send')
 
     const agent = setupAgent({
+      info: { errorBeacon: 'fake-beacon' },
       init: { feature_flags: ['rum_v2'] },
       runtime: {
         activatedFeatures: {},
         appMetadata: {} // clear setupAgent's default so Connector's guard actually applies the connect response below
       }
     })
-    agent.info.errorBeacon = 'fake-beacon'
 
     const pveInst = new PageViewEvent(agent)
     await new Promise(process.nextTick)
@@ -132,6 +133,7 @@ describe('PageViewEvent aggregate v2', () => {
 
   test('builds query timestamp from corrected origin time', async () => {
     const agent = setupAgent({
+      info: { errorBeacon: 'fake-beacon' },
       init: { feature_flags: ['rum_v2'] },
       runtime: {
         activatedFeatures: {}
@@ -148,6 +150,7 @@ describe('PageViewEvent aggregate v2', () => {
 
   test('serializes only the first buffered payload entry', async () => {
     const agent = setupAgent({
+      info: { errorBeacon: 'fake-beacon' },
       init: { feature_flags: ['rum_v2'] },
       runtime: {
         activatedFeatures: {}

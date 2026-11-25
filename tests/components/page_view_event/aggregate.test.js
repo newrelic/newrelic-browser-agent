@@ -7,8 +7,8 @@ import { TextEncoder } from 'util'
 let mainAgent, pveAggregate
 
 beforeAll(async () => {
-  mainAgent = setupAgent()
-  mainAgent.info.errorBeacon = 'fake-beacon' // Set a dummy value so send() logic runs (but submitMethod will be mocked to prevent actual network calls)
+  // Set a dummy beacon so send() logic runs (but submitMethod will be mocked to prevent actual network calls)
+  mainAgent = setupAgent({ info: { errorBeacon: 'fake-beacon' } })
 })
 beforeEach(async () => {
   const pveInstrument = new PageViewEvent(mainAgent)
@@ -93,8 +93,7 @@ describe('RUM call', () => {
 
     sendSpy = jest.spyOn(sendModule, 'send')
 
-    testAgent = setupAgent()
-    testAgent.info.errorBeacon = 'fake-beacon' // Required for send() to execute
+    testAgent = setupAgent({ info: { errorBeacon: 'fake-beacon' } }) // beacon is required for send() to execute
 
     const pveInst = new PageViewEvent(testAgent)
     await new Promise(process.nextTick)
@@ -298,10 +297,9 @@ describe('RUM call', () => {
 
     test('does not emit rumresp a second time when RUM call succeeds', async () => {
       const cachedApp = { agents: [{ entityGuid: 'test-guid' }], nrServerTime: someServerTime }
-      const agentWithCache = setupAgent()
+      const agentWithCache = setupAgent({ info: { errorBeacon: 'fake-beacon' } })
       // These tests seed a cached RUM response before the real bootstrap runs, so the session needs to exist upfront.
       setupAgentSession(agentWithCache)
-      agentWithCache.info.errorBeacon = 'fake-beacon'
       agentWithCache.runtime.session.state.cachedRumResponse = { app: cachedApp, ...featFlags }
 
       const pveInst = new PageViewEvent(agentWithCache)
@@ -366,8 +364,7 @@ describe('RUM call', () => {
           }
         }
 
-        testAgent = setupAgent({ runtime: { session: mockSessionEntity } })
-        testAgent.info.errorBeacon = 'fake-beacon' // Required for send() to execute
+        testAgent = setupAgent({ info: { errorBeacon: 'fake-beacon' }, runtime: { session: mockSessionEntity } }) // beacon is required for send() to execute
 
         const pveInst = new PageViewEvent(testAgent)
         await new Promise(process.nextTick)
@@ -504,8 +501,7 @@ describe('RUM call', () => {
 
   // this is the scenario where the session is disabled (e.g. cookies are off) so there is no place to cache the response, but we still want to activate features based on the RUM response flags
   test('passes flags to activate features, when session is not present', async () => {
-    const noSessionAgent = setupAgent({ init: { privacy: { cookies_enabled: false } } })
-    noSessionAgent.info.errorBeacon = 'fake-beacon'
+    const noSessionAgent = setupAgent({ info: { errorBeacon: 'fake-beacon' }, init: { privacy: { cookies_enabled: false } } })
     const pveInst = new PageViewEvent(noSessionAgent)
     await new Promise(process.nextTick)
     const noSessionAgg = pveInst.featAggregate
@@ -537,8 +533,7 @@ describe('RUM call', () => {
   })
 
   test('does not include fsh in RUM query params when session is not present', async () => {
-    const noSessionAgent = setupAgent({ init: { privacy: { cookies_enabled: false } } })
-    noSessionAgent.info.errorBeacon = 'fake-beacon'
+    const noSessionAgent = setupAgent({ info: { errorBeacon: 'fake-beacon' }, init: { privacy: { cookies_enabled: false } } })
     const pveInst = new PageViewEvent(noSessionAgent)
     await new Promise(process.nextTick)
     const noSessionAgg = pveInst.featAggregate
@@ -593,8 +588,7 @@ describe('RUM call', () => {
   test('cachedRumResponse is stored separately for multiple apps', async () => {
     testAgent.runtime.session.state.cachedRumResponse = undefined
 
-    const testAgent2 = setupAgent()
-    testAgent2.info.errorBeacon = 'fake-beacon'
+    const testAgent2 = setupAgent({ info: { errorBeacon: 'fake-beacon' } })
     const pveInst2 = new PageViewEvent(testAgent2)
     await new Promise(process.nextTick)
     const pveAgg2 = pveInst2.featAggregate

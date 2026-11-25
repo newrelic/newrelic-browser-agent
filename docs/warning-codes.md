@@ -166,3 +166,5 @@
 `Entities were detected that share a name with different IDs - This can cause multiple entities to have the same name in New Relic.`
 ### 82
 `Entities were detected that share an ID with different names - This can cause your entity's name to change unexpectedly.`
+### 83
+`Harvest blocked because its destination does not match the endpoint the agent was configured with.`

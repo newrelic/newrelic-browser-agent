@@ -73,6 +73,28 @@ describe('pvt timings tests', () => {
   })
 
   describe('interaction related timings', () => {
+    it('harvests first interaction with an unknown target when FileReader is unavailable', async () => {
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: 'spa' }))
+        .then(() => browser.waitForAgentLoad())
+
+      await browser.execute(function () {
+        const getEntriesByType = window.performance.getEntriesByType.bind(window.performance)
+        const firstInput = { name: 'mousedown', startTime: window.performance.now(), target: null }
+
+        delete window.FileReader
+        window.performance.getEntriesByType = type => type === 'first-input' ? [firstInput] : getEntriesByType(type)
+      })
+
+      const [timingsHarvests] = await Promise.all([
+        timingsCapture.waitForResult({ timeout: 10000 }),
+        browser.url(await browser.testHandle.assetURL('/'))
+      ])
+
+      const firstInteraction = timingsHarvests.flatMap(harvest => harvest.request.body)
+        .find(timing => timing.name === 'fi')
+      expect(firstInteraction?.attributes.find(attr => attr.key === 'eventTarget')?.value).toEqual('unknown')
+    })
+
     loadersToTest.forEach(loader => {
       it(`FI, INP & LCP for ${loader} agent`, async () => {
         const start = Date.now()

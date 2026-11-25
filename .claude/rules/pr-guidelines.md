@@ -99,7 +99,7 @@ A new type must be wired through every one of these, or release notes silently
 drop or miscategorize it (none of this is covered by a single CI check):
 
 1. [validate-pr.yml](../../.github/workflows/validate-pr.yml) — title regex and its error message.
-2. [release-please.yml](../../.github/workflows/release-please.yml) — `changelog-types`
+2. [release-please-config.json](../../release-please-config.json) — `changelog-sections`
    entry (listing a type here also makes it open a release PR, at patch level
    unless it is `feat` or breaking).
 3. [.github/actions/docs-pr/index.js](../../.github/actions/docs-pr/index.js) — `categories`, `frontMatter`, `bodyContent` and the loop/`JSON.stringify` for it.

@@ -7,3 +7,5 @@
 /package.json @newrelic/br0ws3r
 /package-lock.json @newrelic/br0ws3r
 /.github/actions/package-lock.json @newrelic/br0ws3r
+/release-please-config.json @newrelic/br0ws3r
+/.release-please-manifest.json @newrelic/br0ws3r

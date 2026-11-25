@@ -12,6 +12,9 @@ import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, INTERACTION_TRIGGERS, POPSTATE_TRIGGER } from '../constants'
 import { now } from '../../../common/timing/now'
 import { setupInteractionAPI } from '../../../loaders/api/interaction'
+import { warn } from '../../../common/util/console'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
 
 /**
  * The minimal time after a UI event for which no further events will be processed - i.e. a throttling rate to reduce spam.
@@ -60,7 +63,11 @@ export class Instrument extends InstrumentBase {
     })
 
     const processUserInteraction = debounce((event) => {
-      if (document.readyState === 'loading') return // document.body is not expected to be defined yet during loading, so only "interactive" or "complete" is considered "legit" user interaction
+      if (document.body instanceof Node === false) {
+        warn(83, { trigger: event.type, readyState: document.readyState, body: document.body })
+        handle(SUPPORTABILITY_METRIC_CHANNEL, [`SoftNav/Interaction/NoBody/${event.type}`], undefined, FEATURE_NAMES.metrics, this.ee)
+        return
+      }
       handle('newUIEvent', [event], undefined, this.featureName, this.ee)
       domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true })
     }, UI_WAIT_INTERVAL, { leading: true })

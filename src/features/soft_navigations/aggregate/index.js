@@ -5,6 +5,7 @@
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { webdriverDetected } from '../../../common/util/webdriver-detection'
+import { warn } from '../../../common/util/console'
 import { loadTime } from '../../../common/vitals/load-time'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
@@ -245,7 +246,17 @@ export class Aggregate extends AggregateBase {
         if (!this.associatedInteraction) {
         // This new api-driven interaction will be the target of any subsequent .interaction() call, until it is closed by EITHER .end() OR the regular url>dom change process.
           this.associatedInteraction = thisClass.interactionInProgress = new Interaction(API_TRIGGER_NAME, Math.floor(time), thisClass.latestRouteSetByApi)
-          thisClass.domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true }) // start observing for DOM changes like a regular UI-driven interaction
+          /*
+            document.body can be momentarily null (e.g. a router that replaces it asynchronously). Only the observer is skipped:
+            the interaction above is already assigned and the other api handlers dereference it, so it must still be created.
+            Without a DOM observer no DOM change is detected, so it can only end via .end() (api interactions have no cancellation timer).
+          */
+          if (document.body instanceof Node) {
+            thisClass.domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true }) // start observing for DOM changes like a regular UI-driven interaction
+          } else {
+            warn(83, { trigger: 'api', readyState: document.readyState, body: document.body })
+            thisClass.reportSupportabilityMetric('SoftNav/Interaction/NoBody/api')
+          }
           thisClass.setClosureHandlers()
         }
       }
